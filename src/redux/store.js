@@ -1,14 +1,16 @@
-import { configureStore } from '@reduxjs/toolkit';
-import authReducer from './slices/authSlice';
-import residencyReducer from './slices/residencySlice';
-import tripsReducer from './slices/tripsSlice';
+import { createStore, applyMiddleware } from 'redux';
+import thunk from 'redux-thunk';
+import { persistStore, persistReducer } from 'redux-persist';
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import rootReducer from './rootReducer';
 
-export const store = configureStore({
-  reducer: {
-    auth: authReducer,
-    residency: residencyReducer,
-    trips: tripsReducer,
-  },
-});
+const persistConfig = {
+  key: 'root',
+  storage: AsyncStorage,
+  whitelist: ['auth'],
+}
 
-export default store;
+const persistedReducer = persistReducer(persistConfig, rootReducer)
+
+export const store = createStore(persistedReducer, applyMiddleware(thunk))
+export const persistor = persistStore(store);

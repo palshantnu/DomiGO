@@ -1,72 +1,203 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import InputField from '../../components/InputField';
-import colors from '../../theme/colors';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  TextInput,
+  Image,
+  StatusBar,
+} from "react-native";
+import LinearGradient from "react-native-linear-gradient";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Ionicons from "react-native-vector-icons/Ionicons";
 
 const LoginScreen = ({ navigation }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   return (
-    <View style={styles.container}>
-      <Image source={require('../../assets/image/logo.png')} style={styles.logo} />
+    <LinearGradient
+      colors={["#9ab1fa", "#ffffff"]}
+      start={{ x: 1, y: 0 }}
+      end={{ x: 0.8, y: 0.4 }}
+      locations={[0.05, 0.55]}
+      style={styles.container}
+    >
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-      <Text style={styles.title}>Welcome to DomiGo</Text>
-      <Text style={styles.subtitle}>Your journey to smarter property management starts here.</Text>
-      <Text style={styles.lable}>Email address</Text>
-      <InputField
-        icon="mail-outline"
-        placeholder="Enter your email"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <Text style={styles.lable}>Password</Text>
-      <InputField
-        icon="lock-closed-outline"
-        placeholder="Enter your password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+      <SafeAreaView style={styles.innerContainer}>
+        <Text style={styles.welcomeTitle}>Welcome to{"\n"}DomiGo</Text>
+        <Text style={styles.subtitle}>
+          Your Journey to Smarter Property Management Starts Here.
+        </Text>
 
-      <TouchableOpacity>
-        <Text style={styles.forgot}>Forgot Password?</Text>
-      </TouchableOpacity>
+        {/* Email Input */}
+        <View style={styles.inputWrapper}>
+          <Ionicons name="mail-outline" size={20} color="#666" style={styles.icon} />
+          <TextInput
+            placeholder="Email"
+            placeholderTextColor="#777"
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+          />
+        </View>
 
-      <TouchableOpacity onPress={() => navigation.navigate('Main')} style={styles.button}>
-        <Text style={styles.buttonText}>Log In</Text>
-      </TouchableOpacity>
+        {/* Password Input */}
+        <View style={styles.inputWrapper}>
+          <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.icon} />
+          <TextInput
+            placeholder="Password"
+            placeholderTextColor="#777"
+            style={styles.input}
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
+        </View>
 
-      <View style={styles.divider} />
 
-      <Text style={styles.footerText}>
-        Don’t have an account?{' '}
-        {/* <Text style={styles.link} onPress={() => navigation.navigate('Signup')}>
-          Sign Up
-        </Text> */}
-      </Text>
-      <TouchableOpacity onPress={() => navigation.navigate('Signup')} style={styles.button2}>
-        <Text style={styles.button2Text}>Sign Up</Text>
-      </TouchableOpacity>
-    </View>
+
+        <TouchableOpacity onPress={() => navigation.navigate('Main')}  style={styles.loginBtn}>
+          <Text style={styles.loginText}>Log in</Text>
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <Text style={styles.forgotText}>Forgot Password?</Text>
+        </TouchableOpacity>
+        <View style={styles.divider} />
+
+        <Text style={styles.footerText}>
+          Don’t Have an Account?{" "}
+        </Text>
+
+        <TouchableOpacity
+          style={styles.signupBtn}
+          onPress={() => navigation.navigate("Signup")}
+        >
+          <Text style={styles.signupText}>Sign up</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.orText}>or Sign in with</Text>
+
+        <View style={styles.socialContainer}>
+          <TouchableOpacity>
+            <Image
+              source={require("../../assets/image/google.png")}
+              style={styles.socialIcon}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <Image
+              source={require("../../assets/image/facebook.png")}
+              style={styles.socialIcon}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <Image
+              source={require("../../assets/image/apple.png")}
+              style={styles.socialIcon}
+            />
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white, padding: 25, justifyContent: 'center' },
-  logo: { width: 200, height: 70, alignSelf: 'center', marginBottom: 10, resizeMode: 'contain' },
-  title: { fontSize: 30, fontWeight: '700', textAlign: 'center', color: colors.black },
-  brand: { color: colors.primary },
-  subtitle: { textAlign: 'center', color: colors.gray, marginBottom: 30, marginTop: 5, fontSize: 13 },
-  forgot: { alignSelf: 'flex-end', color: colors.primary, fontSize: 13, marginBottom: 15 },
-  button: { backgroundColor: colors.primary, borderRadius: 8, paddingVertical: 12 },
-  buttonText: { color: colors.white, textAlign: 'center', fontSize: 16, fontWeight: '500' },
-  button2: { backgroundColor: colors.green, borderRadius: 8, paddingVertical: 12,marginTop:10 },
-  button2Text: { color: colors.white, textAlign: 'center', fontSize: 16, fontWeight: '500' },
-  divider: { height: 1, backgroundColor: '#E5E5EA', marginVertical: 25 },
-  footerText: { textAlign: 'center', fontSize: 14 },
-  link: { color: colors.secondary, fontWeight: '600' },
-  lable:{color:'#000',marginBottom:10,fontSize:17,fontWeight:'600'}
+  container: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  innerContainer: {
+    paddingHorizontal: 20,
+  },
+  welcomeTitle: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#000",
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#555",
+    marginVertical: 10,
+    lineHeight: 20,
+  },
+  inputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F3F3F3",
+    borderRadius: 25,
+    paddingHorizontal: 15,
+    height: 60,
+    marginTop: 20,
+  },
+  icon: {
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: "#000",
+  },
+  forgotText: {
+    color: "#29A0DD",
+    fontSize: 14,
+    textAlign: "center",
+    marginTop: 12,
+  },
+  loginBtn: {
+    backgroundColor: "#29A0DD",
+    borderRadius: 25,
+    paddingVertical: 18,
+    alignItems: "center",
+    marginTop: 25,
+  },
+  loginText: {
+    color: "#fff",
+    fontSize: 17,
+    fontWeight: "600",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#ddd",
+    marginVertical: 25,
+  },
+  footerText: {
+    textAlign: "center",
+    color: "#000",
+    fontSize: 15,
+    marginBottom: 10,
+  },
+  signupBtn: {
+    backgroundColor: "#69BE7E",
+    borderRadius: 25,
+    paddingVertical: 18,
+    alignItems: "center",
+  },
+  signupText: {
+    color: "#fff",
+    fontSize: 17,
+    fontWeight: "600",
+  },
+  orText: {
+    textAlign: "center",
+    color: "#000",
+    marginVertical: 20,
+    fontSize: 15,
+  },
+  socialContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 25,
+  },
+  socialIcon: {
+    width: 40,
+    height: 40,
+    resizeMode: "contain",
+  },
 });
 
 export default LoginScreen;

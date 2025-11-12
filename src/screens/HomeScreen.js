@@ -12,85 +12,122 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import * as Progress from 'react-native-progress';
 import colors from '../theme/colors';
 import Header from '../components/Header';
+import { useNavigation } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import LinearGradient from 'react-native-linear-gradient';
 
 
-const HomeScreen = () => {
+const HomeScreen = (props) => {
     const progress = 200 / 365;
-
+    const navigation = useNavigation();
     return (
-        <View style={{ flex: 1 }}>
-            <Header />
-            <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        <LinearGradient
+            colors={["#9ab1fa", "#ffffff"]}
+            start={{ x: 1, y: 0 }}
+            end={{ x: 0.8, y: 0.4 }}
+            locations={[0.05, 0.55]}
+            style={styles.container}
+        >
+            <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1, backgroundColor: 'none' }}>
+                <Header title={'Dashboard'} />
+                <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
-                <View style={{ ...styles.section, elevation: 2, backgroundColor: colors.white, borderRadius: 10 }}>
-                    <Text style={styles.sectionTitle}>Financial Year Progress</Text>
-                    <View style={styles.progressContainer}>
-                        <Text style={styles.progressText}>
-                            Day <Text style={styles.bold}>200</Text> of 365
-                        </Text>
-                        <Text style={styles.daysLeft}>165 days left</Text>
+                    <View
+                        style={{
+                            ...styles.section,
+                            elevation: 2,
+                            backgroundColor: '#F6F6F6',
+                            borderRadius: 10,
+                        }}
+                    >
+                        <Text style={styles.sectionTitle}>Financial Year Progress</Text>
+
+                        <View style={styles.progressButtonRow}>
+                            <TouchableOpacity style={styles.completedBtn}>
+                                <Text style={styles.completedText}>200 Days Completed</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity style={styles.remainingBtn}>
+                                <Text style={styles.remainingText}>165 Days Left</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                    <Progress.Bar
-                        progress={progress}
-                        width={null}
-                        color={colors.primary}
-                        unfilledColor="#E6E6E6"
-                        borderWidth={0}
-                        height={8}
-                        borderRadius={5}
-                        style={styles.progressBar}
-                    />
-                </View>
 
-                <View style={{ ...styles.section, elevation: 2, backgroundColor: '#fafafa', borderRadius: 10 }}>
-                    <Text style={styles.sectionTitle}>Residency Actions</Text>
-                    <View style={styles.actionContainer}>
-                        <TouchableOpacity style={styles.actionButton}>
-                            <Text style={styles.actionText}>Metrics</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.addCircle}>
-                            <Icon name="add" size={28} color="#fff" />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.actionButton}>
-                            <Text style={styles.actionText}>Calendar</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
+                    <View style={{ ...styles.section, elevation: 2, backgroundColor: '#fafafa', borderRadius: 10 }}>
+                        <Text style={styles.sectionTitle}>Insights Menu</Text>
 
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>State-wise Residency Overview</Text>
-                    <View style={styles.stateGrid}>
-                        {[
-                            { code: 'FL', days: 134, color: '#D3D3D3', threshold: 183 },
-                            { code: 'NY', days: 83, color: '#28a0dd', threshold: 183 },
-                            { code: 'CA', days: 170, color: '#dc3c41', threshold: 183 },
-                            { code: 'UT', days: 45, color: '#28a0dd', threshold: 183 },
-                        ].map((item, index) => (
-                            <View key={index} style={[styles.stateCard, { borderColor: 'grey', width: Dimensions.get('window').width * 0.42, height: Dimensions.get('window').width * 0.42, elevation: 1, borderWidth: 0.1 }]}>
-                                <View style={styles.smallCircle}>
-                                    <Text style={styles.smallCircleText}>{item.threshold}</Text>
+                        <View style={styles.toggleContainer}>
+                            <TouchableOpacity style={styles.leftTab}>
+                                <Text style={styles.activeText}>Metrics</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity style={styles.centerCircle} onPress={() => navigation.navigate('Metrics')}>
+                                <View style={{
+                                    backgroundColor: colors.white, padding: 1, width: 35,
+                                    height: 35, borderRadius: 21,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    borderColor: colors.primary,
+                                    borderWidth: 3
+                                }}>
+                                    <Icon name="add" size={22} color={colors.primary} />
                                 </View>
-                                <View style={{ borderRadius: 70, borderWidth: 3, borderColor: item.color, width: Dimensions.get('window').width * 0.35, height: Dimensions.get('window').width * 0.35, justifyContent: 'center', alignItems: 'center' }}>
-                                    <Text style={styles.stateCode}>{item.code}</Text>
-                                    <Text style={styles.stateDays}>{item.days}</Text>
-                                    <Text style={styles.daysIn}>Days in</Text>
+                            </TouchableOpacity>
 
-                                </View>
-                            </View>
-                        ))}
+                            <TouchableOpacity style={styles.rightTab}>
+                                <Text style={styles.inactiveText}>Calendar</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                </View>
-            </ScrollView>
-        </View>
+
+
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>State-wise Residency Overview</Text>
+                        <View style={styles.stateGrid}>
+                            {[
+                                { code: 'FL', days: 134, color: '#D3D3D3', threshold: 183 },
+                                { code: 'NY', days: 83, color: '#28a0dd', threshold: 183 },
+                                { code: 'CA', days: 170, color: '#dc3c41', threshold: 183 },
+                                { code: 'UT', days: 45, color: '#28a0dd', threshold: 183 },
+                            ].map((item, index) => (
+                                <View key={index} style={[styles.stateCard, { borderColor: '#E0E0E0', width: Dimensions.get('window').width * 0.42, height: Dimensions.get('window').width * 0.42, elevation: 1, borderWidth: 0.5 }]}>
+                                    <View style={styles.smallCircle}>
+                                        <Text style={styles.smallCircleText}>{item.threshold}</Text>
+                                    </View>
+                                    <View style={{ borderRadius: 70, borderWidth: 5, borderColor: item.color, width: Dimensions.get('window').width * 0.35, height: Dimensions.get('window').width * 0.35, justifyContent: 'center', alignItems: 'center' }}>
+                                        <Text style={styles.stateCode}>{item.code}</Text>
+                                        <Text style={styles.stateDays}>{item.days}</Text>
+                                        <Text style={styles.daysIn}>Days in</Text>
+
+                                    </View>
+                                </View>
+                            ))}
+                        </View>
+                    </View>
+                </ScrollView>
+            </SafeAreaView>
+        </LinearGradient>
     );
 };
 
-export default HomeScreen;
+
+function mapStateToProps(state) {
+    return {
+
+    };
+}
+
+
+const mapDispatchToProps = {
+
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(HomeScreen);
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        // backgroundColor: '#fff',
 
     },
 
@@ -191,12 +228,13 @@ const styles = StyleSheet.create({
     },
     smallCircle: {
         position: 'absolute',
-        top: 5,
-        right: 5,
+        top: 15,
+        right: -1,
         width: 36,
         height: 20,
-        borderRadius: 18,
-        backgroundColor: '#F5F5F5',
+        borderTopLeftRadius: 18,
+        borderBottomLeftRadius: 18,
+        backgroundColor: colors.primary,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
@@ -205,6 +243,108 @@ const styles = StyleSheet.create({
     smallCircleText: {
         fontSize: 12,
         fontWeight: '500',
-        color: '#888',
+        color: '#fff',
     },
+    progressButtonRow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
+        borderRadius: 30,
+        backgroundColor: '#fff',
+        width: '100%'
+    },
+
+    completedBtn: {
+        backgroundColor: colors.primary,
+        paddingVertical: 16,
+        paddingHorizontal: 16,
+        borderRadius: 30,
+        elevation: 2,
+        textAlign: 'center',
+        width: '50%'
+    },
+
+    remainingBtn: {
+        // backgroundColor: '#E0E0E0',
+        paddingVertical: 16,
+        paddingHorizontal: 16,
+        borderRadius: 10,
+        elevation: 1,
+        textAlign: 'center',
+        width: '50%'
+    },
+
+    completedText: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 14,
+    },
+
+    remainingText: {
+        color: '#333',
+        fontWeight: '600',
+        fontSize: 14,
+    },
+    toggleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        backgroundColor: '#fff',
+        borderRadius: 30,
+        overflow: 'hidden',
+        elevation: 2,
+        marginTop: 5,
+        borderColor: '#D7D7D7',
+        borderWidth: 1
+    },
+
+    leftTab: {
+        flex: 1,
+        backgroundColor: colors.primary,
+        paddingVertical: 14,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderTopLeftRadius: 30,
+        borderBottomLeftRadius: 30,
+    },
+
+    rightTab: {
+        flex: 1,
+        backgroundColor: '#fff',
+        paddingVertical: 14,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderTopRightRadius: 30,
+        borderBottomRightRadius: 30,
+    },
+
+    centerCircle: {
+        position: 'absolute',
+        alignSelf: 'center',
+        width: 42,
+        height: 42,
+        borderRadius: 21,
+        backgroundColor: '#fff',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 12,
+        borderColor: '#fff',
+        zIndex: 2,
+    },
+
+    activeText: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 15,
+    },
+
+    inactiveText: {
+        color: '#000',
+        fontWeight: '600',
+        fontSize: 15,
+    },
+
+
 });

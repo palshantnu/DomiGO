@@ -27,14 +27,15 @@ function App() {
   return (
     <Provider store={store}>
     <SafeAreaProvider>
+    <NavigationContainer>
       <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={colors.primary}
+        barStyle={isDarkMode ? 'dark-content' : 'dark-content'}
+        backgroundColor={colors.white}
         translucent={false}
       />
 
       <AppContent />
-
+      </NavigationContainer>
     </SafeAreaProvider>
     </Provider>
   );
@@ -45,15 +46,15 @@ function AppContent() {
 
   return (
     <SafeAreaView
-      edges={['top', 'bottom', 'left', 'right']}
+      edges={[ 'bottom', 'left', 'right']}
       style={[
         styles.container,
         // { paddingTop: safeAreaInsets.top }
       ]}
     >
-      <NavigationContainer>
+     
         <RootNavigator />
-      </NavigationContainer>
+     
     </SafeAreaView>
   );
 }
@@ -61,7 +62,7 @@ function AppContent() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.primary || '#fff'
+    backgroundColor: colors.white || '#fff'
   },
 });
 

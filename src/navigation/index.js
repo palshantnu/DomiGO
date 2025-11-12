@@ -15,6 +15,12 @@ import colors from '../theme/colors';
 import TaxResidencyIntro from '../screens/TaxResidencyIntro';
 import SettingsNavigation from './SettingsNavigation';
 import PermissionScreen from '../screens/PermissionScreen';
+import HomeNavigation from './HomeNavigation';
+import TripListScreen from '../screens/TripListScreen';
+import AddTripNavigation from './AddTripNavigation';
+import DayDetailScreen from '../screens/DayDetailScreen';
+import { View } from 'react-native';
+import { ICON_ADD, ICON_CALENDAR, ICON_HOME, ICON_NOTIFICATION, ICON_SETTINGS } from '../assets/svgicon';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -24,53 +30,55 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarShowLabel: true,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: '#636363',
+        tabBarShowLabel: false,
         tabBarStyle: {
           height: 70,
-          paddingBottom: 10,
           paddingTop: 10,
           borderTopWidth: 0.5,
           borderTopColor: '#E0E0E0',
           backgroundColor: '#fff',
           elevation: 8,
         },
-        tabBarIcon: ({ color, size, focused }) => {
+        tabBarIcon: ({ focused }) => {
           let iconName;
-
-          switch (route.name) {
-            case 'Dashboard':
-              iconName = focused ? 'home' : 'home-outline';
-              break;
-            case 'Calendar':
-              iconName = focused ? 'calendar' : 'calendar-outline';
-              break;
-            case 'Add Trip':
-              iconName = focused ? 'add-circle' : 'add-circle-outline';
-              break;
-            case 'Alerts':
-              iconName = focused ? 'notifications' : 'notifications-outline';
-              break;
-            case 'Settings':
-              iconName = focused ? 'settings' : 'settings-outline';
-              break;
-            default:
-              iconName = 'ellipse-outline';
+          let iconColor = '#000';
+          let iconSize = 26;
+          if (route.name === 'Dashboard') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Calendar') {
+            iconName = focused ? 'calendar' : 'calendar-outline';
+          } else if (route.name === 'AddTripNavigation') {
+            iconName = 'add-circle-outline';
+            iconColor = colors.primary; // center + icon color
+            iconSize = 35;
+          } else if (route.name === 'Alerts') {
+            iconName = focused ? 'notifications' : 'notifications-outline';
+          } else if (route.name === 'Settings') {
+            iconName = focused ? 'settings' : 'settings-outline';
           }
 
-          return <Icon name={iconName} size={26} color={color} />;
+          return (
+            <View style={{ alignItems: 'center', justifyContent: 'center', height: 70 }}>
+              {route.name == 'Dashboard' ? <ICON_HOME height={24} width={24} />
+                : route.name == 'Calendar' ? <ICON_CALENDAR height={24} width={24} />
+                  : route.name == 'AddTripNavigation' ? <ICON_ADD height={30} width={30} />
+                    : route.name == 'Alerts' ? <ICON_NOTIFICATION height={24} width={24} />
+                      : route.name == 'Settings' ? <ICON_SETTINGS height={24} width={24} />
+                        : null}
+            </View>
+          );
         },
       })}
     >
-      <Tab.Screen name="Dashboard" component={HomeScreen} />
+      <Tab.Screen name="Dashboard" component={HomeNavigation} />
       <Tab.Screen name="Calendar" component={CalendarScreen} />
-      <Tab.Screen name="Add Trip" component={AddTripScreen} />
+      <Tab.Screen name="AddTripNavigation" component={AddTripNavigation} />
       <Tab.Screen name="Alerts" component={AlertsScreen} />
       <Tab.Screen name="Settings" component={SettingsNavigation} />
     </Tab.Navigator>
   );
 }
+
 
 export default function RootNavigator() {
   return (
@@ -108,6 +116,11 @@ export default function RootNavigator() {
       <Stack.Screen
         name="PermissionScreen"
         component={PermissionScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="DayDetail"
+        component={DayDetailScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
