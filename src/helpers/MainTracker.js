@@ -14,7 +14,7 @@ const locationEventEmitter = isNativeModuleAvailable()
 
 class DomigoTracker {
   constructor() {
-    this.subscriptions = [];
+    this.subscriptions = []; 
     this.isTracking = false;
     this.nativeAvailable = isNativeModuleAvailable();
     
