@@ -8,6 +8,11 @@ import ReportsExportScreen from '../screens/ReportsExportScreen';
 import MenuScreen from '../screens/MenuScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import ProfileManagementScreen from '../screens/ProfileManagementScreen';
+import ChangePasswordScreen from '../screens/ChangePasswordScreen';
+import CreateResidencyRecordScreen from '../screens/CreateResidencyRecordScreen';
+import ResidencyRecordDetailsScreen from '../screens/ResidencyRecordDetailsScreen';
+import ResidencyHistoryScreen from '../screens/ResidencyRecords';
+
 
 export default function SettingsNavigation() {
     const Stack = createStackNavigator();
@@ -29,6 +34,21 @@ export default function SettingsNavigation() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
+          name="ResidencyHistory"
+          component={ResidencyHistoryScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="CreateResidencyRecord"
+          component={CreateResidencyRecordScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ResidencyRecordDetails"
+          component={ResidencyRecordDetailsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
           name="Profile"
           component={ProfileScreen}
           options={{ headerShown: false }}
@@ -39,10 +59,11 @@ export default function SettingsNavigation() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="TaxResidencyIntro"
-          component={TaxResidencyIntro}
+          name="ChangePassword"
+          component={ChangePasswordScreen}
           options={{ headerShown: false }}
         />
+     
        
 
       </Stack.Navigator>

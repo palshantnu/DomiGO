@@ -1,0 +1,504 @@
+package com.domigo
+
+import android.app.*
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
+import android.os.Build
+import android.os.Bundle
+import android.os.IBinder
+import android.util.Log
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import com.facebook.react.bridge.*
+import com.facebook.react.modules.core.DeviceEventManagerModule
+import okhttp3.*
+import org.json.JSONObject
+import java.io.IOException
+import java.util.concurrent.TimeUnit
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
+
+class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
+
+    private val context: Context = reactContext
+    private lateinit var locationManager: LocationManager
+    private lateinit var locationListener: LocationListener
+    private var isTracking = false
+
+    // HTTP client for background network calls
+    private val httpClient = OkHttpClient.Builder()
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .build()
+
+    // Configuration
+    private var locationInterval: Long = 20000L // 20 seconds
+    private var locationDistance: Float = 0f
+    private var googleApiKey: String = ""
+    private var domigoToken: String = ""
+    private var apiUrl: String = ""
+
+    // Track last values to avoid duplicate API calls
+    private var lastState: String = ""
+    private var lastApiTime: Long = 0
+
+    companion object {
+        private const val TAG = "LocationModule"
+        private const val NOTIFICATION_ID = 1
+        private const val CHANNEL_ID = "location_service_domigo"
+        private const val GOOGLE_GEOCODING_URL = "https://maps.googleapis.com/maps/api/geocode/json"
+        private const val FOUR_HOURS_MS = 4 * 60 * 60 * 1000 // 4 hours in milliseconds
+    }
+
+    override fun getName(): String {
+        return "LocationTracker"
+    }
+
+    @ReactMethod
+    fun setConfig(config: ReadableMap) {
+        try {
+            if (config.hasKey("interval")) {
+                locationInterval = config.getInt("interval").toLong()
+            }
+            if (config.hasKey("googleApiKey")) {
+                googleApiKey = config.getString("googleApiKey") ?: ""
+            }
+            if (config.hasKey("domigoToken")) {
+                domigoToken = config.getString("domigoToken") ?: ""
+            }
+            if (config.hasKey("apiUrl")) {
+                apiUrl = config.getString("apiUrl") ?: ""
+            }
+            
+            Log.d(TAG, "Config updated - Interval: $locationInterval, API Key: ${if (googleApiKey.isNotEmpty()) "SET" else "NOT SET"}")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error setting config: ${e.message}")
+        }
+    }
+
+    @ReactMethod
+    fun startLocationTracking() {
+        if (isTracking) {
+            Log.d(TAG, "Location tracking already started")
+            return
+        }
+
+        // Check location permissions
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.e(TAG, "Location permission not granted")
+            sendEvent("onLocationError", Arguments.createMap().apply {
+                putString("error", "Location permission not granted")
+            })
+            return
+        }
+
+        // Check if API key is set
+        if (googleApiKey.isEmpty()) {
+            Log.e(TAG, "Google API key not set")
+            sendEvent("onLocationError", Arguments.createMap().apply {
+                putString("error", "Google API key not configured")
+            })
+            return
+        }
+
+        try {
+            startForegroundService()
+            setupLocationListener()
+            isTracking = true
+            Log.d(TAG, "Location tracking started successfully with interval: $locationInterval ms")
+        } catch (e: SecurityException) {
+            Log.e(TAG, "SecurityException: ${e.message}")
+            sendEvent("onLocationError", Arguments.createMap().apply {
+                putString("error", "Security exception: ${e.message}")
+            })
+        } catch (e: Exception) {
+            Log.e(TAG, "Error starting location tracking: ${e.message}")
+            sendEvent("onLocationError", Arguments.createMap().apply {
+                putString("error", "Failed to start location tracking: ${e.message}")
+            })
+        }
+    }
+
+    @ReactMethod
+    fun stopLocationTracking() {
+        if (!isTracking) {
+            Log.d(TAG, "Location tracking already stopped")
+            return
+        }
+
+        try {
+            if (::locationManager.isInitialized && ::locationListener.isInitialized) {
+                locationManager.removeUpdates(locationListener)
+            }
+            stopForegroundService()
+            isTracking = false
+            Log.d(TAG, "Location tracking stopped successfully")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error stopping location tracking: ${e.message}")
+        }
+    }
+
+    @ReactMethod
+    fun isTracking(promise: Promise) {
+        promise.resolve(isTracking)
+    }
+
+    private fun setupLocationListener() {
+        locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        locationListener = object : LocationListener {
+            override fun onLocationChanged(location: Location) {
+                Log.d(TAG, "New location: ${location.latitude}, ${location.longitude}, Accuracy: ${location.accuracy}")
+                
+                // Send basic location data to JS
+                val locationData = Arguments.createMap().apply {
+                    putDouble("latitude", location.latitude)
+                    putDouble("longitude", location.longitude)
+                    putDouble("accuracy", location.accuracy.toDouble())
+                    putDouble("speed", location.speed.toDouble())
+                    putDouble("altitude", location.altitude)
+                    putDouble("bearing", location.bearing.toDouble())
+                    putDouble("timestamp", System.currentTimeMillis().toDouble())
+                    putString("provider", location.provider)
+                }
+                sendEvent("onLocationChanged", locationData)
+
+                // Process location in background (reverse geocoding + API call)
+                if (location.accuracy < 100) { // Only process if accuracy is better than 100 meters
+                    processLocationInBackground(location)
+                } else {
+                    Log.w(TAG, "Location accuracy too poor: ${location.accuracy}, skipping processing")
+                }
+            }
+
+            override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {
+                Log.d(TAG, "Location status changed: $provider - $status")
+            }
+
+            override fun onProviderEnabled(provider: String) {
+                Log.d(TAG, "Location provider enabled: $provider")
+                sendEvent("onLocationStatus", Arguments.createMap().apply {
+                    putString("provider", provider)
+                    putString("status", "enabled")
+                })
+            }
+
+            override fun onProviderDisabled(provider: String) {
+                Log.d(TAG, "Location provider disabled: $provider")
+                sendEvent("onLocationStatus", Arguments.createMap().apply {
+                    putString("provider", provider)
+                    putString("status", "disabled")
+                })
+            }
+        }
+
+        // Request location updates from both GPS and Network providers
+        val providers = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
+        
+        providers.forEach { provider ->
+            try {
+                if (locationManager.isProviderEnabled(provider)) {
+                    locationManager.requestLocationUpdates(
+                        provider,
+                        locationInterval,
+                        locationDistance,
+                        locationListener
+                    )
+                    Log.d(TAG, "Location updates requested for provider: $provider with interval: $locationInterval ms")
+                } else {
+                    Log.w(TAG, "Location provider not enabled: $provider")
+                }
+            } catch (e: SecurityException) {
+                Log.e(TAG, "SecurityException for provider $provider: ${e.message}")
+            } catch (e: IllegalArgumentException) {
+                Log.e(TAG, "IllegalArgumentException for provider $provider: ${e.message}")
+            }
+        }
+
+        // Try to get last known location immediately
+        try {
+            var bestLocation: Location? = null
+            providers.forEach { provider ->
+                if (locationManager.isProviderEnabled(provider)) {
+                    val lastLocation = locationManager.getLastKnownLocation(provider)
+                    if (lastLocation != null && (bestLocation == null || 
+                        lastLocation.accuracy < bestLocation!!.accuracy)) {
+                        bestLocation = lastLocation
+                    }
+                }
+            }
+            
+            bestLocation?.let { location ->
+                Log.d(TAG, "Last known location: ${location.latitude}, ${location.longitude}")
+                if (location.accuracy < 100) {
+                    processLocationInBackground(location)
+                }
+            }
+        } catch (e: SecurityException) {
+            Log.e(TAG, "SecurityException getting last known location: ${e.message}")
+        }
+    }
+
+    private fun processLocationInBackground(location: Location) {
+        // Perform reverse geocoding in background
+        reverseGeocodeInBackground(location.latitude, location.longitude)
+    }
+
+    private fun reverseGeocodeInBackground(lat: Double, lng: Double) {
+        val url = "$GOOGLE_GEOCODING_URL?latlng=$lat,$lng&key=$googleApiKey"
+        
+        val request = Request.Builder()
+            .url(url)
+            .build()
+
+        httpClient.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                Log.e(TAG, "Reverse geocoding failed: ${e.message}")
+                sendEvent("onLocationError", Arguments.createMap().apply {
+                    putString("error", "Reverse geocoding failed: ${e.message}")
+                })
+            }
+
+            override fun onResponse(call: okhttp3.Call, response: Response) {
+                try {
+                    val responseBody = response.body?.string()
+                    if (response.isSuccessful && responseBody != null) {
+                        val json = JSONObject(responseBody)
+                        val status = json.getString("status")
+                        
+                        if (status == "OK") {
+                            val results = json.getJSONArray("results")
+                            
+                            if (results.length() > 0) {
+                                val firstResult = results.getJSONObject(0)
+                                val addressComponents = firstResult.getJSONArray("address_components")
+                                
+                                var city = ""
+                                var state = ""
+                                var fullAddress = firstResult.getString("formatted_address")
+                                
+                                for (i in 0 until addressComponents.length()) {
+                                    val component = addressComponents.getJSONObject(i)
+                                    val types = component.getJSONArray("types")
+                                    
+                                    for (j in 0 until types.length()) {
+                                        when (types.getString(j)) {
+                                            "locality", "administrative_area_level_2" -> {
+                                                if (city.isEmpty()) {
+                                                    city = component.getString("long_name")
+                                                }
+                                            }
+                                            "administrative_area_level_1" -> {
+                                                state = component.getString("long_name")
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                Log.d(TAG, "Reverse geocode result: City=$city, State=$state")
+                                
+                                // Send address info back to JS
+                                val addressData = Arguments.createMap().apply {
+                                    putDouble("latitude", lat)
+                                    putDouble("longitude", lng)
+                                    putString("city", city)
+                                    putString("state", state)
+                                    putString("fullAddress", fullAddress)
+                                    putDouble("timestamp", System.currentTimeMillis().toDouble())
+                                }
+                                
+                                sendEvent("onAddressResolved", addressData)
+                                
+                                // Send to Domigo API with conditions
+                                sendToDomigoAPI(lat, lng, city, state, fullAddress)
+                            }
+                        } else {
+                            Log.e(TAG, "Google Geocoding API error: $status")
+                            sendEvent("onLocationError", Arguments.createMap().apply {
+                                putString("error", "Geocoding API error: $status")
+                            })
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error parsing reverse geocode response: ${e.message}")
+                    sendEvent("onLocationError", Arguments.createMap().apply {
+                        putString("error", "Geocoding parse error: ${e.message}")
+                    })
+                }
+            }
+        })
+    }
+
+    private fun sendToDomigoAPI(lat: Double, lng: Double, city: String, state: String, address: String) {
+       
+
+        val currentTime = System.currentTimeMillis()
+        val timeDifference = currentTime - lastApiTime
+        val stateChanged = state != lastState
+        val timePassed = timeDifference >= FOUR_HOURS_MS
+
+        // Only send to API if state changed or 4 hours passed
+   
+        if (!stateChanged && !timePassed) {
+            Log.d(TAG, "⏳ No API update required (No state change & 4hr not passed)")
+            return
+        }
+        val jsonBody = JSONObject().apply {
+            put("latitude", lat)
+            put("longitude", lng)
+            put("state", state)
+            put("city", city)
+            put("address", address)
+        }
+
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val requestBody = jsonBody.toString().toRequestBody(mediaType)
+
+        val request = Request.Builder()
+            .url(apiUrl)
+            .post(requestBody)
+            .addHeader("Content-Type", "application/json")
+            .addHeader("Authorization", "Bearer $domigoToken")
+            .build()
+
+        httpClient.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                Log.e(TAG, "Domigo API call failed: ${e.message}")
+                sendEvent("onLocationError", Arguments.createMap().apply {
+                    putString("error", "API call failed: ${e.message}")
+                })
+            }
+
+            override fun onResponse(call: okhttp3.Call, response: Response) {
+                try {
+                    if (response.isSuccessful) {
+                        Log.d(TAG, "✅ Location sent to Domigo API successfully")
+                        
+                        // Update tracking values
+                        lastState = state
+                        lastApiTime = currentTime
+                        
+                        sendEvent("onApiSuccess", Arguments.createMap().apply {
+                            putString("message", "Location sent to API successfully")
+                            putString("state", state)
+                            putString("city", city)
+                        })
+                    } else {
+                        Log.e(TAG, "❌ Domigo API call failed with status: ${response.code}")
+                        val errorBody = response.body?.string() ?: "Unknown error"
+                        sendEvent("onLocationError", Arguments.createMap().apply {
+                            putString("error", "API error ${response.code}: $errorBody")
+                        })
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error handling API response: ${e.message}")
+                }
+            }
+        })
+    }
+
+    private fun startForegroundService() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val serviceIntent = Intent(context, LocationForegroundService::class.java)
+            context.startForegroundService(serviceIntent)
+        } else {
+            val serviceIntent = Intent(context, LocationForegroundService::class.java)
+            context.startService(serviceIntent)
+        }
+    }
+
+    private fun stopForegroundService() {
+        val serviceIntent = Intent(context, LocationForegroundService::class.java)
+        context.stopService(serviceIntent)
+    }
+
+    private fun sendEvent(eventName: String, params: WritableMap) {
+        try {
+            reactApplicationContext
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                .emit(eventName, params)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error sending event to JS: ${e.message}")
+        }
+    }
+}
+
+class LocationForegroundService : Service() {
+    private val CHANNEL_ID = "location_service_domigo"
+    private val NOTIFICATION_ID = 1
+
+    override fun onCreate() {
+        super.onCreate()
+        createNotificationChannel()
+        startForeground(NOTIFICATION_ID, createNotification())
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        return START_STICKY
+    }
+
+    override fun onBind(intent: Intent?): IBinder? {
+        return null
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopForeground(true)
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "Domigo Location Service",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Tracks your location in the background for Domigo app"
+                setShowBadge(false)
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            }
+
+            val notificationManager = getSystemService(NotificationManager::class.java)
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun createNotification(): Notification {
+        val notificationIntent = packageManager?.getLaunchIntentForPackage(packageName)?.apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            notificationIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("Domigo Location Tracking")
+            .setContentText("Tracking your location in the background")
+            .setSmallIcon(getNotificationIcon())
+            .setContentIntent(pendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setSilent(true)
+            .build()
+    }
+
+    private fun getNotificationIcon(): Int {
+        return resources.getIdentifier("ic_launcher", "mipmap", packageName)
+    }
+}

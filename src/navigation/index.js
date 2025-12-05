@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -21,6 +21,9 @@ import AddTripNavigation from './AddTripNavigation';
 import DayDetailScreen from '../screens/DayDetailScreen';
 import { View } from 'react-native';
 import { ICON_ADD, ICON_CALENDAR, ICON_HOME, ICON_NOTIFICATION, ICON_SETTINGS } from '../assets/svgicon';
+import { connect } from 'react-redux';
+import { LOGOUT } from '../redux/actions/action-creator';
+import SplashScreen from '../screens/SplashScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -80,27 +83,41 @@ function MainTabs() {
 }
 
 
-export default function RootNavigator() {
+const RootNavigator = (props) => {
+  const [isSplashDone, setIsSplashDone] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsSplashDone(true);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, []);
   return (
     <Stack.Navigator>
-      <Stack.Screen
-        name="Login"
-        component={LoginScreen}
-        options={{ headerShown: false }}
-      />
+      {!isSplashDone && (
+        <Stack.Screen options={{ headerShown: false }} name="Splash" component={SplashScreen} />
+      )}
+      {isSplashDone && props.SignIn && props.userData !== '' ? (
+        <Stack.Screen options={{ headerShown: false }} name="Main" component={MainTabs} />
+      ) : isSplashDone ? (
+        <Stack.Screen
+          name="TaxResidencyIntro"
+          component={TaxResidencyIntro}
+          options={{ headerShown: false }}
+        />
+      ) : null}
+
+      <Stack.Screen options={{ headerShown: false }} name="Login" component={LoginScreen} />
+
       <Stack.Screen
         name="Signup"
         component={SignupScreen}
         options={{ headerShown: false }}
       />
+
+
       <Stack.Screen
-        name="Main"
-        component={MainTabs}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="TaxResidencyIntro"
-        component={TaxResidencyIntro}
+        name="SplashScreen"
+        component={SplashScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
@@ -126,3 +143,15 @@ export default function RootNavigator() {
     </Stack.Navigator>
   );
 }
+function mapStateToProps(state) {
+  return {
+    userData: state.auth.userData,
+    SignIn: state.auth.SignIn,
+  }
+}
+
+const mapDispatchToProps = {
+  LOGOUT,
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(RootNavigator);

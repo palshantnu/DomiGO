@@ -1,39 +1,592 @@
 import {
-    SIGN_IN_REQUEST,
-    SIGN_IN_SUCCESS,
-    SIGN_IN_FAILURE,
-    LOGOUT_SUCCESS,
-    SET_APP_LANGUAGE,
-  } from './action-types';
-  import axiosinstance from '../../../axios/axiosinstance';
-  import EndPoints from '../../../services/EndPoints';
-  
-  export const SIGNIN = (data) => (dispatch) => {
-    dispatch({ type: SIGN_IN_REQUEST })
-    
-    return axiosinstance.post(EndPoints.authLogin, data)
-      .then((response) => {
-        if (response.data.status) {
-          dispatch({
-            type: SIGN_IN_SUCCESS,
-            payload: response.data,
-          })
-        }
-        return response.data
-      })
-      .catch((error) => {
-        dispatch({ type: SIGN_IN_FAILURE })
-        throw error
-      })
-  }
-  
-  export const LOGOUT = () => (dispatch) => {
-    dispatch({ type: LOGOUT_SUCCESS })
-  }
-  
-  export const changeAppLanguageAction = (language) => (dispatch) => {
-    dispatch({
-      type: SET_APP_LANGUAGE,
-      payload: language,
+  SIGN_IN_REQUEST,
+  SIGN_IN_SUCCESS,
+  SIGN_IN_FAILURE,
+  LOGOUT_SUCCESS,
+  SET_APP_LANGUAGE,
+  SIGN_UP_REQUEST,
+  SIGN_UP_SUCCESS,
+  SIGN_UP_FAILURE,
+  UPDATE_PERSONAL_DATA,
+  ADD_TRIP_REQUEST,
+  ADD_TRIP_FAILURE,
+  TRIP_LIST_SUCCESS,
+  GET_TRIP_LIST_SUCCESS,
+  GET_DOCUMENT_CATEGORY_LIST_SUCCESS,
+  DOCUMENT_CATEGORY_LIST_FAILURE,
+  ADD_DOCUMENT_RECORD_REQUEST,
+  ADD_DOCUMENT_RECORD_SUCCESS,
+  ADD_DOCUMENT_RECORD_FAILURE,
+  GET_RESIDENCY_DOC_LIST_SUCCESS,
+  RESIDENCY_DOC_LIST_FAILURE,
+  RESIDENCY_DOC_DETAILS_FAILURE,
+  GET_RESIDENCY_DOC_DETAILS_SUCCESS,
+  GET_TRIP_MODE_LIST_SUCCESS,
+  TRIP_MODE_LIST_FAILURE,
+  GET_TRIP_TYPE_LIST_SUCCESS,
+  TRIP_TYPE_LIST_FAILURE,
+  GET_TRIP_SUMMARY_DETAILS_SUCCESS,
+  TRIP_SUMMARY_DETAILS_FAILURE,
+  UPDATE_TRIP_REQUEST,
+  UPDATE_TRIP_FAILURE,
+  UPDATE_TRIP_SUCCESS,
+  GET_TRIP_DETAILS_SUCCESS,
+  TRIP_DETAILS_FAILURE,
+  GET_FINAL_YEAR_PROGRESS_SUCCESS,
+  FINAL_YEAR_PROGRESS_FAILURE,
+  TRIP_LIST_FAILURE,
+
+} from './action-types';
+import axiosinstance from '../../axios/axiosinstance';
+import EndPoints from '../../services/EndPoints';
+import { getTripService, getUserPersonalInfoService, updateUserPersonalInfoService } from '../../services/Services';
+import { CustomToast, jsonToFormData, sendDataToReducer } from '../../helpers/CommonHelpers';
+import { getAuthToken } from '../selectors/common';
+
+const CommonError = {
+  message: 'Something Went Wrong',
+  status: false,
+}
+
+
+export const SIGNIN = (data) => (dispatch) => {
+  dispatch({ type: SIGN_IN_REQUEST })
+
+  return axiosinstance.post(EndPoints.authLogin, data)
+    .then((response) => {
+      console.log('response1', response);
+
+      if (response.data.message == 'Success') {
+
+        dispatch({
+          type: SIGN_IN_SUCCESS,
+          payload: response.data,
+        })
+      } else {
+
+      }
+      console.log('response2', response.data);
+      return response.data
     })
+    .catch((error) => {
+      dispatch({ type: SIGN_IN_FAILURE })
+      throw error
+    })
+}
+export const SIGNUP = (data) => (dispatch) => {
+  dispatch({ type: SIGN_UP_REQUEST })
+
+  return axiosinstance.post(EndPoints.signup, data)
+    .then((response) => {
+      console.log('response1', response);
+
+      if (response.data.success) {
+        console.log('response2', response);
+        dispatch({
+          type: SIGN_UP_SUCCESS,
+          payload: response.data.result,
+        })
+      }
+      console.log('response3', response.data);
+      return response.data
+    })
+    .catch((error) => {
+      dispatch({ type: SIGN_UP_FAILURE })
+      throw error
+    })
+}
+
+export const getPersonalProfileDataAction = () => (dispatch, getState) => new Promise((resolve, reject) => {
+  const state = getState()
+  const token = getAuthToken(state)
+  getUserPersonalInfoService(token).then((res) => {
+    console.log('res====>', res);
+
+    sendDataToReducer(dispatch, UPDATE_PERSONAL_DATA, res?.data?.result);
+    resolve(res?.data?.result)
+  }).catch((error) => {
+    reject({ error })
+  })
+})
+
+export const updatePersonalInfoAction = (data) => (dispatch, getState) => new Promise((resolve, reject) => {
+  const state = getState()
+  // const userData = getUserDataSelelctor(state);
+  // data.user_id = userData?.id;
+  const formData = jsonToFormData(data)
+  console.log('formData==>', formData);
+
+  updateUserPersonalInfoService(data).then((res) => {
+    console.log('res===>', res.data.success);
+
+    dispatch(getPersonalProfileDataAction())
+    resolve(res)
+  }).catch((error) => {
+    const errorResponse = error?.response?.data?.error;
+    CustomToast.show(errorResponse?.[Object.keys(errorResponse)?.[0]]?.[0])
+    reject({ error })
+  })
+})
+
+export const ADDTRIP = (formData) => {
+  return async (dispatch) => {
+    dispatch({
+      type: ADD_TRIP_REQUEST,
+      payload: 'ADD_TRIP_REQUEST',
+    })
+    try {
+      const response = await axiosinstance.post(EndPoints.addTrip, formData)
+      const responseJson = response.data;
+      console.log('responseJson==>', responseJson);
+
+      if (response.message == 'Success') {
+        dispatch({
+          type: ADD_TRIP_SUCCESS,
+          payload: responseJson,
+        })
+        return { response: responseJson }
+      }
+      dispatch({
+        type: ADD_TRIP_FAILURE,
+        payload: 'ADD_TRIP_FAILURE',
+      })
+      return ({ response: responseJson })
+    }
+    catch (e) {
+      dispatch({
+        type: ADD_TRIP_FAILURE,
+        payload: 'ADD_TRIP_FAILURE',
+      })
+      return ({ response: e })
+    }
   }
+}
+export const UPDATETRIP = (formData) => {
+  return async (dispatch) => {
+    dispatch({
+      type: UPDATE_TRIP_REQUEST,
+      payload: 'UPDATE_TRIP_REQUEST',
+    })
+    try {
+      const response = await axiosinstance.put(`${EndPoints.UpdateTrip}/${formData.id}`, formData)
+      const responseJson = response.data;
+      console.log('responseJson==>', responseJson);
+
+      if (response.message == 'Success') {
+        dispatch({
+          type: UPDATE_TRIP_SUCCESS,
+          payload: responseJson,
+        })
+        return { response: responseJson }
+      }
+      dispatch({
+        type: UPDATE_TRIP_FAILURE,
+        payload: 'UPDATE_TRIP_FAILURE',
+      })
+      return ({ response: responseJson })
+    }
+    catch (e) {
+      dispatch({
+        type: UPDATE_TRIP_FAILURE,
+        payload: 'UPDATE_TRIP_FAILURE',
+      })
+      return ({ response: e })
+    }
+  }
+}
+
+export function GET_TRIP_DETAILS(id) {
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.get(`trips/${id}`);
+      const responseJson = response.data;
+
+      console.log("DETAILS API =>", responseJson);
+
+      if (responseJson.message === "Success") {
+        dispatch({
+          type: GET_TRIP_DETAILS_SUCCESS,
+          payload: responseJson.result,   
+        });
+        return Promise.resolve(responseJson.result);
+      }
+
+      dispatch({
+        type: TRIP_DETAILS_FAILURE,
+        payload: "TRIP_DETAILS_FAILURE",
+      });
+
+      return Promise.reject(responseJson);
+
+    } catch (e) {
+      dispatch({
+        type: TRIP_DETAILS_FAILURE,
+        payload: "TRIP_DETAILS_FAILURE",
+      });
+
+      console.log("TRIP_DETAILS_FAILURE API ERROR =>", e);
+      return Promise.reject(CommonError);
+    }
+  };
+}
+export function GET_TRIP_SUMMARY_DETAILS(id) {
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.get(`trips/${id}/detail`);
+      const responseJson = response.data;
+
+      console.log("DETAILS API =>", responseJson);
+
+      if (responseJson.message === "Success") {
+        dispatch({
+          type: GET_TRIP_SUMMARY_DETAILS_SUCCESS,
+          payload: responseJson.result,   
+        });
+        return Promise.resolve(responseJson.result);
+      }
+
+      dispatch({
+        type: TRIP_SUMMARY_DETAILS_FAILURE,
+        payload: "TRIP_SUMMARY_DETAILS_FAILURE",
+      });
+
+      return Promise.reject(responseJson);
+
+    } catch (e) {
+      dispatch({
+        type: TRIP_SUMMARY_DETAILS_FAILURE,
+        payload: "TRIP_SUMMARY_DETAILS_FAILURE",
+      });
+
+      console.log("TRIP_SUMMARY_DETAILS_FAILURE API ERROR =>", e);
+      return Promise.reject(CommonError);
+    }
+  };
+}
+
+export function GET_TRIP_LIST_LIST() {
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.get('trips')
+      const responseJson = response.data;
+      console.log('responseJson-=>', responseJson);
+
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_TRIP_LIST_SUCCESS,
+          payload: responseJson,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: TRIP_LIST_FAILURE,
+        payload: 'TRIP_LIST_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: TRIP_LIST_FAILURE,
+        payload: 'TRIP_LIST_FAILURE',
+      })
+      console.log('catch error API TRIP_LIST_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+export function GET_Document_Category_LIST() {
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.get('document-category')
+      const responseJson = response.data;
+      console.log('responseJson--=>', responseJson);
+
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_DOCUMENT_CATEGORY_LIST_SUCCESS,
+          payload: responseJson,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: DOCUMENT_CATEGORY_LIST_FAILURE,
+        payload: 'DOCUMENT_CATEGORY_LIST_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: DOCUMENT_CATEGORY_LIST_FAILURE,
+        payload: 'DOCUMENT_CATEGORY_LIST_FAILURE',
+      })
+      console.log('catch error API DOCUMENT_CATEGORY_LIST_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+export const ADD_DOCUMENT_RECORD = (formData) => {
+  console.log('formData', formData);
+
+  return async (dispatch) => {
+    dispatch({
+      type: ADD_DOCUMENT_RECORD_REQUEST,
+      payload: 'ADD_DOCUMENT_RECORD_REQUEST',
+    })
+    try {
+      const response = await axiosinstance.post(EndPoints.addDocumentRecords, formData)
+      const responseJson = response.data;
+      console.log('responseJson=--------=>', responseJson);
+
+      if (response.message == 'Success') {
+        dispatch({
+          type: ADD_DOCUMENT_RECORD_SUCCESS,
+          payload: responseJson,
+        })
+        return { response: responseJson }
+      }
+      dispatch({
+        type: ADD_DOCUMENT_RECORD_FAILURE,
+        payload: 'ADD_DOCUMENT_RECORD_FAILURE',
+      })
+      return ({ response: responseJson })
+    }
+    catch (e) {
+      dispatch({
+        type: ADD_DOCUMENT_RECORD_FAILURE,
+        payload: 'ADD_DOCUMENT_RECORD_FAILURE',
+      })
+      return ({ response: e })
+    }
+  }
+}
+export function GET_RESIDENCY_RECORD_LIST() {
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.get('residency-doc')
+      const responseJson = response.data;
+      console.log('responseJson-=>', responseJson);
+
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_RESIDENCY_DOC_LIST_SUCCESS,
+          payload: responseJson,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: RESIDENCY_DOC_LIST_FAILURE,
+        payload: 'RESIDENCY_DOC_LIST_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: RESIDENCY_DOC_LIST_FAILURE,
+        payload: 'RESIDENCY_DOC_LIST_FAILURE',
+      })
+      console.log('catch error API RESIDENCY_DOC_LIST_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+export function GET_TRIP_MODE_LIST() {
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.get('trip-mode')
+      const responseJson = response.data;
+      console.log('responseJson-=>', responseJson);
+
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_TRIP_MODE_LIST_SUCCESS,
+          payload: responseJson,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: TRIP_MODE_LIST_FAILURE,
+        payload: 'TRIP_MODE_LIST_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: TRIP_MODE_LIST_FAILURE,
+        payload: 'TRIP_MODE_LIST_FAILURE',
+      })
+      console.log('catch error API TRIP_MODE_LIST_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+export function GET_TRIP_TYPE_LIST() {
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.get('trip-type')
+      const responseJson = response.data;
+      console.log('responseJson-=>', responseJson);
+
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_TRIP_TYPE_LIST_SUCCESS,
+          payload: responseJson,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: TRIP_TYPE_LIST_FAILURE,
+        payload: 'TRIP_TYPE_LIST_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: TRIP_TYPE_LIST_FAILURE,
+        payload: 'TRIP_TYPE_LIST_FAILURE',
+      })
+      console.log('catch error API TRIP_TYPE_LIST_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+export function DELETE_RESIDENCY_RECORD(id) {
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.delete(`residency-doc/${id}`)
+      const responseJson = response.data;
+      console.log('responseJson-=>', responseJson);
+
+      if (responseJson.message == 'Success') {
+
+        return Promise.resolve(responseJson)
+      }
+
+      return Promise.reject(responseJson)
+    } catch (e) {
+
+      console.log('catch error API RESIDENCY_DOC_LIST_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+
+export function UPDATE_RESIDENCY_RECORD(id, payload) {
+  return async dispatch => {
+    try {
+      const formData = new FormData();
+
+      Object.keys(payload).forEach(key => {
+        if (key === "attachment" && payload.attachment?.uri) {
+          formData.append("attachment", {
+            uri: payload.attachment.uri,
+            type: payload.attachment.type || "image/jpeg",
+            name: payload.attachment.name || "file.jpg"
+          });
+        } else {
+          formData.append(key, payload[key]);
+        }
+      });
+
+      const response = await axiosinstance.patch(
+        `residency-doc/${id}`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" }
+        }
+      );
+
+      const json = response.data;
+      if (json.message === "Success") {
+        return Promise.resolve(json);
+      }
+
+      return Promise.reject(json);
+
+    } catch (error) {
+      console.log("UPDATE ERROR =>", error);
+      return Promise.reject(error);
+    }
+  };
+}
+export function GET_RESIDENCY_RECORD_DETAILS(id) {
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.get(`residency-doc/${id}`);
+      const responseJson = response.data;
+
+      console.log("DETAILS API =>", responseJson);
+
+      if (responseJson.message === "Success") {
+        dispatch({
+          type: GET_RESIDENCY_DOC_DETAILS_SUCCESS,
+          payload: responseJson.result,   
+        });
+        return Promise.resolve(responseJson.result);
+      }
+
+      dispatch({
+        type: RESIDENCY_DOC_DETAILS_FAILURE,
+        payload: "RESIDENCY_DOC_DETAILS_FAILURE",
+      });
+
+      return Promise.reject(responseJson);
+
+    } catch (e) {
+      dispatch({
+        type: RESIDENCY_DOC_DETAILS_FAILURE,
+        payload: "RESIDENCY_DOC_DETAILS_FAILURE",
+      });
+
+      console.log("DETAILS API ERROR =>", e);
+      return Promise.reject(CommonError);
+    }
+  };
+}
+export function GET_FINAL_YEAR_PROGRESS() {
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.get('dashboard/fy-progress')
+      const responseJson = response.data;
+      console.log('responseJson-=>', responseJson);
+
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_FINAL_YEAR_PROGRESS_SUCCESS,
+          payload: responseJson.result,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: FINAL_YEAR_PROGRESS_FAILURE,
+        payload: 'FINAL_YEAR_PROGRESS_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: FINAL_YEAR_PROGRESS_FAILURE,
+        payload: 'FINAL_YEAR_PROGRESS_FAILURE',
+      })
+      console.log('catch error API FINAL_YEAR_PROGRESS_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+
+
+// export const getTripListDataAction = () => (dispatch, getState) => new Promise((resolve, reject) => {
+
+//   getTripService().then((res) => {
+//     console.log('res====>', res);
+
+//     // sendDataToReducer(dispatch, TRIP_LIST_SUCCESS, res?.data?.result);
+//     // resolve(res?.data?.result)
+//   }).catch((error) => {
+//     reject({ error })
+//   })
+// })
+
+export const LOGOUT = () => (dispatch) => {
+  dispatch({ type: LOGOUT_SUCCESS })
+}
+
+export const changeAppLanguageAction = (language) => (dispatch) => {
+  dispatch({
+    type: SET_APP_LANGUAGE,
+    payload: language,
+  })
+}

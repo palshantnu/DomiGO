@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -12,17 +12,82 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import LinearGradient from "react-native-linear-gradient";
 import Header from "../components/Header";
+import {
+  getPersonalProfileDataAction,
+  updatePersonalInfoAction
+} from "../redux/actions/action-creator";
+import { getUserPersonalDataSelelctor } from "../redux/selectors/common";
+import colors from "../theme/colors";
+import { connect } from "react-redux";
+import { CustomToast } from "../helpers/CommonHelpers";
+import useAPI from "../helpers/useAPI";
+import { useNavigation } from "@react-navigation/native";
+import NetInfo from '@react-native-community/netinfo';
+import { SliderButton } from "../components/SliderButton";
 
-const colors = {
-  primary: "#28A0DD",
-  background: "#FFFFFF",
-  textDark: "#000",
-  textLight: "#666",
-  border: "#E5E5EA",
-  inputBg: "#F5F5F5",
-};
+const ProfileManagementScreen = ({
+  userPersonalData,
+  getPersonalProfileDataAction,
+  updatePersonalInfoAction,
+}) => {
+  const [netInfo, setNetInfo] = useState(true);
+  const [buttonLoader, setButtonLoader] = useState(false);
+  const { callApi: callUpdatePersonalInfoApi } = useAPI();
+  const navigation = useNavigation();
+  const [name, setName] = useState("");
+  const [address, setAddress] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [mobile, setMobile] = useState("");
 
-const ProfileManagementScreen = () => {
+  useEffect(() => {
+    getPersonalProfileDataAction();
+  }, []);
+
+  React.useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setNetInfo(state.isConnected);
+    });
+
+    return () => unsubscribe();
+  }, []);
+  useEffect(() => {
+    if (userPersonalData) {
+      setName(userPersonalData.name ?? "");
+      setAddress(userPersonalData.address ?? "");
+      setMobile(userPersonalData.mobile ?? "");
+    }
+  }, [userPersonalData]);
+
+  const personalData = {
+    name,
+    mobile,
+    address,
+    // current_password: currentPassword,
+    // new_password: newPassword,
+  };
+
+  const UpdateProfile = async () => {
+    setButtonLoader(true);
+    callUpdatePersonalInfoApi(updatePersonalInfoAction(personalData))
+      .then((res) => {
+        console.log('res--->', res);
+        setButtonLoader(true);
+        if (res.data.success) {
+          CustomToast.show("Profile updated successfully");
+          navigation.goBack();
+        }
+
+      })
+      .catch((e) => {
+        setButtonLoader(true);
+        console.log('res--->', e);
+        CustomToast.show("Something went wrong");
+      });
+  };
+
   return (
     <LinearGradient
       colors={["#9ab1fa", "#ffffff"]}
@@ -32,12 +97,12 @@ const ProfileManagementScreen = () => {
       style={styles.container}
     >
       <SafeAreaView edges={["top", "left", "right"]} style={styles.container}>
-        <Header title={"Profile Management"} />
+        <Header title="Profile Management" />
+
         <ScrollView
           contentContainerStyle={{ paddingBottom: 40 }}
           showsVerticalScrollIndicator={false}
         >
-          {/* Profile Image */}
           <View style={styles.profileWrapper}>
             <View>
               <Image
@@ -49,81 +114,104 @@ const ProfileManagementScreen = () => {
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.profileName}>Jim Wilkes</Text>
-            <Text style={styles.profileEmail}>jim@jimwilkes.me</Text>
+            <Text style={styles.profileName}>{name || "User"}</Text>
+            <Text style={styles.profileEmail}>
+              {userPersonalData.email ?? "user@gmail.com"}
+            </Text>
           </View>
 
-          {/* Personal Info Section */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Personal Info</Text>
 
-            {/* Input Fields */}
             <View style={styles.inputCard}>
               <InfoInput
                 icon="person-outline"
-                placeholder="Jim Wilkes"
-                value="Jim Wilkes"
+                placeholder="Full Name"
+                value={name}
+                setValue={setName}
               />
+
               <InfoInput
                 icon="location-outline"
-                placeholder="123 Harmony Lane, Suite 4B, Melbourne"
-                value="123 Harmony Lane, Suite 4B, Melbourne"
+                placeholder="Address"
+                value={address}
+                setValue={setAddress}
               />
+
               <InfoInput
-                icon="lock-closed-outline"
-                placeholder="xxxxxxxxxxxxx"
-                secureTextEntry
-              />
-              <InfoInput
-                icon="lock-closed-outline"
-                placeholder="New Password"
-                secureTextEntry
+                icon="call-outline"
+                placeholder="Mobile Number"
+                value={mobile}
+                setValue={setMobile}
+                keyboardType="number-pad"
+                maxLength={10}
               />
             </View>
           </View>
-
-          {/* Save Button */}
-          <TouchableOpacity style={styles.saveButton}>
+          <View style={{ width: '90%', alignSelf: 'center' }}>
+            <SliderButton
+              isClickButton={true}
+              onSubmit={() => {
+                if (!netInfo) {
+                  CustomToast.show("No internet connection");
+                } else {
+                  UpdateProfile();
+                }
+              }}
+              buttonTitle={'Save Changes'}
+              loader={buttonLoader}
+            />
+          </View>
+          {/* <TouchableOpacity style={styles.saveButton} onPress={UpdateProfile}>
             <Text style={styles.saveButtonText}>Save Changes</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
   );
 };
 
-// Reusable Input Row
-const InfoInput = ({ icon, placeholder, value, secureTextEntry }) => (
+const InfoInput = ({
+  icon,
+  placeholder,
+  value,
+  setValue,
+  secureTextEntry,
+  isPassword,
+  togglePassword,
+    keyboardType,
+  maxLength
+}) => (
   <View style={styles.inputRow}>
-    <Ionicons
-      name={icon}
-      size={18}
-      color="#595959"
-      style={styles.inputIcon}
-    />
+    <Ionicons name={icon} size={18} color="#595959" style={styles.inputIcon} />
+
     <TextInput
       style={styles.textInput}
       placeholder={placeholder}
       placeholderTextColor="#999"
       value={value}
+      onChangeText={setValue}
       secureTextEntry={secureTextEntry}
+      keyboardType={keyboardType}
+      maxLength={maxLength}
     />
+
+    {isPassword && (
+      <TouchableOpacity onPress={togglePassword}>
+        <Ionicons
+          name={secureTextEntry ? "eye-off-outline" : "eye-outline"}
+          size={20}
+          color="#595959"
+        />
+      </TouchableOpacity>
+    )}
   </View>
 );
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  profileWrapper: {
-    alignItems: "center",
-    marginTop: 25,
-  },
-  profileImage: {
-    height: 100,
-    width: 100,
-    borderRadius: 50,
-  },
+  container: { flex: 1 },
+  profileWrapper: { alignItems: "center", marginTop: 25 },
+  profileImage: { height: 100, width: 100, borderRadius: 50 },
   plusButton: {
     position: "absolute",
     bottom: 4,
@@ -141,44 +229,26 @@ const styles = StyleSheet.create({
     color: colors.textDark,
     marginTop: 8,
   },
-  profileEmail: {
-    fontSize: 14,
-    color: colors.textLight,
-  },
-  section: {
-    marginTop: 30,
-    paddingHorizontal: 15,
-  },
+  profileEmail: { fontSize: 14, color: colors.textLight },
+  section: { marginTop: 30, paddingHorizontal: 15 },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "600",
     color: colors.textDark,
     marginBottom: 10,
   },
-  inputCard: {
-    backgroundColor: "#fff",
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-  },
+  inputCard: { backgroundColor: "#fff", paddingVertical: 8, paddingHorizontal: 10 },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.inputBg,
+    backgroundColor: '#F2F2F2',
     borderRadius: 25,
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginBottom: 12,
   },
-  inputIcon: {
-  
-    padding: 8,
-    marginRight: 10,
-  },
-  textInput: {
-    flex: 1,
-    fontSize: 14,
-    color: colors.textDark,
-  },
+  inputIcon: { padding: 8, marginRight: 10 },
+  textInput: { flex: 1, fontSize: 14, backgroundColor: "#F2F2F2" },
   saveButton: {
     backgroundColor: colors.primary,
     marginTop: 25,
@@ -194,4 +264,16 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ProfileManagementScreen;
+const mapStateToProps = (state) => ({
+  userPersonalData: getUserPersonalDataSelelctor(state),
+});
+
+const mapDispatchToProps = {
+  getPersonalProfileDataAction,
+  updatePersonalInfoAction,
+};
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(ProfileManagementScreen);

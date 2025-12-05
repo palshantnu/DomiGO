@@ -1,52 +1,60 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import colors from '../theme/colors';
-
+import { View, Text, StyleSheet, TouchableOpacity, Image, ImageBackground } from 'react-native';
+import { SliderButton } from '../components/SliderButton';
+import { CustomToast } from '../helpers/CommonHelpers';
 
 const TaxResidencyIntro = ({ navigation }) => {
     return (
-        <View style={styles.container}>
-            <View style={styles.logoContainer}>
+        <ImageBackground
+            source={require('../assets/image/introbg.png')}
+            style={styles.container}
+            resizeMode="cover"
+        >
+            <View style={styles.innerCard}>
+
+
                 <Image
-                    source={require('../assets/image/logo2.png')}
+                    source={require('../assets/image/domigo.png')}
                     style={styles.logo}
                     resizeMode="contain"
                 />
-            </View>
 
-            <View style={styles.content}>
-                <Text style={styles.title}>Tax Residency Tracker</Text>
-                <Text style={styles.subtitle}>
-                    Track your <Text style={styles.highlight}>Residency</Text>
+
+                <Text style={styles.mainTitle}>Track Smart</Text>
+                <Text style={styles.mainTitle}>
+                    <Text style={styles.highlight}>Go</Text> Free!!
                 </Text>
+
+
                 <Text style={styles.desc}>
-                    Your guide to tax compliance across states.
+                    Your guide to Tax Compliance{"\n"}Across States
                 </Text>
-
-                <View style={styles.dotsContainer}>
-                    <View style={[styles.dot, { opacity: 1 }]} />
-                    <View style={styles.dot} />
-                    <View style={styles.dot} />
-                    <View style={styles.dot} />
+                <View style={{ marginTop: 35, width: '95%' }}>
+                    <SliderButton
+                        isClickButton={true}
+                        onSubmit={() => {
+                            navigation.navigate('PermissionScreen', { screenname: 'Signup' })
+                        }}
+                        btncolor={"#69BE7E"}
+                        buttonTitle={'Sign up'}
+                    />
                 </View>
-            </View>
-            <View style={styles.content}>
-                <TouchableOpacity
+                {/* <TouchableOpacity
                     style={styles.button}
                     onPress={() => navigation.navigate('PermissionScreen')}
                 >
                     <Text style={styles.buttonText}>Sign up</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
 
-                <TouchableOpacity>
+
+                <TouchableOpacity onPress={() => navigation.navigate('PermissionScreen', { screenname: 'Login' })}>
                     <Text style={styles.loginText}>
-                        Already signed up? <Text style={styles.loginLink}>Log in</Text>
+                        Already Have Account? <Text style={styles.loginLink}>Log in</Text>
                     </Text>
                 </TouchableOpacity>
+
             </View>
-
-
-        </View>
+        </ImageBackground>
     );
 };
 
@@ -55,87 +63,69 @@ export default TaxResidencyIntro;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.primary,
-        justifyContent: 'space-between',
-        paddingVertical: 40,
+        justifyContent: 'center',
+        // paddingHorizontal: 18,
     },
-    logoContainer: {
-        alignItems: 'center',
-        marginTop: 40,
-    },
-    logo: {
-        width: 100,
-        height: 100,
-    },
-    content: {
-        alignItems: 'center',
+
+    innerCard: {
+        // backgroundColor: 'rgba(255,255,255,0.06)',
+        paddingVertical: 50,
         paddingHorizontal: 20,
+        borderRadius: 40,
+        alignItems: 'center',
+        width: '100%',
     },
-    title: {
-        fontSize: 25,
-        color: '#fff',
-        fontWeight: '600',
-        marginTop: 30,
+
+    logo: {
+        width: 200,
+        height: 200,
+        marginBottom: 20,
     },
-    subtitle: {
-        fontSize: 30,
-        color: '#fff',
+
+    mainTitle: {
+        fontSize: 40,
+        color: 'white',
         fontWeight: '700',
-        marginTop: 8,
+        textAlign: 'center',
+        marginTop: 5,
     },
+
     highlight: {
         color: '#7EE000',
     },
+
     desc: {
         fontSize: 14,
-        color: '#fff',
-        marginTop: 8,
+        color: 'white',
         textAlign: 'center',
+        marginTop: 20,
         opacity: 0.9,
+        lineHeight: 20,
     },
-    dotsContainer: {
-        flexDirection: 'row',
-        marginVertical: 24,
-    },
-    dot: {
-        width: 8,
-        height: 8,
-        backgroundColor: '#fff',
-        borderRadius: 4,
-        marginHorizontal: 4,
-        opacity: 0.5,
-    },
+
     button: {
-        backgroundColor: '#47CC63',
+        marginTop: 35,
+        backgroundColor: '#6ED46E',
         paddingVertical: 14,
-        borderRadius: 8,
-        width: '80%',
+        borderRadius: 28,
+        width: '75%',
         alignItems: 'center',
     },
+
     buttonText: {
-        color: '#fff',
-        fontWeight: '600',
-        fontSize: 15,
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '700',
     },
+
     loginText: {
-        color: '#fff',
-        marginTop: 14,
+        color: 'white',
+        marginTop: 18,
         fontSize: 14,
     },
+
     loginLink: {
-        textDecorationLine: 'underline',
-    },
-    bottomNav: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        backgroundColor: '#2594c8',
-        paddingVertical: 10,
-    },
-    navItem: {
-        alignItems: 'center',
-    },
-    navLabel: {
-        color: '#fff',
-        fontSize: 12,
+        color: '#7EE000',
+        fontWeight: '700',
     },
 });

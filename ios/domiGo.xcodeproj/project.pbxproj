@@ -8,10 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		1811AC982ED0375D00585ACD /* SLCEventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1811AC972ED0375D00585ACD /* SLCEventEmitter.swift */; };
+		1811AC9A2ED038D500585ACD /* SLCEventEmitter 2.m in Sources */ = {isa = PBXBuildFile; fileRef = 1811AC992ED038D500585ACD /* SLCEventEmitter 2.m */; };
+		18CD2AD82ED5B36B00A6C3BC /* locationModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18CD2AD72ED5B36700A6C3BC /* locationModule.swift */; };
+		18CD2ADA2ED5B52D00A6C3BC /* LocationTrackerBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 18CD2AD92ED5B52400A6C3BC /* LocationTrackerBridge.m */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		8A7284165F736DAD2949322C /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
-		F1A8E129249D1BE4B1980481 /* libPods-domiGo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C79719E84BF31196ED9436B9 /* libPods-domiGo.a */; };
+		D6048E12F98362F3C4B4B251 /* libPods-domiGo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CB31C9F06CF298197060B243 /* libPods-domiGo.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,11 +23,16 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = domiGo/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = domiGo/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = domiGo/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		53F9F9D98C2DC6A23571F483 /* Pods-domiGo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-domiGo.debug.xcconfig"; path = "Target Support Files/Pods-domiGo/Pods-domiGo.debug.xcconfig"; sourceTree = "<group>"; };
+		1811AC962ED0374D00585ACD /* domiGo-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "domiGo-Bridging-Header.h"; sourceTree = "<group>"; };
+		1811AC972ED0375D00585ACD /* SLCEventEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SLCEventEmitter.swift; sourceTree = "<group>"; };
+		1811AC992ED038D500585ACD /* SLCEventEmitter 2.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "SLCEventEmitter 2.m"; sourceTree = "<group>"; };
+		18CD2AD72ED5B36700A6C3BC /* locationModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = locationModule.swift; sourceTree = "<group>"; };
+		18CD2AD92ED5B52400A6C3BC /* LocationTrackerBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LocationTrackerBridge.m; sourceTree = "<group>"; };
+		4929A01D06700E2A750575FD /* Pods-domiGo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-domiGo.debug.xcconfig"; path = "Target Support Files/Pods-domiGo/Pods-domiGo.debug.xcconfig"; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = domiGo/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = domiGo/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		A56A983BF794E5C11B93276F /* Pods-domiGo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-domiGo.release.xcconfig"; path = "Target Support Files/Pods-domiGo/Pods-domiGo.release.xcconfig"; sourceTree = "<group>"; };
-		C79719E84BF31196ED9436B9 /* libPods-domiGo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-domiGo.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		85551843BC52DC024194DD7B /* Pods-domiGo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-domiGo.release.xcconfig"; path = "Target Support Files/Pods-domiGo/Pods-domiGo.release.xcconfig"; sourceTree = "<group>"; };
+		CB31C9F06CF298197060B243 /* libPods-domiGo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-domiGo.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -32,7 +41,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F1A8E129249D1BE4B1980481 /* libPods-domiGo.a in Frameworks */,
+				D6048E12F98362F3C4B4B251 /* libPods-domiGo.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -42,11 +51,16 @@
 		13B07FAE1A68108700A75B9A /* domiGo */ = {
 			isa = PBXGroup;
 			children = (
+				18CD2AD92ED5B52400A6C3BC /* LocationTrackerBridge.m */,
+				18CD2AD72ED5B36700A6C3BC /* locationModule.swift */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
+				1811AC972ED0375D00585ACD /* SLCEventEmitter.swift */,
+				1811AC992ED038D500585ACD /* SLCEventEmitter 2.m */,
 				761780EC2CA45674006654EE /* AppDelegate.swift */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
+				1811AC962ED0374D00585ACD /* domiGo-Bridging-Header.h */,
 			);
 			name = domiGo;
 			sourceTree = "<group>";
@@ -55,7 +69,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				C79719E84BF31196ED9436B9 /* libPods-domiGo.a */,
+				CB31C9F06CF298197060B243 /* libPods-domiGo.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -92,8 +106,8 @@
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				53F9F9D98C2DC6A23571F483 /* Pods-domiGo.debug.xcconfig */,
-				A56A983BF794E5C11B93276F /* Pods-domiGo.release.xcconfig */,
+				4929A01D06700E2A750575FD /* Pods-domiGo.debug.xcconfig */,
+				85551843BC52DC024194DD7B /* Pods-domiGo.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -105,13 +119,13 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "domiGo" */;
 			buildPhases = (
-				C1EF91ABEC99873398499892 /* [CP] Check Pods Manifest.lock */,
+				B9EB80EC0CF77FD174431F9E /* [CP] Check Pods Manifest.lock */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				B686B6F9CE16F98397ADB43B /* [CP] Embed Pods Frameworks */,
-				5A290E4C74D67A8B1FA7CCA3 /* [CP] Copy Pods Resources */,
+				9F96D5B0DF64DE510D8E91A0 /* [CP] Embed Pods Frameworks */,
+				74871F32428C54705202183B /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -131,7 +145,7 @@
 				LastUpgradeCheck = 1210;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
-						LastSwiftMigration = 1120;
+						LastSwiftMigration = 1620;
 					};
 				};
 			};
@@ -183,7 +197,7 @@
 			shellPath = /bin/sh;
 			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
 		};
-		5A290E4C74D67A8B1FA7CCA3 /* [CP] Copy Pods Resources */ = {
+		74871F32428C54705202183B /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -200,7 +214,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-domiGo/Pods-domiGo-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		B686B6F9CE16F98397ADB43B /* [CP] Embed Pods Frameworks */ = {
+		9F96D5B0DF64DE510D8E91A0 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -217,7 +231,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-domiGo/Pods-domiGo-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		C1EF91ABEC99873398499892 /* [CP] Check Pods Manifest.lock */ = {
+		B9EB80EC0CF77FD174431F9E /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -246,7 +260,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1811AC982ED0375D00585ACD /* SLCEventEmitter.swift in Sources */,
+				1811AC9A2ED038D500585ACD /* SLCEventEmitter 2.m in Sources */,
+				18CD2AD82ED5B36B00A6C3BC /* locationModule.swift in Sources */,
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
+				18CD2ADA2ED5B52D00A6C3BC /* LocationTrackerBridge.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -255,7 +273,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 53F9F9D98C2DC6A23571F483 /* Pods-domiGo.debug.xcconfig */;
+			baseConfigurationReference = 4929A01D06700E2A750575FD /* Pods-domiGo.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -265,6 +283,7 @@
 				DEVELOPMENT_TEAM = 2PMT2H528Z;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = domiGo/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = DomiGo;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -276,10 +295,10 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.app.domigo;
+				PRODUCT_BUNDLE_IDENTIFIER = com.app.domigo;
 				PRODUCT_NAME = domiGo;
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "domiGo-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -288,7 +307,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A56A983BF794E5C11B93276F /* Pods-domiGo.release.xcconfig */;
+			baseConfigurationReference = 85551843BC52DC024194DD7B /* Pods-domiGo.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -297,6 +316,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 2PMT2H528Z;
 				INFOPLIST_FILE = domiGo/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = DomiGo;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -308,10 +328,10 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.app.domigo;
+				PRODUCT_BUNDLE_IDENTIFIER = com.app.domigo;
 				PRODUCT_NAME = domiGo;
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "domiGo-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};

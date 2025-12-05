@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
     View,
     Text,
@@ -12,18 +12,26 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import LinearGradient from "react-native-linear-gradient";
 import Header from "../components/Header";
 import { useNavigation } from "@react-navigation/native";
+import { connect } from "react-redux";
+import { getPersonalProfileDataAction } from "../redux/actions/action-creator";
+import { getUserPersonalDataSelelctor } from "../redux/selectors/common";
+import colors from "../theme/colors";
 
-const colors = {
-    primary: "#28A0DD",
-    background: "#FFFFFF",
-    card: "#FFFFFF",
-    textDark: "#000",
-    textLight: "#666",
-    border: "#E5E5EA",
-};
 
-const ProfileScreen = () => {
+const ProfileScreen = ({
+    userPersonalData,
+    getPersonalProfileDataAction
+}) => {
     const navigation = useNavigation();
+
+    const getData = async () => {
+        await getPersonalProfileDataAction();
+    };
+
+    useEffect(() => {
+        getData();
+    }, []);
+
     return (
         <LinearGradient
             colors={["#9ab1fa", "#ffffff"]}
@@ -38,7 +46,6 @@ const ProfileScreen = () => {
                     contentContainerStyle={{ paddingBottom: 30 }}
                     showsVerticalScrollIndicator={false}
                 >
-                    {/* Profile Image */}
                     <View style={styles.profileWrapper}>
                         <View>
                             <Image
@@ -50,26 +57,22 @@ const ProfileScreen = () => {
                             </TouchableOpacity>
                         </View>
 
-                        <Text style={styles.profileName}>Jim Wilkes</Text>
-                        <Text style={styles.profileEmail}>jim@jimwilkes.me</Text>
+                        <Text style={styles.profileName}>{userPersonalData?.name ?? 'user'}</Text>
+                        <Text style={styles.profileEmail}>{userPersonalData?.email ?? 'user@gmail.com'}</Text>
                     </View>
-
-                    {/* Personal Info Section */}
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Personal Info</Text>
                         <View style={styles.infoCard}>
-                            <InfoRow icon="person-outline" value="Jim Wilkes" />
+                            <InfoRow icon="person-outline" value={userPersonalData?.name ?? 'user'} />
                             <InfoRow
                                 icon="location-outline"
-                                value="123 Harmony Lane, Suite 4B, Melbourne"
+                                value={userPersonalData?.address ?? '**********'}
                             />
-                            <InfoRow icon="call-outline" value="+1 4668 5863 456" />
+                            <InfoRow icon="call-outline" value={userPersonalData?.mobile ?? '**********'} />
                             <InfoRow icon="lock-closed-outline" value="xxxxxxxxxxxxx" isLast />
                         </View>
                     </View>
-
-                    {/* Edit Button */}
-                    <TouchableOpacity onPress={()=>navigation.navigate('ProfileManagement')} style={styles.editButton}>
+                    <TouchableOpacity onPress={() => navigation.navigate('ProfileManagement')} style={styles.editButton}>
                         <Text style={styles.editButtonText}>Edit Profile</Text>
                     </TouchableOpacity>
                 </ScrollView>
@@ -78,7 +81,7 @@ const ProfileScreen = () => {
     );
 };
 
-// Reusable row for info items
+
 const InfoRow = ({ icon, value, isLast }) => (
     <View
         style={[styles.infoRow, !isLast && { borderBottomWidth: 1, borderBottomColor: "#eee" }]}
@@ -184,5 +187,15 @@ const styles = StyleSheet.create({
         fontWeight: "600",
     },
 });
+function mapStateToProps(state) {
+    return {
+        userPersonalData: getUserPersonalDataSelelctor(state),
+    }
+}
 
-export default ProfileScreen;
+const mapDispatchToProps = {
+    getPersonalProfileDataAction,
+}
+export default connect(mapStateToProps, mapDispatchToProps)(ProfileScreen);
+
+

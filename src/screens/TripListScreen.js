@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,8 +12,13 @@ import colors from "../theme/colors";
 import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LinearGradient from "react-native-linear-gradient";
+import { connect, useDispatch } from "react-redux";
+import { GET_TRIP_LIST_LIST } from "../redux/actions/action-creator";
 
-export default function TripListScreen() {
+
+const TripListScreen = ({ tripList }) => {
+  console.log('tripList==>', tripList);
+  const dispatch = useDispatch();
   const trips = [
     {
       id: 1,
@@ -72,6 +77,25 @@ export default function TripListScreen() {
     },
   ];
   const navigation = useNavigation();
+  const API_Function = useCallback(
+    (startup = false) =>
+      new Promise((resolve, reject) => {
+        dispatch(GET_TRIP_LIST_LIST()).then(resolve).catch(reject);
+      }),
+    [
+      GET_TRIP_LIST_LIST,
+    ],
+  );
+  useEffect(() => {
+    API_Function();
+  }, [])
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      API_Function();
+
+    });
+    return unsubscribe;
+  }, [navigation]);
   return (
     <LinearGradient
       colors={["#9ab1fa", "#ffffff"]}
@@ -90,14 +114,14 @@ export default function TripListScreen() {
 
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recent Trips</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('AddRecord')} style={styles.addTripButton}>
+            <TouchableOpacity onPress={() => navigation.navigate('AddTrip')} style={styles.addTripButton}>
               <Ionicons style={{ backgroundColor: colors.primary, borderRadius: 40 }} name="add" size={20} color={colors.white} />
               <Text style={styles.addTripText}>Add Trip</Text>
             </TouchableOpacity>
           </View>
 
 
-          {trips.map((trip) => (
+          {tripList.map((trip) => (
             <View key={trip.id} style={styles.card}>
 
               <View style={styles.topRow}>
@@ -110,20 +134,20 @@ export default function TripListScreen() {
                     color="#4CAF50"
                     style={{ marginRight: 5 }}
                   />
-                  <Text style={styles.typeText}>{trip.type}</Text>
+                  <Text style={styles.typeText}>{trip?.type?.name}</Text>
                 </View>
                 <View
-                  style={[styles.impactBadge, { backgroundColor: trip.impactBg }]}
+                  style={[styles.impactBadge, { backgroundColor: '#00d250' }]}
                 >
-                  <Text style={[styles.impactText, { color: trip.impactColor }]}>
-                    {trip.impact}
+                  <Text style={[styles.impactText, { color: '#fff' }]}>
+                    {trip.impactLevel}
                   </Text>
                 </View>
               </View>
 
 
-              <Text style={styles.cityText}>{trip.city}</Text>
-              <Text style={styles.dateText}>{trip.date}</Text>
+              <Text style={styles.cityText}>{trip.destinationCity},{trip.destinationState}</Text>
+              <Text style={styles.dateText}>{new Date(trip.endDate).toDateString()}</Text>
 
               <View style={styles.divider} />
 
@@ -131,20 +155,21 @@ export default function TripListScreen() {
               <View style={styles.bottomRow}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                   <Text style={styles.label}>Days Spent</Text>
-                  <Text style={styles.daysText}>{trip.days}</Text>
+                  <Text style={styles.daysText}>{trip.daysSpent} Days</Text>
                 </View>
 
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginTop: 10 }}>
                   <Text style={styles.label}>Residency Impact</Text>
                   <View style={styles.riskBadge}>
-                    <Text style={styles.riskText}>{trip.risk}</Text>
+                    <Text style={styles.riskText}>{trip.residencyRisk}</Text>
                   </View>
                 </View>
 
 
               </View>
               <TouchableOpacity
-                onPress={() => navigation.navigate('DayDetail')}
+                onLongPress={() => navigation.navigate('AddTrip', { id: trip.id })}
+                onPress={() => navigation.navigate('DayDetail', trip)}
                 style={{
                   width: 36,
                   height: 36,
@@ -168,7 +193,18 @@ export default function TripListScreen() {
     </LinearGradient>
   );
 }
+function mapStateToProps(state) {
+  return {
+    loginToken: state.auth.loginToken,
+    userData: state.auth.userData,
+    tripList: state.common.tripList,
+  };
+}
 
+const mapDispatchToProps = {
+  GET_TRIP_LIST_LIST
+};
+export default connect(mapStateToProps, mapDispatchToProps)(TripListScreen);
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -268,7 +304,7 @@ const styles = StyleSheet.create({
     color: "#888",
   },
   daysText: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: "700",
     color: "#000",
   },

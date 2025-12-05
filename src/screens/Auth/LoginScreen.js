@@ -11,10 +11,84 @@ import {
 import LinearGradient from "react-native-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import { connect } from "react-redux";
+import { SIGNIN } from "../../redux/actions/action-creator";
+import { CustomToast } from "../../helpers/CommonHelpers";
+import { SliderButton } from "../../components/SliderButton";
+import NetInfo from '@react-native-community/netinfo';
+import useAPI from '../../helpers/useAPI';
+import { startBackgroundLocation } from "../../helpers/LocationTracker";
+import { startDomigoTracking } from "../../helpers/MainTracker";
+import  DomigoTracker  from "../../helpers/MainTracker";
 
-const LoginScreen = ({ navigation }) => {
+
+const LoginScreen = ({ navigation, signIn }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { callApi: callLoginApi, loading: loginLoading } = useAPI();
+  const [netInfo, setNetInfo] = useState(true);
+  const [buttonLoader, setButtonLoader] = useState(false);
+
+  const validateForm = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!netInfo) {
+      CustomToast.show("No internet connection");
+      return false;
+    }
+    if (!email.trim()) {
+      CustomToast.show("Please enter email");
+      return false;
+    }
+    if (!emailRegex.test(email.trim())) {
+      CustomToast.show("Please enter a valid email");
+      return false;
+    }
+    if (!password.trim()) {
+      CustomToast.show("Please enter password");
+      return false;
+    }
+    return true;
+  };
+
+  const SignInUser = async () => {
+    if (!validateForm()) return;
+
+    setButtonLoader(true);
+    const data = {
+      email: email.trim(),
+      password: password.trim()
+    };
+    callLoginApi(signIn(data))
+      .then(async(response) => {
+        console.log('response--==>', response);
+        setButtonLoader(false);
+        if (response.message != 'Success') {
+          
+          CustomToast.show(response?.message ?? response?.error);
+        } else {
+            const { started } = await DomigoTracker.startDomigoTracking();
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "Main" }],
+          });
+          CustomToast.show('Login Successfully');
+        }
+      })
+      .catch(e => {
+        setButtonLoader(false);
+        CustomToast.show('something_went_wrong');
+        console.log('Catch Error SignIn Screen = ', e);
+      });
+  }
+
+  React.useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setNetInfo(state.isConnected);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   return (
     <LinearGradient
@@ -38,7 +112,7 @@ const LoginScreen = ({ navigation }) => {
           <TextInput
             placeholder="Email"
             placeholderTextColor="#777"
-            style={styles.input}
+            style={{ ...styles.input, textTransform: 'lowercase' }}
             value={email}
             onChangeText={setEmail}
           />
@@ -56,12 +130,24 @@ const LoginScreen = ({ navigation }) => {
             onChangeText={setPassword}
           />
         </View>
+        <View style={{ marginTop: 25, }} />
+        <SliderButton
+          isClickButton={true}
+          onSubmit={() => {
+            if (!netInfo) {
+              CustomToast.show("No internet connection");
+            } else {
+              SignInUser();
+            }
+          }}
+          buttonTitle={'LogIn'}
+          loader={buttonLoader}
+        />
 
 
-
-        <TouchableOpacity onPress={() => navigation.navigate('Main')}  style={styles.loginBtn}>
+        {/* <TouchableOpacity onPress={() => navigation.navigate('Main')} style={styles.loginBtn}>
           <Text style={styles.loginText}>Log in</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <TouchableOpacity>
           <Text style={styles.forgotText}>Forgot Password?</Text>
         </TouchableOpacity>
@@ -70,13 +156,21 @@ const LoginScreen = ({ navigation }) => {
         <Text style={styles.footerText}>
           Don’t Have an Account?{" "}
         </Text>
-
-        <TouchableOpacity
+        <SliderButton
+          isClickButton={true}
+          onSubmit={() => {
+            navigation.navigate("Signup")
+          }
+          }
+          btncolor={"#69BE7E"}
+          buttonTitle={'Sign up'}
+        />
+        {/* <TouchableOpacity
           style={styles.signupBtn}
           onPress={() => navigation.navigate("Signup")}
         >
           <Text style={styles.signupText}>Sign up</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <Text style={styles.orText}>or Sign in with</Text>
 
@@ -199,5 +293,14 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
   },
 });
+function mapStateToProps(state) {
+  return {
+    deviceToken: state.auth.deviceToken,
+    userData: state.auth.userData,
+  }
+}
 
-export default LoginScreen;
+const mapDispatchToProps = {
+  signIn: SIGNIN,
+}
+export default connect(mapStateToProps, mapDispatchToProps)(LoginScreen);

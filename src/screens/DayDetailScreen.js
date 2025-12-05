@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,9 +11,22 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import colors from "../theme/colors";
 import { useNavigation } from "@react-navigation/native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import LinearGradient from "react-native-linear-gradient";
+import Header from "../components/Header";
+import { GET_TRIP_SUMMARY_DETAILS } from "../redux/actions/action-creator";
+import { connect, useDispatch } from "react-redux";
 
-export default function DayDetailScreen() {
+function DayDetailScreen({
+  GET_TRIP_SUMMARY_DETAILS,
+  route,
+  TripSummaryDetails
+}) {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const trip = route.params;
+  console.log('trip', TripSummaryDetails);
+  // console.log("DATE TEST => ", new Date().toString());
 
   const timelineData = [
     { icon: "home-outline", time: "08:00 AM", place: "Los Angeles, CA", desc: "Departed from home" },
@@ -23,122 +36,154 @@ export default function DayDetailScreen() {
     { icon: "bed-outline", time: "09:00 AM", place: "Las Vegas, NV", desc: "Departed from hotel" },
     { icon: "home-outline", time: "02:00 PM", place: "Los Angeles, CA", desc: "Arrived back home" },
   ];
+  const API_Function = useCallback(async () => {
+    try {
+      await dispatch(GET_TRIP_SUMMARY_DETAILS(trip.id));
+    } catch (e) {
+      console.log("Error fetching trip summary:", e);
+    }
+  }, [dispatch, trip.id]);
+
+  useEffect(() => {
+  API_Function();
+}, []);
+
+useEffect(() => {
+  const unsubscribe = navigation.addListener('focus', API_Function);
+  return unsubscribe;
+}, [navigation]);
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Ionicons name="chevron-back" onPress={() => navigation.goBack()} size={24} color="#000" />
-        <Text style={styles.headerTitle}>Day Detail</Text>
-        <View style={{ width: 24 }} />
-      </View>
+    <LinearGradient
+      colors={["#9ab1fa", "#ffffff"]}
+      start={{ x: 1, y: 0 }}
+      end={{ x: 0.8, y: 0.4 }}
+      locations={[0.05, 0.55]}
+      style={styles.container}
+    >
+      <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
+        <Header title="Day Detail" />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Trip Info */}
-        <View style={styles.card}>
-          <View style={styles.tripInfoHeader}>
-            <Ionicons name="location-outline" size={20} color={colors.primary} />
-            <Text style={styles.tripTitle}>Los Angeles to Las Vegas</Text>
-          </View>
-          <Text style={styles.tripDate}>October 26 - October 27, 2024</Text>
 
-          <Image
-            source={{
-              uri: "https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png",
-            }}
-            style={styles.mapImage}
-          />
-        </View>
+        <ScrollView showsVerticalScrollIndicator={false}>
 
-        {/* Trip Summary */}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Trip Summary</Text>
-
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryItem}>
-              <View style={styles.iconBox}>
-                <MaterialCommunityIcons name="map-marker-distance" size={18} color={colors.primary} />
-              </View>
-              <View style={{ alignItems: "center" }}>
-              <Text style={styles.summaryLabel}>Distance</Text>
-                <Text style={styles.summaryValue}>270 miles</Text>
-                
-              </View>
+          <View style={styles.card}>
+            <View style={styles.tripInfoHeader}>
+              <Ionicons name="location-outline" size={20} color={colors.primary} />
+              <Text style={styles.tripTitle}>{TripSummaryDetails?.trip?.originState} to {TripSummaryDetails?.trip?.destinationState}</Text>
             </View>
+            <Text style={styles.tripDate}>{new Date(TripSummaryDetails?.trip?.startDate).toDateString()} - {new Date(TripSummaryDetails?.trip?.endDate).toDateString()}</Text>
 
-            <View style={styles.summaryItem}>
-              <View style={styles.iconBox}>
-                <Ionicons name="flag-outline" size={18} color={colors.primary} />
-              </View>
-              <View style={{ alignItems: "center" }}>
-              <Text style={styles.summaryLabel}>States Visited</Text>
-                <Text style={styles.summaryValue}>2</Text>
-              
-              </View>
-            </View>
+            <Image
+              source={{
+                uri: "https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png",
+              }}
+              style={styles.mapImage}
+            />
           </View>
 
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryItem}>
-              <View style={styles.iconBox}>
-                <Ionicons name="time-outline" size={18} color={colors.primary} />
-              </View>
-              <View style={{ alignItems: "center" }}>
-              <Text style={styles.summaryLabel}>Duration</Text>
-                <Text style={styles.summaryValue}>2 days</Text>
-               
-              </View>
-            </View>
 
-            <View style={styles.summaryItem}>
-              <View style={[styles.iconBox, ]}>
-                <Ionicons name="checkmark-circle" size={18} color="#34C759" />
-              </View>
-              <View style={{ alignItems: "center" }}>
-              <Text style={styles.summaryLabel}>Status</Text>
-                <Text style={[styles.summaryValue, { color: "#34C759" }]}>Active</Text>
-               
-              </View>
-            </View>
-          </View>
-        </View>
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Trip Summary</Text>
 
-        {/* Timeline */}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Timeline of Events</Text>
 
-          {timelineData.map((item, index) => (
-            <View key={index} style={styles.timelineItem}>
-              <View style={styles.timelineIconContainer}>
-                <View style={styles.timelineCircle}>
-                  <Ionicons name={item.icon} size={16} color={colors.white} />
+            <View style={styles.summaryRow}>
+
+
+              <View style={styles.summaryBox}>
+                <Ionicons name="car-outline" size={22} color={colors.primary} />
+                <View style={{ marginLeft: 10 }}>
+                  <Text style={styles.summaryLabel}>Distance</Text>
+                  <Text style={styles.summaryValue}>{TripSummaryDetails?.summary?.distanceMiles} miles</Text>
                 </View>
-                {index !== timelineData.length - 1 && <View style={styles.timelineLine} />}
               </View>
 
-              <View style={styles.timelineTextContainer}>
-                <Text style={styles.timeText}>{item.time}</Text>
-                <Text style={styles.placeText}>{item.place}</Text>
-                <Text style={styles.descText}>{item.desc}</Text>
+
+              <View style={styles.summaryBox}>
+                <Ionicons name="flag-outline" size={22} color={colors.primary} />
+                <View style={{ marginLeft: 10 }}>
+                  <Text style={styles.summaryLabel}>States Visited</Text>
+                  <Text style={styles.summaryValue}>{TripSummaryDetails?.summary?.statesVisited}</Text>
+                </View>
               </View>
+
             </View>
-          ))}
-        </View>
 
-        {/* Edit Button */}
-        <TouchableOpacity style={styles.editButton}>
-          <Ionicons name="pencil-outline" size={18} color="#fff" />
-          <Text style={styles.editButtonText}>Edit Trip Details</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </View>
+
+            <View style={styles.summaryRow}>
+
+              {/* Duration */}
+              <View style={styles.summaryBox}>
+                <Ionicons name="time-outline" size={22} color={colors.primary} />
+                <View style={{ marginLeft: 10 }}>
+                  <Text style={styles.summaryLabel}>Duration</Text>
+                  <Text style={styles.summaryValue}>{TripSummaryDetails?.summary?.durationDays} days</Text>
+                </View>
+              </View>
+
+
+              <View style={styles.summaryBox}>
+                <Ionicons name="checkmark-circle-outline" size={22} color="#34C759" />
+                <View style={{ marginLeft: 10 }}>
+                  <Text style={styles.summaryLabel}>Status</Text>
+                  <Text style={[styles.summaryValue, { color: "#34C759", textTransform: 'capitalize' }]}>
+                    {TripSummaryDetails?.trip?.status}
+                  </Text>
+                </View>
+              </View>
+
+            </View>
+          </View>
+
+
+
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Timeline of Events</Text>
+
+            {TripSummaryDetails?.events.map((item, index) => (
+              <View key={index} style={styles.timelineItem}>
+                <View style={styles.timelineIconContainer}>
+                  <View style={styles.timelineCircle}>
+                    <Ionicons name={'home-outline'} size={16} color={colors.white} />
+                  </View>
+                  {index !== TripSummaryDetails?.events.length - 1 && <View style={styles.timelineLine} />}
+                </View>
+
+                <View style={styles.timelineTextContainer}>
+                  <Text style={styles.timeText}>{item.time}</Text>
+                  <Text style={styles.placeText}>{item.state},{item.city}</Text>
+                  <Text style={styles.descText}>{item.description}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+
+
+          {/* <TouchableOpacity onPress={() => navigation.navigate('AddTrip', { trip })} style={styles.editButton}>
+            <Ionicons name="pencil-outline" size={18} color="#fff" />
+            <Text style={styles.editButtonText}>Edit Trip </Text>
+          </TouchableOpacity> */}
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
+function mapStateToProps(state) {
+  return {
+    loginToken: state.auth.loginToken,
+    userData: state.auth.userData,
+    TripSummaryDetails: state.common.TripSummaryDetails,
+  };
+}
 
+const mapDispatchToProps = {
+  GET_TRIP_SUMMARY_DETAILS
+};
+export default connect(mapStateToProps, mapDispatchToProps)(DayDetailScreen);
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
   },
 
   header: {
@@ -290,4 +335,31 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginLeft: 6,
   },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 15,
+  },
+
+  summaryBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "48%",
+    backgroundColor: "#fff",
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+  },
+
+  summaryLabel: {
+    fontSize: 13,
+    color: "#777",
+    marginBottom: 2,
+  },
+
+  summaryValue: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#000",
+  },
+
 });

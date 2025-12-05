@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,9 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import Foundation from "react-native-vector-icons/Foundation";
 import { ICON_Edit } from "../assets/svgicon";
 import { useNavigation } from "@react-navigation/native";
+import { connect } from "react-redux";
+import { getUserPersonalDataSelelctor } from "../redux/selectors/common";
+import { getPersonalProfileDataAction } from "../redux/actions/action-creator";
 
 const colors = {
   primary: "#28A0DD",
@@ -24,7 +27,15 @@ const colors = {
   success: "#28a745",
 };
 
-const MenuScreen = () => {
+const MenuScreen = ({ userPersonalData, getPersonalProfileDataAction, }) => {
+  console.log('userPersonalData', userPersonalData);
+  const getData = async () => {
+    await getPersonalProfileDataAction();
+  };
+
+  useEffect(() => {
+    getData();
+  }, []);
   const navigation = useNavigation();
   return (
     <LinearGradient
@@ -39,31 +50,26 @@ const MenuScreen = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 15, paddingBottom: 30 }}
         >
-          {/* Profile Header */}
           <View style={styles.profileRow}>
             <Image
               source={{ uri: "https://i.pravatar.cc/100" }}
               style={styles.profileImage}
             />
             <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>Jim Wilkes</Text>
-              <Text style={styles.profileEmail}>jim@jimwilkes.me</Text>
+              <Text style={styles.profileName}>{userPersonalData?.name ?? 'user'}</Text>
+              <Text style={styles.profileEmail}>{userPersonalData?.email ?? 'user@gmail.com'}</Text>
             </View>
             <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.editButton}>
               <ICON_Edit />
             </TouchableOpacity>
           </View>
-
-          {/* Change Password */}
           <View style={styles.card}>
             <MenuRow
               icon="lock-closed-outline"
               label="Change Password"
-              onPress={() => { }}
+              onPress={() => { navigation.navigate('ChangePassword') }}
             />
           </View>
-
-          {/* Settings Section */}
           <Text style={styles.sectionTitle}>Settings</Text>
           <View style={styles.card}>
             <MenuRow icon="lock-closed-outline" label="My Locations" />
@@ -83,10 +89,9 @@ const MenuScreen = () => {
             />
           </View>
 
-          {/* Support Section */}
           <Text style={styles.sectionTitle}>Support</Text>
           <View style={styles.card}>
-            <MenuRow icon="home-outline" label="Domicile / Residency Settings" />
+            <MenuRow onPress={() => { navigation.navigate('ResidencyHistory') }} icon="home-outline" label="Domicile / Residency Settings" />
             <MenuRow
               icon="mail-outline"
               label="support@domigo-go.com"
@@ -116,7 +121,6 @@ const MenuRow = ({ icon, label, status, isLast, statusColor, onPress }) => (
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <Text style={styles.label}>{label}</Text>
 
-          {/* 🟢 Small green dot when active/enabled */}
           {statusColor === '#28a745' && (
             <View
               style={{
@@ -231,5 +235,14 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 });
+function mapStateToProps(state) {
 
-export default MenuScreen;
+  return {
+    userPersonalData: getUserPersonalDataSelelctor(state),
+  }
+}
+
+const mapDispatchToProps = {
+  getPersonalProfileDataAction,
+}
+export default connect(mapStateToProps, mapDispatchToProps)(MenuScreen);

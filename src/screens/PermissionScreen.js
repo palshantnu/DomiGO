@@ -1,62 +1,97 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
-import colors from '../theme/colors';
+import { useNavigation } from "@react-navigation/native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Switch,
+  ScrollView,
+} from "react-native";
+import LinearGradient from "react-native-linear-gradient";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-const PermissionScreen = ({ navigation }) => {
+
+const PermissionScreen = ({ route }) => {
+  const { screenname } = route.params;
+  const navigation = useNavigation();
+
+  const [locationEnabled, setLocationEnabled] = useState(false);
+  const [offlineSync, setOfflineSync] = useState(true);
+  useEffect(() => {
+    if (locationEnabled && offlineSync) {
+      navigation.navigate(screenname)
+    }
+
+  }, [locationEnabled, offlineSync])
+
   return (
-    <View style={styles.container}>
-      {/* <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Icon name="chevron-back" size={26} color="#000" />
-      </TouchableOpacity> */}
 
-      <Image
-        source={require('../assets/image/logo.png')}
-        style={styles.logo}
-        resizeMode="contain"
-      />
+    <LinearGradient
+      colors={["#9ab1fa", "#ffffff"]}
+      start={{ x: 1, y: 0 }}
+      end={{ x: 0.8, y: 0.4 }}
+      locations={[0.05, 0.55]}
+      style={styles.container}
+    >
+      <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1, backgroundColor: 'none' }}>
+        <ScrollView showsVerticalScrollIndicator={false}>
 
-      <Text style={styles.title}>Grant Essential Permissions</Text>
+          <View style={styles.header}>
+            <Text style={styles.title}>Grant Essential Permissions</Text>
 
-      <Text style={styles.description}>
-        ResiTrack Tax requires Location and Motion & Fitness data to accurately
-        track your residency days across states. Please grant these permissions
-        to get started.
-      </Text>
+            <Text style={styles.subtitle}>
+              ResiTrack Tax requires Location and Motion & Fitness data to
+              accurately track your residency days across states. Please grant
+              these permissions to get started.
+            </Text>
+          </View>
 
-      <View style={styles.card}>
-        <View style={styles.cardContent}>
-          <Text style={styles.icon}>📍</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.cardTitle}>Location Access</Text>
-            <Text style={styles.cardDesc}>
+
+          <View style={styles.card}>
+
+
+            <View style={styles.line} />
+
+
+            <View style={styles.row}>
+              <Text style={styles.sectionTitle}>Location Access</Text>
+              <Switch
+                value={locationEnabled}
+                onValueChange={(val) => setLocationEnabled(val)}
+                trackColor={{ false: "#D1D5DB", true: "#7ED957" }}
+                thumbColor="#fff"
+              />
+            </View>
+
+            <Text style={styles.sectionDesc}>
               Allow ResiTrack to access your location in the background to
               automatically track your residency days across states. This data
               is essential for accurate tax calculations.
             </Text>
-          </View>
-        </View>
-        <TouchableOpacity style={styles.allowBtn}>
-          <Text style={styles.allowText}>Allow Location Access</Text>
-        </TouchableOpacity>
-      </View>
 
-      <View style={styles.card}>
-        <View style={styles.cardContent}>
-          <Text style={styles.icon}>🅷</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.cardTitle}>Offline Sync</Text>
-            <Text style={styles.cardDesc}>
-              Enable offline sync and calendar synchronization to manage data in
-              the local database until it is synced to the cloud.
+            <View style={styles.line} />
+
+
+            <View style={styles.row}>
+              <Text style={styles.sectionTitle}>Offline Sync</Text>
+              <Switch
+                value={offlineSync}
+                onValueChange={(val) => setOfflineSync(val)}
+                trackColor={{ false: "#D1D5DB", true: "#7ED957" }}
+                thumbColor="#fff"
+              />
+            </View>
+
+            <Text style={styles.sectionDesc}>
+              Enable offline sync and calendar sync to manage data in the local
+              database until it is synced to the cloud.
             </Text>
+
           </View>
-        </View>
-        <TouchableOpacity style={styles.allowBtn}>
-          <Text style={styles.allowText}>Allow Sync Access</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
+
   );
 };
 
@@ -65,80 +100,58 @@ export default PermissionScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    padding: 20,
-    paddingTop: 50,
   },
-  backButton: {
-    position: 'absolute',
-    top: 50,
-    left: 20,
-    zIndex: 10,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 30,
-    padding: 4,
-  },
-  logo: {
-    width: 110,
-    height: 50,
-    alignSelf: 'center',
-    marginBottom: 10,
-    marginTop: 10,
+
+
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 40,
+    paddingBottom: 60,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#0D1B2A',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  description: {
-    fontSize: 14,
-    color: '#5C677D',
-    textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 26,
-  },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 5,
-    elevation: 2,
-  },
-  cardContent: {
-    flexDirection: 'row',
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#000",
     marginBottom: 12,
   },
-  icon: {
-    fontSize: 26,
-    marginRight: 12,
-    color: colors.primary,
-  },
-  cardTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#0D1B2A',
-    marginBottom: 4,
-  },
-  cardDesc: {
-    fontSize: 13,
-    color: '#5C677D',
-    lineHeight: 18,
-  },
-  allowBtn: {
-    backgroundColor: colors.primary,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  allowText: {
-    color: '#fff',
-    fontWeight: '600',
+  subtitle: {
     fontSize: 14,
+    color: "#4B5563",
+    lineHeight: 20,
+  },
+
+  card: {
+    backgroundColor: "#fff",
+    marginTop: -40,
+    borderTopLeftRadius: 26,
+    borderTopRightRadius: 26,
+    padding: 20,
+    // elevation: 3,
+    minHeight: 480,
+  },
+
+  line: {
+    height: 1,
+    backgroundColor: "#E5E7EB",
+    marginVertical: 18,
+  },
+
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#111827",
+  },
+
+  sectionDesc: {
+    fontSize: 13,
+    color: "#4B5563",
+    marginTop: 8,
+    lineHeight: 18,
   },
 });

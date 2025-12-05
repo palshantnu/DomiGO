@@ -14,8 +14,14 @@ import { useNavigation } from "@react-navigation/native";
 import LinearGradient from "react-native-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ICON_AppTheme, ICON_bell, ICON_bell_off, ICON_File_dock, ICON_Language, ICON_Lock, ICON_Menu, ICON_syncdata } from "../assets/svgicon";
+import { useDispatch } from "react-redux";
+import { LOGOUT } from "../redux/actions/action-creator";
+import { CustomToast } from "../helpers/CommonHelpers";
+import { stopDomigoTracking } from "../helpers/MainTracker";
+import DomigoTracker from "../helpers/MainTracker";
 
 export default function SettingsScreen() {
+  const dispatch = useDispatch();
   const [deadlineReminders, setDeadlineReminders] = useState(true);
   const [stateAlerts, setStateAlerts] = useState(true);
   const [syncData, setSyncData] = useState(true);
@@ -43,7 +49,7 @@ export default function SettingsScreen() {
             <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('Menu')}>
               <View style={styles.rowLeft}>
                 <ICON_Menu />
-                <View>
+                <View style={{ width: '100%' }}>
                   <Text style={styles.title}>Menu</Text>
                   <Text style={styles.subtitle}>View your quick access options</Text>
                 </View>
@@ -53,7 +59,7 @@ export default function SettingsScreen() {
             <TouchableOpacity style={styles.row}>
               <View style={styles.rowLeft}>
                 <ICON_Language height={24} width={24} />
-                <View>
+                <View style={{ width: '100%' }}>
                   <Text style={styles.title}>Language</Text>
                   <Text style={styles.subtitle}>English (US)</Text>
                 </View>
@@ -64,7 +70,7 @@ export default function SettingsScreen() {
             <TouchableOpacity style={styles.row}>
               <View style={styles.rowLeft}>
                 <ICON_AppTheme height={24} width={24} />
-                <View>
+                <View style={{ width: '100%' }}>
                   <Text style={styles.title}>App Theme</Text>
                   <Text style={styles.subtitle}>System Default</Text>
                 </View>
@@ -157,6 +163,30 @@ export default function SettingsScreen() {
               </View>
               <Ionicons name="chevron-forward" size={18} color="#999" />
             </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.row}
+              onPress={() => {
+                dispatch(LOGOUT());
+                CustomToast.show('LogOut User Successfully');
+                DomigoTracker.stopDomigoTracking();
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: "Login" }],
+                });
+              }}
+            >
+              <View style={styles.rowLeft}>
+
+                <Ionicons name="log-out-outline" size={24} color="#d9534f" />
+                <View style={{ width: '100%' }}>
+                  <Text style={[styles.title]}>Logout</Text>
+                  <Text style={[styles.subtitle]}>
+                    Sign out from your account
+                  </Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#999" />
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -200,12 +230,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     borderBottomWidth: 1,
     borderBottomColor: "#f2f2f2",
+
   },
   rowLeft: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
     flex: 1,
+
   },
   title: {
     fontSize: 14,
@@ -217,5 +249,6 @@ const styles = StyleSheet.create({
     color: "#777",
     marginTop: 2,
     maxWidth: "90%",
+
   },
 });

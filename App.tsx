@@ -14,7 +14,11 @@ import { Provider } from 'react-redux';
 // import SplashScreen from 'react-native-splash-screen';
 import RootNavigator from './src/navigation';
 import colors from './src/theme/colors';
-import { store } from './src/redux/store';
+import { store, persistor } from './src/redux/store';
+import { PersistGate } from 'redux-persist/integration/react';
+import { startDomigoTracking, stopDomigoTracking } from "./src/helpers/MainTracker";
+import { testNativeModule } from './src/helpers/testNativeModule';
+
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
 
@@ -24,19 +28,25 @@ function App() {
   //     SplashScreen.hide();
   //   }, 2000); // optional delay for demo
   // }, []);
+  // useEffect(()=>{
+  //   testNativeModule()
+  // },[])
+
   return (
     <Provider store={store}>
-    <SafeAreaProvider>
-    <NavigationContainer>
-      <StatusBar
-        barStyle={isDarkMode ? 'dark-content' : 'dark-content'}
-        backgroundColor={colors.white}
-        translucent={false}
-      />
+      <PersistGate loading={null} persistor={persistor}>
+        <SafeAreaProvider>
+          <NavigationContainer>
+            <StatusBar
+              barStyle={isDarkMode ? 'dark-content' : 'dark-content'}
+              backgroundColor={colors.white}
+              translucent={false}
+            />
 
-      <AppContent />
-      </NavigationContainer>
-    </SafeAreaProvider>
+            <AppContent />
+          </NavigationContainer>
+        </SafeAreaProvider>
+      </PersistGate>
     </Provider>
   );
 }
@@ -46,15 +56,15 @@ function AppContent() {
 
   return (
     <SafeAreaView
-      edges={[ 'bottom', 'left', 'right']}
+      edges={['bottom', 'left', 'right']}
       style={[
         styles.container,
         // { paddingTop: safeAreaInsets.top }
       ]}
     >
-     
-        <RootNavigator />
-     
+
+      <RootNavigator />
+
     </SafeAreaView>
   );
 }

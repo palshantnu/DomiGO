@@ -1,8 +1,12 @@
 import axios from 'axios';
 import { store } from '../redux/store';
+// import Config from 'react-native-config';
 
-export const baseURL = 'https://api.example.com/api/';
-export const IMAGE_URL = 'https://api.example.com/images/';
+export const baseURL = 'http://3.91.116.18:4001/api/';
+// export const baseURL = `${Config.BASE_URL}/api/`;
+export const IMAGE_URL = 'http://3.91.116.18:4001/api/';
+
+console.log('baseURL',baseURL);
 
 const axiosinstance = axios.create({
   baseURL,

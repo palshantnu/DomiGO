@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
     View,
     Text,
@@ -15,11 +15,37 @@ import Header from '../components/Header';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
+import { connect, useDispatch } from 'react-redux';
+import startTracking, { stopTracking } from '../helpers/LocationTracker';
+import { startDomigoTracking } from '../helpers/MainTracker';
+import DomigoTracker from '../helpers/MainTracker';
+import { GET_FINAL_YEAR_PROGRESS } from '../redux/actions/action-creator';
 
 
-const HomeScreen = (props) => {
+const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, loginToken,finalYearProgress}) => {
+    const dispatch = useDispatch();
+
     const progress = 200 / 365;
     const navigation = useNavigation();
+    // useEffect(() => {
+    //     DomigoTracker.startDomigoTracking();
+
+    //     // return () => {
+    //     //   stopDomigoTracking();
+    //     // };
+    // }, []);
+
+    useEffect(() => {
+
+        dispatch(GET_FINAL_YEAR_PROGRESS)
+        // return () => {
+        //   stopDomigoTracking();
+        // };
+    }, []);
+
+console.log('finalYearProgress',finalYearProgress);
+
+
     return (
         <LinearGradient
             colors={["#9ab1fa", "#ffffff"]}
@@ -44,11 +70,11 @@ const HomeScreen = (props) => {
 
                         <View style={styles.progressButtonRow}>
                             <TouchableOpacity style={styles.completedBtn}>
-                                <Text style={styles.completedText}>200 Days Completed</Text>
+                                <Text style={styles.completedText}>{finalYearProgress?.daysSpent} Days Completed</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity style={styles.remainingBtn}>
-                                <Text style={styles.remainingText}>165 Days Left</Text>
+                                <Text style={styles.remainingText}>{finalYearProgress?.daysLeft} Days Left</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -57,7 +83,7 @@ const HomeScreen = (props) => {
                         <Text style={styles.sectionTitle}>Insights Menu</Text>
 
                         <View style={styles.toggleContainer}>
-                            <TouchableOpacity style={styles.leftTab}>
+                            <TouchableOpacity  style={styles.leftTab}>
                                 <Text style={styles.activeText}>Metrics</Text>
                             </TouchableOpacity>
 
@@ -74,7 +100,7 @@ const HomeScreen = (props) => {
                                 </View>
                             </TouchableOpacity>
 
-                            <TouchableOpacity style={styles.rightTab}>
+                            <TouchableOpacity onPress={()=>DomigoTracker.startDomigoTracking()}  style={styles.rightTab}>
                                 <Text style={styles.inactiveText}>Calendar</Text>
                             </TouchableOpacity>
                         </View>
@@ -113,13 +139,16 @@ const HomeScreen = (props) => {
 
 function mapStateToProps(state) {
     return {
+        userData: state.auth.userData,
+        loginToken: state.auth.loginToken,
+        finalYearProgress: state.common.finalYearProgress,
 
     };
 }
 
 
 const mapDispatchToProps = {
-
+    GET_FINAL_YEAR_PROGRESS
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(HomeScreen);
@@ -278,13 +307,13 @@ const styles = StyleSheet.create({
     completedText: {
         color: '#fff',
         fontWeight: '600',
-        fontSize: 14,
+        fontSize: 12,
     },
 
     remainingText: {
         color: '#333',
         fontWeight: '600',
-        fontSize: 14,
+        fontSize: 12,
     },
     toggleContainer: {
         flexDirection: 'row',
