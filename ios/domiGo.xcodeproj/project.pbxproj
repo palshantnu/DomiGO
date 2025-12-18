@@ -280,7 +280,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 2PMT2H528Z;
+				DEVELOPMENT_TEAM = NZK3F2XNQQ;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = domiGo/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DomiGo;
@@ -295,7 +295,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.app.domigo;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gohome.domigo;
 				PRODUCT_NAME = domiGo;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "domiGo-Bridging-Header.h";
@@ -314,7 +314,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 2PMT2H528Z;
+				DEVELOPMENT_TEAM = NZK3F2XNQQ;
 				INFOPLIST_FILE = domiGo/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DomiGo;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
@@ -328,7 +328,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.app.domigo;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gohome.domigo;
 				PRODUCT_NAME = domiGo;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "domiGo-Bridging-Header.h";

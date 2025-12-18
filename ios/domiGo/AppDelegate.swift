@@ -6,7 +6,7 @@ import CoreLocation
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate {
-  var window: UIWindow?
+  var window: UIWindow? 
 
   var reactNativeDelegate: ReactNativeDelegate? 
   var reactNativeFactory: RCTReactNativeFactory?
