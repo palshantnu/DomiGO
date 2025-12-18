@@ -19,10 +19,12 @@ import { connect, useDispatch } from 'react-redux';
 import startTracking, { stopTracking } from '../helpers/LocationTracker';
 import { startDomigoTracking } from '../helpers/MainTracker';
 import DomigoTracker from '../helpers/MainTracker';
-import { GET_FINAL_YEAR_PROGRESS } from '../redux/actions/action-creator';
+import { GET_FINAL_YEAR_PROGRESS,GET_STATE_WISE_RESIDENCY } from '../redux/actions/action-creator';
 
 
-const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, loginToken,finalYearProgress}) => {
+const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS,GET_STATE_WISE_RESIDENCY, loginToken,finalYearProgress,stateWiseResidency}) => {
+    console.log('stateWiseResidency>>>>',stateWiseResidency);
+    
     const dispatch = useDispatch();
 
     const progress = 200 / 365;
@@ -38,12 +40,43 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, loginToken,finalYearProgress}) =>
     useEffect(() => {
 
         dispatch(GET_FINAL_YEAR_PROGRESS)
+        dispatch(GET_STATE_WISE_RESIDENCY)
         // return () => {
         //   stopDomigoTracking();
         // };
     }, []);
 
-console.log('finalYearProgress',finalYearProgress);
+console.log('loginToken',loginToken);
+
+function getStateCodeSafe(state) {
+  return state
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, "")
+    .split(/\s+/)
+    .map(w => w.charAt(0).toUpperCase())
+    .join("");
+}
+
+        const stringToHash = (str) => {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        return hash;
+    };
+
+    const getDarkPastelColor = (str) => {
+        const hash = stringToHash(str);
+        const hue = Math.abs(hash) % 360;
+        return `hsl(${hue}, 55%, 35%)`; // dark pastel
+    };
+
+    const getStateColor = (state) =>
+        state ? getDarkPastelColor(state) : '#2C2C2C';
+
+
+// console.log(getStateCodeSafe("  Uttar   Pradesh ")); // UP
+
 
 
     return (
@@ -69,13 +102,13 @@ console.log('finalYearProgress',finalYearProgress);
                         <Text style={styles.sectionTitle}>Financial Year Progress</Text>
 
                         <View style={styles.progressButtonRow}>
-                            <TouchableOpacity style={styles.completedBtn}>
+                            <View style={styles.completedBtn}>
                                 <Text style={styles.completedText}>{finalYearProgress?.daysSpent} Days Completed</Text>
-                            </TouchableOpacity>
+                            </View>
 
-                            <TouchableOpacity style={styles.remainingBtn}>
+                            <View style={styles.remainingBtn}>
                                 <Text style={styles.remainingText}>{finalYearProgress?.daysLeft} Days Left</Text>
-                            </TouchableOpacity>
+                            </View>
                         </View>
                     </View>
 
@@ -110,18 +143,21 @@ console.log('finalYearProgress',finalYearProgress);
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>State-wise Residency Overview</Text>
                         <View style={styles.stateGrid}>
-                            {[
-                                { code: 'FL', days: 134, color: '#D3D3D3', threshold: 183 },
-                                { code: 'NY', days: 83, color: '#28a0dd', threshold: 183 },
-                                { code: 'CA', days: 170, color: '#dc3c41', threshold: 183 },
-                                { code: 'UT', days: 45, color: '#28a0dd', threshold: 183 },
-                            ].map((item, index) => (
+                            {
+                            // [
+                            //     { code: 'FL', days: 134, color: '#D3D3D3', threshold: 183 },
+                            //     { code: 'NY', days: 83, color: '#28a0dd', threshold: 183 },
+                            //     { code: 'CA', days: 170, color: '#dc3c41', threshold: 183 },
+                            //     { code: 'UT', days: 45, color: '#28a0dd', threshold: 183 },
+                            // ]
+                            stateWiseResidency
+                            .map((item, index) => (
                                 <View key={index} style={[styles.stateCard, { borderColor: '#E0E0E0', width: Dimensions.get('window').width * 0.42, height: Dimensions.get('window').width * 0.42, elevation: 1, borderWidth: 0.5 }]}>
                                     <View style={styles.smallCircle}>
-                                        <Text style={styles.smallCircleText}>{item.threshold}</Text>
+                                        <Text style={styles.smallCircleText}>{'10'}</Text>
                                     </View>
-                                    <View style={{ borderRadius: 70, borderWidth: 5, borderColor: item.color, width: Dimensions.get('window').width * 0.35, height: Dimensions.get('window').width * 0.35, justifyContent: 'center', alignItems: 'center' }}>
-                                        <Text style={styles.stateCode}>{item.code}</Text>
+                                    <View style={{ borderRadius: 70, borderWidth: 5, borderColor: getStateColor(item.state), width: Dimensions.get('window').width * 0.35, height: Dimensions.get('window').width * 0.35, justifyContent: 'center', alignItems: 'center' }}>
+                                        <Text style={styles.stateCode}>{item.state.length < 2 ? item.state : getStateCodeSafe(item.state)}</Text>
                                         <Text style={styles.stateDays}>{item.days}</Text>
                                         <Text style={styles.daysIn}>Days in</Text>
 
@@ -142,13 +178,14 @@ function mapStateToProps(state) {
         userData: state.auth.userData,
         loginToken: state.auth.loginToken,
         finalYearProgress: state.common.finalYearProgress,
-
+        stateWiseResidency:state.common.stateWiseResidency
     };
 }
 
 
 const mapDispatchToProps = {
-    GET_FINAL_YEAR_PROGRESS
+    GET_FINAL_YEAR_PROGRESS,
+    GET_STATE_WISE_RESIDENCY
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(HomeScreen);
@@ -299,7 +336,7 @@ const styles = StyleSheet.create({
         paddingVertical: 16,
         paddingHorizontal: 16,
         borderRadius: 10,
-        elevation: 1,
+        // elevation: 1,
         textAlign: 'center',
         width: '50%'
     },

@@ -7,6 +7,7 @@ import TaxResidencyIntro from '../screens/TaxResidencyIntro';
 import HomeScreen from '../screens/HomeScreen';
 import MetricsScreen from '../screens/MetricsScreen';
 
+
 export default function HomeNavigation() {
     const Stack = createStackNavigator();
     return (

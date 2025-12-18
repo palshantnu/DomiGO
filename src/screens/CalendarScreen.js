@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -14,44 +14,195 @@ import Header from '../components/Header';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import CustomScroll from '../components/CustomScroll';
+import { GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIMELINE, GET_YEAR_WISE_TIMELINE } from '../redux/actions/action-creator';
+import { connect } from 'react-redux';
 
-export default function CalendarScreen({ navigation }) {
+function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIMELINE, GET_YEAR_WISE_TIMELINE, yearWiseTimeline, weekWiseTimeline, monthWiseTimeline }) {
   const [selectedTab, setSelectedTab] = useState('Month');
   const [selectedResidencyType, setSelectedResidencyType] = useState('past');
 
+  console.log('yearWiseTimeline', yearWiseTimeline);
+  console.log('weekWiseTimeline', weekWiseTimeline);
+  console.log('monthWiseTimeline', monthWiseTimeline);
 
-  const regulatoryCalendar = [
-    {
-      period: 'August 12 - August 18, 2024',
-      entries: [
-        { id: 'AUD', name: 'Lay Ayes', location: 'California', day: "mon" },
-        { id: 'NOT', name: 'Picker', location: 'Kissen', day: "tou" },
-        { id: 'AUD', name: 'Sun Fushido', location: 'Call for Is', day: "mon" },
-        { id: 'NOT', name: 'Lay Vogue', location: 'Hoyoda', day: "mon" },
-        { id: 'NOT', name: 'Set Lake', location: 'City, Utah', day: "mon" },
-        { id: 'AUD', name: 'Mars', location: 'Nevada', day: "mon" },
-        { id: 'AUD', name: 'Portland', location: 'Oregon', day: "mon" },
-        { id: 'AUD', name: 'Screp', location: 'Wash Lake', day: "mon" },
-        { id: 'AUD', name: 'Buffalo', location: 'Oregon', day: "mon" },
-        { id: 'AUD', name: 'Southern', location: 'Wash Lake', day: "mon" },
-      ]
-    },
-    {
-      period: 'August 19 - August 25, 2024',
-      entries: [
-        { id: 'AUD', name: 'Santa', location: 'Texas', day: "mon" },
-        { id: 'AUD', name: 'Elgin', location: 'Texas', day: "mon" },
-        { id: 'AUD', name: 'Hudson', location: 'Texas', day: "mon" },
-        { id: 'AUD', name: 'North Pacific', location: '', day: "mon" },
-        { id: 'AUD', name: 'Canada', location: 'Florida', day: "mon" },
-        { id: 'AUD', name: 'Tampa', location: 'Florida', day: "mon" },
-        { id: 'AUD', name: 'Austin', location: 'Georgia', day: "mon" },
-        { id: 'AUD', name: 'Chattleton', location: 'South Carolina', day: "mon" },
-        { id: 'AUD', name: 'Chicago', location: 'North Carolina', day: "mon" },
-        { id: 'AUD', name: 'Ralph', location: 'North Carolina', day: "mon" },
-      ]
-    }
-  ];
+  const getCurrentWeekDates = () => {
+  const today = new Date();
+
+  // Clone date to avoid mutation
+  const current = new Date(today);
+
+  // Get day (0 = Sunday, 1 = Monday ...)
+  const day = current.getDay();
+
+  // Monday as start of week
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+
+  const startOfWeek = new Date(current);
+  startOfWeek.setDate(current.getDate() + diffToMonday);
+
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+  const formatDate = (date) =>
+    date.toISOString().split('T')[0]; // YYYY-MM-DD
+
+  return {
+    start: formatDate(startOfWeek),
+    end: formatDate(endOfWeek),
+  };
+};
+
+
+
+  useEffect(() => {
+    const today = new Date();
+      const { start, end } = getCurrentWeekDates();
+
+    GET_WEEK_WISE_TIMELINE({ start, end });;
+    GET_YEAR_WISE_TIMELINE({year:today.getFullYear()});
+    GET_MONTH_WISE_TIMELINE({
+      month: today.getMonth() + 1, // JS months 0-based
+      year: today.getFullYear(),
+    });
+  }, []);
+
+
+  const STATE_COLOR_MAP = {
+    "Madhya Pradesh": "#28a0dd",
+    "Uttar Pradesh": "#34c759",
+    "Delhi": "#5ac8fa",
+    "California": "#a5f1a9",
+    "Arizona": "#1d3b73",
+  };
+
+
+  const getMarkedDates = (monthWiseTimeline) => {
+    const result = monthWiseTimeline || {};
+    const marked = {};
+
+    Object.keys(result).forEach(date => {
+      const uniqueStates = [
+        ...new Set(result[date].map(item => item.state))
+      ];
+
+      marked[date] = {
+        dots: uniqueStates.map(state => ({
+          color: STATE_COLOR_MAP[state] || '#999'
+        }))
+      };
+    });
+
+    return marked;
+  };
+
+
+
+  const getLegendStates = (monthWiseTimeline) => {
+    const result = monthWiseTimeline || {};
+    const stateSet = new Set();
+
+    Object.values(result).forEach(dayArray => {
+      dayArray.forEach(item => {
+        if (item.state) {
+          stateSet.add(item.state);
+        }
+      });
+    });
+
+    return Array.from(stateSet);
+  };
+
+  const legendStates = getLegendStates(monthWiseTimeline);
+
+
+
+  const getWeekCalendarData = (weekResult = {}) => {
+    return Object.keys(weekResult).map(date => {
+      const formattedDate = new Date(date).toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      });
+
+      return {
+        period: formattedDate,
+        entries: weekResult[date].map((item, index) => ({
+          id: item.state?.slice(0, 3).toUpperCase(),
+          name: item.city,
+          location: item.state,
+          day: new Date(date).toLocaleDateString('en-US', { weekday: 'short' })
+        }))
+      };
+    });
+  };
+
+  const regulatoryCalendar = getWeekCalendarData(weekWiseTimeline);
+
+  const getYearData = (data = []) => {
+    const formatDate = (date) =>
+    new Date(date).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+    });
+    return data.map((item, index) => ({
+      id: index + 1,
+      // date: `${new Date(item.startDate).toLocaleDateString('en-IN')} - 
+      //      ${new Date(item.endDate).toLocaleDateString('en-IN')}`,
+      date: `${formatDate(item.startDate)} - ${formatDate(item.endDate)}`,
+      location: `${item.city}, ${item.state}`,
+      days: `${item.days} Day${item.days > 1 ? 's' : ''}`,
+      color: STATE_COLOR_MAP[item.state] || colors.primary,
+      // color: colors.primary,
+      manual: item.isManual
+    }));
+  };
+
+  const today = new Date();
+
+  const yearData = getYearData(yearWiseTimeline || []);
+
+  const residenciesDataa = yearData.filter(item => {
+    const end = new Date(item.date.split('-')[1]);
+    return selectedResidencyType === 'past'
+      ? end < today
+      : end >= today;
+  });
+
+
+
+
+  // const regulatoryCalendar = [
+  //   {
+  //     period: 'August 12 - August 18, 2024',
+  //     entries: [
+  //       { id: 'AUD', name: 'Lay Ayes', location: 'California', day: "mon" },
+  //       { id: 'NOT', name: 'Picker', location: 'Kissen', day: "tou" },
+  //       { id: 'AUD', name: 'Sun Fushido', location: 'Call for Is', day: "mon" },
+  //       { id: 'NOT', name: 'Lay Vogue', location: 'Hoyoda', day: "mon" },
+  //       { id: 'NOT', name: 'Set Lake', location: 'City, Utah', day: "mon" },
+  //       { id: 'AUD', name: 'Mars', location: 'Nevada', day: "mon" },
+  //       { id: 'AUD', name: 'Portland', location: 'Oregon', day: "mon" },
+  //       { id: 'AUD', name: 'Screp', location: 'Wash Lake', day: "mon" },
+  //       { id: 'AUD', name: 'Buffalo', location: 'Oregon', day: "mon" },
+  //       { id: 'AUD', name: 'Southern', location: 'Wash Lake', day: "mon" },
+  //     ]
+  //   },
+  //   {
+  //     period: 'August 19 - August 25, 2024',
+  //     entries: [
+  //       { id: 'AUD', name: 'Santa', location: 'Texas', day: "mon" },
+  //       { id: 'AUD', name: 'Elgin', location: 'Texas', day: "mon" },
+  //       { id: 'AUD', name: 'Hudson', location: 'Texas', day: "mon" },
+  //       { id: 'AUD', name: 'North Pacific', location: '', day: "mon" },
+  //       { id: 'AUD', name: 'Canada', location: 'Florida', day: "mon" },
+  //       { id: 'AUD', name: 'Tampa', location: 'Florida', day: "mon" },
+  //       { id: 'AUD', name: 'Austin', location: 'Georgia', day: "mon" },
+  //       { id: 'AUD', name: 'Chattleton', location: 'South Carolina', day: "mon" },
+  //       { id: 'AUD', name: 'Chicago', location: 'North Carolina', day: "mon" },
+  //       { id: 'AUD', name: 'Ralph', location: 'North Carolina', day: "mon" },
+  //     ]
+  //   }
+  // ];
   const residenciesData = {
     past: [
       { id: 1, date: '01 Jan - 07 Jan', location: 'New York, USA', days: '7 Days', color: '#28a0dd' },
@@ -133,29 +284,38 @@ export default function CalendarScreen({ navigation }) {
               <View style={styles.calendarWrapper}>
                 <Calendar
                   markingType={'multi-dot'}
-                  markedDates={{
-                    '2025-11-01': {
-                      dots: [{ color: '#28a0dd' }], 
-                    },
-                    '2025-11-08': {
-                      dots: [{ color: '#34c759' }], 
-                    },
-                    '2025-11-15': {
-                      dots: [{ color: '#5ac8fa' }],
-                    },
-                    '2025-11-22': {
-                      dots: [
-                        { color: '#34c759' }, 
-                        { color: '#a5f1a9' }, 
-                      ],
-                    },
-                    '2025-11-29': {
-                      dots: [
-                        { color: '#007aff' }, 
-                        { color: '#1d3b73' },
-                      ],
-                    },
+                  // markedDates={{
+                  //   '2025-11-01': {
+                  //     dots: [{ color: '#28a0dd' }],
+                  //   },
+                  //   '2025-11-08': {
+                  //     dots: [{ color: '#34c759' }],
+                  //   },
+                  //   '2025-11-15': {
+                  //     dots: [{ color: '#5ac8fa' }],
+                  //   },
+                  //   '2025-11-22': {
+                  //     dots: [
+                  //       { color: '#34c759' },
+                  //       { color: '#a5f1a9' },
+                  //     ],
+                  //   },
+                  //   '2025-11-29': {
+                  //     dots: [
+                  //       { color: '#007aff' },
+                  //       { color: '#1d3b73' },
+                  //     ],
+                  //   },
+                  // }}
+                  onMonthChange={(monthData) => {
+                    console.log('Month Changed =>', monthData);
+
+                    GET_MONTH_WISE_TIMELINE({
+                      month: monthData.month,
+                      year: monthData.year,
+                    });
                   }}
+                  markedDates={getMarkedDates(monthWiseTimeline)}
                   theme={{
                     backgroundColor: '#ffffff',
                     calendarBackground: '#ffffff',
@@ -178,26 +338,17 @@ export default function CalendarScreen({ navigation }) {
               </View>
 
               <View style={styles.legendContainer}>
-                <View style={styles.legendItem}>
-                  <View style={[styles.dot, { backgroundColor: '#28a0dd' }]} />
-                  <Text style={styles.legendText}>New York</Text>
-                </View>
-                <View style={styles.legendItem}>
-                  <View style={[styles.dot, { backgroundColor: '#34c759' }]} />
-                  <Text style={styles.legendText}>California</Text>
-                </View>
-                <View style={styles.legendItem}>
-                  <View style={[styles.dot, { backgroundColor: '#5ac8fa' }]} />
-                  <Text style={styles.legendText}>Texas</Text>
-                </View>
-                <View style={styles.legendItem}>
-                  <View style={[styles.dot, { backgroundColor: '#a5f1a9' }]} />
-                  <Text style={styles.legendText}>Florida</Text>
-                </View>
-                <View style={styles.legendItem}>
-                  <View style={[styles.dot, { backgroundColor: '#1d3b73' }]} />
-                  <Text style={styles.legendText}>Arizona</Text>
-                </View>
+                {legendStates.map((state) => (
+                  <View key={state} style={styles.legendItem}>
+                    <View
+                      style={[
+                        styles.dot,
+                        { backgroundColor: STATE_COLOR_MAP[state] || '#999' }
+                      ]}
+                    />
+                    <Text style={styles.legendText}>{state}</Text>
+                  </View>
+                ))}
               </View>
             </View>
           )}
@@ -276,7 +427,8 @@ export default function CalendarScreen({ navigation }) {
               </View>
 
               <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-                {residenciesData[selectedResidencyType].map((item) => (
+                {/* {residenciesData[selectedResidencyType].map((item) => ( */}
+                {yearData?.map((item) => (
                   <View key={item.id} style={styles.card}>
                     <View style={[styles.colorStrip, { backgroundColor: item.color }]} />
                     <View style={styles.infoContainer}>
@@ -316,6 +468,27 @@ export default function CalendarScreen({ navigation }) {
     </LinearGradient>
   );
 }
+
+
+
+function mapStateToProps(state) {
+  return {
+    userData: state.auth.userData,
+    loginToken: state.auth.loginToken,
+    yearWiseTimeline: state.common.yearWiseTimeline,
+    weekWiseTimeline: state.common.weekWiseTimeline,
+    monthWiseTimeline: state.common.monthWiseTimeline,
+  };
+}
+
+
+const mapDispatchToProps = {
+  GET_WEEK_WISE_TIMELINE,
+  GET_MONTH_WISE_TIMELINE,
+  GET_YEAR_WISE_TIMELINE
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(CalendarScreen);
 
 
 
