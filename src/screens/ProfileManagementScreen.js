@@ -19,11 +19,14 @@ import {
 import { getUserPersonalDataSelelctor } from "../redux/selectors/common";
 import colors from "../theme/colors";
 import { connect } from "react-redux";
-import { CustomToast } from "../helpers/CommonHelpers";
+import { CustomToast, GOOGLE_KEY } from "../helpers/CommonHelpers";
 import useAPI from "../helpers/useAPI";
 import { useNavigation } from "@react-navigation/native";
 import NetInfo from '@react-native-community/netinfo';
 import { SliderButton } from "../components/SliderButton";
+import Geolocation from "react-native-geolocation-service";
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import GoogleAutoComplete from '../components/GoogleAutoComplete';
 
 const ProfileManagementScreen = ({
   userPersonalData,
@@ -41,7 +44,34 @@ const ProfileManagementScreen = ({
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [mobile, setMobile] = useState("");
+  const [country, setCountry] = useState("");
+  const [stateName, setStateName] = useState("");
+  const [city, setCity] = useState("");
 
+  useEffect(() => {
+    Geolocation.getCurrentPosition(
+      async position => {
+        const { latitude, longitude } = position.coords;
+
+        // Reverse Geocoding API
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_KEY}`
+        );
+
+        const json = await response.json();
+
+        if (json.results.length > 0) {
+          const countryData = json.results[0].address_components.find(c =>
+            c.types.includes("country")
+          );
+
+          setCountry(countryData?.long_name || "");
+        }
+      },
+      error => console.log(error),
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+    );
+  }, []);
   useEffect(() => {
     getPersonalProfileDataAction();
   }, []);
@@ -65,9 +95,12 @@ const ProfileManagementScreen = ({
     name,
     mobile,
     address,
+    state: stateName,
+    city,
     // current_password: currentPassword,
     // new_password: newPassword,
   };
+console.log('personalData',personalData);
 
   const UpdateProfile = async () => {
     setButtonLoader(true);
@@ -116,7 +149,7 @@ const ProfileManagementScreen = ({
 
             <Text style={styles.profileName}>{name || "User"}</Text>
             <Text style={styles.profileEmail}>
-              {userPersonalData.email ?? "user@gmail.com"}
+              {userPersonalData?.email ?? "user@gmail.com"}
             </Text>
           </View>
 
@@ -131,12 +164,7 @@ const ProfileManagementScreen = ({
                 setValue={setName}
               />
 
-              <InfoInput
-                icon="location-outline"
-                placeholder="Address"
-                value={address}
-                setValue={setAddress}
-              />
+             
 
               <InfoInput
                 icon="call-outline"
@@ -146,6 +174,41 @@ const ProfileManagementScreen = ({
                 keyboardType="number-pad"
                 maxLength={10}
               />
+               <InfoInput
+                icon="location-outline"
+                placeholder="Address"
+                value={address}
+                setValue={setAddress}
+              />
+              <View style={{ marginHorizontal: 0, marginTop: 0 }}>
+                {/* <Text style={styles.sectionTitle}>State</Text> */}
+
+                <GoogleAutoComplete
+                  placeholder="Search State"
+                  apiKey={GOOGLE_KEY}
+                  country={country?.slice(0, 2).toLowerCase()}
+                  type="(regions)"
+                  onSelect={(value) => {
+                    setStateName(value);
+                    setCity("");
+                  }}
+                />
+              </View>
+              <View style={{ marginHorizontal: 0, marginTop: 10 }}>
+                {/* <Text style={styles.sectionTitle}>City</Text> */}
+
+                <GoogleAutoComplete
+                  placeholder="Search City"
+                  apiKey={GOOGLE_KEY}
+                  country={country?.slice(0, 2).toLowerCase()}
+                  type="(cities)"
+                  onSelect={(value) => {
+                    setCity(value);
+                  }}
+                />
+
+              </View>
+
             </View>
           </View>
           <View style={{ width: '90%', alignSelf: 'center' }}>
@@ -179,7 +242,7 @@ const InfoInput = ({
   secureTextEntry,
   isPassword,
   togglePassword,
-    keyboardType,
+  keyboardType,
   maxLength
 }) => (
   <View style={styles.inputRow}>

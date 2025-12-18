@@ -21,6 +21,11 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
+
 
 class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
 
@@ -45,6 +50,14 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     // Track last values to avoid duplicate API calls
     private var lastState: String = ""
     private var lastApiTime: Long = 0
+
+        // Track previous state info
+    private var previousLat: Double? = null
+    private var previousLng: Double? = null
+    private var previousCity: String = ""
+    private var previousStateName: String = ""
+    private var previousEnterTime: Long = 0L
+
 
     companion object {
         private const val TAG = "LocationModule"
@@ -250,6 +263,14 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         }
     }
 
+
+
+    private fun formatDate(timestamp: Long): String {
+    val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
+    sdf.timeZone = TimeZone.getTimeZone("UTC")
+    return sdf.format(Date(timestamp))
+}
+
     private fun processLocationInBackground(location: Location) {
         // Perform reverse geocoding in background
         reverseGeocodeInBackground(location.latitude, location.longitude)
@@ -317,6 +338,17 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
                                     putString("fullAddress", fullAddress)
                                     putDouble("timestamp", System.currentTimeMillis().toDouble())
                                 }
+
+                                                // If first-time or app started fresh
+                if (previousEnterTime == 0L) {
+                    previousLat = lat
+                    previousLng = lng
+                    previousCity = city
+                    previousStateName = state
+                    previousEnterTime = System.currentTimeMillis()
+
+                    Log.d(TAG, "Initialized previous state tracking")
+                }
                                 
                                 sendEvent("onAddressResolved", addressData)
                                 
@@ -340,6 +372,8 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         })
     }
 
+
+
     private fun sendToDomigoAPI(lat: Double, lng: Double, city: String, state: String, address: String) {
        
 
@@ -350,10 +384,37 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
 
         // Only send to API if state changed or 4 hours passed
    
-        if (!stateChanged && !timePassed) {
-            Log.d(TAG, "⏳ No API update required (No state change & 4hr not passed)")
-            return
-        }
+            if (!stateChanged && !timePassed) {
+                Log.d(TAG, "⏳ No API update required")
+                return
+            }
+
+
+    Log.d(TAG, "STATE CHANGED! Triggering trip API")
+
+    // Build trip API call
+    sendTripFormData(
+        originLat = previousLat ?: lat,
+        originLng = previousLng ?: lng,
+        originCity = previousCity,
+        originState = previousStateName,
+        originStartDate = previousEnterTime,
+
+        destinationLat = lat,
+        destinationLng = lng,
+        destinationCity = city,
+        destinationState = state,
+        destinationEnterDate = System.currentTimeMillis()
+    )
+
+    // Reset previous state to new state
+    previousLat = lat
+    previousLng = lng
+    previousCity = city
+    previousStateName = state
+    previousEnterTime = System.currentTimeMillis()
+
+
         val jsonBody = JSONObject().apply {
             put("latitude", lat)
             put("longitude", lng)
@@ -361,6 +422,9 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
             put("city", city)
             put("address", address)
         }
+
+        Log.d(TAG, "📡 Sending location to API → $city, $state")
+
 
         val mediaType = "application/json; charset=utf-8".toMediaType()
         val requestBody = jsonBody.toString().toRequestBody(mediaType)
@@ -432,6 +496,84 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
             Log.e(TAG, "Error sending event to JS: ${e.message}")
         }
     }
+
+
+
+
+
+
+private fun sendTripFormData(
+    originLat: Double,
+    originLng: Double,
+    originCity: String,
+    originState: String,
+    originStartDate: Long,
+
+    destinationLat: Double,
+    destinationLng: Double,
+    destinationCity: String,
+    destinationState: String,
+    destinationEnterDate: Long
+) {
+
+    val formBody = MultipartBody.Builder()
+        .setType(MultipartBody.FORM)
+
+        // ORIGIN
+        .addFormDataPart("originLat", originLat.toString())
+        .addFormDataPart("originLng", originLng.toString())
+        .addFormDataPart("originCity", originCity)
+        .addFormDataPart("originState", originState)
+        .addFormDataPart("startDate", formatDate(originStartDate))
+
+        // DESTINATION
+        .addFormDataPart("destinationLat", destinationLat.toString())
+        .addFormDataPart("destinationLng", destinationLng.toString())
+        .addFormDataPart("destinationCity", destinationCity)
+        .addFormDataPart("destinationState", destinationState)
+        .addFormDataPart("endDate", formatDate(destinationEnterDate))
+        .addFormDataPart("attachments", "[]")
+        .addFormDataPart("modeId", 2.toString())
+        .addFormDataPart("typeId", 6.toString())
+
+        .build()
+
+    val request = Request.Builder()
+        .url("http://3.91.116.18:4001/api/trips")  // replace with your addTrip URL
+        .post(formBody)
+        .addHeader("Authorization", "Bearer $domigoToken")
+        .build()
+
+    httpClient.newCall(request).enqueue(object : okhttp3.Callback {
+        override fun onFailure(call: Call, e: IOException) {
+    val errorData = Arguments.createMap().apply {
+        putString("error", e.message)
+        putDouble("timestamp", System.currentTimeMillis().toDouble())
+    }
+    sendEvent("onTripApiError", errorData)
+}
+
+        override fun onResponse(call: Call, response: Response) {
+    val responseBody = response.body?.string() ?: ""
+
+    Log.d(TAG, "🚗 Trip API Response: ${response.code}")
+
+    val eventData = Arguments.createMap().apply {
+        putInt("statusCode", response.code)
+        putBoolean("success", response.isSuccessful)
+        putString("response", responseBody)
+        putDouble("timestamp", System.currentTimeMillis().toDouble())
+    }
+
+    sendEvent("onTripApiResponse", eventData)
+}
+    })
+}
+
+
+
+
+    
 }
 
 class LocationForegroundService : Service() {

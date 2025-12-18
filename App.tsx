@@ -37,11 +37,11 @@ function App() {
       <PersistGate loading={null} persistor={persistor}>
         <SafeAreaProvider>
           <NavigationContainer>
-            <StatusBar
+            {/* <StatusBar
               barStyle={isDarkMode ? 'dark-content' : 'dark-content'}
               backgroundColor={colors.white}
               translucent={false}
-            />
+            /> */}
 
             <AppContent />
           </NavigationContainer>
@@ -62,9 +62,7 @@ function AppContent() {
         // { paddingTop: safeAreaInsets.top }
       ]}
     >
-
       <RootNavigator />
-
     </SafeAreaView>
   );
 }

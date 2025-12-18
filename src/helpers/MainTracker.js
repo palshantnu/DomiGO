@@ -6,27 +6,34 @@ import store from '../redux/store';
 const isNativeModuleAvailable = () => {
   return NativeModules.LocationTracker != null;
 };
-  const { loginToken } = store?.getState()?.auth || '';
+const { loginToken } = store?.getState()?.auth || '';
+
+
+console.log('loginToken>>>>>>>>>>>>>>>>>>>>>>>>>>>', loginToken);
+
 // Create event emitter only if native module exists
-const locationEventEmitter = isNativeModuleAvailable() 
-  ? new NativeEventEmitter(NativeModules.LocationTracker) 
+const locationEventEmitter = isNativeModuleAvailable()
+  ? new NativeEventEmitter(NativeModules.LocationTracker)
   : null;
 
 class DomigoTracker {
   constructor() {
-    this.subscriptions = []; 
+    this.subscriptions = [];
     this.isTracking = false;
     this.nativeAvailable = isNativeModuleAvailable();
-    
+
     console.log(`📍 DomigoTracker - Platform: ${Platform.OS}, Native available: ${this.nativeAvailable}`);
-    
+
     if (!this.nativeAvailable) {
       console.warn('📍 DomigoTracker - Native module not available, running in fallback mode');
     }
   }
 
   async startDomigoTracking() {
+    console.log('🔥 JS startDomigoTracking CALLED');
+    console.log('🔥 NativeModules.LocationTracker =', NativeModules.LocationTracker);
     console.log(`🚀 Starting Domigo location tracking on ${Platform.OS}...`);
+console.log('loginToken>>>>>>>>>>>>>>>>>>>>>>>>>>>', loginToken);
 
     if (!this.nativeAvailable) {
       console.warn('📍 DomigoTracker - Native module not available, cannot start tracking');
@@ -34,19 +41,21 @@ class DomigoTracker {
     }
 
     try {
-      const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEwLCJlbWFpbCI6ImFqYXlAZ21haWwuY29tIiwiaWF0IjoxNzYzOTgzODg5LCJleHAiOjE3NjQwMTI2ODl9.V6muZZvXTE-P8DUuxnzfuhFzjB41C0tj22IxWp3eMEI";
+      // const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEwLCJlbWFpbCI6ImFqYXlAZ21haWwuY29tIiwiaWF0IjoxNzYzOTgzODg5LCJleHAiOjE3NjQwMTI2ODl9.V6muZZvXTE-P8DUuxnzfuhFzjB41C0tj22IxWp3eMEI";
+      const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEwLCJlbWFpbCI6ImFqYXlAZ21haWwuY29tIiwiaWF0IjoxNzY1ODY4MTYwLCJleHAiOjE3NjU4OTY5NjB9.C3-csUwdqLBtcylrSD_f6UWc-sNU3IR8BSjJ84A-Bsg";
       const API_URL = "http://3.91.116.18:4001/api/locations";
 
       // Set configuration for both platforms
       const config = {
-        interval: 20000, 
-        domigoToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEwLCJlbWFpbCI6ImFqYXlAZ21haWwuY29tIiwiaWF0IjoxNzY0MDc1MDIzLCJleHAiOjE3NjQxMDM4MjN9.eLadDqiUV0JpGpI7L38FGq0MahIhnqjTboQZI7K0gr0',
+        interval: 20000,
+        // domigoToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEwLCJlbWFpbCI6ImFqYXlAZ21haWwuY29tIiwiaWF0IjoxNzY2MDM2Nzk1LCJleHAiOjE3NjYwNjU1OTV9.bMR_0zqYOXAhBrmdcmvGFevbA1RkLH-mVWDeTmIuecw',
+        domigoToken: loginToken,
         apiUrl: API_URL
       };
       if (Platform.OS === 'android') {
         config.googleApiKey = GOOGLE_KEY;
       }
-      console.log('📍 Setting config for native module...',config);
+      console.log('📍 Setting config for native module...', config);
       await NativeModules.LocationTracker.setConfig(config);
 
       // Set up event listeners
@@ -55,7 +64,7 @@ class DomigoTracker {
       console.log('📍 Starting native location tracking...');
       await NativeModules.LocationTracker.startLocationTracking();
       this.isTracking = true;
-      
+
       console.log(`📍 Domigo ${Platform.OS} - Tracking started successfully`);
       return { started: true, subscriptions: this.subscriptions };
     } catch (error) {
@@ -71,7 +80,7 @@ class DomigoTracker {
     }
 
     console.log(`🛑 Stopping Domigo tracking on ${Platform.OS}...`);
-    
+
     try {
       // Remove all event listeners
       this.subscriptions.forEach(subscription => subscription.remove());
@@ -80,7 +89,7 @@ class DomigoTracker {
       // Stop native tracking
       await NativeModules.LocationTracker.stopLocationTracking();
       this.isTracking = false;
-      
+
       console.log(`📍 Domigo ${Platform.OS} - Tracking stopped successfully`);
       return true;
     } catch (error) {
@@ -119,12 +128,17 @@ class DomigoTracker {
     // Set up new event listeners
     this.subscriptions.push(
       locationEventEmitter.addListener('onLocationChanged', (location) => {
-        console.log(`📍 Domigo ${Platform.OS} - Location:`, {
-          latitude: location.latitude,
-          longitude: location.longitude,
-          accuracy: location.accuracy,
-          provider: location.provider
-        });
+        console.log(
+          `📍 [${new Date(location.timestamp).toLocaleTimeString()}] Location Update`,
+          {
+            lat: location.latitude.toFixed(6),
+            lng: location.longitude.toFixed(6),
+            accuracy: `${location.accuracy}m`,
+            speed: location.speed,
+            provider: location.provider
+          }
+        );
+
       })
     );
 
@@ -155,6 +169,28 @@ class DomigoTracker {
         console.log(`ℹ️ Domigo ${Platform.OS} - Status:`, status);
       })
     );
+
+
+
+
+    //new changes
+    this.subscriptions.push(
+      locationEventEmitter.addListener('onTripApiResponse', (data) => {
+        console.log('🚗 Trip API Success:', {
+          statusCode: data.statusCode,
+          response: data.response,
+          time: new Date(data.timestamp).toLocaleString()
+        });
+      })
+    );
+
+    this.subscriptions.push(
+      locationEventEmitter.addListener('onTripApiError', (error) => {
+        console.error('🚗 Trip API Error:', error);
+      })
+    );
+
+
 
     console.log('📍 Event listeners setup completed');
   }

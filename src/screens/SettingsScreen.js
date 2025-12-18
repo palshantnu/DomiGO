@@ -151,7 +151,8 @@ export default function SettingsScreen() {
               <Ionicons name="chevron-forward" size={18} color="#999" />
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.row}>
+            <TouchableOpacity style={styles.row}
+            onPress={()=>navigation.navigate("PrivacyPolicyScreen")}>
               <View style={styles.rowLeft}>
                 <ICON_Lock height={24} width={24} />
                 <View>

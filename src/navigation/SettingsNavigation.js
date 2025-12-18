@@ -12,6 +12,7 @@ import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 import CreateResidencyRecordScreen from '../screens/CreateResidencyRecordScreen';
 import ResidencyRecordDetailsScreen from '../screens/ResidencyRecordDetailsScreen';
 import ResidencyHistoryScreen from '../screens/ResidencyRecords';
+import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 
 
 export default function SettingsNavigation() {
@@ -63,6 +64,12 @@ export default function SettingsNavigation() {
           component={ChangePasswordScreen}
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="PrivacyPolicyScreen"
+          component={PrivacyPolicyScreen}
+          options={{ headerShown: false }}
+        />
+
      
        
 

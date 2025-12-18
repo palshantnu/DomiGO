@@ -35,6 +35,17 @@ import {
   GET_FINAL_YEAR_PROGRESS_SUCCESS,
   FINAL_YEAR_PROGRESS_FAILURE,
   TRIP_LIST_FAILURE,
+  GET_STATE_WISE_RESIDENCY_SUCCESS,
+  STATE_WISE_RESIDENCY_FAILURE,
+  GET_STATE_WISE_METRICS_SUCCESS,
+  STATE_WISE_METRICS_FAILURE,
+  GET_YEAR_WISE_TIMELINE_FAILURE,
+  GET_YEAR_WISE_TIMELINE_SUCCESS,
+  YEAR_WISE_TIMELINE_FAILURE,
+  GET_WEEK_WISE_TIMELINE_SUCCESS,
+  WEEK_WISE_TIMELINE_FAILURE,
+  MONTH_WISE_TIMELINE_FAILURE,
+  GET_MONTH_WISE_TIMELINE_SUCCESS
 
 } from './action-types';
 import axiosinstance from '../../axios/axiosinstance';
@@ -567,6 +578,160 @@ export function GET_FINAL_YEAR_PROGRESS() {
   }
 }
 
+export function GET_STATE_WISE_RESIDENCY() {
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.get('dashboard/state-days')
+      const responseJson = response.data;
+      console.log('responseSTATEJson-=>', responseJson);
+
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_STATE_WISE_RESIDENCY_SUCCESS,
+          payload: responseJson.result,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: STATE_WISE_RESIDENCY_FAILURE,
+        payload: 'STATE_WISE_RESIDENCY_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: STATE_WISE_RESIDENCY_FAILURE,
+        payload: 'STATE_WISE_RESIDENCY_FAILURE',
+      })
+      console.log('catch error API STATE_WISE_RESIDENCY_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+
+
+export function GET_STATE_WISE_METRICS() {
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.get('dashboard/metrics')
+      const responseJson = response.data;
+      console.log('responseMetricsJson-=>', responseJson);
+
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_STATE_WISE_METRICS_SUCCESS,
+          payload: responseJson.result,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: STATE_WISE_RESIDENCY_FAILURE,
+        payload: 'STATE_WISE_METRICS_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: STATE_WISE_METRICS_FAILURE,
+        payload: 'STATE_WISE_METRICS_FAILURE',
+      })
+      console.log('catch error API STATE_WISE_METRICS_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+
+
+export function GET_YEAR_WISE_TIMELINE({year}) {
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.get(`dashboard/timeline/year?year=${year}`)
+      const responseJson = response.data;
+      console.log('responseYEARJson-=>', responseJson);
+
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_YEAR_WISE_TIMELINE_SUCCESS,
+          payload: responseJson.result,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: YEAR_WISE_TIMELINE_FAILURE,
+        payload: 'YEAR_WISE_TIMELINE_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: YEAR_WISE_TIMELINE_FAILURE,
+        payload: 'YEAR_WISE_TIMELINE_FAILURE',
+      })
+      console.log('catch error API YEAR_WISE_TIMELINE_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+
+export function GET_WEEK_WISE_TIMELINE({ start, end }) {
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.get(`http://3.91.116.18:4001/api/dashboard/calendar/week?end=${start}&end=${end}`)
+      const responseJson = response.data;
+      console.log('responseWEEKJson-=>', responseJson);
+
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_WEEK_WISE_TIMELINE_SUCCESS,
+          payload: responseJson.result,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: WEEK_WISE_TIMELINE_FAILURE,
+        payload: 'WEEK_WISE_TIMELINE_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: WEEK_WISE_TIMELINE_FAILURE,
+        payload: 'WEEK_WISE_TIMELINE_FAILURE',
+      })
+      console.log('catch error API WEEK_WISE_TIMELINE_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+
+// export function GET_MONTH_WISE_TIMELINE() {
+//     type: 'GET_MONTH_WISE_TIMELINE',
+//   payload
+//   return async (dispatch) => {
+//     try {
+//       const response = await axiosinstance.get('dashboard/calendar/month?month=2025-12')
+//       const responseJson = response.data;
+//       console.log('responseMONTHJson-=>', responseJson);
+
+//       if (responseJson.message == 'Success') {
+//         dispatch({
+//           type: GET_MONTH_WISE_TIMELINE_SUCCESS,
+//           payload: responseJson.result,
+//         })
+//         return Promise.resolve(responseJson)
+//       }
+//       dispatch({
+//         type: MONTH_WISE_TIMELINE_FAILURE,
+//         payload: 'MONTH_WISE_TIMELINE_FAILURE',
+//       })
+//       return Promise.reject(responseJson)
+//     } catch (e) {
+//       dispatch({
+//         type: MONTH_WISE_TIMELINE_FAILURE,
+//         payload: 'MONTH_WISE_TIMELINE_FAILURE',
+//       })
+//       console.log('catch error API MONTH_WISE_TIMELINE_FAILURE', e)
+//       return Promise.reject(CommonError)
+//     }
+//   }
+// }
+
 
 // export const getTripListDataAction = () => (dispatch, getState) => new Promise((resolve, reject) => {
 
@@ -579,6 +744,49 @@ export function GET_FINAL_YEAR_PROGRESS() {
 //     reject({ error })
 //   })
 // })
+
+export const GET_MONTH_WISE_TIMELINE = ({ month, year }) => {
+  // console.log('fbfsvbv',month,year);
+  
+  return async (dispatch) => {
+    try {
+      dispatch({ type: 'GET_MONTH_WISE_TIMELINE' });
+
+      // month ko 2 digit me convert karo
+      const formattedMonth = String(month).padStart(2, '0');
+
+      const response = await axiosinstance.get(
+        `dashboard/calendar/month?month=${year}-${formattedMonth}`
+      );
+
+      const responseJson = response.data;
+      console.log('responseMONTHJson =>', responseJson);
+
+      if (responseJson.message === 'Success') {
+        dispatch({
+          type: 'GET_MONTH_WISE_TIMELINE_SUCCESS',
+          payload: responseJson.result,
+        });
+        return Promise.resolve(responseJson);
+      }
+
+      dispatch({
+        type: 'MONTH_WISE_TIMELINE_FAILURE',
+        payload: responseJson,
+      });
+
+      return Promise.reject(responseJson);
+    } catch (e) {
+      dispatch({
+        type: 'MONTH_WISE_TIMELINE_FAILURE',
+        payload: e,
+      });
+      console.log('catch error MONTH_WISE_TIMELINE_FAILURE', e);
+      return Promise.reject(e);
+    }
+  };
+};
+
 
 export const LOGOUT = () => (dispatch) => {
   dispatch({ type: LOGOUT_SUCCESS })

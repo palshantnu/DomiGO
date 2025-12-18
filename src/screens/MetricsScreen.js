@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
     View,
     Text,
@@ -11,70 +11,137 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import Header from '../components/Header';
 import CustomProgressBar from '../components/CustomProgressBar';
+import { connect, useDispatch } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
+import { GET_STATE_WISE_METRICS } from '../redux/actions/action-creator';
 
 const colors = {
     primary: '#28a0dd',
 };
 
-const metricsData = [
-    {
-        id: 1,
-        state: 'FL',
-        bgColor: '#2ecc71',
-        taxDays: 134,
-        daysWorked: 100,
-        hoursWorked: 800,
-        travelDays: 15,
-        wages: '$100,000',
-        progress: 0.5,
-    },
-    {
-        id: 2,
-        state: 'NY',
-        bgColor: '#f39c12',
-        taxDays: 100,
-        daysWorked: 100,
-        hoursWorked: 100,
-        travelDays: 10,
-        wages: '$120,000',
-        progress: 0.5,
-    },
-    {
-        id: 3,
-        state: 'CA',
-        bgColor: '#3498db',
-        taxDays: 180,
-        daysWorked: 120,
-        hoursWorked: 950,
-        travelDays: 8,
-        wages: '$150,000',
-        progress: 0.75,
-    },
-    {
-        id: 4,
-        state: 'UT',
-        bgColor: '#27ae60',
-        taxDays: 90,
-        daysWorked: 60,
-        hoursWorked: 450,
-        travelDays: 3,
-        wages: '$85,000',
-        progress: 0.3,
-    },
-    {
-        id: 5,
-        state: 'VA',
-        bgColor: '#e74c3c',
-        taxDays: 180,
-        daysWorked: 100,
-        hoursWorked: 300,
-        travelDays: 5,
-        wages: '$90,000',
-        progress: 0.9,
-    },
-];
+// const metricsData = [
+//     {
+//         id: 1,
+//         state: 'FL',
+//         bgColor: '#2ecc71',
+//         taxDays: 134,
+//         daysWorked: 100,
+//         hoursWorked: 800,
+//         travelDays: 15,
+//         wages: '$100,000',
+//         progress: 0.5,
+//     },
+//     {
+//         id: 2,
+//         state: 'NY',
+//         bgColor: '#f39c12',
+//         taxDays: 100,
+//         daysWorked: 100,
+//         hoursWorked: 100,
+//         travelDays: 10,
+//         wages: '$120,000',
+//         progress: 0.5,
+//     },
+//     {
+//         id: 3,
+//         state: 'CA',
+//         bgColor: '#3498db',
+//         taxDays: 180,
+//         daysWorked: 120,
+//         hoursWorked: 950,
+//         travelDays: 8,
+//         wages: '$150,000',
+//         progress: 0.75,
+//     },
+//     {
+//         id: 4,
+//         state: 'UT',
+//         bgColor: '#27ae60',
+//         taxDays: 90,
+//         daysWorked: 60,
+//         hoursWorked: 450,
+//         travelDays: 3,
+//         wages: '$85,000',
+//         progress: 0.3,
+//     },
+//     {
+//         id: 5,
+//         state: 'VA',
+//         bgColor: '#e74c3c',
+//         taxDays: 180,
+//         daysWorked: 100,
+//         hoursWorked: 300,
+//         travelDays: 5,
+//         wages: '$90,000',
+//         progress: 0.9,
+//     },
+// ];
 
-export default function MetricsScreen() {
+
+
+//  function MetricsScreen({GET_STATE_WISE_METRICS,}) {
+const MetricsScreen = ({ GET_STATE_WISE_METRICS, loginToken, stateWiseMetrics }) => {
+    console.log('stateWiseMetrics>>>>', stateWiseMetrics);
+
+
+    function getStateCodeSafe(state) {
+        return state
+            .toLowerCase()
+            .replace(/[^a-z\s]/g, "")
+            .split(/\s+/)
+            .map(w => w.charAt(0).toUpperCase())
+            .join("");
+    }
+
+        const stringToHash = (str) => {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        return hash;
+    };
+
+    const getDarkPastelColor = (str) => {
+        const hash = stringToHash(str);
+        const hue = Math.abs(hash) % 360;
+        return `hsl(${hue}, 55%, 35%)`; // dark pastel
+    };
+
+    const getStateColor = (state) =>
+        state ? getDarkPastelColor(state) : '#2C2C2C';
+
+
+
+    const metricsData = stateWiseMetrics.map((item, index) => ({
+        id: index.toString(),
+        state: item.state,
+        taxDays: item.daysTracked,
+        daysWorked: item.daysWorked,
+        hoursWorked: item.hoursWorked,
+        travelDays: item.travelDays,
+        wages: item.estimatedWages,
+        progress: item.progressDays / 10, // example: assuming max = 10 days
+        progressLabel: `${item.progressDays} Days`,
+        // bgColor: '#E6F0FF', // you can make this dynamic if needed
+        bgColor: getStateColor(item.state)
+    }));
+
+
+    const dispatch = useDispatch();
+
+    const progress = 200 / 365;
+    const navigation = useNavigation();
+
+    // useEffect(() => {
+
+    //     dispatch(GET_STATE_WISE_METRICS())
+    //     // return () => {
+    //     //   stopDomigoTracking();
+    //     // };
+    // }, []);
+    useEffect(() => {
+        GET_STATE_WISE_METRICS();
+    }, []);
     return (
         <LinearGradient
             colors={['#9ab1fa', '#ffffff']}
@@ -100,6 +167,14 @@ export default function MetricsScreen() {
                     showsVerticalScrollIndicator={false}
                 >
                     {metricsData.map((item) => {
+                        // const stats = [
+                        //     { label: 'Tax Days in', value: item.taxDays },
+                        //     { label: 'Days Worked', value: item.daysWorked },
+                        //     { label: 'Hours Worked', value: item.hoursWorked },
+                        //     { label: 'Travel Days', value: item.travelDays },
+                        //     { label: 'Est. Wages', value: item.wages },
+                        //     { label: '', value: '' },
+                        // ];
                         const stats = [
                             { label: 'Tax Days in', value: item.taxDays },
                             { label: 'Days Worked', value: item.daysWorked },
@@ -112,7 +187,7 @@ export default function MetricsScreen() {
                         return (
                             <View key={item.id} style={styles.card}>
                                 <View style={[styles.stateBox, { backgroundColor: item.bgColor }]}>
-                                    <Text style={styles.stateText}>{item.state}</Text>
+                                    <Text style={styles.stateText}>{item.state.length < 2 ? item.state : getStateCodeSafe(item.state)}</Text>
                                 </View>
 
                                 <View style={styles.cardContent}>
@@ -121,7 +196,7 @@ export default function MetricsScreen() {
                                             progress={item.progress}
                                             height={18}
                                             bgColor="#3170E2"
-                                            label="10 Days"
+                                            label={item.progress * 10}
                                         />
                                     </View>
 
@@ -151,6 +226,22 @@ export default function MetricsScreen() {
         </LinearGradient>
     );
 }
+
+
+function mapStateToProps(state) {
+    return {
+        userData: state.auth.userData,
+        loginToken: state.auth.loginToken,
+        stateWiseMetrics: state.common.stateWiseMetrics
+    };
+}
+
+
+const mapDispatchToProps = {
+    GET_STATE_WISE_METRICS,
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(MetricsScreen);
 
 const styles = StyleSheet.create({
     container: {
