@@ -19,7 +19,8 @@ import NetInfo from '@react-native-community/netinfo';
 import useAPI from '../../helpers/useAPI';
 import { startBackgroundLocation } from "../../helpers/LocationTracker";
 import { startDomigoTracking } from "../../helpers/MainTracker";
-import  DomigoTracker  from "../../helpers/MainTracker";
+import DomigoTracker from "../../helpers/MainTracker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 const LoginScreen = ({ navigation, signIn }) => {
@@ -60,14 +61,17 @@ const LoginScreen = ({ navigation, signIn }) => {
       password: password.trim()
     };
     callLoginApi(signIn(data))
-      .then(async(response) => {
+      .then(async (response) => {
         console.log('response--==>', response);
         setButtonLoader(false);
         if (response.message != 'Success') {
-          
+
           CustomToast.show(response?.message ?? response?.error);
         } else {
-            const { started } = await DomigoTracker.startDomigoTracking();
+          console.log('response',response.token);
+          await AsyncStorage.setItem('DOMIGO_TRACKING_ENABLED', '1');
+          DomigoTracker.startDomigoTracking(response.token);
+          // const { started } = await DomigoTracker.startDomigoTracking();
           navigation.reset({
             index: 0,
             routes: [{ name: "Main" }],

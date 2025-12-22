@@ -6,10 +6,10 @@ import store from '../redux/store';
 const isNativeModuleAvailable = () => {
   return NativeModules.LocationTracker != null;
 };
-const { loginToken } = store?.getState()?.auth || '';
 
 
-console.log('loginToken>>>>>>>>>>>>>>>>>>>>>>>>>>>', loginToken);
+
+// console.log(userData,'loginToken>>>>>>>>>>>>>>>>>>>>>>>>>>>', loginToken,userData);
 
 // Create event emitter only if native module exists
 const locationEventEmitter = isNativeModuleAvailable()
@@ -28,12 +28,49 @@ class DomigoTracker {
       console.warn('📍 DomigoTracker - Native module not available, running in fallback mode');
     }
   }
+// Update your DomigoTracker class methods:
 
-  async startDomigoTracking() {
+async getLaunchContext() {
+  if (!this.nativeAvailable) {
+    return { launchedByLocation: false };
+  }
+  
+  try {
+    const context = await NativeModules.LocationTracker.getLaunchContext();
+    return context;
+  } catch (error) {
+    console.error('Failed to get launch context:', error);
+    return { launchedByLocation: false };
+  }
+}
+
+async clearNotificationBadge() {
+  if (!this.nativeAvailable) return;
+  
+  try {
+    await NativeModules.LocationTracker.clearNotificationBadge();
+  } catch (error) {
+    console.error('Failed to clear notification badge:', error);
+  }
+}
+
+// Add event listener for silent notifications
+setupEventListeners() {
+  // ... existing code ...
+  
+  // Add this new event listener
+  // this.subscriptions.push(
+  //   locationEventEmitter.addListener('onSilentNotificationReceived', (data) => {
+  //     console.log('📱 Silent notification received:', data);
+  //   })
+  // );
+}
+  async startDomigoTracking(token) {
+    const { loginToken,userData } = store.getState().auth || '';
     console.log('🔥 JS startDomigoTracking CALLED');
     console.log('🔥 NativeModules.LocationTracker =', NativeModules.LocationTracker);
     console.log(`🚀 Starting Domigo location tracking on ${Platform.OS}...`);
-console.log('loginToken>>>>>>>>>>>>>>>>>>>>>>>>>>>', loginToken);
+    // console.log('loginToken>>>>>>>>>>>>>>>>>>>>>>>>>>>', token || loginToken);
 
     if (!this.nativeAvailable) {
       console.warn('📍 DomigoTracker - Native module not available, cannot start tracking');
@@ -42,14 +79,13 @@ console.log('loginToken>>>>>>>>>>>>>>>>>>>>>>>>>>>', loginToken);
 
     try {
       // const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEwLCJlbWFpbCI6ImFqYXlAZ21haWwuY29tIiwiaWF0IjoxNzYzOTgzODg5LCJleHAiOjE3NjQwMTI2ODl9.V6muZZvXTE-P8DUuxnzfuhFzjB41C0tj22IxWp3eMEI";
-      const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEwLCJlbWFpbCI6ImFqYXlAZ21haWwuY29tIiwiaWF0IjoxNzY1ODY4MTYwLCJleHAiOjE3NjU4OTY5NjB9.C3-csUwdqLBtcylrSD_f6UWc-sNU3IR8BSjJ84A-Bsg";
       const API_URL = "http://3.91.116.18:4001/api/locations";
 
       // Set configuration for both platforms
       const config = {
         interval: 20000,
         // domigoToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEwLCJlbWFpbCI6ImFqYXlAZ21haWwuY29tIiwiaWF0IjoxNzY2MDM2Nzk1LCJleHAiOjE3NjYwNjU1OTV9.bMR_0zqYOXAhBrmdcmvGFevbA1RkLH-mVWDeTmIuecw',
-        domigoToken: loginToken,
+        domigoToken: token || loginToken,
         apiUrl: API_URL
       };
       if (Platform.OS === 'android') {

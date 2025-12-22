@@ -16,9 +16,8 @@ import RootNavigator from './src/navigation';
 import colors from './src/theme/colors';
 import { store, persistor } from './src/redux/store';
 import { PersistGate } from 'redux-persist/integration/react';
-import { startDomigoTracking, stopDomigoTracking } from "./src/helpers/MainTracker";
-import { testNativeModule } from './src/helpers/testNativeModule';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import DomigoTracker from './src/helpers/MainTracker'
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
 
@@ -31,7 +30,23 @@ function App() {
   // useEffect(()=>{
   //   testNativeModule()
   // },[])
-
+  useEffect(() => {
+    const autoStartTracking = async () => {
+      const enabled = await AsyncStorage.getItem('DOMIGO_TRACKING_ENABLED');
+      const token = store.getState().auth?.loginToken;
+      
+      if (enabled === '1' && token) {
+        // Add delay to prevent immediate duplicate processing
+        setTimeout(() => {
+          console.log('🔁 Auto-starting Domigo tracking');
+          DomigoTracker.startDomigoTracking(token);
+        }, 2000); // 2 second delay
+      }
+    };
+    
+    autoStartTracking();
+  }, []);
+  
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>

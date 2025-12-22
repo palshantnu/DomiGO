@@ -133,7 +133,9 @@ function getStateCodeSafe(state) {
                                 </View>
                             </TouchableOpacity>
 
-                            <TouchableOpacity onPress={()=>DomigoTracker.startDomigoTracking()}  style={styles.rightTab}>
+                            <TouchableOpacity 
+                            // onPress={()=>DomigoTracker.startDomigoTracking()}
+                              style={styles.rightTab}>
                                 <Text style={styles.inactiveText}>Calendar</Text>
                             </TouchableOpacity>
                         </View>

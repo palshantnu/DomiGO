@@ -26,6 +26,7 @@
 		1811AC962ED0374D00585ACD /* domiGo-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "domiGo-Bridging-Header.h"; sourceTree = "<group>"; };
 		1811AC972ED0375D00585ACD /* SLCEventEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SLCEventEmitter.swift; sourceTree = "<group>"; };
 		1811AC992ED038D500585ACD /* SLCEventEmitter 2.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "SLCEventEmitter 2.m"; sourceTree = "<group>"; };
+		186B82672EF51DFE00A62AFF /* domiGo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = domiGo.entitlements; path = domiGo/domiGo.entitlements; sourceTree = "<group>"; };
 		18CD2AD72ED5B36700A6C3BC /* locationModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = locationModule.swift; sourceTree = "<group>"; };
 		18CD2AD92ED5B52400A6C3BC /* LocationTrackerBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LocationTrackerBridge.m; sourceTree = "<group>"; };
 		4929A01D06700E2A750575FD /* Pods-domiGo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-domiGo.debug.xcconfig"; path = "Target Support Files/Pods-domiGo/Pods-domiGo.debug.xcconfig"; sourceTree = "<group>"; };
@@ -51,6 +52,7 @@
 		13B07FAE1A68108700A75B9A /* domiGo */ = {
 			isa = PBXGroup;
 			children = (
+				186B82672EF51DFE00A62AFF /* domiGo.entitlements */,
 				18CD2AD92ED5B52400A6C3BC /* LocationTrackerBridge.m */,
 				18CD2AD72ED5B36700A6C3BC /* locationModule.swift */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
@@ -277,9 +279,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = domiGo/domiGo.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = NZK3F2XNQQ;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = domiGo/Info.plist;
@@ -289,7 +292,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.1;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -311,9 +314,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = domiGo/domiGo.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = NZK3F2XNQQ;
 				INFOPLIST_FILE = domiGo/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DomiGo;
@@ -322,7 +326,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.1;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",

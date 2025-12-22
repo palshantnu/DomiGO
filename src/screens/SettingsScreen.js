@@ -19,6 +19,7 @@ import { LOGOUT } from "../redux/actions/action-creator";
 import { CustomToast } from "../helpers/CommonHelpers";
 import { stopDomigoTracking } from "../helpers/MainTracker";
 import DomigoTracker from "../helpers/MainTracker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function SettingsScreen() {
   const dispatch = useDispatch();
@@ -152,7 +153,7 @@ export default function SettingsScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.row}
-            onPress={()=>navigation.navigate("PrivacyPolicyScreen")}>
+              onPress={() => navigation.navigate("PrivacyPolicyScreen")}>
               <View style={styles.rowLeft}>
                 <ICON_Lock height={24} width={24} />
                 <View>
@@ -166,8 +167,9 @@ export default function SettingsScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.row}
-              onPress={() => {
+              onPress={async () => {
                 dispatch(LOGOUT());
+                await AsyncStorage.removeItem('DOMIGO_TRACKING_ENABLED');
                 CustomToast.show('LogOut User Successfully');
                 DomigoTracker.stopDomigoTracking();
                 navigation.reset({

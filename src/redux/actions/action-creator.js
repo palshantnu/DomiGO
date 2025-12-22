@@ -65,7 +65,7 @@ export const SIGNIN = (data) => (dispatch) => {
 
   return axiosinstance.post(EndPoints.authLogin, data)
     .then((response) => {
-      console.log('response1', response);
+      // console.log('response1', response);
 
       if (response.data.message == 'Success') {
 
@@ -76,7 +76,7 @@ export const SIGNIN = (data) => (dispatch) => {
       } else {
 
       }
-      console.log('response2', response.data);
+      // console.log('response2', response.data);
       return response.data
     })
     .catch((error) => {
@@ -89,16 +89,16 @@ export const SIGNUP = (data) => (dispatch) => {
 
   return axiosinstance.post(EndPoints.signup, data)
     .then((response) => {
-      console.log('response1', response);
+      // console.log('response1', response);
 
       if (response.data.success) {
-        console.log('response2', response);
+        // console.log('response2', response);
         dispatch({
           type: SIGN_UP_SUCCESS,
           payload: response.data.result,
         })
       }
-      console.log('response3', response.data);
+      // console.log('response3', response.data);
       return response.data
     })
     .catch((error) => {
@@ -111,7 +111,7 @@ export const getPersonalProfileDataAction = () => (dispatch, getState) => new Pr
   const state = getState()
   const token = getAuthToken(state)
   getUserPersonalInfoService(token).then((res) => {
-    console.log('res====>', res);
+    // console.log('res====>', res);
 
     sendDataToReducer(dispatch, UPDATE_PERSONAL_DATA, res?.data?.result);
     resolve(res?.data?.result)
@@ -125,10 +125,10 @@ export const updatePersonalInfoAction = (data) => (dispatch, getState) => new Pr
   // const userData = getUserDataSelelctor(state);
   // data.user_id = userData?.id;
   const formData = jsonToFormData(data)
-  console.log('formData==>', formData);
+  // console.log('formData==>', formData);
 
   updateUserPersonalInfoService(data).then((res) => {
-    console.log('res===>', res.data.success);
+    // console.log('res===>', res.data.success);
 
     dispatch(getPersonalProfileDataAction())
     resolve(res)
@@ -148,7 +148,7 @@ export const ADDTRIP = (formData) => {
     try {
       const response = await axiosinstance.post(EndPoints.addTrip, formData)
       const responseJson = response.data;
-      console.log('responseJson==>', responseJson);
+      // console.log('responseJson==>', responseJson);
 
       if (response.message == 'Success') {
         dispatch({
@@ -181,7 +181,7 @@ export const UPDATETRIP = (formData) => {
     try {
       const response = await axiosinstance.put(`${EndPoints.UpdateTrip}/${formData.id}`, formData)
       const responseJson = response.data;
-      console.log('responseJson==>', responseJson);
+      // console.log('responseJson==>', responseJson);
 
       if (response.message == 'Success') {
         dispatch({
@@ -280,7 +280,7 @@ export function GET_TRIP_LIST_LIST() {
     try {
       const response = await axiosinstance.get('trips')
       const responseJson = response.data;
-      console.log('responseJson-=>', responseJson);
+      // console.log('responseJson-=>', responseJson);
 
       if (responseJson.message == 'Success') {
         dispatch({
@@ -309,7 +309,7 @@ export function GET_Document_Category_LIST() {
     try {
       const response = await axiosinstance.get('document-category')
       const responseJson = response.data;
-      console.log('responseJson--=>', responseJson);
+      // console.log('responseJson--=>', responseJson);
 
       if (responseJson.message == 'Success') {
         dispatch({
@@ -334,7 +334,7 @@ export function GET_Document_Category_LIST() {
   }
 }
 export const ADD_DOCUMENT_RECORD = (formData) => {
-  console.log('formData', formData);
+  // console.log('formData', formData);
 
   return async (dispatch) => {
     dispatch({
@@ -344,7 +344,7 @@ export const ADD_DOCUMENT_RECORD = (formData) => {
     try {
       const response = await axiosinstance.post(EndPoints.addDocumentRecords, formData)
       const responseJson = response.data;
-      console.log('responseJson=--------=>', responseJson);
+      // console.log('responseJson=--------=>', responseJson);
 
       if (response.message == 'Success') {
         dispatch({
@@ -373,7 +373,7 @@ export function GET_RESIDENCY_RECORD_LIST() {
     try {
       const response = await axiosinstance.get('residency-doc')
       const responseJson = response.data;
-      console.log('responseJson-=>', responseJson);
+      // console.log('responseJson-=>', responseJson);
 
       if (responseJson.message == 'Success') {
         dispatch({
@@ -402,7 +402,7 @@ export function GET_TRIP_MODE_LIST() {
     try {
       const response = await axiosinstance.get('trip-mode')
       const responseJson = response.data;
-      console.log('responseJson-=>', responseJson);
+      // console.log('responseJson-=>', responseJson);
 
       if (responseJson.message == 'Success') {
         dispatch({
@@ -431,7 +431,7 @@ export function GET_TRIP_TYPE_LIST() {
     try {
       const response = await axiosinstance.get('trip-type')
       const responseJson = response.data;
-      console.log('responseJson-=>', responseJson);
+      // console.log('responseJson-=>', responseJson);
 
       if (responseJson.message == 'Success') {
         dispatch({
@@ -460,7 +460,7 @@ export function DELETE_RESIDENCY_RECORD(id) {
     try {
       const response = await axiosinstance.delete(`residency-doc/${id}`)
       const responseJson = response.data;
-      console.log('responseJson-=>', responseJson);
+      // console.log('responseJson-=>', responseJson);
 
       if (responseJson.message == 'Success') {
 
@@ -553,7 +553,7 @@ export function GET_FINAL_YEAR_PROGRESS() {
     try {
       const response = await axiosinstance.get('dashboard/fy-progress')
       const responseJson = response.data;
-      console.log('responseJson-=>', responseJson);
+      // console.log('responseJson-=>', responseJson);
 
       if (responseJson.message == 'Success') {
         dispatch({
@@ -583,7 +583,7 @@ export function GET_STATE_WISE_RESIDENCY() {
     try {
       const response = await axiosinstance.get('dashboard/state-days')
       const responseJson = response.data;
-      console.log('responseSTATEJson-=>', responseJson);
+      // console.log('responseSTATEJson-=>', responseJson);
 
       if (responseJson.message == 'Success') {
         dispatch({
@@ -614,7 +614,7 @@ export function GET_STATE_WISE_METRICS() {
     try {
       const response = await axiosinstance.get('dashboard/metrics')
       const responseJson = response.data;
-      console.log('responseMetricsJson-=>', responseJson);
+      // console.log('responseMetricsJson-=>', responseJson);
 
       if (responseJson.message == 'Success') {
         dispatch({
@@ -645,7 +645,7 @@ export function GET_YEAR_WISE_TIMELINE({year}) {
     try {
       const response = await axiosinstance.get(`dashboard/timeline/year?year=${year}`)
       const responseJson = response.data;
-      console.log('responseYEARJson-=>', responseJson);
+      // console.log('responseYEARJson-=>', responseJson);
 
       if (responseJson.message == 'Success') {
         dispatch({
@@ -671,11 +671,13 @@ export function GET_YEAR_WISE_TIMELINE({year}) {
 }
 
 export function GET_WEEK_WISE_TIMELINE({ start, end }) {
+
+  
   return async (dispatch) => {
     try {
-      const response = await axiosinstance.get(`http://3.91.116.18:4001/api/dashboard/calendar/week?end=${start}&end=${end}`)
+      const response = await axiosinstance.get(`http://3.91.116.18:4001/api/dashboard/calendar/week?end=${end}&start=${start}`)
       const responseJson = response.data;
-      console.log('responseWEEKJson-=>', responseJson);
+      // console.log('responseWEEKJson-=>', responseJson);
 
       if (responseJson.message == 'Success') {
         dispatch({
@@ -760,7 +762,7 @@ export const GET_MONTH_WISE_TIMELINE = ({ month, year }) => {
       );
 
       const responseJson = response.data;
-      console.log('responseMONTHJson =>', responseJson);
+      // console.log('responseMONTHJson =>', responseJson);
 
       if (responseJson.message === 'Success') {
         dispatch({
