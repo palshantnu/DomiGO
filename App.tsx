@@ -54,8 +54,10 @@ function App() {
           <NavigationContainer>
             {/* <StatusBar
               barStyle={isDarkMode ? 'dark-content' : 'dark-content'}
-              backgroundColor={colors.white}
-              translucent={false}
+              translucent={true}
+              backgroundColor={'transparent'}
+              // backgroundColor={'#9ab1fa'}
+              // translucent={false}
             /> */}
 
             <AppContent />

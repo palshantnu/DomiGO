@@ -389,6 +389,14 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
                 return
             }
 
+                if (state == previousStateName) {
+        Log.d(TAG, "🏠 Same state ($state), no trip required")
+        return
+    }
+
+    Log.d(TAG, "🚦 STATE CHANGED: $previousStateName → $state")
+
+
 
     Log.d(TAG, "STATE CHANGED! Triggering trip API")
 

@@ -153,7 +153,7 @@ function getStateCodeSafe(state) {
                             //     { code: 'UT', days: 45, color: '#28a0dd', threshold: 183 },
                             // ]
                             stateWiseResidency
-                            .map((item, index) => (
+                            ?.map((item, index) => (
                                 <View key={index} style={[styles.stateCard, { borderColor: '#E0E0E0', width: Dimensions.get('window').width * 0.42, height: Dimensions.get('window').width * 0.42, elevation: 1, borderWidth: 0.5 }]}>
                                     <View style={styles.smallCircle}>
                                         <Text style={styles.smallCircleText}>{'10'}</Text>

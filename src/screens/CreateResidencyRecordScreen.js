@@ -8,6 +8,7 @@ import {
     ScrollView,
     Platform,
     ActivityIndicator,
+    KeyboardAvoidingView,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import DatePicker from "react-native-date-picker";
@@ -25,6 +26,17 @@ import {
 import { CustomToast, GOOGLE_KEY } from "../helpers/CommonHelpers";
 import colors from "../theme/colors";
 import { useNavigation, useRoute } from "@react-navigation/native";
+
+
+
+const InputContainer = React.memo(({ icon, children }) => (
+    <View style={styles.inputContainer}>
+        <Ionicons name={icon} size={20} color="#9E9EA7" />
+        <View style={{ flex: 1, marginLeft: 12 }}>
+            {children}
+        </View>
+    </View>
+));
 
 const CreateResidencyRecordScreen = ({
     documentCategoryList,
@@ -107,12 +119,14 @@ const CreateResidencyRecordScreen = ({
         }
     };
 
-    const InputContainer = ({ icon, children }) => (
-        <View style={styles.inputContainer}>
-            <Ionicons name={icon} size={20} color="#9E9EA7" />
-            <View style={{ flex: 1, marginLeft: 12 }}>{children}</View>
-        </View>
-    );
+    // const InputContainer = ({ icon, children }) => (
+    //     <View style={styles.inputContainer}>
+    //         <Ionicons name={icon} size={20} color="#9E9EA7" />
+    //         <View style={{ flex: 1, marginLeft: 12 }}>{children}</View>
+    //     </View>
+    // );
+
+
 
     // const UploadRecord = async () => {
     //     if (!validate()) return;
@@ -178,164 +192,180 @@ const CreateResidencyRecordScreen = ({
             locations={[0.05, 0.55]}
             style={{ flex: 1 }}
         >
-            <View style={{ flex: 1 ,paddingTop:50}}>
+            <View style={{ flex: 1, paddingTop: 50 }}>
                 <Header title={editData ? "Edit Residency Record" : "Add Residency Record"} />
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === "ios" ? "padding" : undefined}
+                    style={{ flex: 1 }}
+                >
 
-                <ScrollView contentContainerStyle={styles.formContainer}>
-                    <View style={styles.whiteCard}>
 
-                        <Text style={styles.label}>Title *</Text>
-                        <InputContainer icon="document-text-outline">
-                            <TextInput
-                                placeholder="Enter Title"
-                                placeholderTextColor="#A8A8A8"
-                                style={styles.input}
-                                value={form.title}
-                                onChangeText={(v) => setValue("title", v)}
-                            />
-                        </InputContainer>
+                    <ScrollView contentContainerStyle={styles.formContainer}
+                        keyboardShouldPersistTaps="handled"
+                    >
+                        <View style={styles.whiteCard}>
 
-                        <Text style={styles.label}>Category *</Text>
-                        <InputContainer icon="list-outline">
-                            <Dropdown
-                                style={styles.dropdown}
-                                data={categoryData}
-                                placeholder="Select category"
-                                labelField="label"
-                                valueField="value"
-                                value={form.categoryId}
-                                placeholderStyle={{ color: "#A8A8A8" }}
-                                selectedTextStyle={styles.dropdownText}
-                                onChange={(item) => setValue("categoryId", item.value)}
-                            />
-                        </InputContainer>
-
-                        <Text style={styles.label}>State *</Text>
-                        <View style={{ position: "relative" }}>
-                            <InputContainer icon="flag-outline">
+                            <Text style={styles.label}>Title *</Text>
+                            <InputContainer icon="document-text-outline">
                                 <TextInput
-                                    placeholder="Enter State"
+                                    // placeholder="Enter Title"
+                                    // placeholderTextColor="#A8A8A8"
+                                    // style={styles.input}
+                                    // value={form.title}
+                                    // onChangeText={(v) => setValue("title", v)}
+                                    placeholder="Enter Title"
                                     placeholderTextColor="#A8A8A8"
                                     style={styles.input}
-                                    value={form.state}
-                                    onChangeText={(v) => {
-                                        setValue("state", v);
-                                    }}
+                                    value={form.title}
+                                    onChangeText={(v) => setValue("title", v)}
+                                    autoCorrect={false}
+                                    autoCapitalize="none"
+                                    blurOnSubmit={false}
                                 />
                             </InputContainer>
-                        </View>
 
-                        <Text style={styles.label}>City *</Text>
-                        <View style={{ position: "relative" }}>
-                            <InputContainer icon="business-outline">
-                                <TextInput
-                                    placeholder="Enter City"
-                                    placeholderTextColor="#A8A8A8"
-                                    style={styles.input}
-                                    value={form.city}
-                                    onChangeText={(v) => {
-                                        setValue("city", v);
-                                    }}
+                            <Text style={styles.label}>Category *</Text>
+                            <InputContainer icon="list-outline">
+                                <Dropdown
+                                    style={styles.dropdown}
+                                    data={categoryData}
+                                    placeholder="Select category"
+                                    labelField="label"
+                                    valueField="value"
+                                    value={form.categoryId}
+                                    placeholderStyle={{ color: "#A8A8A8" }}
+                                    selectedTextStyle={styles.dropdownText}
+                                    onChange={(item) => setValue("categoryId", item.value)}
                                 />
                             </InputContainer>
-                        </View>
 
-                        <Text style={styles.label}>Issue Date *</Text>
-                        <InputContainer icon="calendar-outline">
-                            <TouchableOpacity
-                                onPress={() => setOpenIssuePicker(true)}
-                            >
-                                <Text
-                                    style={
-                                        form.issueDate
-                                            ? styles.input
-                                            : styles.placeholder
-                                    }
+                            <Text style={styles.label}>State *</Text>
+                            <View style={{ position: "relative" }}>
+                                <InputContainer icon="flag-outline">
+                                    <TextInput
+                                        placeholder="Enter State"
+                                        placeholderTextColor="#A8A8A8"
+                                        style={styles.input}
+                                        value={form.state}
+                                        onChangeText={(v) => {
+                                            setValue("state", v);
+                                        }}
+                                    />
+                                </InputContainer>
+                            </View>
+
+                            <Text style={styles.label}>City *</Text>
+                            <View style={{ position: "relative" }}>
+                                <InputContainer icon="business-outline">
+                                    <TextInput
+                                        placeholder="Enter City"
+                                        placeholderTextColor="#A8A8A8"
+                                        style={styles.input}
+                                        value={form.city}
+                                        onChangeText={(v) => {
+                                            setValue("city", v);
+                                        }}
+                                    />
+                                </InputContainer>
+                            </View>
+
+                            <Text style={styles.label}>Issue Date *</Text>
+                            <InputContainer icon="calendar-outline">
+                                <TouchableOpacity
+                                    onPress={() => setOpenIssuePicker(true)}
                                 >
-                                    {form.issueDate || "Select Issue Date"}
-                                </Text>
-                            </TouchableOpacity>
-                        </InputContainer>
+                                    <Text
+                                        style={
+                                            form.issueDate
+                                                ? styles.input
+                                                : styles.placeholder
+                                        }
+                                    >
+                                        {form.issueDate || "Select Issue Date"}
+                                    </Text>
+                                </TouchableOpacity>
+                            </InputContainer>
 
-                        <DatePicker
-                            modal
-                            mode="date"
-                            open={openIssuePicker}
-                            date={new Date()}
-                            onConfirm={(d) => {
-                                setOpenIssuePicker(false);
-                                setValue("issueDate", d.toISOString().slice(0, 10));
-                            }}
-                            onCancel={() => setOpenIssuePicker(false)}
-                        />
-
-                        <Text style={styles.label}>Renew Date *</Text>
-                        <InputContainer icon="calendar-outline">
-                            <TouchableOpacity
-                                onPress={() => setOpenRenewPicker(true)}
-                            >
-                                <Text
-                                    style={
-                                        form.renewDate
-                                            ? styles.input
-                                            : styles.placeholder
-                                    }
-                                >
-                                    {form.renewDate || "Select Renew Date"}
-                                </Text>
-                            </TouchableOpacity>
-                        </InputContainer>
-
-                        <DatePicker
-                            modal
-                            mode="date"
-                            open={openRenewPicker}
-                            date={new Date()}
-                            onConfirm={(d) => {
-                                setOpenRenewPicker(false);
-                                setValue("renewDate", d.toISOString().slice(0, 10));
-                            }}
-                            onCancel={() => setOpenRenewPicker(false)}
-                        />
-
-                        <Text style={styles.label}>Notes</Text>
-                        <InputContainer icon="document-outline">
-                            <TextInput
-                                style={[styles.input, { height: 80 }]}
-                                // multiline
-                                placeholder="Add notes"
-                                placeholderTextColor="#A8A8A8"
-                                value={form.notes}
-                                onChangeText={(v) => setValue("notes", v)}
+                            <DatePicker
+                                modal
+                                mode="date"
+                                open={openIssuePicker}
+                                date={new Date()}
+                                onConfirm={(d) => {
+                                    setOpenIssuePicker(false);
+                                    setValue("issueDate", d.toISOString().slice(0, 10));
+                                }}
+                                onCancel={() => setOpenIssuePicker(false)}
                             />
-                        </InputContainer>
 
-                        <Text style={styles.label}>Attachment</Text>
-                        <InputContainer icon="cloud-upload-outline">
-                            <TouchableOpacity onPress={pickAttachment}>
-                                <Text style={styles.uploadText}>
-                                    {form.attachment
-                                        ? form.attachment.name
-                                        : "Upload PDF / Image"}
-                                </Text>
+                            <Text style={styles.label}>Renew Date *</Text>
+                            <InputContainer icon="calendar-outline">
+                                <TouchableOpacity
+                                    onPress={() => setOpenRenewPicker(true)}
+                                >
+                                    <Text
+                                        style={
+                                            form.renewDate
+                                                ? styles.input
+                                                : styles.placeholder
+                                        }
+                                    >
+                                        {form.renewDate || "Select Renew Date"}
+                                    </Text>
+                                </TouchableOpacity>
+                            </InputContainer>
+
+                            <DatePicker
+                                modal
+                                mode="date"
+                                open={openRenewPicker}
+                                date={new Date()}
+                                onConfirm={(d) => {
+                                    setOpenRenewPicker(false);
+                                    setValue("renewDate", d.toISOString().slice(0, 10));
+                                }}
+                                onCancel={() => setOpenRenewPicker(false)}
+                            />
+
+                            <Text style={styles.label}>Notes</Text>
+                            <InputContainer icon="document-outline">
+                                <TextInput
+                                    style={[styles.input, { height: 80 }]}
+                                    // multiline
+                                    placeholder="Add notes"
+                                    placeholderTextColor="#A8A8A8"
+                                    value={form.notes}
+                                    onChangeText={(v) => setValue("notes", v)}
+                                />
+                            </InputContainer>
+
+                            <Text style={styles.label}>Attachment</Text>
+                            <InputContainer icon="cloud-upload-outline">
+                                <TouchableOpacity onPress={pickAttachment}>
+                                    <Text style={styles.uploadText}>
+                                        {form.attachment
+                                            ? form.attachment.name
+                                            : "Upload PDF / Image"}
+                                    </Text>
+                                </TouchableOpacity>
+                            </InputContainer>
+
+                            <TouchableOpacity
+                                onPress={UploadRecord}
+                                style={styles.saveButton}
+                                disabled={isLoading}
+                            >
+                                {isLoading ? (
+                                    <ActivityIndicator color="#fff" />
+                                ) : (
+                                    <Text style={styles.saveText}>
+                                        {editData ? "Update Record" : "Save Record"}
+                                    </Text>
+                                )}
                             </TouchableOpacity>
-                        </InputContainer>
-
-                        <TouchableOpacity
-                            onPress={UploadRecord}
-                            style={styles.saveButton}
-                            disabled={isLoading}
-                        >
-                            {isLoading ? (
-                                <ActivityIndicator color="#fff" />
-                            ) : (
-                                <Text style={styles.saveText}>
-                                    {editData ? "Update Record" : "Save Record"}
-                                </Text>
-                            )}
-                        </TouchableOpacity>
-                    </View>
-                </ScrollView>
+                        </View>
+                    </ScrollView>
+                </KeyboardAvoidingView>
             </View>
         </LinearGradient>
     );
