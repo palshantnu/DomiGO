@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
+  Platform,
+  PermissionsAndroid,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
@@ -48,30 +50,38 @@ const ProfileManagementScreen = ({
   const [stateName, setStateName] = useState("");
   const [city, setCity] = useState("");
 
-  useEffect(() => {
-    Geolocation.getCurrentPosition(
-      async position => {
-        const { latitude, longitude } = position.coords;
+  // useEffect(() => {
+  //   Geolocation.getCurrentPosition(
+  //     async position => {
+  //       const { latitude, longitude } = position.coords;
+  //       // const latitude = 26.21
+  //       // const longitude = 78.18
 
-        // Reverse Geocoding API
-        const response = await fetch(
-          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_KEY}`
-        );
+  //       // Reverse Geocoding API
+  //       const response = await fetch(
+  //         `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_KEY}`
+  //       );
 
-        const json = await response.json();
+  //       const json = await response.json();
 
-        if (json.results.length > 0) {
-          const countryData = json.results[0].address_components.find(c =>
-            c.types.includes("country")
-          );
+  //       console.log(json);
+        
 
-          setCountry(countryData?.long_name || "");
-        }
-      },
-      error => console.log(error),
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-    );
-  }, []);
+  //       if (json.results.length > 0) {
+  //         const countryData = json.results[0].address_components.find(c =>
+  //           c.types.includes("country")
+  //         );
+
+  //         setCountry(countryData?.long_name || "");
+  //       }
+  //     },
+  //     error => console.log(error),
+  //     { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+  //   );
+  // }, []);
+
+
+
   useEffect(() => {
     getPersonalProfileDataAction();
   }, []);
@@ -101,6 +111,72 @@ const ProfileManagementScreen = ({
     // new_password: newPassword,
   };
 console.log('personalData',personalData);
+
+
+const requestLocationPermission = async () => {
+  if (Platform.OS === "android") {
+    await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+    );
+  }
+};
+
+// useEffect(() => {
+//   requestLocationPermission().then(() => {
+//     Geolocation.getCurrentPosition(
+//       position => {
+//         console.log('dhsbvbdhvb',position.coords);
+//       },
+//       error => console.log(error),
+//       { enableHighAccuracy: true }
+//     );
+//   });
+// }, []);
+
+
+// useEffect(() => {
+//   const getLocation = async () => {
+//     try {
+//       Geolocation.getCurrentPosition(
+//         async position => {
+//           // try {
+//             const { latitude, longitude } = position.coords;
+//             console.log('latitude','longitude', longitude,latitude);
+            
+
+//             // const response = await fetch(
+//             //   `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_KEY}`
+//             // );
+
+//             // const json = await response.json();
+
+//             // if (
+//             //   json.results &&
+//             //   json.results.length > 0 &&
+//             //   json.results[0].address_components
+//             // ) {
+//             //   const countryData = json.results[0].address_components.find(c =>
+//             //     c.types.includes("country")
+//             //   );
+
+//             //   setCountry(countryData?.long_name || "");
+//             // }
+//       //     } catch (apiError) {
+//       //       console.log("API Error:", apiError);
+//       //     }
+//       //   },
+//       //   error => {
+//       //     console.log("Geolocation Error:", error);
+//         },
+//       //   { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+//       );
+//     } catch (err) {
+//       console.log("Location Catch Error:", err);
+//     }
+//   };
+
+//   getLocation();
+// }, []);
 
   const UpdateProfile = async () => {
     setButtonLoader(true);

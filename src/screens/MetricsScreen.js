@@ -219,9 +219,9 @@ const MetricsScreen = ({ GET_STATE_WISE_METRICS, loginToken, stateWiseMetrics })
                     })}
                 </ScrollView>
 
-                <TouchableOpacity style={styles.fab}>
+                {/* <TouchableOpacity style={styles.fab}>
                     <Text style={styles.fabPlus}>+</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
             </SafeAreaView>
         </LinearGradient>
     );

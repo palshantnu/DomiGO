@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,10 @@ import {
   TouchableOpacity,
   FlatList,
   ScrollView,
+  Modal,
+  Animated,
+  Dimensions,
+  PanResponder,
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -20,46 +24,52 @@ import { connect } from 'react-redux';
 function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIMELINE, GET_YEAR_WISE_TIMELINE, yearWiseTimeline, weekWiseTimeline, monthWiseTimeline }) {
   const [selectedTab, setSelectedTab] = useState('Month');
   const [selectedResidencyType, setSelectedResidencyType] = useState('past');
+  const [tripModalVisible, setTripModalVisible] = useState(false);
+  const [selectedTrips, setSelectedTrips] = useState([]);
+  const [openWeekIndex, setOpenWeekIndex] = useState(null);
+  const [openIndex, setOpenIndex] = useState(null);
+
+
 
   console.log('yearWiseTimeline', yearWiseTimeline);
   console.log('weekWiseTimeline', weekWiseTimeline);
   console.log('monthWiseTimeline', monthWiseTimeline);
 
   const getCurrentWeekDates = () => {
-  const today = new Date();
+    const today = new Date();
 
-  // Clone date to avoid mutation
-  const current = new Date(today);
+    // Clone date to avoid mutation
+    const current = new Date(today);
 
-  // Get day (0 = Sunday, 1 = Monday ...)
-  const day = current.getDay();
+    // Get day (0 = Sunday, 1 = Monday ...)
+    const day = current.getDay();
 
-  // Monday as start of week
-  const diffToMonday = day === 0 ? -6 : 1 - day;
+    // Monday as start of week
+    const diffToMonday = day === 0 ? -6 : 1 - day;
 
-  const startOfWeek = new Date(current);
-  startOfWeek.setDate(current.getDate() + diffToMonday);
+    const startOfWeek = new Date(current);
+    startOfWeek.setDate(current.getDate() + diffToMonday);
 
-  const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(startOfWeek.getDate() + 6);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
 
-  const formatDate = (date) =>
-    date.toISOString().split('T')[0]; // YYYY-MM-DD
+    const formatDate = (date) =>
+      date.toISOString().split('T')[0]; // YYYY-MM-DD
 
-  return {
-    start: formatDate(startOfWeek),
-    end: formatDate(endOfWeek),
+    return {
+      start: formatDate(startOfWeek),
+      end: formatDate(endOfWeek),
+    };
   };
-};
 
 
 
   useEffect(() => {
     const today = new Date();
-      const { start, end } = getCurrentWeekDates();
+    const { start, end } = getCurrentWeekDates();
 
     GET_WEEK_WISE_TIMELINE({ start, end });;
-    GET_YEAR_WISE_TIMELINE({year:today.getFullYear()});
+    GET_YEAR_WISE_TIMELINE({ year: today.getFullYear() });
     GET_MONTH_WISE_TIMELINE({
       month: today.getMonth() + 1, // JS months 0-based
       year: today.getFullYear(),
@@ -82,7 +92,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
     Object.keys(result).forEach(date => {
       const uniqueStates = [
-        ...new Set(result[date].map(item => item.state))
+        ...new Set(result[date].map(item => item.destinationState))
       ];
 
       marked[date] = {
@@ -97,14 +107,126 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
 
 
+  const screenHeight = Dimensions.get('window').height;
+  const translateY = useRef(new Animated.Value(screenHeight)).current;
+
+  useEffect(() => {
+    if (tripModalVisible) {
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [tripModalVisible]);
+
+  const closeModal = () => {
+    Animated.timing(translateY, {
+      toValue: screenHeight,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setTripModalVisible(false);
+    });
+  };
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gesture) => gesture.dy > 10,
+      onPanResponderMove: (_, gesture) => {
+        if (gesture.dy > 0) {
+          translateY.setValue(gesture.dy);
+        }
+      },
+      onPanResponderRelease: (_, gesture) => {
+        if (gesture.dy > 120) {
+          closeModal();
+        } else {
+          Animated.spring(translateY, {
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+    })
+  ).current;
+
+
+
+
+  //   const handleDayPress = (day) => {
+  //   console.log('DAY PRESSED 👉', day);
+  // };
+
+
+
+  const markedDates = useMemo(
+    () => getMarkedDates(monthWiseTimeline),
+    [monthWiseTimeline]
+  );
+
+
+  //   const handleDayPress = (day) => {
+  //   const selectedDate = day.dateString;
+  //   const tripsForDay = monthWiseTimeline[selectedDate] || [];
+
+  // //   const tripsForDay = (monthWiseTimeline[selectedDate] || []).filter(
+  // //   t =>
+  // //     !(t.originCity === t.destinationCity &&
+  // //       t.originState === t.destinationState)
+  // // );
+
+  //   if (tripsForDay.length === 1) {
+  //     // Single trip → direct navigation
+  //     navigation.navigate('AddTrip', 
+  //      tripsForDay[0].id,
+
+  //     //   {
+  //     //   id: tripsForDay[0].id,
+  //     // }
+  //   );
+  //   } else if (tripsForDay.length > 1) {
+  //     // Multiple trips → open modal
+  //     setSelectedTrips(tripsForDay);
+  //     setTripModalVisible(true);
+  //   }
+  // };
+
+
+  const handleDayPress = (day) => {
+    const dateKey = day.dateString;
+    // const tripsForDay = monthWiseTimeline?.[dateKey] || [];
+
+    const tripsForDay = (monthWiseTimeline[dateKey] || []).filter(
+      t =>
+        !(t.originCity === t.destinationCity &&
+          t.originState === t.destinationState)
+    );
+
+    console.log('Trips on', dateKey, tripsForDay);
+
+    if (tripsForDay.length === 1) {
+      // navigation.navigate('AddTrip', { id: tripsForDay[0].id });
+      navigation.navigate('DayDetail', tripsForDay[0].id)
+    }
+    else if (tripsForDay.length > 1) {
+      setSelectedTrips(tripsForDay);
+      setTripModalVisible(true);
+    }
+  };
+  useEffect(() => {
+    console.log('Modal visible changed 👉', tripModalVisible);
+  }, [tripModalVisible])
+
+
   const getLegendStates = (monthWiseTimeline) => {
     const result = monthWiseTimeline || {};
     const stateSet = new Set();
 
     Object.values(result).forEach(dayArray => {
       dayArray.forEach(item => {
-        if (item.state) {
-          stateSet.add(item.state);
+        if (item.destinationState) {
+          stateSet.add(item.destinationState);
         }
       });
     });
@@ -116,57 +238,382 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
 
 
+  // const getWeekCalendarData = (weekResult = {}) => {
+  //   return Object.keys(weekResult).map(date => {
+  //     const formattedDate = new Date(date).toLocaleDateString('en-IN', {
+  //       day: '2-digit',
+  //       month: 'long',
+  //       year: 'numeric'
+  //     });
+
+  //     return {
+  //       period: formattedDate,
+  //       entries: weekResult[date].map((item, index) => ({
+  //         _id:item.id,
+  //         id: item.destinationState?.slice(0, 3).toUpperCase(),
+  //         name: item.destinationCity,
+  //         location: item.destinationState,
+  //         day: new Date(date).toLocaleDateString('en-US', { weekday: 'short' })
+  //       }))
+  //     };
+  //   });
+  // };
+
   const getWeekCalendarData = (weekResult = {}) => {
     return Object.keys(weekResult).map(date => {
+      const trips = weekResult[date];
+
       const formattedDate = new Date(date).toLocaleDateString('en-IN', {
         day: '2-digit',
-        month: 'long',
-        year: 'numeric'
+        month: 'short',
+      });
+
+      const day = new Date(date).toLocaleDateString('en-US', {
+        weekday: 'short',
+      });
+
+      // Build locations list like image
+      const locations = [];
+
+      trips.forEach(trip => {
+        // Origin
+        locations.push({
+          type: 'origin',
+          city: trip.originCity,
+          state: trip.originState,
+        });
+
+        // Destination
+        locations.push({
+          type: 'destination',
+          city: trip.destinationCity,
+          state: trip.destinationState,
+          id: trip.id,
+        });
       });
 
       return {
-        period: formattedDate,
-        entries: weekResult[date].map((item, index) => ({
-          id: item.state?.slice(0, 3).toUpperCase(),
-          name: item.city,
-          location: item.state,
-          day: new Date(date).toLocaleDateString('en-US', { weekday: 'short' })
-        }))
+        date,
+        formattedDate,
+        day,
+        locations,
       };
     });
   };
 
-  const regulatoryCalendar = getWeekCalendarData(weekWiseTimeline);
 
-  const getYearData = (data = []) => {
-    const formatDate = (date) =>
-    new Date(date).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
+
+
+  const getWeekKey = (dateStr) => {
+    const date = new Date(dateStr);
+    const start = new Date(date);
+    start.setDate(date.getDate() - date.getDay()); // Sunday
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+
+    const format = d =>
+      d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+
+    return `${format(start)} - ${format(end)}`;
+  };
+
+
+  const getYearWeeklyData = (yearWiseTimeline = {}) => {
+    const weekMap = {};
+
+    Object.entries(yearWiseTimeline).forEach(([date, trips]) => {
+      const weekKey = getWeekKey(date);
+
+      if (!weekMap[weekKey]) {
+        weekMap[weekKey] = [];
+      }
+      weekMap[weekKey].push(...trips);
     });
-    return data.map((item, index) => ({
+
+    return Object.keys(weekMap).map((week, index) => ({
       id: index + 1,
-      // date: `${new Date(item.startDate).toLocaleDateString('en-IN')} - 
-      //      ${new Date(item.endDate).toLocaleDateString('en-IN')}`,
-      date: `${formatDate(item.startDate)} - ${formatDate(item.endDate)}`,
-      location: `${item.city}, ${item.state}`,
-      days: `${item.days} Day${item.days > 1 ? 's' : ''}`,
-      color: STATE_COLOR_MAP[item.state] || colors.primary,
-      // color: colors.primary,
-      manual: item.isManual
+      week,
+      color:STATE_COLOR_MAP[week[0].destinationState] || colors.primary,
+      trips: weekMap[week],
     }));
   };
 
-  const today = new Date();
 
-  const yearData = getYearData(yearWiseTimeline || []);
 
-  const residenciesDataa = yearData.filter(item => {
-    const end = new Date(item.date.split('-')[1]);
-    return selectedResidencyType === 'past'
-      ? end < today
-      : end >= today;
-  });
+  const weeklyData = getYearWeeklyData(yearWiseTimeline);
+
+
+  // const renderWeekCard = (item, index) => {
+  //   const isOpen = openWeekIndex === index;
+
+  //   return (
+  //     <View key={index} style={styles.weekCard}>
+  //       {/* HEADER */}
+  //       <TouchableOpacity
+  //         activeOpacity={0.8}
+  //         onPress={() =>
+  //           setOpenWeekIndex(isOpen ? null : index)
+  //         }
+  //         style={styles.weekHeader}
+  //       >
+  //         <Text style={styles.weekTitle}>{item.week}</Text>
+  //         <Ionicons
+  //           name={isOpen ? 'chevron-up' : 'chevron-down'}
+  //           size={20}
+  //           color="#666"
+  //         />
+  //       </TouchableOpacity>
+
+  //       {/* EXPANDED CONTENT */}
+  //       {isOpen && (
+  //         <View style={styles.weekContent}>
+  //           {item.trips.map(trip => (
+  //             <TouchableOpacity
+  //               key={trip.id}
+  //               style={styles.tripRow}
+  //               onPress={() =>
+  //                 navigation.navigate('DayDetail', trip)
+  //               }
+  //             >
+  //               <View style={styles.tripLine}>
+  //                 <View style={styles.dotBlue} />
+  //                 <Text style={styles.tripText}>
+  //                   {trip.originCity}, {trip.originState}
+  //                 </Text>
+  //               </View>
+
+  //               <View style={styles.tripLine}>
+  //                 <View style={styles.dotGreen} />
+  //                 <Text style={styles.tripText}>
+  //                   {trip.destinationCity}, {trip.destinationState}
+  //                 </Text>
+  //               </View>
+  //             </TouchableOpacity>
+  //           ))}
+  //         </View>
+  //       )}
+  //     </View>
+  //   );
+  // };
+
+
+
+  // const getWeekCalendarData = (weekResult = {}) => {
+  //   return Object.keys(weekResult).map(date => {
+  //     const trips = weekResult[date];
+
+  //     const formattedDate = new Date(date).toLocaleDateString('en-IN', {
+  //       day: '2-digit',
+  //       month: 'short',
+  //     });
+
+  //     const day = new Date(date).toLocaleDateString('en-US', {
+  //       weekday: 'short',
+  //     });
+
+  //     const locations = [];
+
+  //     let lastLocationKey = null;
+
+  //     trips.forEach(trip => {
+  //       const originKey = `${trip.originCity}-${trip.originState}`;
+  //       const destinationKey = `${trip.destinationCity}-${trip.destinationState}`;
+
+  //       // ORIGIN (no navigation)
+  //       if (originKey !== lastLocationKey) {
+  //         locations.push({
+  //           type: 'origin',
+  //           city: trip.originCity,
+  //           state: trip.originState,
+  //         });
+  //         lastLocationKey = originKey;
+  //       }
+
+  //       // DESTINATION (tap enabled)
+  //       if (destinationKey !== lastLocationKey) {
+  //         locations.push({
+  //           type: 'destination',
+  //           city: trip.destinationCity,
+  //           state: trip.destinationState,
+  //           tripId: trip.id,
+  //         });
+  //         lastLocationKey = destinationKey;
+  //       }
+
+  //       // separator marker after each trip
+  //       locations.push({ type: 'separator' });
+  //     });
+
+  //     return {
+  //       date,
+  //       formattedDate,
+  //       day,
+  //       locations,
+  //     };
+  //   });
+  // };
+
+
+const YearWeekCard = ({ item, index }) => {
+  const isOpen = openIndex === index;
+  console.log('itemmdnfn',item);
+  
+  return (
+    <View style={styles.cardWrapper}>
+      
+      {/* ===== MAIN CARD ROW (UNCHANGED) ===== */}
+      <View style={styles.rowContainer}>
+        {/* Left color strip */}
+        <View
+          style={[
+            styles.colorStrip,
+            { backgroundColor: item.color },
+          ]}
+        />
+
+        {/* Card content */}
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() =>
+            setOpenIndex(isOpen ? null : index)
+          }
+          style={styles.cardBody}
+        >
+          {/* Top row */}
+          <View style={styles.topRow}>
+            <Text style={styles.dateText}>{item.week}</Text>
+            {/* <Text style={styles.daysText}>{item.days}</Text> */}
+            <Text style={styles.daysText}>{'07 Days'}</Text>
+          </View>
+
+          {/* Bottom row */}
+          <View style={styles.bottomRow}>
+            <Text style={styles.locationText}>
+              {item.location}
+            </Text>
+
+            <View style={styles.rightIcons}>
+              {item.manual && (
+                <View style={styles.manualTag}>
+                  <Text style={styles.manualText}>Manual</Text>
+                </View>
+              )}
+              <Ionicons
+                name="chatbubble-outline"
+                size={16}
+                color="#9E9E9E"
+                style={{ marginLeft: 8 }}
+              />
+            </View>
+          </View>
+        </TouchableOpacity>
+      </View>
+
+      {/* ===== EXPANDED CONTENT (NICHE) ===== */}
+      {isOpen && (
+        <View style={styles.expandedContainer}>
+          {item.trips.map(trip => (
+            <TouchableOpacity
+              key={trip.id}
+              style={styles.tripRow}
+              onPress={() =>
+                navigation.navigate('DayDetail', trip)
+              }
+            >
+              <View style={styles.tripLine}>
+                <View style={styles.blueDot} />
+                <Text style={styles.tripText}>
+                  {trip.originCity}, {trip.originState}
+                </Text>
+              </View>
+
+              <View style={styles.tripLine}>
+                <View style={styles.greenDot} />
+                <Text style={styles.tripText}>
+                  {trip.destinationCity}, {trip.destinationState}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+};
+
+
+
+  const regulatoryCalendar = getWeekCalendarData(weekWiseTimeline);
+
+  const getTimelineData = (dataObj = {}) => {
+    const formatDate = (date) =>
+      new Date(date).toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+      });
+
+    return Object.values(dataObj)
+      .map((dayArray) => {
+        if (!dayArray.length) return null;
+
+        const first = dayArray[0];
+        const last = dayArray[dayArray.length - 1];
+
+        const start = new Date(first.startDate);
+        const end = new Date(last.endDate);
+
+        const days =
+          Math.max(
+            1,
+            Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1
+          );
+
+        return {
+          id: first.id,
+          date: `${formatDate(start)} - ${formatDate(end)}`,
+          days: `${days.toString().padStart(2, '0')} Days`,
+          location: `${last.destinationCity}, ${last.destinationState}`,
+          manual: first.isManual ?? false,
+          color:
+            STATE_COLOR_MAP[last.destinationState] || colors.primary,
+        };
+      })
+      .filter(Boolean);
+  };
+
+  const timelineData = getTimelineData(yearWiseTimeline);
+
+  // const getYearData = (data = []) => {
+  //   console.log('dataaaaaa',data);
+
+  //   const formatDate = (date) =>
+  //   new Date(date).toLocaleDateString('en-IN', {
+  //     day: '2-digit',
+  //     month: 'short',
+  //   });
+  //   return data[].map((item, index) => ({
+  //     id: index + 1,
+  //     // date: `${new Date(item.startDate).toLocaleDateString('en-IN')} - 
+  //     //      ${new Date(item.endDate).toLocaleDateString('en-IN')}`,
+  //     date: `${formatDate(item.startDate)} - ${formatDate(item.endDate)}`,
+  //     location: `${item.city}, ${item.state}`,
+  //     days: `${item.days} Day${item.days > 1 ? 's' : ''}`,
+  //     color: STATE_COLOR_MAP[item.state] || colors.primary,
+  //     // color: colors.primary,
+  //     manual: item.isManual
+  //   }));
+  // };
+
+  // const today = new Date();
+
+  // const yearData = getYearData(yearWiseTimeline || []);
+
+  // const residenciesDataa = yearData.filter(item => {
+  //   const end = new Date(item.date.split('-')[1]);
+  //   return selectedResidencyType === 'past'
+  //     ? end < today
+  //     : end >= today;
+  // });
 
 
 
@@ -220,7 +667,9 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
 
   const renderRegulatoryEntry = (item, index) => (
-    <View style={styles.regulatoryRow} key={index}>
+    <TouchableOpacity style={styles.regulatoryRow} key={index}
+      onPress={() => navigation.navigate('AddTrip', { id: item._id })}>
+
       <View style={{ backgroundColor: '#F1F1F1', borderRadius: 50, height: 50, width: 50, justifyContent: 'center', alignItems: 'center', marginRight: 15, }}>
         <Text style={styles.regulatoryId}>{item.id}</Text>
         <Text style={styles.regulatoryId2}>{item.day}</Text>
@@ -237,16 +686,114 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
         </View>
 
       </View>
-    </View>
+    </TouchableOpacity>
   );
+
+  // const renderRegulatorySection = (section, index) => (
+  //   <View key={index} style={styles.regulatorySection}>
+  //     <Text style={styles.periodTitle}>{section.period}</Text>
+  //     {section.entries.map(renderRegulatoryEntry)}
+  //     {index < regulatoryCalendar.length - 1 && <View style={styles.separator} />}
+  //   </View>
+  // );
+
+
+
+
+  //   const renderRegulatorySection = (section, index) => (
+  //   <View key={index} style={styles.regulatorySection}>
+
+  //     {/* Date bubble */}
+  //     <View style={styles.dateRow}>
+  //       <View style={styles.dateCircle}>
+  //         <Text style={styles.dateText}>{section.formattedDate}</Text>
+  //         <Text style={styles.dayText}>{section.day}</Text>
+  //       </View>
+
+  //       {/* Locations */}
+  //       <View style={{ flex: 1 }}>
+  //         {section.locations.map((item, idx) => (
+  //           <TouchableOpacity key={idx} style={styles.locationRow}
+  //           onPress={() =>item.type === 'origin'?console.log('hiiii') : navigation.navigate('DayDetail', item)}>
+  //             <View
+  //               style={[
+  //                 styles.dot,
+  //                 { backgroundColor: item.type === 'origin' ? '#2F80ED' : '#27AE60' },
+  //               ]}
+  //             />
+  //             <Text style={styles.locationText}>
+  //               {item.city}, {item.state}
+  //             </Text>
+  //           </TouchableOpacity>
+  //         ))}
+  //           {/* <View style={styles.separator} /> */}
+  //       </View>
+  //     </View>
+
+  //     {index < regulatoryCalendar.length - 1 && <View style={styles.separator} />}
+  //   </View>
+  // );
+
 
   const renderRegulatorySection = (section, index) => (
     <View key={index} style={styles.regulatorySection}>
-      <Text style={styles.periodTitle}>{section.period}</Text>
-      {section.entries.map(renderRegulatoryEntry)}
-      {index < regulatoryCalendar.length - 1 && <View style={styles.separator} />}
+      <View style={styles.rowContainer}>
+
+        {/* Date Bubble */}
+        <View style={styles.dateColumn}>
+          <View style={styles.dateCircle}>
+            <Text style={styles.dateText}>{section.formattedDate}</Text>
+            <Text style={styles.dayText}>{section.day}</Text>
+          </View>
+
+          {/* Vertical timeline */}
+          {/* <View style={styles.verticalLine} /> */}
+        </View>
+
+        {/* Locations */}
+        <View style={{ flex: 1 }}>
+          {section.locations.map((item, idx) => {
+            if (item.type === 'separator') {
+              return <View key={idx} style={styles.tripSeparator} />;
+            }
+
+            const isDestination = item.type === 'destination';
+
+            const Wrapper = isDestination ? TouchableOpacity : View;
+
+            return (
+              <Wrapper
+                key={idx}
+                activeOpacity={0.7}
+                onPress={
+                  isDestination
+                    // ? () => navigation.navigate('AddTrip', { id: item.tripId })
+                    ? () => navigation.navigate('DayDetail', item)
+                    : undefined
+                }
+                style={styles.locationRow}
+              >
+                <View
+                  style={[
+                    styles.dot,
+                    { backgroundColor: isDestination ? '#27AE60' : '#2F80ED' },
+                  ]}
+                />
+                <Text style={styles.locationText}>
+                  {item.city}, {item.state}
+                </Text>
+              </Wrapper>
+            );
+          })}
+        </View>
+      </View>
+
+      {index < regulatoryCalendar.length - 1 && (
+        <View style={styles.sectionSeparator} />
+      )}
     </View>
   );
+
 
   return (
     <LinearGradient
@@ -281,7 +828,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
               padding: 16,
               elevation: 1
             }}>
-              <View style={styles.calendarWrapper}>
+              <View style={styles.calendarWrapper} pointerEvents="auto">
                 <Calendar
                   markingType={'multi-dot'}
                   // markedDates={{
@@ -315,7 +862,10 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                       year: monthData.year,
                     });
                   }}
-                  markedDates={getMarkedDates(monthWiseTimeline)}
+                  // markedDates={getMarkedDates(monthWiseTimeline)}
+                  markedDates={markedDates}
+                  onDayPress={handleDayPress}
+
                   theme={{
                     backgroundColor: '#ffffff',
                     calendarBackground: '#ffffff',
@@ -398,65 +948,115 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
             </TouchableOpacity>
           </View>}
           {selectedTab === 'Year' &&
-            <View style={{ flex: 1 }}>
-              <View style={{
-                flexDirection: 'row',
-                // backgroundColor: '#F1F1F1',
-                borderRadius: 12,
-                marginBottom: 15,
-                overflow: 'hidden',
-              }}>
-                {['past', 'upcoming'].map((type) => (
-                  <TouchableOpacity
-                    key={type}
-                    onPress={() => setSelectedResidencyType(type)}
-                    style={[
-                      styles.residencyTab,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.residencyTabText,
-                        selectedResidencyType === type && styles.residencyTabTextActive,
-                      ]}
-                    >
-                      {type === 'past' ? 'Past Residencies' : 'Upcoming Residencies'}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+            // <View style={{ flex: 1 }}>
+            //   <View style={{
+            //     flexDirection: 'row',
+            //     // backgroundColor: '#F1F1F1',
+            //     borderRadius: 12,
+            //     marginBottom: 15,
+            //     overflow: 'hidden',
+            //   }}>
+            //     {['past', 'upcoming'].map((type) => (
+            //       <TouchableOpacity
+            //         key={type}
+            //         onPress={() => setSelectedResidencyType(type)}
+            //         style={[
+            //           styles.residencyTab,
+            //         ]}
+            //       >
+            //         <Text
+            //           style={[
+            //             styles.residencyTabText,
+            //             selectedResidencyType === type && styles.residencyTabTextActive,
+            //           ]}
+            //         >
+            //           {type === 'past' ? 'Past Residencies' : 'Upcoming Residencies'}
+            //         </Text>
+            //       </TouchableOpacity>
+            //     ))}
+            //   </View>
 
-              <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-                {/* {residenciesData[selectedResidencyType].map((item) => ( */}
-                {yearData?.map((item) => (
-                  <View key={item.id} style={styles.card}>
-                    <View style={[styles.colorStrip, { backgroundColor: item.color }]} />
-                    <View style={styles.infoContainer}>
-                      <View style={styles.topRow}>
-                        <Text style={styles.dateText}>{item.date}</Text>
-                        <Text style={styles.daysText}>{item.days}</Text>
-                      </View>
-                      <View style={styles.bottomRow}>
-                        <Text style={styles.locationText}>{item.location}</Text>
-                        <View style={styles.rightIcons}>
-                          {item.manual && (
-                            <View style={styles.manualTag}>
-                              <Text style={styles.manualText}>Manual</Text>
-                            </View>
-                          )}
-                          <Ionicons
-                            name="chatbubble-outline"
-                            size={16}
-                            color="#999"
-                            style={{ marginLeft: 8 }}
-                          />
-                        </View>
-                      </View>
-                    </View>
-                  </View>
-                ))}
-              </ScrollView>
-            </View>
+            //   <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+            //     {timelineData?.map((item) => (
+            //     // {residenciesData[selectedResidencyType].map((item) => (
+            //       <View key={item.id} style={styles.card}>
+            //         <View style={[styles.colorStrip, { backgroundColor: item.color }]} />
+            //         <View style={styles.infoContainer}>
+            //           <View style={styles.topRow}>
+            //             <Text style={styles.dateText}>{item.date}</Text>
+            //             <Text style={styles.daysText}>{item.days}</Text>
+            //           </View>
+            //           <View style={styles.bottomRow}>
+            //             <Text style={styles.locationText}>{item.location}</Text>
+            //             <View style={styles.rightIcons}>
+            //               {item.manual && (
+            //                 <View style={styles.manualTag}>
+            //                   <Text style={styles.manualText}>Manual</Text>
+            //                 </View>
+            //               )}
+            //               <Ionicons
+            //                 name="chatbubble-outline"
+            //                 size={16}
+            //                 color="#999"
+            //                 style={{ marginLeft: 8 }}
+            //               />
+            //             </View>
+            //           </View>
+            //         </View>
+            //       </View>
+            //     ))}
+            //   </ScrollView>
+
+
+
+            //   {/* <ScrollView showsVerticalScrollIndicator={false}>
+            //     {timelineData.map((item) => (
+            //       <View key={item.id} style={styles.card}>
+            //         <View
+            //           style={[styles.colorStrip, { backgroundColor: item.color }]}
+            //         />
+
+            //         <View style={styles.infoContainer}>
+            //           <View style={styles.topRow}>
+            //             <Text style={styles.dateText}>{item.date}</Text>
+            //             <Text style={styles.daysText}>{item.days}</Text>
+            //           </View>
+            //           <View style={styles.bottomRow}>
+            //             <Text style={styles.locationText}>{item.location}</Text>
+
+            //             <View style={styles.rightIcons}>
+            //               {item.manual && (
+            //                 <View style={styles.manualTag}>
+            //                   <Text style={styles.manualText}>Manual</Text>
+            //                 </View>
+            //               )}
+
+            //               <Ionicons
+            //                 name="chatbubble-outline"
+            //                 size={16}
+            //                 color="#999"
+            //                 style={{ marginLeft: 8 }}
+            //               />
+            //             </View>
+            //           </View>
+            //         </View>
+            //       </View>
+            //     ))}
+            //   </ScrollView> */}
+
+
+            // </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* {weeklyData.map(renderWeekCard)} */}
+              {weeklyData.map((item, index) => (
+                <YearWeekCard
+                  key={index}
+                  item={item}
+                  index={index}
+                />
+              ))}
+            </ScrollView>
+
           }
         </View>
         {selectedTab == 'Year' && <TouchableOpacity
@@ -464,6 +1064,122 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
         >
           <Ionicons name="add" size={30} color="#fff" />
         </TouchableOpacity>}
+
+        {/* <Modal
+          visible={tripModalVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setTripModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Trips</Text>
+
+              <FlatList
+                data={selectedTrips}
+                keyExtractor={(item) => item.id.toString()}
+                ItemSeparatorComponent={() => <View style={styles.tripDivider} />}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.tripRow}
+                    onPress={() => {
+                      setTripModalVisible(false);
+                      // navigation.navigate('AddTrip', { id: item.id });
+                      navigation.navigate('DayDetail', item)
+                    }}
+                  >
+                    <View>
+                      <Text style={styles.tripCity}>
+                        {item.originCity} → {item.destinationCity}
+                      </Text>
+                      <Text style={styles.tripState}>
+                        {item.originState} → {item.destinationState}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+              />
+
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={() => setTripModalVisible(false)}
+              >
+                <Text style={styles.closeText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal> */}
+        <Modal
+          visible={tripModalVisible}
+          transparent
+          animationType="none"
+          onRequestClose={closeModal}
+        >
+          <View style={styles.modalOverlay}>
+            <Animated.View
+              style={[
+                styles.modalContainer,
+                { transform: [{ translateY }] },
+              ]}
+              {...panResponder.panHandlers}
+            >
+              {/* Drag Handle */}
+              <View style={styles.dragHandle} />
+              <View style={[styles.tripRow, { flexDirection: 'row', justifyContent: 'space-between' }]}>
+                <Text style={styles.modalTitle}>Trips</Text>
+                <Text style={styles.modalTitle} onPress={closeModal}>Close</Text>
+              </View>
+              <FlatList
+                data={selectedTrips}
+                keyExtractor={(item) => item.id.toString()}
+                ItemSeparatorComponent={() => <View style={styles.tripDivider} />}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.tripRow}
+                    onPress={() => {
+                      closeModal();
+                      // navigation.navigate('AddTrip', { id: item.id });
+                      navigation.navigate('DayDetail', item)
+                    }}
+                  >
+                    {/* Origin */}
+                    <View style={styles.tripLine}>
+                      <View
+                        style={[
+                          styles.tripDot,
+                          {
+                            backgroundColor:
+                              STATE_COLOR_MAP[item.originState] || '#999',
+                          },
+                        ]}
+                      />
+                      <Text style={styles.tripText}>
+                        {item.originCity}, {item.originState}
+                      </Text>
+                    </View>
+
+                    {/* Destination */}
+                    <View style={styles.tripLine}>
+                      <View
+                        style={[
+                          styles.tripDot,
+                          {
+                            backgroundColor:
+                              STATE_COLOR_MAP[item.destinationState] || '#999',
+                          },
+                        ]}
+                      />
+                      <Text style={styles.tripText}>
+                        {item.destinationCity}, {item.destinationState}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+              />
+            </Animated.View>
+          </View>
+        </Modal>
+
       </SafeAreaView>
     </LinearGradient>
   );
@@ -826,4 +1542,383 @@ const styles = StyleSheet.create({
     color: '#000',
     fontWeight: '600',
   },
+
+
+
+
+
+
+
+
+  card: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    marginBottom: 12,
+    overflow: 'hidden',
+    elevation: 1,
+  },
+  colorStrip: {
+    width: 8,
+  },
+  infoContainer: {
+    flex: 1,
+    padding: 12,
+  },
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  dateText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+  },
+  daysText: {
+    fontSize: 14,
+    color: '#999',
+  },
+  bottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  locationText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  rightIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  manualTag: {
+    backgroundColor: '#DFF5E3',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 12,
+    marginRight: 6,
+  },
+  manualText: {
+    fontSize: 12,
+    color: '#2E7D32',
+    fontWeight: '500',
+  },
+
+
+
+
+
+
+  rowContainer: {
+    flexDirection: 'row',
+  },
+
+  dateColumn: {
+    alignItems: 'center',
+    marginRight: 15,
+  },
+
+  dateCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#F1F1F1',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  dateText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+
+  dayText: {
+    fontSize: 12,
+    color: '#666',
+  },
+
+  verticalLine: {
+    width: 2,
+    flex: 1,
+    backgroundColor: '#E0E0E0',
+    marginTop: 6,
+  },
+
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 10,
+  },
+
+  locationText: {
+    fontSize: 14,
+    color: '#333',
+  },
+
+  tripSeparator: {
+    height: 1,
+    backgroundColor: '#EAEAEA',
+    marginVertical: 8,
+  },
+
+  sectionSeparator: {
+    height: 1,
+    backgroundColor: '#E0E0E0',
+    marginVertical: 12,
+  },
+
+
+
+
+
+
+cardWrapper: {
+  backgroundColor: '#fff',
+  borderRadius: 12,
+  borderWidth: 1,
+  borderColor: '#E6E6E6',
+  marginBottom: 12,
+  overflow: 'hidden',
+},
+
+rowContainer: {
+  flexDirection: 'row',
+},
+
+colorStrip: {
+  width: 8,
+},
+
+cardBody: {
+  flex: 1,
+  padding: 14,
+},
+
+topRow: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+},
+
+dateText: {
+  fontSize: 15,
+  fontWeight: '600',
+  color: '#000',
+},
+
+daysText: {
+  fontSize: 13,
+  color: '#8E8E93',
+},
+
+bottomRow: {
+  marginTop: 6,
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+},
+
+locationText: {
+  fontSize: 14,
+  color: '#8E8E93',
+  fontStyle: 'italic',
+},
+
+rightIcons: {
+  flexDirection: 'row',
+  alignItems: 'center',
+},
+
+manualTag: {
+  backgroundColor: '#E7F6EC',
+  paddingHorizontal: 10,
+  paddingVertical: 3,
+  borderRadius: 12,
+  borderWidth: 1,
+  borderColor: '#34C759',
+},
+
+manualText: {
+  fontSize: 12,
+  color: '#2E7D32',
+  fontWeight: '500',
+},
+
+/* EXPANDED */
+expandedContainer: {
+  paddingHorizontal: 22, // color strip + spacing
+  paddingBottom: 14,
+  paddingTop: 4,
+  backgroundColor: '#FAFAFA',
+  borderTopWidth: 1,
+  borderTopColor: '#EFEFEF',
+},
+
+tripRow: {
+  marginTop: 10,
+},
+
+tripLine: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginBottom: 6,
+},
+
+blueDot: {
+  width: 8,
+  height: 8,
+  borderRadius: 4,
+  backgroundColor: '#2F80ED',
+  marginRight: 8,
+},
+
+greenDot: {
+  width: 8,
+  height: 8,
+  borderRadius: 4,
+  backgroundColor: '#27AE60',
+  marginRight: 8,
+},
+
+tripText: {
+  fontSize: 14,
+  color: '#333',
+},
+
+
+
+  //   dateRow: {
+  //   flexDirection: 'row',
+  //   alignItems: 'flex-start',
+  //   marginBottom: 12,
+  // },
+
+  // dateCircle: {
+  //   width: 60,
+  //   height: 60,
+  //   borderRadius: 30,
+  //   backgroundColor: '#F1F1F1',
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  //   marginRight: 15,
+  // },
+
+  // dateText: {
+  //   fontSize: 12,
+  //   fontWeight: '600',
+  // },
+
+  // dayText: {
+  //   fontSize: 12,
+  //   color: '#666',
+  // },
+
+  // locationRow: {
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   marginBottom: 6,
+  // },
+
+  // dot: {
+  //   width: 8,
+  //   height: 8,
+  //   borderRadius: 4,
+  //   marginRight: 10,
+  // },
+
+  // locationText: {
+  //   fontSize: 14,
+  //   color: '#333',
+  // },
+
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+    elevation: 10,        // 👈 ANDROID FIX
+  },
+
+  modalContainer: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 16,
+    maxHeight: '60%',
+  },
+
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+
+  tripRow: {
+    paddingVertical: 12,
+  },
+
+  tripCity: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+
+  tripState: {
+    fontSize: 13,
+    color: '#666',
+  },
+
+  tripDivider: {
+    height: 1,
+    backgroundColor: '#eee',
+  },
+
+  closeBtn: {
+    alignItems: 'center',
+    marginTop: 12,
+  },
+
+  closeText: {
+    color: '#007AFF',
+    fontSize: 16,
+  },
+
+  dragHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#CCC',
+    alignSelf: 'center',
+    marginBottom: 12,
+  },
+
+  tripRow: {
+    paddingVertical: 12,
+  },
+
+  tripLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+
+  tripDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+
+  tripText: {
+    fontSize: 14,
+    color: '#333',
+  },
+
 });

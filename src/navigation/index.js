@@ -65,6 +65,7 @@ function MainTabs() {
               {route.name == 'Dashboard' ? <ICON_HOME height={24} width={24} />
                 : route.name == 'Calendar' ? <ICON_CALENDAR height={24} width={24} />
                   : route.name == 'AddTripNavigation' ? <ICON_ADD height={30} width={30} />
+                  // : route.name == 'AddTripNavigation' ? <Icon name='arrow-back-circle-outline' size={32} color="#29A0DD" />
                     : route.name == 'Alerts' ? <ICON_NOTIFICATION height={24} width={24} />
                       : route.name == 'Settings' ? <ICON_SETTINGS height={24} width={24} />
                         : null}
@@ -76,6 +77,26 @@ function MainTabs() {
       <Tab.Screen name="Dashboard" component={HomeNavigation} />
       <Tab.Screen name="Calendar" component={CalendarScreen} />
       <Tab.Screen name="AddTripNavigation" component={AddTripNavigation} />
+      {/* <Tab.Screen
+        name="AddTripNavigation"
+        component={AddTripNavigation}
+        listeners={({ navigation }) => ({
+          tabPress: e => {
+            e.preventDefault(); // stop default tab switch
+            console.log();
+            
+
+            if (navigation.canGoBack()) {
+              navigation.goBack(); // normal back behavior
+            } else {
+              // navigation.navigate('Dashboard'); // fallback
+              navigation.goBack(); // normal back behavior
+
+            }
+          },
+        })}
+      /> */}
+
       <Tab.Screen name="Alerts" component={AlertsScreen} />
       <Tab.Screen name="Settings" component={SettingsNavigation} />
     </Tab.Navigator>
@@ -138,6 +159,11 @@ const RootNavigator = (props) => {
       <Stack.Screen
         name="DayDetail"
         component={DayDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="AddTrip"
+        component={AddTripScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

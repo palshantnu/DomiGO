@@ -58,6 +58,18 @@ export default function SettingsScreen() {
               <Ionicons name="chevron-forward" size={18} color="#999" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.row}>
+              <TouchableOpacity style={styles.rowLeft}
+              onPress={() => navigation.navigate('ResidencyHistory')}>
+                {/* <ICON_Language height={24} width={24} /> */}
+                <ICON_File_dock height={24} width={24} />
+                <View style={{ width: '100%' }}>
+                  <Text style={styles.title}>Domicile</Text>
+                  <Text style={styles.subtitle}>Manage Documents</Text>
+                </View>
+              </TouchableOpacity>
+              <Ionicons name="chevron-forward" size={18} color="#999" />
+            </TouchableOpacity>
+            {/* <TouchableOpacity style={styles.row}>
               <View style={styles.rowLeft}>
                 <ICON_Language height={24} width={24} />
                 <View style={{ width: '100%' }}>
@@ -77,7 +89,7 @@ export default function SettingsScreen() {
                 </View>
               </View>
               <Ionicons name="chevron-forward" size={18} color="#999" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
 
           <Text style={styles.sectionTitle}>Notifications</Text>
