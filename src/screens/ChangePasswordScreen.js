@@ -212,6 +212,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     backgroundColor: "#F2F2F2",
+    color:'#111'
   },
 
   saveButton: {

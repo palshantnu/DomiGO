@@ -8,7 +8,8 @@ const Header = ({ title }) => {
         <View style={styles.header}>
             <View style={styles.headerLeft}>
                 <Image
-                    source={{ uri: 'https://i.pravatar.cc/100' }}
+                    // source={{ uri: 'https://i.pravatar.cc/100' }}
+                    source={{ uri: 'https://cdn-icons-png.flaticon.com/128/3135/3135715.png' }}
                     style={styles.avatar}
                 />
 

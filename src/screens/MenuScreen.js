@@ -52,7 +52,8 @@ const MenuScreen = ({ userPersonalData, getPersonalProfileDataAction, }) => {
         >
           <View style={styles.profileRow}>
             <Image
-              source={{ uri: "https://i.pravatar.cc/100" }}
+              // source={{ uri: "https://i.pravatar.cc/100" }}
+              source={{ uri: 'https://cdn-icons-png.flaticon.com/128/3135/3135715.png' }}
               style={styles.profileImage}
             />
             <View style={styles.profileInfo}>
@@ -91,7 +92,7 @@ const MenuScreen = ({ userPersonalData, getPersonalProfileDataAction, }) => {
 
           <Text style={styles.sectionTitle}>Support</Text>
           <View style={styles.card}>
-            <MenuRow onPress={() => { navigation.navigate('ResidencyHistory') }} icon="home-outline" label="Domicile / Residency Settings" />
+            {/* <MenuRow onPress={() => { navigation.navigate('ResidencyHistory') }} icon="home-outline" label="Domicile / Residency Settings" /> */}
             <MenuRow
               icon="mail-outline"
               label="support@domigo-go.com"

@@ -12,31 +12,75 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 export default function GoogleAutoComplete({
   placeholder,
   onSelect,
-  type,
-  country,
+  isStateSearch = false,
+  countryCode,
+  stateName,
   apiKey,
-  icon = "location-outline", // default icon
+  icon = "location-outline",
 }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
 
   const fetchPlaces = async (text) => {
     setQuery(text);
-    if (text.length < 2) return;
+
+    if (text.length < 2) {
+      setResults([]);
+      return;
+    }
 
     try {
-      const endpoint = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${text}&types=${type}&components=country:${country}&key=${apiKey}`;
-      const response = await fetch(endpoint);
+      let url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
+        text
+      )}&key=${apiKey}`;
+
+      // ✅ ONLY STATES
+      if (isStateSearch) {
+        url += `&types=administrative_area_level_1`;
+      } 
+      // ✅ ONLY CITIES
+      else {
+        url += `&types=(cities)`;
+      }
+
+      // ✅ Country restriction
+      if (countryCode) {
+        url += `&components=country:${countryCode}`;
+      }
+
+      // ✅ Bias cities inside selected state
+      if (!isStateSearch && stateName) {
+        const geoRes = await fetch(
+          `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+            stateName
+          )}&key=${apiKey}`
+        );
+        const geoJson = await geoRes.json();
+        const location = geoJson.results?.[0]?.geometry?.location;
+
+        if (location) {
+          url += `&locationbias=circle:500000@${location.lat},${location.lng}`;
+        }
+      }
+
+      const response = await fetch(url);
       const json = await response.json();
-      setResults(json.predictions || []);
+
+      setResults(json.status === "OK" ? json.predictions : []);
     } catch (err) {
       console.log("Autocomplete Error:", err);
+      setResults([]);
     }
   };
 
+  const handleSelect = (item) => {
+    setQuery(item.description.split(",")[0]); // 👈 sirf naam
+    setResults([]);
+    onSelect(item.description.split(",")[0]);
+  };
+
   return (
-    <View style={{}}>
-      {/* SAME UI AS InfoInput */}
+    <View>
       <View style={styles.inputRow}>
         <Ionicons name={icon} size={18} color="#595959" style={styles.inputIcon} />
 
@@ -49,22 +93,20 @@ export default function GoogleAutoComplete({
         />
       </View>
 
-      {/* Dropdown List */}
       {results.length > 0 && (
         <FlatList
           data={results}
-          style={styles.dropdownContainer}
           keyExtractor={(item) => item.place_id}
+          style={styles.dropdownContainer}
+          keyboardShouldPersistTaps="handled"
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.dropdownItem}
-              onPress={() => {
-                onSelect(item.description);
-                setQuery(item.description);
-                setResults([]);
-              }}
+              onPress={() => handleSelect(item)}
             >
-              <Text style={styles.dropdownText}>{item.description}</Text>
+              <Text style={styles.dropdownText}>
+                {item.description.split(",")[0]}
+              </Text>
             </TouchableOpacity>
           )}
         />
@@ -81,7 +123,6 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    marginBottom: 2,
   },
   inputIcon: { padding: 8, marginRight: 10 },
   textInput: {
@@ -89,11 +130,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#000",
   },
-
   dropdownContainer: {
     backgroundColor: "#fff",
     borderRadius: 10,
-    marginTop: -8,
+    marginTop: 4,
     elevation: 5,
     maxHeight: 200,
   },

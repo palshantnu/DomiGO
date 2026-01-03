@@ -9,6 +9,7 @@ import {
   TextInput,
   Platform,
   PermissionsAndroid,
+  KeyboardAvoidingView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
@@ -26,7 +27,7 @@ import useAPI from "../helpers/useAPI";
 import { useNavigation } from "@react-navigation/native";
 import NetInfo from '@react-native-community/netinfo';
 import { SliderButton } from "../components/SliderButton";
-import Geolocation from "react-native-geolocation-service";
+import Geolocation from '@react-native-community/geolocation'
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import GoogleAutoComplete from '../components/GoogleAutoComplete';
 
@@ -47,38 +48,59 @@ const ProfileManagementScreen = ({
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [mobile, setMobile] = useState("");
   const [country, setCountry] = useState("");
+  const [countryCode, setCountryCode] = useState("");
   const [stateName, setStateName] = useState("");
   const [city, setCity] = useState("");
 
-  // useEffect(() => {
-  //   Geolocation.getCurrentPosition(
-  //     async position => {
-  //       const { latitude, longitude } = position.coords;
-  //       // const latitude = 26.21
-  //       // const longitude = 78.18
+  const getLocation = async () => {
+    Geolocation.getCurrentPosition(
+      async position => {
+        const { latitude, longitude } = position.coords;
+        // const latitude = 26.21
+        // const longitude = 78.18
 
-  //       // Reverse Geocoding API
-  //       const response = await fetch(
-  //         `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_KEY}`
-  //       );
+        // Reverse Geocoding API
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_KEY}`
+        );
 
-  //       const json = await response.json();
+        const json = await response.json();
 
-  //       console.log(json);
-        
+        console.log('json', json);
 
-  //       if (json.results.length > 0) {
-  //         const countryData = json.results[0].address_components.find(c =>
-  //           c.types.includes("country")
-  //         );
 
-  //         setCountry(countryData?.long_name || "");
-  //       }
-  //     },
-  //     error => console.log(error),
-  //     { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-  //   );
-  // }, []);
+        if (json.results.length > 0) {
+          const countryData = json.results[0].address_components.find(c =>
+            c.types.includes("country")
+          );
+          console.log('countryData?.long_name', countryData?.long_name);
+
+          setCountry(countryData?.long_name || "");
+          setCountryCode(countryData?.short_name?.toLowerCase() || "");
+        }
+      },
+      error => console.log(error),
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+    );
+  }
+  useEffect(() => {
+    const requestLocationPermission = async () => {
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'Location Permission',
+            message: 'App needs access to your location',
+            buttonPositive: 'OK',
+          }
+        );
+        getLocation()
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+      }
+      return true;
+    };
+    requestLocationPermission();
+  }, [])
 
 
 
@@ -110,73 +132,73 @@ const ProfileManagementScreen = ({
     // current_password: currentPassword,
     // new_password: newPassword,
   };
-console.log('personalData',personalData);
+  console.log('personalData', personalData);
 
 
-const requestLocationPermission = async () => {
-  if (Platform.OS === "android") {
-    await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-    );
-  }
-};
+  const requestLocationPermission = async () => {
+    if (Platform.OS === "android") {
+      await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+      );
+    }
+  };
 
-// useEffect(() => {
-//   requestLocationPermission().then(() => {
-//     Geolocation.getCurrentPosition(
-//       position => {
-//         console.log('dhsbvbdhvb',position.coords);
-//       },
-//       error => console.log(error),
-//       { enableHighAccuracy: true }
-//     );
-//   });
-// }, []);
+  // useEffect(() => {
+  //   requestLocationPermission().then(() => {
+  //     Geolocation.getCurrentPosition(
+  //       position => {
+  //         console.log('dhsbvbdhvb',position.coords);
+  //       },
+  //       error => console.log(error),
+  //       { enableHighAccuracy: true }
+  //     );
+  //   });
+  // }, []);
 
 
-// useEffect(() => {
-//   const getLocation = async () => {
-//     try {
-//       Geolocation.getCurrentPosition(
-//         async position => {
-//           // try {
-//             const { latitude, longitude } = position.coords;
-//             console.log('latitude','longitude', longitude,latitude);
-            
+  // useEffect(() => {
+  //   const getLocation = async () => {
+  //     try {
+  //       Geolocation.getCurrentPosition(
+  //         async position => {
+  //           // try {
+  //             const { latitude, longitude } = position.coords;
+  //             console.log('latitude','longitude', longitude,latitude);
 
-//             // const response = await fetch(
-//             //   `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_KEY}`
-//             // );
 
-//             // const json = await response.json();
+  //             // const response = await fetch(
+  //             //   `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_KEY}`
+  //             // );
 
-//             // if (
-//             //   json.results &&
-//             //   json.results.length > 0 &&
-//             //   json.results[0].address_components
-//             // ) {
-//             //   const countryData = json.results[0].address_components.find(c =>
-//             //     c.types.includes("country")
-//             //   );
+  //             // const json = await response.json();
 
-//             //   setCountry(countryData?.long_name || "");
-//             // }
-//       //     } catch (apiError) {
-//       //       console.log("API Error:", apiError);
-//       //     }
-//       //   },
-//       //   error => {
-//       //     console.log("Geolocation Error:", error);
-//         },
-//       //   { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-//       );
-//     } catch (err) {
-//       console.log("Location Catch Error:", err);
-//     }
-//   };
+  //             // if (
+  //             //   json.results &&
+  //             //   json.results.length > 0 &&
+  //             //   json.results[0].address_components
+  //             // ) {
+  //             //   const countryData = json.results[0].address_components.find(c =>
+  //             //     c.types.includes("country")
+  //             //   );
 
-//   getLocation();
-// }, []);
+  //             //   setCountry(countryData?.long_name || "");
+  //             // }
+  //       //     } catch (apiError) {
+  //       //       console.log("API Error:", apiError);
+  //       //     }
+  //       //   },
+  //       //   error => {
+  //       //     console.log("Geolocation Error:", error);
+  //         },
+  //       //   { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+  //       );
+  //     } catch (err) {
+  //       console.log("Location Catch Error:", err);
+  //     }
+  //   };
+
+  //   getLocation();
+  // }, []);
 
   const UpdateProfile = async () => {
     setButtonLoader(true);
@@ -198,68 +220,91 @@ const requestLocationPermission = async () => {
   };
 
   return (
-    <LinearGradient
-      colors={["#9ab1fa", "#ffffff"]}
-      start={{ x: 1, y: 0 }}
-      end={{ x: 0.8, y: 0.4 }}
-      locations={[0.05, 0.55]}
-      style={styles.container}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
     >
-      <SafeAreaView edges={["top", "left", "right"]} style={styles.container}>
-        <Header title="Profile Management" />
+      <LinearGradient
+        colors={["#9ab1fa", "#ffffff"]}
+        start={{ x: 1, y: 0 }}
+        end={{ x: 0.8, y: 0.4 }}
+        locations={[0.05, 0.55]}
+        style={styles.container}
+      >
+        <SafeAreaView edges={["top", "left", "right"]} style={styles.container}>
+          <Header title="Profile Management" />
 
-        <ScrollView
-          contentContainerStyle={{ paddingBottom: 40 }}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.profileWrapper}>
-            <View>
-              <Image
-                source={{ uri: "https://i.pravatar.cc/150" }}
-                style={styles.profileImage}
-              />
-              <TouchableOpacity style={styles.plusButton}>
-                <Ionicons name="add" size={18} color="#fff" />
-              </TouchableOpacity>
+          <ScrollView
+            contentContainerStyle={{ paddingBottom: 40 }}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.profileWrapper}>
+              <View>
+                <Image
+                  // source={{ uri: "https://i.pravatar.cc/150" }}
+                    source={{ uri: 'https://cdn-icons-png.flaticon.com/128/3135/3135715.png' }}
+                  style={styles.profileImage}
+                />
+                {/* <TouchableOpacity style={styles.plusButton}>
+                  <Ionicons name="add" size={18} color="#fff" />
+                </TouchableOpacity> */}
+              </View>
+
+              <Text style={styles.profileName}>{name || "User"}</Text>
+              <Text style={styles.profileEmail}>
+                {userPersonalData?.email ?? "user@gmail.com"}
+              </Text>
             </View>
 
-            <Text style={styles.profileName}>{name || "User"}</Text>
-            <Text style={styles.profileEmail}>
-              {userPersonalData?.email ?? "user@gmail.com"}
-            </Text>
-          </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Personal Info</Text>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Personal Info</Text>
+              <View style={styles.inputCard}>
+                <InfoInput
+                  icon="person-outline"
+                  placeholder="Full Name"
+                  value={name}
+                  setValue={setName}
+                />
 
-            <View style={styles.inputCard}>
-              <InfoInput
-                icon="person-outline"
-                placeholder="Full Name"
-                value={name}
-                setValue={setName}
-              />
 
-             
 
-              <InfoInput
-                icon="call-outline"
-                placeholder="Mobile Number"
-                value={mobile}
-                setValue={setMobile}
-                keyboardType="number-pad"
-                maxLength={10}
-              />
-               <InfoInput
-                icon="location-outline"
-                placeholder="Address"
-                value={address}
-                setValue={setAddress}
-              />
-              <View style={{ marginHorizontal: 0, marginTop: 0 }}>
-                {/* <Text style={styles.sectionTitle}>State</Text> */}
+                <InfoInput
+                  icon="call-outline"
+                  placeholder="Mobile Number"
+                  value={mobile}
+                  setValue={setMobile}
+                  keyboardType="number-pad"
+                  maxLength={10}
+                />
+                <InfoInput
+                  icon="location-outline"
+                  placeholder="Address"
+                  value={address}
+                  setValue={setAddress}
+                />
 
-                <GoogleAutoComplete
+                {/* <GoogleAutoComplete
+                placeholder="Select Country"
+                apiKey={GOOGLE_KEY}
+                type="(countries)"
+                onSelect={(value, details) => {
+                  const countryComponent = details.address_components.find(c =>
+                    c.types.includes("country")
+                  );
+
+                  setCountry(countryComponent.long_name);
+                  setCountryCode(countryComponent.short_name.toLowerCase());
+
+                  setStateName("");
+                  setCity("");
+                }}
+              /> */}
+                <View style={{ marginHorizontal: 0, marginTop: 0 }}>
+                  {/* <Text style={styles.sectionTitle}>State</Text> */}
+
+                  {/* <GoogleAutoComplete
                   placeholder="Search State"
                   apiKey={GOOGLE_KEY}
                   country={country?.slice(0, 2).toLowerCase()}
@@ -268,12 +313,33 @@ const requestLocationPermission = async () => {
                     setStateName(value);
                     setCity("");
                   }}
-                />
-              </View>
-              <View style={{ marginHorizontal: 0, marginTop: 10 }}>
-                {/* <Text style={styles.sectionTitle}>City</Text> */}
+                /> */}
+                  {/* <GoogleAutoComplete
+                    placeholder="Search State"
+                    apiKey={GOOGLE_KEY}
+                    country={countryCode}
+                    countryCode={countryCode}
+                    type="(regions)"
+                    onSelect={(value) => {
+                      setStateName(value);
+                      setCity("");
+                    }}
+                  /> */}
+                  <GoogleAutoComplete
+                    placeholder="Search State"
+                    apiKey={GOOGLE_KEY}
+                    countryCode={countryCode}
+                    isStateSearch={true}
+                    onSelect={(value) => {
+                      setStateName(value);
+                      setCity("");
+                    }}
+                  />
+                </View>
+                <View style={{ marginHorizontal: 0, marginTop: 10 }}>
+                  {/* <Text style={styles.sectionTitle}>City</Text> */}
 
-                <GoogleAutoComplete
+                  {/* <GoogleAutoComplete
                   placeholder="Search City"
                   apiKey={GOOGLE_KEY}
                   country={country?.slice(0, 2).toLowerCase()}
@@ -281,32 +347,52 @@ const requestLocationPermission = async () => {
                   onSelect={(value) => {
                     setCity(value);
                   }}
-                />
+                /> */}
+                  {/* <GoogleAutoComplete
+                    placeholder="Search City"
+                    apiKey={GOOGLE_KEY}
+                    country={countryCode}
+                    type="(cities)"
+                    countryCode={countryCode}
+                    components={`country:${countryCode}`}
+                    onSelect={(value) => {
+                      setCity(value);
+                    }}
+                  /> */}
+                  <GoogleAutoComplete
+                    placeholder="Search City"
+                    apiKey={GOOGLE_KEY}
+                    countryCode={countryCode}
+                    stateName={stateName}
+                    isStateSearch={false}
+                    onSelect={setCity}
+                  />
+
+                </View>
 
               </View>
-
             </View>
-          </View>
-          <View style={{ width: '90%', alignSelf: 'center' }}>
-            <SliderButton
-              isClickButton={true}
-              onSubmit={() => {
-                if (!netInfo) {
-                  CustomToast.show("No internet connection");
-                } else {
-                  UpdateProfile();
-                }
-              }}
-              buttonTitle={'Save Changes'}
-              loader={buttonLoader}
-            />
-          </View>
-          {/* <TouchableOpacity style={styles.saveButton} onPress={UpdateProfile}>
+            <View style={{ width: '90%', alignSelf: 'center' }}>
+              <SliderButton
+                isClickButton={true}
+                onSubmit={() => {
+                  if (!netInfo) {
+                    CustomToast.show("No internet connection");
+                  } else {
+                    UpdateProfile();
+                  }
+                }}
+                buttonTitle={'Save Changes'}
+                loader={buttonLoader}
+              />
+            </View>
+            {/* <TouchableOpacity style={styles.saveButton} onPress={UpdateProfile}>
             <Text style={styles.saveButtonText}>Save Changes</Text>
           </TouchableOpacity> */}
-        </ScrollView>
-      </SafeAreaView>
-    </LinearGradient>
+          </ScrollView>
+        </SafeAreaView>
+      </LinearGradient>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -387,7 +473,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   inputIcon: { padding: 8, marginRight: 10 },
-  textInput: { flex: 1, fontSize: 14, backgroundColor: "#F2F2F2" },
+  textInput: { flex: 1, fontSize: 14, backgroundColor: "#F2F2F2", color: '#111' },
   saveButton: {
     backgroundColor: colors.primary,
     marginTop: 25,
