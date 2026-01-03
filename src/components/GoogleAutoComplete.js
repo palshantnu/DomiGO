@@ -16,11 +16,14 @@ export default function GoogleAutoComplete({
   countryCode,
   stateName,
   apiKey,
+  value,
   icon = "location-outline",
 }) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(value);
   const [results, setResults] = useState([]);
-
+console.log('====================================');
+console.log('value:', value);
+console.log('====================================');
   const fetchPlaces = async (text) => {
     setQuery(text);
 
@@ -37,7 +40,7 @@ export default function GoogleAutoComplete({
       // ✅ ONLY STATES
       if (isStateSearch) {
         url += `&types=administrative_area_level_1`;
-      } 
+      }
       // ✅ ONLY CITIES
       else {
         url += `&types=(cities)`;
@@ -71,7 +74,7 @@ export default function GoogleAutoComplete({
       console.log("Autocomplete Error:", err);
       setResults([]);
     }
-  };
+  }; 
 
   const handleSelect = (item) => {
     setQuery(item.description.split(",")[0]); // 👈 sirf naam
@@ -85,11 +88,11 @@ export default function GoogleAutoComplete({
         <Ionicons name={icon} size={18} color="#595959" style={styles.inputIcon} />
 
         <TextInput
-          placeholder={placeholder}
+          placeholder={value || placeholder}
           value={query}
           onChangeText={fetchPlaces}
           style={styles.textInput}
-          placeholderTextColor="#999"
+          placeholderTextColor={value ? "#000" : "#999"}
         />
       </View>
 

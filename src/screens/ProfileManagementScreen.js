@@ -120,6 +120,8 @@ const ProfileManagementScreen = ({
       setName(userPersonalData.name ?? "");
       setAddress(userPersonalData.address ?? "");
       setMobile(userPersonalData.mobile ?? "");
+      setCity(userPersonalData.city ?? "");
+      setStateName(userPersonalData.state ?? "");
     }
   }, [userPersonalData]);
 
@@ -330,6 +332,7 @@ const ProfileManagementScreen = ({
                     apiKey={GOOGLE_KEY}
                     countryCode={countryCode}
                     isStateSearch={true}
+                    value={stateName}
                     onSelect={(value) => {
                       setStateName(value);
                       setCity("");
@@ -366,6 +369,7 @@ const ProfileManagementScreen = ({
                     stateName={stateName}
                     isStateSearch={false}
                     onSelect={setCity}
+                     value={city}
                   />
 
                 </View>
