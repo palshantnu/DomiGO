@@ -9,6 +9,7 @@ import {
     Platform,
     ActivityIndicator,
     KeyboardAvoidingView,
+    PermissionsAndroid,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import DatePicker from "react-native-date-picker";
@@ -26,6 +27,8 @@ import {
 import { CustomToast, GOOGLE_KEY } from "../helpers/CommonHelpers";
 import colors from "../theme/colors";
 import { useNavigation, useRoute } from "@react-navigation/native";
+import GoogleAutoComplete from "../components/GoogleAutoComplete";
+import Geolocation from "@react-native-community/geolocation";
 
 
 
@@ -47,6 +50,8 @@ const CreateResidencyRecordScreen = ({
     const route = useRoute();
     const editData = route.params?.editData || null;
     const [isLoading, setIsLoading] = useState(false);
+    const [countryCode, setCountryCode] = useState("");
+
     const dispatch = useDispatch();
     const [form, setForm] = useState({
         title: "",
@@ -65,6 +70,60 @@ const CreateResidencyRecordScreen = ({
 
     const [openIssuePicker, setOpenIssuePicker] = useState(false);
     const [openRenewPicker, setOpenRenewPicker] = useState(false);
+
+    // const countryCode = "in";
+    const isResidence = true
+
+
+      const getLocation = async () => {
+        Geolocation.getCurrentPosition(
+          async position => {
+            const { latitude, longitude } = position.coords;
+            // const latitude = 26.21
+            // const longitude = 78.18
+    
+            // Reverse Geocoding API
+            const response = await fetch(
+              `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_KEY}`
+            );
+    
+            const json = await response.json();
+    
+            console.log('json', json);
+    
+    
+            if (json.results.length > 0) {
+              const countryData = json.results[0].address_components.find(c =>
+                c.types.includes("country")
+              );
+              console.log('countryData?.long_name', countryData?.long_name);
+    
+              setCountry(countryData?.long_name || "");
+              setCountryCode(countryData?.short_name?.toLowerCase() || "");
+            }
+          },
+          error => console.log(error),
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+        );
+      }
+      useEffect(() => {
+        const requestLocationPermission = async () => {
+          if (Platform.OS === 'android') {
+            const granted = await PermissionsAndroid.request(
+              PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+              {
+                title: 'Location Permission',
+                message: 'App needs access to your location',
+                buttonPositive: 'OK',
+              }
+            );
+            getLocation()
+            return granted === PermissionsAndroid.RESULTS.GRANTED;
+          }
+          return true;
+        };
+        requestLocationPermission();
+      }, [])
 
     useEffect(() => {
         GET_Document_Category_LIST();
@@ -239,7 +298,7 @@ const CreateResidencyRecordScreen = ({
                                 />
                             </InputContainer>
 
-                            <Text style={styles.label}>State *</Text>
+                            {/* <Text style={styles.label}>State *</Text>
                             <View style={{ position: "relative" }}>
                                 <InputContainer icon="flag-outline">
                                     <TextInput
@@ -252,12 +311,27 @@ const CreateResidencyRecordScreen = ({
                                         }}
                                     />
                                 </InputContainer>
-                            </View>
+                            </View> */}
+                            <Text style={styles.label}>State *</Text>
+                            {/* <InputContainer icon="flag-outline"> */}
+                            <GoogleAutoComplete
+                                placeholder="Search State"
+                                isResidence={isResidence}
+                                apiKey={GOOGLE_KEY}
+                                isStateSearch={true}
+                                countryCode={countryCode}
+                                value={form.state}
+                                onSelect={(value) => {
+                                    setValue("state", value);
+                                    setValue("city", "");
+                                }}
+                            />
+                            {/* </InputContainer> */}
 
                             <Text style={styles.label}>City *</Text>
                             <View style={{ position: "relative" }}>
-                                <InputContainer icon="business-outline">
-                                    <TextInput
+                                {/* <InputContainer icon="business-outline"> */}
+                                {/* <TextInput
                                         placeholder="Enter City"
                                         placeholderTextColor="#A8A8A8"
                                         style={styles.input}
@@ -265,8 +339,18 @@ const CreateResidencyRecordScreen = ({
                                         onChangeText={(v) => {
                                             setValue("city", v);
                                         }}
-                                    />
-                                </InputContainer>
+                                    /> */}
+                                {/* </InputContainer> */}
+                                <GoogleAutoComplete
+                                    placeholder="Search City"
+                                    apiKey={GOOGLE_KEY}
+                                    isStateSearch={false}
+                                    isResidence={isResidence}
+                                    stateName={form.state}
+                                    countryCode={countryCode}
+                                    value={form.city}
+                                    onSelect={(value) => setValue("city", value)}
+                                />
                             </View>
 
                             <Text style={styles.label}>Issue Date *</Text>

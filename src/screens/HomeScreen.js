@@ -7,6 +7,7 @@ import {
     StyleSheet,
     ScrollView,
     Dimensions,
+    Modal,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Progress from 'react-native-progress';
@@ -19,12 +20,14 @@ import { connect, useDispatch } from 'react-redux';
 import startTracking, { stopTracking } from '../helpers/LocationTracker';
 import { startDomigoTracking } from '../helpers/MainTracker';
 import DomigoTracker from '../helpers/MainTracker';
-import { GET_FINAL_YEAR_PROGRESS,GET_STATE_WISE_RESIDENCY } from '../redux/actions/action-creator';
+import { GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY } from '../redux/actions/action-creator';
 
 
-const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS,GET_STATE_WISE_RESIDENCY, loginToken,finalYearProgress,stateWiseResidency}) => {
-    console.log('stateWiseResidency>>>>',stateWiseResidency);
-    
+const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, loginToken, finalYearProgress, stateWiseResidency, userData }) => {
+    const [showStateModal, setShowStateModal] = React.useState(false);
+    console.log('stateWiseResidency>>>>', stateWiseResidency);
+    console.log('userData>>>>', userData);
+
     const dispatch = useDispatch();
 
     const progress = 200 / 365;
@@ -38,6 +41,12 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS,GET_STATE_WISE_RESIDENCY, loginTok
     // }, []);
 
     useEffect(() => {
+        if (userData && userData.state === null) {
+            setShowStateModal(true);
+        }
+    }, [userData]);
+
+    useEffect(() => {
 
         dispatch(GET_FINAL_YEAR_PROGRESS)
         dispatch(GET_STATE_WISE_RESIDENCY)
@@ -46,18 +55,18 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS,GET_STATE_WISE_RESIDENCY, loginTok
         // };
     }, []);
 
-console.log('loginToken',loginToken);
+    console.log('loginToken', loginToken);
 
-function getStateCodeSafe(state) {
-  return state
-    .toLowerCase()
-    .replace(/[^a-z\s]/g, "")
-    .split(/\s+/)
-    .map(w => w.charAt(0).toUpperCase())
-    .join("");
-}
+    function getStateCodeSafe(state) {
+        return state
+            .toLowerCase()
+            .replace(/[^a-z\s]/g, "")
+            .split(/\s+/)
+            .map(w => w.charAt(0).toUpperCase())
+            .join("");
+    }
 
-        const stringToHash = (str) => {
+    const stringToHash = (str) => {
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
             hash = str.charCodeAt(i) + ((hash << 5) - hash);
@@ -75,7 +84,7 @@ function getStateCodeSafe(state) {
         state ? getDarkPastelColor(state) : '#2C2C2C';
 
 
-// console.log(getStateCodeSafe("  Uttar   Pradesh ")); // UP
+    // console.log(getStateCodeSafe("  Uttar   Pradesh ")); // UP
 
 
 
@@ -116,7 +125,7 @@ function getStateCodeSafe(state) {
                         <Text style={styles.sectionTitle}>Insights Menu</Text>
 
                         <View style={styles.toggleContainer}>
-                            <TouchableOpacity  style={styles.leftTab}>
+                            <TouchableOpacity style={styles.leftTab}>
                                 <Text style={styles.activeText}>Metrics</Text>
                             </TouchableOpacity>
 
@@ -133,9 +142,9 @@ function getStateCodeSafe(state) {
                                 </View>
                             </TouchableOpacity>
 
-                            <TouchableOpacity 
-                            // onPress={()=>DomigoTracker.startDomigoTracking()}
-                              style={styles.rightTab}>
+                            <TouchableOpacity
+                                // onPress={()=>DomigoTracker.startDomigoTracking()}
+                                style={styles.rightTab}>
                                 <Text style={styles.inactiveText}>Calendar</Text>
                             </TouchableOpacity>
                         </View>
@@ -146,28 +155,58 @@ function getStateCodeSafe(state) {
                         <Text style={styles.sectionTitle}>State-wise Residency Overview</Text>
                         <View style={styles.stateGrid}>
                             {
-                            // [
-                            //     { code: 'FL', days: 134, color: '#D3D3D3', threshold: 183 },
-                            //     { code: 'NY', days: 83, color: '#28a0dd', threshold: 183 },
-                            //     { code: 'CA', days: 170, color: '#dc3c41', threshold: 183 },
-                            //     { code: 'UT', days: 45, color: '#28a0dd', threshold: 183 },
-                            // ]
-                            stateWiseResidency
-                            ?.map((item, index) => (
-                                <View key={index} style={[styles.stateCard, { borderColor: '#E0E0E0', width: Dimensions.get('window').width * 0.42, height: Dimensions.get('window').width * 0.42, elevation: 1, borderWidth: 0.5 }]}>
-                                    <View style={styles.smallCircle}>
-                                        <Text style={styles.smallCircleText}>{'10'}</Text>
-                                    </View>
-                                    <View style={{ borderRadius: 70, borderWidth: 5, borderColor: getStateColor(item.state), width: Dimensions.get('window').width * 0.35, height: Dimensions.get('window').width * 0.35, justifyContent: 'center', alignItems: 'center' }}>
-                                        <Text style={styles.stateCode}>{item.state.length < 2 ? item.state : getStateCodeSafe(item.state)}</Text>
-                                        <Text style={styles.stateDays}>{item.days}</Text>
-                                        <Text style={styles.daysIn}>Days in</Text>
+                                // [
+                                //     { code: 'FL', days: 134, color: '#D3D3D3', threshold: 183 },
+                                //     { code: 'NY', days: 83, color: '#28a0dd', threshold: 183 },
+                                //     { code: 'CA', days: 170, color: '#dc3c41', threshold: 183 },
+                                //     { code: 'UT', days: 45, color: '#28a0dd', threshold: 183 },
+                                // ]
+                                stateWiseResidency
+                                    ?.map((item, index) => (
+                                        <View key={index} style={[styles.stateCard, { borderColor: '#E0E0E0', width: Dimensions.get('window').width * 0.42, height: Dimensions.get('window').width * 0.42, elevation: 1, borderWidth: 0.5 }]}>
+                                            <View style={styles.smallCircle}>
+                                                <Text style={styles.smallCircleText}>{'10'}</Text>
+                                            </View>
+                                            <View style={{ borderRadius: 70, borderWidth: 5, borderColor: getStateColor(item.state), width: Dimensions.get('window').width * 0.35, height: Dimensions.get('window').width * 0.35, justifyContent: 'center', alignItems: 'center' }}>
+                                                <Text style={styles.stateCode}>{item.state.length < 2 ? item.state : getStateCodeSafe(item.state)}</Text>
+                                                <Text style={styles.stateDays}>{item.days}</Text>
+                                                <Text style={styles.daysIn}>Days in</Text>
 
-                                    </View>
-                                </View>
-                            ))}
+                                            </View>
+                                        </View>
+                                    ))}
                         </View>
                     </View>
+                    <Modal
+                        transparent={true}
+                        animationType="fade"
+                        visible={showStateModal}
+                    >
+                        <View style={styles.modalOverlay}>
+                            <View style={styles.modalContainer}>
+                                <Text style={styles.modalTitle}>
+                                    Please add your home state or domicile
+                                </Text>
+
+                                <Text style={styles.modalSubtitle}>
+                                    This is required to calculate your residency accurately.
+                                </Text>
+
+                                <TouchableOpacity
+                                    style={styles.modalButton}
+                                    onPress={() => {
+                                        setShowStateModal(false);
+                                        navigation.navigate('Profile'); // ya jis screen pe state add hoti ho
+                                    }}
+                                >
+                                    <Text style={styles.modalButtonText}>
+                                        Add Now
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </Modal>
+
                 </ScrollView>
             </SafeAreaView>
         </LinearGradient>
@@ -180,7 +219,7 @@ function mapStateToProps(state) {
         userData: state.auth.userData,
         loginToken: state.auth.loginToken,
         finalYearProgress: state.common.finalYearProgress,
-        stateWiseResidency:state.common.stateWiseResidency
+        stateWiseResidency: state.common.stateWiseResidency
     };
 }
 
@@ -413,6 +452,52 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         fontSize: 15,
     },
+
+
+
+    modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+},
+
+modalContainer: {
+    width: '85%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+    elevation: 5,
+},
+
+modalTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 8,
+},
+
+modalSubtitle: {
+    fontSize: 13,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+},
+
+modalButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+},
+
+modalButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
+},
+
 
 
 });

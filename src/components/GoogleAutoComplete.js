@@ -12,6 +12,7 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 export default function GoogleAutoComplete({
   placeholder,
   onSelect,
+  isResidence,
   isStateSearch = false,
   countryCode,
   stateName,
@@ -23,6 +24,7 @@ export default function GoogleAutoComplete({
   const [results, setResults] = useState([]);
 console.log('====================================');
 console.log('value:', value);
+console.log('isResidence:', isResidence);
 console.log('====================================');
   const fetchPlaces = async (text) => {
     setQuery(text);
@@ -84,7 +86,7 @@ console.log('====================================');
 
   return (
     <View>
-      <View style={styles.inputRow}>
+      <View style={[styles.inputRow,{paddingVertical:isResidence ?5:10}]}>
         <Ionicons name={icon} size={18} color="#595959" style={styles.inputIcon} />
 
         <TextInput
@@ -125,7 +127,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F2F2F2",
     borderRadius: 25,
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    // paddingVertical: isResidence?5:10,
   },
   inputIcon: { padding: 8, marginRight: 10 },
   textInput: {
