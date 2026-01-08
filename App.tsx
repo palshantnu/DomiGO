@@ -17,7 +17,9 @@ import colors from './src/theme/colors';
 import { store, persistor } from './src/redux/store';
 import { PersistGate } from 'redux-persist/integration/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import DomigoTracker from './src/helpers/MainTracker'
+import DomigoTracker from './src/helpers/MainTracker';
+import { checkLocationPermission, handleLocationAccess } from './src/helpers/locationPermission';
+import { ensureLocationReady } from './src/helpers/locationHandler';
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
 
@@ -30,6 +32,28 @@ function App() {
   // useEffect(()=>{
   //   testNativeModule()
   // },[])
+
+  //   useEffect(() => {
+  //   checkLocationPermission();
+  // }, []);
+
+  //   useEffect(() => {
+  //   handleLocationAccess().then((enabled) => {
+  //     console.log('Location Ready:', enabled);
+  //   });
+  // }, []);
+//   useEffect(() => {
+//   setTimeout(() => {
+//     handleLocationAccess();
+//   }, 1000);
+// }, []);
+useEffect(() => {
+  // 🔥 Delay is MUST
+  setTimeout(() => {
+    ensureLocationReady();
+  }, 1500);
+}, []);
+
   useEffect(() => {
     const autoStartTracking = async () => {
       const enabled = await AsyncStorage.getItem('DOMIGO_TRACKING_ENABLED');

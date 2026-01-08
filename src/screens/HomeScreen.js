@@ -13,7 +13,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import * as Progress from 'react-native-progress';
 import colors from '../theme/colors';
 import Header from '../components/Header';
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import { connect, useDispatch } from 'react-redux';
@@ -21,10 +21,18 @@ import startTracking, { stopTracking } from '../helpers/LocationTracker';
 import { startDomigoTracking } from '../helpers/MainTracker';
 import DomigoTracker from '../helpers/MainTracker';
 import { GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY } from '../redux/actions/action-creator';
+import { handleLocationAccess } from '../helpers/locationPermission';
+import { ensureLocationReady } from '../helpers/locationHandler';
+import { forceEnableGPS } from '../helpers/locationGuard';
+import { checkGPSStatus } from '../helpers/gpsStatus';
+import { useGPSListener } from '../hooks/useGPSListener';
+import { openLocationSettings } from '../helpers/locationRedirect';
+
 
 
 const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, loginToken, finalYearProgress, stateWiseResidency, userData }) => {
     const [showStateModal, setShowStateModal] = React.useState(false);
+    const [isGPSOn, setIsGPSOn] = React.useState(true);
     console.log('stateWiseResidency>>>>', stateWiseResidency);
     console.log('userData>>>>', userData);
 
@@ -46,14 +54,59 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, loginTo
         }
     }, [userData]);
 
-    useEffect(() => {
+    // useEffect(()=>{
+         useGPSListener(setIsGPSOn);
+    // },[])
 
+   
+
+    useEffect(() => {
+    
         dispatch(GET_FINAL_YEAR_PROGRESS)
         dispatch(GET_STATE_WISE_RESIDENCY)
         // return () => {
         //   stopDomigoTracking();
         // };
     }, []);
+
+    // useEffect(() => {
+    //     handleLocationAccess().then((enabled) => {
+    //       console.log('Location Ready:', enabled);
+    //     });
+    //   }, []);
+
+    //       useEffect(() => {
+    //   setTimeout(() => {
+    //     handleLocationAccess();
+    //   }, 1000);
+    // }, []);
+    // useEffect(() => {
+    //   // 🔥 Delay is MUST
+    //   setTimeout(() => {
+    //     ensureLocationReady();
+    //   }, 1500);
+    // }, []);
+
+    const isFocused = useIsFocused();
+
+    // useEffect(() => {
+    //     if (isFocused) {
+    //         const timer = setTimeout(() => {
+    //             forceEnableGPS();
+    //         }, 800); // 👈 small delay only
+    //         return () => clearTimeout(timer);
+    //     }
+    // }, [isFocused]);
+
+    // useEffect(() => {
+    //     if (isFocused) {
+    //         setTimeout(async () => {
+    //             const gps = await checkGPSStatus();
+    //             setIsGPSOn(gps);
+    //         }, 500);
+    //     }
+    // }, [isFocused])
+
 
     console.log('loginToken', loginToken);
 
@@ -120,6 +173,54 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, loginTo
                             </View>
                         </View>
                     </View>
+
+                    {!isGPSOn && (
+  <TouchableOpacity
+    activeOpacity={0.8}
+    onPress={openLocationSettings}
+    style={styles.locationBanner}
+  >
+    <View style={styles.locationIcon}>
+      <Icon name="location-sharp" size={18} color="#fff" />
+    </View>
+
+    <View style={{ flex: 1 }}>
+      <Text style={styles.locationTitle}>
+        Please enable precise location tracking!
+      </Text>
+      <Text style={styles.locationSubtitle}>
+        Tap here to fix
+      </Text>
+    </View>
+
+    <Icon name="chevron-forward" size={20} color="#fff" />
+  </TouchableOpacity>
+)}
+
+
+                    {/* {!isGPSOn && (
+                        <TouchableOpacity
+                            activeOpacity={0.8}
+                            onPress={() => openLocationSettings(setIsGPSOn)}
+                            style={styles.locationBanner}
+                        >
+                            <View style={styles.locationIcon}>
+                                <Icon name="location-sharp" size={18} color="#fff" />
+                            </View>
+
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.locationTitle}>
+                                    Please enable precise location tracking!
+                                </Text>
+                                <Text style={styles.locationSubtitle}>
+                                    Tap here to fix
+                                </Text>
+                            </View>
+
+                            <Icon name="chevron-forward" size={20} color="#fff" />
+                        </TouchableOpacity>
+                    )} */}
+
 
                     <View style={{ ...styles.section, elevation: 2, backgroundColor: '#fafafa', borderRadius: 10 }}>
                         <Text style={styles.sectionTitle}>Insights Menu</Text>
@@ -456,47 +557,83 @@ const styles = StyleSheet.create({
 
 
     modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-},
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
 
-modalContainer: {
-    width: '85%',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    alignItems: 'center',
-    elevation: 5,
-},
+    modalContainer: {
+        width: '85%',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 20,
+        alignItems: 'center',
+        elevation: 5,
+    },
 
-modalTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 8,
-},
+    modalTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        textAlign: 'center',
+        marginBottom: 8,
+    },
 
-modalSubtitle: {
-    fontSize: 13,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 20,
-},
+    modalSubtitle: {
+        fontSize: 13,
+        color: '#666',
+        textAlign: 'center',
+        marginBottom: 20,
+    },
 
-modalButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 25,
-},
+    modalButton: {
+        backgroundColor: colors.primary,
+        paddingVertical: 12,
+        paddingHorizontal: 30,
+        borderRadius: 25,
+    },
 
-modalButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
-},
+    modalButtonText: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 14,
+    },
+
+
+
+
+    locationBanner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#E74C3C',
+        marginHorizontal: 12,
+        marginTop: 8,
+        padding: 12,
+        borderRadius: 10,
+        elevation: 3,
+    },
+
+    locationIcon: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: '#C0392B',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 10,
+    },
+
+    locationTitle: {
+        color: '#fff',
+        fontWeight: '700',
+        fontSize: 13,
+    },
+
+    locationSubtitle: {
+        color: '#FFEAEA',
+        fontSize: 11,
+        marginTop: 2,
+    },
 
 
 
