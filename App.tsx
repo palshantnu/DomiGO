@@ -50,7 +50,7 @@ function App() {
 useEffect(() => {
   // 🔥 Delay is MUST
   setTimeout(() => {
-    ensureLocationReady();
+    // ensureLocationReady();
   }, 1500);
 }, []);
 

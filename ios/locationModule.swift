@@ -50,7 +50,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         print("📍 LocationTracker initialized")
         setupLocationManager()
         loadPersistedState()
-        setupNotificationObservers()
+        // setupNotificationObservers()
         
         // Delay checking pending locations to allow app to fully initialize
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
@@ -58,29 +58,29 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         }
     }
 
-    private func setupNotificationObservers() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleBackgroundLocationNotification(_:)),
-            name: NSNotification.Name("NewBackgroundLocation"),
-            object: nil
-        )
+    // private func setupNotificationObservers() {
+    //     NotificationCenter.default.addObserver(
+    //         self,
+    //         selector: #selector(handleBackgroundLocationNotification(_:)),
+    //         name: NSNotification.Name("NewBackgroundLocation"),
+    //         object: nil
+    //     )
         
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleAppLaunchedByLocation),
-            name: NSNotification.Name("AppLaunchedByLocation"),
-            object: nil
-        )
+    //     NotificationCenter.default.addObserver(
+    //         self,
+    //         selector: #selector(handleAppLaunchedByLocation),
+    //         name: NSNotification.Name("AppLaunchedByLocation"),
+    //         object: nil
+    //     )
         
-        // For backward compatibility with your existing SLC notification
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleSLCNotification(_:)),
-            name: NSNotification.Name("SLC_LOCATION"),
-            object: nil
-        )
-    }
+    //     // For backward compatibility with your existing SLC notification
+    //     NotificationCenter.default.addObserver(
+    //         self,
+    //         selector: #selector(handleSLCNotification(_:)),
+    //         name: NSNotification.Name("SLC_LOCATION"),
+    //         object: nil
+    //     )
+    // }
     
     @objc private func handleAppLaunchedByLocation() {
         print("🔄 App was launched by location update - checking for pending locations")

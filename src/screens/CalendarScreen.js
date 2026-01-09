@@ -327,16 +327,23 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
       if (!weekMap[weekKey]) {
         weekMap[weekKey] = [];
       }
-      weekMap[weekKey].push(...trips);
+
+      // ✅ FORCE trips to always be an array
+      const tripArray = Array.isArray(trips) ? trips : trips ? [trips] : [];
+
+      weekMap[weekKey].push(...tripArray);
     });
 
     return Object.keys(weekMap).map((week, index) => ({
       id: index + 1,
       week,
-      color:STATE_COLOR_MAP[week[0].destinationState] || colors.primary,
       trips: weekMap[week],
+      color:
+        STATE_COLOR_MAP[weekMap[week][0]?.destinationState] ||
+        colors.primary,
     }));
   };
+
 
 
 
@@ -454,92 +461,92 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   // };
 
 
-const YearWeekCard = ({ item, index }) => {
-  const isOpen = openIndex === index;
-  console.log('itemmdnfn',item);
-  
-  return (
-    <View style={styles.cardWrapper}>
-      
-      {/* ===== MAIN CARD ROW (UNCHANGED) ===== */}
-      <View style={styles.rowContainer}>
-        {/* Left color strip */}
-        <View
-          style={[
-            styles.colorStrip,
-            { backgroundColor: item.color },
-          ]}
-        />
+  const YearWeekCard = ({ item, index }) => {
+    const isOpen = openIndex === index;
+    console.log('itemmdnfn', item);
 
-        {/* Card content */}
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={() =>
-            setOpenIndex(isOpen ? null : index)
-          }
-          style={styles.cardBody}
-        >
-          {/* Top row */}
-          <View style={styles.topRow}>
-            <Text style={styles.dateText}>{item.week}</Text>
-            {/* <Text style={styles.daysText}>{item.days}</Text> */}
-            <Text style={styles.daysText}>{'07 Days'}</Text>
-          </View>
+    return (
+      <View style={styles.cardWrapper}>
 
-          {/* Bottom row */}
-          <View style={styles.bottomRow}>
-            <Text style={styles.locationText}>
-              {item.location}
-            </Text>
+        {/* ===== MAIN CARD ROW (UNCHANGED) ===== */}
+        <View style={styles.rowContainer}>
+          {/* Left color strip */}
+          <View
+            style={[
+              styles.colorStrip,
+              { backgroundColor: item.color },
+            ]}
+          />
 
-            <View style={styles.rightIcons}>
-              {item.manual && (
-                <View style={styles.manualTag}>
-                  <Text style={styles.manualText}>Manual</Text>
-                </View>
-              )}
-              <Ionicons
-                name="chatbubble-outline"
-                size={16}
-                color="#9E9E9E"
-                style={{ marginLeft: 8 }}
-              />
+          {/* Card content */}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() =>
+              setOpenIndex(isOpen ? null : index)
+            }
+            style={styles.cardBody}
+          >
+            {/* Top row */}
+            <View style={styles.topRow}>
+              <Text style={styles.dateText}>{item.week}</Text>
+              {/* <Text style={styles.daysText}>{item.days}</Text> */}
+              <Text style={styles.daysText}>{'07 Days'}</Text>
             </View>
-          </View>
-        </TouchableOpacity>
-      </View>
 
-      {/* ===== EXPANDED CONTENT (NICHE) ===== */}
-      {isOpen && (
-        <View style={styles.expandedContainer}>
-          {item.trips.map(trip => (
-            <TouchableOpacity
-              key={trip.id}
-              style={styles.tripRow}
-              onPress={() =>
-                navigation.navigate('DayDetail', trip)
-              }
-            >
-              <View style={styles.tripLine}>
-                <View style={styles.blueDot} />
-                <Text style={styles.tripText}>
-                  {trip.originCity}, {trip.originState}
-                </Text>
-              </View>
+            {/* Bottom row */}
+            <View style={styles.bottomRow}>
+              <Text style={styles.locationText}>
+                {item.location}
+              </Text>
 
-              <View style={styles.tripLine}>
-                <View style={styles.greenDot} />
-                <Text style={styles.tripText}>
-                  {trip.destinationCity}, {trip.destinationState}
-                </Text>
+              <View style={styles.rightIcons}>
+                {item.manual && (
+                  <View style={styles.manualTag}>
+                    <Text style={styles.manualText}>Manual</Text>
+                  </View>
+                )}
+                <Ionicons
+                  name="chatbubble-outline"
+                  size={16}
+                  color="#9E9E9E"
+                  style={{ marginLeft: 8 }}
+                />
               </View>
-            </TouchableOpacity>
-          ))}
+            </View>
+          </TouchableOpacity>
         </View>
-      )}
-    </View>
-  );
-};
+
+        {/* ===== EXPANDED CONTENT (NICHE) ===== */}
+        {isOpen && (
+          <View style={styles.expandedContainer}>
+            {item.trips.map(trip => (
+              <TouchableOpacity
+                key={trip.id}
+                style={styles.tripRow}
+                onPress={() =>
+                  navigation.navigate('DayDetail', trip)
+                }
+              >
+                <View style={styles.tripLine}>
+                  <View style={styles.blueDot} />
+                  <Text style={styles.tripText}>
+                    {trip.originCity}, {trip.originState}
+                  </Text>
+                </View>
+
+                <View style={styles.tripLine}>
+                  <View style={styles.greenDot} />
+                  <Text style={styles.tripText}>
+                    {trip.destinationCity}, {trip.destinationState}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </View>
+    );
+  };
 
 
 
@@ -1680,118 +1687,118 @@ const styles = StyleSheet.create({
 
 
 
-cardWrapper: {
-  backgroundColor: '#fff',
-  borderRadius: 12,
-  borderWidth: 1,
-  borderColor: '#E6E6E6',
-  marginBottom: 12,
-  overflow: 'hidden',
-},
+  cardWrapper: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E6E6E6',
+    marginBottom: 12,
+    overflow: 'hidden',
+  },
 
-rowContainer: {
-  flexDirection: 'row',
-},
+  rowContainer: {
+    flexDirection: 'row',
+  },
 
-colorStrip: {
-  width: 8,
-},
+  colorStrip: {
+    width: 8,
+  },
 
-cardBody: {
-  flex: 1,
-  padding: 14,
-},
+  cardBody: {
+    flex: 1,
+    padding: 14,
+  },
 
-topRow: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-},
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
 
-dateText: {
-  fontSize: 15,
-  fontWeight: '600',
-  color: '#000',
-},
+  dateText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#000',
+  },
 
-daysText: {
-  fontSize: 13,
-  color: '#8E8E93',
-},
+  daysText: {
+    fontSize: 13,
+    color: '#8E8E93',
+  },
 
-bottomRow: {
-  marginTop: 6,
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-},
+  bottomRow: {
+    marginTop: 6,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
 
-locationText: {
-  fontSize: 14,
-  color: '#8E8E93',
-  fontStyle: 'italic',
-},
+  locationText: {
+    fontSize: 14,
+    color: '#8E8E93',
+    fontStyle: 'italic',
+  },
 
-rightIcons: {
-  flexDirection: 'row',
-  alignItems: 'center',
-},
+  rightIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
 
-manualTag: {
-  backgroundColor: '#E7F6EC',
-  paddingHorizontal: 10,
-  paddingVertical: 3,
-  borderRadius: 12,
-  borderWidth: 1,
-  borderColor: '#34C759',
-},
+  manualTag: {
+    backgroundColor: '#E7F6EC',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#34C759',
+  },
 
-manualText: {
-  fontSize: 12,
-  color: '#2E7D32',
-  fontWeight: '500',
-},
+  manualText: {
+    fontSize: 12,
+    color: '#2E7D32',
+    fontWeight: '500',
+  },
 
-/* EXPANDED */
-expandedContainer: {
-  paddingHorizontal: 22, // color strip + spacing
-  paddingBottom: 14,
-  paddingTop: 4,
-  backgroundColor: '#FAFAFA',
-  borderTopWidth: 1,
-  borderTopColor: '#EFEFEF',
-},
+  /* EXPANDED */
+  expandedContainer: {
+    paddingHorizontal: 22, // color strip + spacing
+    paddingBottom: 14,
+    paddingTop: 4,
+    backgroundColor: '#FAFAFA',
+    borderTopWidth: 1,
+    borderTopColor: '#EFEFEF',
+  },
 
-tripRow: {
-  marginTop: 10,
-},
+  tripRow: {
+    marginTop: 10,
+  },
 
-tripLine: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  marginBottom: 6,
-},
+  tripLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
 
-blueDot: {
-  width: 8,
-  height: 8,
-  borderRadius: 4,
-  backgroundColor: '#2F80ED',
-  marginRight: 8,
-},
+  blueDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#2F80ED',
+    marginRight: 8,
+  },
 
-greenDot: {
-  width: 8,
-  height: 8,
-  borderRadius: 4,
-  backgroundColor: '#27AE60',
-  marginRight: 8,
-},
+  greenDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#27AE60',
+    marginRight: 8,
+  },
 
-tripText: {
-  fontSize: 14,
-  color: '#333',
-},
+  tripText: {
+    fontSize: 14,
+    color: '#333',
+  },
 
 
 
