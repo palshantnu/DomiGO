@@ -297,7 +297,9 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, loginTo
                                     style={styles.modalButton}
                                     onPress={() => {
                                         setShowStateModal(false);
-                                        navigation.navigate('Profile'); // ya jis screen pe state add hoti ho
+                                        navigation.navigate('Settings', {
+                                            screen: 'ProfileManagement',
+                                        });
                                     }}
                                 >
                                     <Text style={styles.modalButtonText}>
