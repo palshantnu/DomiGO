@@ -96,33 +96,33 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         }
     }
     
-    @objc private func handleBackgroundLocationNotification(_ notification: Notification) {
-        guard let locationData = notification.object as? [String: Any],
-              let lat = locationData["latitude"] as? Double,
-              let lng = locationData["longitude"] as? Double else {
-            return
-        }
+    // @objc private func handleBackgroundLocationNotification(_ notification: Notification) {
+    //     guard let locationData = notification.object as? [String: Any],
+    //           let lat = locationData["latitude"] as? Double,
+    //           let lng = locationData["longitude"] as? Double else {
+    //         return
+    //     }
         
-        print("📍 Processing background location notification")
+    //     print("📍 Processing background location notification")
         
-        // Add to pending queue instead of processing immediately
-        let location = CLLocation(latitude: lat, longitude: lng)
-        self.addToPendingLocations(location)
-    }
+    //     // Add to pending queue instead of processing immediately
+    //     let location = CLLocation(latitude: lat, longitude: lng)
+    //     self.addToPendingLocations(location)
+    // }
     
-    @objc private func handleSLCNotification(_ notification: Notification) {
-        guard let userInfo = notification.userInfo,
-              let lat = userInfo["latitude"] as? Double,
-              let lng = userInfo["longitude"] as? Double else {
-            return
-        }
+    // @objc private func handleSLCNotification(_ notification: Notification) {
+    //     guard let userInfo = notification.userInfo,
+    //           let lat = userInfo["latitude"] as? Double,
+    //           let lng = userInfo["longitude"] as? Double else {
+    //         return
+    //     }
         
-        print("📍 Processing SLC location notification")
+    //     print("📍 Processing SLC location notification")
         
-        // Add to pending queue
-        let location = CLLocation(latitude: lat, longitude: lng)
-        self.addToPendingLocations(location)
-    }
+    //     // Add to pending queue
+    //     let location = CLLocation(latitude: lat, longitude: lng)
+    //     self.addToPendingLocations(location)
+    // }
     
     // NEW: Manage pending locations queue
     private func addToPendingLocations(_ location: CLLocation) {

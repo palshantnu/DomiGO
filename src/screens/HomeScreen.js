@@ -55,13 +55,13 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, loginTo
     }, [userData]);
 
     // useEffect(()=>{
-         useGPSListener(setIsGPSOn);
+    useGPSListener(setIsGPSOn);
     // },[])
 
-   
+
 
     useEffect(() => {
-    
+
         dispatch(GET_FINAL_YEAR_PROGRESS)
         dispatch(GET_STATE_WISE_RESIDENCY)
         // return () => {
@@ -175,27 +175,27 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, loginTo
                     </View>
 
                     {!isGPSOn && (
-  <TouchableOpacity
-    activeOpacity={0.8}
-    onPress={openLocationSettings}
-    style={styles.locationBanner}
-  >
-    <View style={styles.locationIcon}>
-      <Icon name="location-sharp" size={18} color="#fff" />
-    </View>
+                        <TouchableOpacity
+                            activeOpacity={0.8}
+                            onPress={openLocationSettings}
+                            style={styles.locationBanner}
+                        >
+                            <View style={styles.locationIcon}>
+                                <Icon name="location-sharp" size={18} color="#fff" />
+                            </View>
 
-    <View style={{ flex: 1 }}>
-      <Text style={styles.locationTitle}>
-        Please enable precise location tracking!
-      </Text>
-      <Text style={styles.locationSubtitle}>
-        Tap here to fix
-      </Text>
-    </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.locationTitle}>
+                                    Please enable precise location tracking!
+                                </Text>
+                                <Text style={styles.locationSubtitle}>
+                                    Tap here to fix
+                                </Text>
+                            </View>
 
-    <Icon name="chevron-forward" size={20} color="#fff" />
-  </TouchableOpacity>
-)}
+                            <Icon name="chevron-forward" size={20} color="#fff" />
+                        </TouchableOpacity>
+                    )}
 
 
                     {/* {!isGPSOn && (
@@ -239,7 +239,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, loginTo
                                     borderColor: colors.primary,
                                     borderWidth: 3
                                 }}>
-                                    <Icon name="add" size={22} color={colors.primary} />
+                                    <Text style={{ color: colors.primary, fontWeight: '700' }}>D</Text>
                                 </View>
                             </TouchableOpacity>
 
