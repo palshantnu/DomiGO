@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import {
   AppState,
+  NativeEventEmitter,
+  NativeModules,
   StatusBar,
   StyleSheet,
   useColorScheme,
@@ -19,9 +21,21 @@ import { store, persistor } from './src/redux/store';
 import { PersistGate } from 'redux-persist/integration/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DomigoTracker from './src/helpers/MainTracker';
+import { navigationRef } from './src/helpers/NavigationService';
 // import { checkLocationPermission, handleLocationAccess } from './src/helpers/locationPermission';
 // import { ensureLocationReady } from './src/helpers/locationHandler';
 import { checkAndRequestLocation } from './src/helpers/locationPermission2';
+
+import { PermissionsAndroid, Platform } from 'react-native';
+
+export async function requestNotificationPermission() {
+  if (Platform.OS === 'android' && Platform.Version >= 33) {
+    await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+    );
+  }
+}
+
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
 
@@ -35,9 +49,9 @@ function App() {
   //   testNativeModule()
   // },[])
 
-  //   useEffect(() => {
-  //   checkLocationPermission();
-  // }, []);
+    useEffect(() => {
+    requestNotificationPermission();
+  }, []);
 
   //   useEffect(() => {
   //   handleLocationAccess().then((enabled) => {
@@ -50,18 +64,15 @@ function App() {
   //   }, 1000);
   // }, []);
   useEffect(() => {
-    // 🔥 Delay is MUST
     setTimeout(() => {
       // ensureLocationReady();
     }, 1500);
   }, []);
   useEffect(() => {
-    // First app open
     setTimeout(() => {
       checkAndRequestLocation();
     }, 1200);
 
-    // When app comes from background to foreground
     const subscription = AppState.addEventListener('change', state => {
       if (state === 'active') {
         checkAndRequestLocation();
@@ -71,17 +82,34 @@ function App() {
     return () => subscription.remove();
   }, []);
 
+    useEffect(() => {
+    const emitter = new NativeEventEmitter(NativeModules.LocationTracker);
+
+    const sub = emitter.addListener(
+      'onTripNotificationClick',
+      data => {
+        console.log('🔔 Trip notification clicked', data);
+
+        navigationRef.current?.navigate('TripDetail', {
+          tripId: data.tripId,
+        });
+      }
+    );
+
+    return () => sub.remove();
+  }, []);
+
+
   useEffect(() => {
     const autoStartTracking = async () => {
       const enabled = await AsyncStorage.getItem('DOMIGO_TRACKING_ENABLED');
       const token = store.getState().auth?.loginToken;
 
       if (enabled === '1' && token) {
-        // Add delay to prevent immediate duplicate processing
         setTimeout(() => {
           console.log('🔁 Auto-starting Domigo tracking');
           DomigoTracker.startDomigoTracking(token);
-        }, 2000); // 2 second delay
+        }, 2000);
       }
     };
 
@@ -92,7 +120,7 @@ function App() {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <SafeAreaProvider>
-          <NavigationContainer>
+          <NavigationContainer ref={navigationRef}>
             {/* <StatusBar
                 barStyle={isDarkMode ? 'dark-content' : 'dark-content'}
                 translucent={true}

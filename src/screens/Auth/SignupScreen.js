@@ -16,6 +16,9 @@ import { SIGNUP } from '../../redux/actions/action-creator';
 import { CustomToast } from '../../helpers/CommonHelpers';
 import NetInfo from '@react-native-community/netinfo';
 import { SliderButton } from '../../components/SliderButton';
+import { GOOGLE_KEY } from "../../helpers/CommonHelpers";
+import AddressAutoComplete from "../../components/AddressAutoComplete";
+import Geolocation from "@react-native-community/geolocation";
 
 const SignupScreen = ({ navigation, signUp }) => {
   const [email, setEmail] = useState("");
@@ -23,6 +26,97 @@ const SignupScreen = ({ navigation, signUp }) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [buttonLoader, setButtonLoader] = useState(false);
   const [netInfo, setNetInfo] = useState(true);
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [stateName, setStateName] = useState("");
+  const [country, setCountry] = useState("");
+  const [countryCode, setCountryCode] = useState("");
+
+
+
+  const getLocation = async () => {
+    Geolocation.getCurrentPosition(
+      async position => {
+        const { latitude, longitude } = position.coords;
+        // const latitude = 26.21
+        // const longitude = 78.18
+
+        // Reverse Geocoding API
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_KEY}`
+        );
+
+        const json = await response.json();
+
+        console.log('json', json);
+
+
+        if (json.results.length > 0) {
+          const countryData = json.results[0].address_components.find(c =>
+            c.types.includes("country")
+          );
+          console.log('countryData?.long_name', countryData?.long_name);
+
+          setCountry(countryData?.long_name || "");
+          setCountryCode(countryData?.short_name?.toLowerCase() || "");
+        }
+      },
+      error => console.log(error),
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+    );
+  }
+  useEffect(() => {
+    const requestLocationPermission = async () => {
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'Location Permission',
+            message: 'App needs access to your location',
+            buttonPositive: 'OK',
+          }
+        );
+        getLocation()
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+      }
+      return true;
+    };
+    requestLocationPermission();
+  }, [])
+
+
+
+  const extractCityStateFromAddress = async (fullAddress) => {
+    try {
+      const res = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+          fullAddress
+        )}&key=${GOOGLE_KEY}`
+      );
+
+      const json = await res.json();
+
+      if (json.results?.length > 0) {
+        let city = "";
+        let state = "";
+
+        json.results[0].address_components.forEach(component => {
+          if (component.types.includes("locality")) {
+            city = component.long_name;
+          }
+          if (component.types.includes("administrative_area_level_1")) {
+            state = component.long_name;
+          }
+        });
+
+        setCity(city);
+        setStateName(state);
+      }
+    } catch (error) {
+      console.log("Address extract error:", error);
+    }
+  };
+
 
   const SignUpUser = async () => {
     console.log('SignUpUser');
@@ -48,10 +142,19 @@ const SignupScreen = ({ navigation, signUp }) => {
     if (password !== confirmPassword) {
       return CustomToast.show("Passwords do not match");
     }
+    if (!address.trim()) {
+      return CustomToast.show("Please select address");
+    }
+    if (!city || !stateName) {
+      return CustomToast.show("Please select valid address");
+    }
 
     const data = {
       email,
-      password
+      password,
+      city,
+      address,
+      state: stateName
     }
     signUp(data, true, true).then((response) => {
       console.log('response==>', response);
@@ -87,6 +190,10 @@ const SignupScreen = ({ navigation, signUp }) => {
     return () => unsubscribe();
   }, []);
 
+  console.log("Signup Address:", address);
+  console.log("Signup City:", city);
+  console.log("Signup State:", stateName);
+
   return (
     <LinearGradient
       colors={["#9ab1fa", "#ffffff"]}
@@ -106,6 +213,17 @@ const SignupScreen = ({ navigation, signUp }) => {
             style={{ ...styles.input, textTransform: 'lowercase' }}
             value={email}
             onChangeText={setEmail}
+          />
+        </View>
+        <View style={{ marginBottom: 20 }}>
+          <AddressAutoComplete
+            apiKey={GOOGLE_KEY}
+            value={address}
+            countryCode={countryCode}
+            onSelect={(selectedAddress) => {
+              setAddress(selectedAddress);
+              extractCityStateFromAddress(selectedAddress);
+            }}
           />
         </View>
         <View style={styles.inputWrapper}>
@@ -209,7 +327,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F3F3F3",
     borderRadius: 25,
     paddingHorizontal: 15,
-    height: 65,
+    height: 55,
     marginBottom: 20,
   },
   icon: {

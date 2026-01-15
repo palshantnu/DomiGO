@@ -45,7 +45,9 @@ import {
   GET_WEEK_WISE_TIMELINE_SUCCESS,
   WEEK_WISE_TIMELINE_FAILURE,
   MONTH_WISE_TIMELINE_FAILURE,
-  GET_MONTH_WISE_TIMELINE_SUCCESS
+  GET_MONTH_WISE_TIMELINE_SUCCESS,
+  GET_STATE_WISE_TRIPS_SUCCESS,
+  STATE_WISE_TRIPS_FAILURE
 
 } from './action-types';
 import axiosinstance from '../../axios/axiosinstance';
@@ -790,6 +792,36 @@ export const GET_MONTH_WISE_TIMELINE = ({ month, year }) => {
     }
   };
 };
+
+export function GET_STATE_WISE_TRIPS({state}) {  
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.get(`trips/state/${state}`)
+      const responseJson = response.data;
+      // console.log('responseYEARJson-=>', responseJson);
+
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_STATE_WISE_TRIPS_SUCCESS,
+          payload: responseJson.result,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: STATE_WISE_TRIPS_FAILURE,
+        payload: 'STATE_WISE_TRIPS_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: STATE_WISE_TRIPS_FAILURE,
+        payload: 'STATE_WISE_TRIPS_FAILURE',
+      })
+      console.log('catch error API STATE_WISE_TRIPS_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
 
 
 export const LOGOUT = () => (dispatch) => {

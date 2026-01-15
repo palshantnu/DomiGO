@@ -264,6 +264,51 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     }
 
 
+private fun showTripCreatedNotification(
+    title: String,
+    message: String,
+    tripId: String
+) {
+    val manager =
+        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            "Domigo Notifications",
+            NotificationManager.IMPORTANCE_HIGH
+        )
+        manager.createNotificationChannel(channel)
+    }
+
+    val intent = Intent(context, MainActivity::class.java).apply {
+        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        putExtra("type", "TRIP_CREATED")
+        putExtra("tripId", tripId)
+    }
+
+    val pendingIntent = PendingIntent.getActivity(
+        context,
+        2001,
+        intent,
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    )
+
+    val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+        .setSmallIcon(android.R.drawable.ic_dialog_info)
+        .setContentTitle(title)
+        .setContentText(message)
+        .setAutoCancel(true)
+        .setPriority(NotificationCompat.PRIORITY_HIGH)
+        .setContentIntent(pendingIntent)
+        .build()
+
+    manager.notify(System.currentTimeMillis().toInt(), notification)
+}
+
+
+
+
 
     private fun formatDate(timestamp: Long): String {
     val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
@@ -565,6 +610,26 @@ private fun sendTripFormData(
     val responseBody = response.body?.string() ?: ""
 
     Log.d(TAG, "🚗 Trip API Response: ${response.code}")
+    
+    if (response.isSuccessful) {
+        try {
+            val json = JSONObject(responseBody)
+            val tripId = json
+                .optJSONObject("result")
+                ?.optInt("id")
+                ?.toString()
+
+            if (tripId != null) {
+                showTripCreatedNotification(
+                    title = "🚗 Trip Created",
+                    message = "Tap to view trip details",
+                    tripId = tripId
+                )
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Trip parse error: ${e.message}")
+        }
+    }
 
     val eventData = Arguments.createMap().apply {
         putInt("statusCode", response.code)

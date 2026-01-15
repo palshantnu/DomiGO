@@ -136,6 +136,19 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, loginTo
     const getStateColor = (state) =>
         state ? getDarkPastelColor(state) : '#2C2C2C';
 
+    const getBorderColorByDays = (days, threshold = 183) => {
+        const percentage = (days / threshold) * 100;
+
+        if (percentage <= 25) {
+            return '#65C466'; // Green
+        } else if (percentage > 25 && percentage < 50) {
+            return '#EBB408'; // Yellow
+        } else {
+            return '#EE4444'; // Green (50% ya usse zyada)
+        }
+    };
+
+
 
     // console.log(getStateCodeSafe("  Uttar   Pradesh ")); // UP
 
@@ -264,17 +277,19 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, loginTo
                                 // ]
                                 stateWiseResidency
                                     ?.map((item, index) => (
-                                        <View key={index} style={[styles.stateCard, { borderColor: '#E0E0E0', width: Dimensions.get('window').width * 0.42, height: Dimensions.get('window').width * 0.42, elevation: 1, borderWidth: 0.5 }]}>
+                                        <TouchableOpacity key={index} style={[styles.stateCard, { borderColor: '#E0E0E0', width: Dimensions.get('window').width * 0.42, height: Dimensions.get('window').width * 0.42, elevation: 1, borderWidth: 0.5 }]}
+                                        onPress={()=>navigation.navigate('StateTripsScreen',{state:item.state})}>
                                             <View style={styles.smallCircle}>
-                                                <Text style={styles.smallCircleText}>{'10'}</Text>
+                                                <Text style={styles.smallCircleText}>{'183'}</Text>
                                             </View>
-                                            <View style={{ borderRadius: 70, borderWidth: 5, borderColor: getStateColor(item.state), width: Dimensions.get('window').width * 0.35, height: Dimensions.get('window').width * 0.35, justifyContent: 'center', alignItems: 'center' }}>
+                                            {/* <View style={{ borderRadius: 70, borderWidth: 5, borderColor: getStateColor(item.state), width: Dimensions.get('window').width * 0.35, height: Dimensions.get('window').width * 0.35, justifyContent: 'center', alignItems: 'center' }}> */}
+                                            <View style={{ borderRadius: 70, borderWidth: 5, borderColor: getBorderColorByDays(item.days), width: Dimensions.get('window').width * 0.35, height: Dimensions.get('window').width * 0.35, justifyContent: 'center', alignItems: 'center' }}>
                                                 <Text style={styles.stateCode}>{item.state.length < 2 ? item.state : getStateCodeSafe(item.state)}</Text>
                                                 <Text style={styles.stateDays}>{item.days}</Text>
                                                 <Text style={styles.daysIn}>Days in</Text>
 
                                             </View>
-                                        </View>
+                                        </TouchableOpacity>
                                     ))}
                         </View>
                     </View>

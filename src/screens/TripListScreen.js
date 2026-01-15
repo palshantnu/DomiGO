@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import Header from "../components/Header";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import colors from "../theme/colors";
 import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -122,7 +123,8 @@ const TripListScreen = ({ tripList }) => {
 
 
           {tripList.map((trip) => (
-            <View key={trip.id} style={styles.card}>
+            <TouchableOpacity key={trip.id} style={styles.card}
+             onPress={() => navigation.navigate('DayDetail', trip)}>
 
               <View style={styles.topRow}>
                 <View style={styles.typeRow}>
@@ -168,8 +170,7 @@ const TripListScreen = ({ tripList }) => {
 
               </View>
               <TouchableOpacity
-                onLongPress={() => navigation.navigate('AddTrip', { id: trip.id })}
-                onPress={() => navigation.navigate('DayDetail', trip)}
+                onPress={() => navigation.navigate('AddTrip', { id: trip.id })}
                 style={{
                   width: 36,
                   height: 36,
@@ -183,10 +184,10 @@ const TripListScreen = ({ tripList }) => {
                   position: 'absolute'
                 }}
               >
-                <Ionicons name="chevron-forward" size={18} color="#fff" />
+                <MaterialIcons name="edit" size={18} color="#fff" />
               </TouchableOpacity>
 
-            </View>
+            </TouchableOpacity>
           ))}
         </ScrollView>
       </SafeAreaView>

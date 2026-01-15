@@ -30,6 +30,7 @@ const AddTripScreen = ({
   TripDetails
 }) => {
   console.log(tripTypeList, tripModeList);
+  console.log('TripDetails', TripDetails);
   const modeOptions = tripModeList?.map(item => ({
     key: item.id,
     value: item.name
@@ -545,6 +546,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginLeft: 10,
     color: "#000",
+    placeholderTextColor:'#111'
   },
 
   suggestionBox: {

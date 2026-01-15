@@ -19,6 +19,7 @@ import HomeNavigation from './HomeNavigation';
 import TripListScreen from '../screens/TripListScreen';
 import AddTripNavigation from './AddTripNavigation';
 import DayDetailScreen from '../screens/DayDetailScreen';
+import StateTripsScreen from '../screens/StateTripsScreen';
 import { View } from 'react-native';
 import { ICON_ADD, ICON_CALENDAR, ICON_HOME, ICON_NOTIFICATION, ICON_SETTINGS } from '../assets/svgicon';
 import { connect } from 'react-redux';
@@ -164,6 +165,11 @@ const RootNavigator = (props) => {
       <Stack.Screen
         name="AddTrip"
         component={AddTripScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="StateTripsScreen"
+        component={StateTripsScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

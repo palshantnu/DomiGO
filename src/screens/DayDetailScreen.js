@@ -159,10 +159,10 @@ useEffect(() => {
           </View>
 
 
-          {/* <TouchableOpacity onPress={() => navigation.navigate('AddTrip', { trip })} style={styles.editButton}>
+          <TouchableOpacity onPress={() => navigation.navigate('AddTrip', {  id: trip.id })} style={styles.editButton}>
             <Ionicons name="pencil-outline" size={18} color="#fff" />
             <Text style={styles.editButtonText}>Edit Trip </Text>
-          </TouchableOpacity> */}
+          </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
