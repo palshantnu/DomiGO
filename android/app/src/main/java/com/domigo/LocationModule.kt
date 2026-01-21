@@ -568,6 +568,22 @@ private fun sendTripFormData(
     destinationState: String,
     destinationEnterDate: Long
 ) {
+    val bodyDebug = Arguments.createMap()
+
+bodyDebug.putString("originLat", originLat.toString())
+bodyDebug.putString("originLng", originLng.toString())
+bodyDebug.putString("originCity", originCity)
+bodyDebug.putString("originState", originState)
+bodyDebug.putString("startDate", formatDate(originStartDate))
+
+bodyDebug.putString("destinationLat", destinationLat.toString())
+bodyDebug.putString("destinationLng", destinationLng.toString())
+bodyDebug.putString("destinationCity", destinationCity)
+bodyDebug.putString("destinationState", destinationState)
+bodyDebug.putString("endDate", formatDate(destinationEnterDate))
+bodyDebug.putString("attachments", "[]")
+bodyDebug.putString("modeId", "11")
+bodyDebug.putString("typeId", "10")
 
     val formBody = MultipartBody.Builder()
         .setType(MultipartBody.FORM)
@@ -586,8 +602,8 @@ private fun sendTripFormData(
         .addFormDataPart("destinationState", destinationState)
         .addFormDataPart("endDate", formatDate(destinationEnterDate))
         .addFormDataPart("attachments", "[]")
-        .addFormDataPart("modeId", 2.toString())
-        .addFormDataPart("typeId", 6.toString())
+        .addFormDataPart("modeId", 1.toString())
+        .addFormDataPart("typeId", 1.toString())
 
         .build()
 
@@ -636,6 +652,7 @@ private fun sendTripFormData(
         putBoolean("success", response.isSuccessful)
         putString("response", responseBody)
         putDouble("timestamp", System.currentTimeMillis().toDouble())
+        putMap("body", bodyDebug)
     }
 
     sendEvent("onTripApiResponse", eventData)

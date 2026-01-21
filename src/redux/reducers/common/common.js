@@ -1,5 +1,5 @@
 
-import { GET_DOCUMENT_CATEGORY_LIST_SUCCESS, GET_DOCUMENT_TYPE_LIST_SUCCESS, GET_FAMILY_MEMBER_SUCCESS, GET_FINAL_YEAR_PROGRESS_SUCCESS, GET_MONTH_WISE_TIMELINE_SUCCESS, GET_RESIDENCY_DOC_DETAILS_SUCCESS, GET_RESIDENCY_DOC_LIST_SUCCESS, GET_STATE_WISE_METRICS_SUCCESS, GET_STATE_WISE_RESIDENCY_SUCCESS, GET_STATE_WISE_TRIPS_SUCCESS, GET_TRIP_DETAILS_SUCCESS, GET_TRIP_LIST_SUCCESS, GET_TRIP_MODE_LIST_SUCCESS, GET_TRIP_SUMMARY_DETAILS_SUCCESS, GET_TRIP_TYPE_LIST_SUCCESS, GET_WEEK_WISE_TIMELINE_SUCCESS, GET_YEAR_WISE_TIMELINE_SUCCESS, SET_APP_LANGUAGE } from '../../actions/action-types';
+import { GET_COMPLIANCE_SCORE_SUCCESS, GET_DOCUMENT_CATEGORY_LIST_SUCCESS, GET_DOCUMENT_TYPE_LIST_SUCCESS, GET_FAMILY_MEMBER_SUCCESS, GET_FINAL_YEAR_PROGRESS_SUCCESS, GET_MONTH_WISE_TIMELINE_SUCCESS, GET_NOTIFICATION_SUCCESS, GET_RESIDENCY_DOC_DETAILS_SUCCESS, GET_RESIDENCY_DOC_LIST_SUCCESS, GET_STATE_WISE_METRICS_SUCCESS, GET_STATE_WISE_RESIDENCY_SUCCESS, GET_STATE_WISE_TRIPS_SUCCESS, GET_TRIP_DETAILS_SUCCESS, GET_TRIP_LIST_SUCCESS, GET_TRIP_MODE_LIST_SUCCESS, GET_TRIP_SUMMARY_DETAILS_SUCCESS, GET_TRIP_TYPE_LIST_SUCCESS, GET_WEEK_WISE_TIMELINE_SUCCESS, GET_YEAR_WISE_TIMELINE_SUCCESS, SET_APP_LANGUAGE } from '../../actions/action-types';
 
 const initialState = {
   appLanguage: 'en',
@@ -16,11 +16,13 @@ const initialState = {
   TripDetails: null,
   finalYearProgress: {},
   stateWiseResidency: [],
+  complianceScore: null,
   stateWiseMetrics: [],
   weekWiseTimeline: [],
   monthWiseTimeline: [],
   yearWiseTimeline: [],
-  stateWiseTrips:[]
+  stateWiseTrips: [],
+  notifications: [],
 
 }
 
@@ -78,6 +80,11 @@ export const common = (state = initialState, { type, payload }) => {
         ...state,
         stateWiseResidency: payload || null,
       };
+    case GET_COMPLIANCE_SCORE_SUCCESS:
+      return {
+        ...state,
+        complianceScore: payload || null,
+      };
     case GET_STATE_WISE_METRICS_SUCCESS:
       return {
         ...state,
@@ -98,10 +105,15 @@ export const common = (state = initialState, { type, payload }) => {
         ...state,
         monthWiseTimeline: payload || null,
       };
-       case GET_STATE_WISE_TRIPS_SUCCESS:
+    case GET_STATE_WISE_TRIPS_SUCCESS:
       return {
         ...state,
         stateWiseTrips: payload || null,
+      };
+    case GET_NOTIFICATION_SUCCESS:
+      return {
+        ...state,
+        notifications: payload || null,
       };
     case GET_FAMILY_MEMBER_SUCCESS:
       return { ...state, familyMembersList: payload?.data || [] }

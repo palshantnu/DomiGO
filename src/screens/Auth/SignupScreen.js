@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TextInput,
   Image,
   StatusBar,
+  PermissionsAndroid,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -65,6 +66,9 @@ const SignupScreen = ({ navigation, signUp }) => {
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
     );
   }
+
+
+
   useEffect(() => {
     const requestLocationPermission = async () => {
       if (Platform.OS === 'android') {
@@ -84,6 +88,10 @@ const SignupScreen = ({ navigation, signUp }) => {
     requestLocationPermission();
   }, [])
 
+
+  
+  console.log('country',country);
+  console.log('countryCode',countryCode);
 
 
   const extractCityStateFromAddress = async (fullAddress) => {

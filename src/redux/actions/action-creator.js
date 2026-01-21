@@ -47,7 +47,13 @@ import {
   MONTH_WISE_TIMELINE_FAILURE,
   GET_MONTH_WISE_TIMELINE_SUCCESS,
   GET_STATE_WISE_TRIPS_SUCCESS,
-  STATE_WISE_TRIPS_FAILURE
+  STATE_WISE_TRIPS_FAILURE,
+  GET_COMPLIANCE_SCORE_SUCCESS,
+  UPDATE_STATE_THRESHOLD_REQUEST,
+  UPDATE_STATE_THRESHOLD_SUCCESS,
+  UPDATE_STATE_THRESHOLD_FAILURE,
+  NOTIFICATION_FAILURE,
+  GET_NOTIFICATION_SUCCESS
 
 } from './action-types';
 import axiosinstance from '../../axios/axiosinstance';
@@ -610,6 +616,66 @@ export function GET_STATE_WISE_RESIDENCY() {
   }
 }
 
+export function GET_COMPLIANCE_SCORE() {
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.get('dashboard/compliance-score')
+      const responseJson = response.data;
+      // console.log('responseSTATEJson-=>', responseJson);
+
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_COMPLIANCE_SCORE_SUCCESS,
+          payload: responseJson.result,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: COMPLIANCE_SCORE_FAILURE,
+        payload: 'COMPLIANCE_SCORE_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: COMPLIANCE_SCORE_FAILURE,
+        payload: 'COMPLIANCE_SCORE_FAILURE',
+      })
+      console.log('catch error API COMPLIANCE_SCORE_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+
+export function GET_NOTIFICATION() {
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.get('notifications')
+      const responseJson = response.data;
+      // console.log('responseSTATEJson-=>', responseJson);
+
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_NOTIFICATION_SUCCESS,
+          payload: responseJson.result,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: NOTIFICATION_FAILURE,
+        payload: 'NOTIFICATION_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: NOTIFICATION_FAILURE,
+        payload: 'NOTIFICATION_FAILURE',
+      })
+      console.log('catch error API NOTIFICATION_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+
 
 export function GET_STATE_WISE_METRICS() {
   return async (dispatch) => {
@@ -819,6 +885,42 @@ export function GET_STATE_WISE_TRIPS({state}) {
       })
       console.log('catch error API STATE_WISE_TRIPS_FAILURE', e)
       return Promise.reject(CommonError)
+    }
+  }
+}
+
+export const UPDATE_STATE_THRESHOLD = (formData) => {
+  // console.log('formData', formData);
+
+  return async (dispatch) => {
+    dispatch({
+      type: UPDATE_STATE_THRESHOLD_REQUEST,
+      payload: 'UPDATE_STATE_THRESHOLD_REQUEST',
+    })
+    try {
+      const response = await axiosinstance.post('/dashboard/state-threshold', formData)
+      const responseJson = response.data;
+      // console.log('responseJson=--------=>', responseJson);
+
+      if (response.message == 'Success') {
+        dispatch({
+          type: UPDATE_STATE_THRESHOLD_SUCCESS,
+          payload: responseJson,
+        })
+        return { response: responseJson }
+      }
+      dispatch({
+        type: UPDATE_STATE_THRESHOLD_FAILURE,
+        payload: 'UPDATE_STATE_THRESHOLD_FAILURE',
+      })
+      return ({ response: responseJson })
+    }
+    catch (e) {
+      dispatch({
+        type: UPDATE_STATE_THRESHOLD_FAILURE,
+        payload: 'UPDATE_STATE_THRESHOLD_FAILURE',
+      })
+      return ({ response: e })
     }
   }
 }

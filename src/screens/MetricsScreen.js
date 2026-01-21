@@ -115,7 +115,8 @@ const MetricsScreen = ({ GET_STATE_WISE_METRICS, loginToken, stateWiseMetrics })
     const metricsData = stateWiseMetrics.map((item, index) => ({
         id: index.toString(),
         state: item.state,
-        taxDays: item.daysTracked,
+        daysIn: item.daysIn,
+        taxDays: item.taxDays,
         daysWorked: item.daysWorked,
         hoursWorked: item.hoursWorked,
         travelDays: item.travelDays,
@@ -176,11 +177,12 @@ const MetricsScreen = ({ GET_STATE_WISE_METRICS, loginToken, stateWiseMetrics })
                         //     { label: '', value: '' },
                         // ];
                         const stats = [
-                            { label: 'Tax Days in', value: item.taxDays },
+                            { label: 'Days in', value: item.daysIn },
+                            { label: 'Travel Days', value: item.travelDays },
                             { label: 'Days Worked', value: item.daysWorked },
                             { label: 'Hours Worked', value: item.hoursWorked },
-                            { label: 'Travel Days', value: item.travelDays },
-                            { label: 'Est. Wages', value: item.wages },
+                            { label: 'Tax Days', value: item.taxDays },
+                            { label: 'Taxable Wages', value: item.wages },
                             { label: '', value: '' },
                         ];
 

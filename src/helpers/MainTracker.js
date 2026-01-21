@@ -215,7 +215,8 @@ setupEventListeners() {
         console.log('🚗 Trip API Success:', {
           statusCode: data.statusCode,
           response: data.response,
-          time: new Date(data.timestamp).toLocaleString()
+          time: new Date(data.timestamp).toLocaleString(),
+          body:data.body,
         });
       })
     );

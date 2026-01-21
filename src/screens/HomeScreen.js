@@ -8,6 +8,7 @@ import {
     ScrollView,
     Dimensions,
     Modal,
+    TextInput,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Progress from 'react-native-progress';
@@ -20,20 +21,26 @@ import { connect, useDispatch } from 'react-redux';
 import startTracking, { stopTracking } from '../helpers/LocationTracker';
 import { startDomigoTracking } from '../helpers/MainTracker';
 import DomigoTracker from '../helpers/MainTracker';
-import { GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY } from '../redux/actions/action-creator';
-import { handleLocationAccess } from '../helpers/locationPermission';
+import { GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COMPLIANCE_SCORE,UPDATE_STATE_THRESHOLD } from '../redux/actions/action-creator';
 import { ensureLocationReady } from '../helpers/locationHandler';
 import { forceEnableGPS } from '../helpers/locationGuard';
 import { checkGPSStatus } from '../helpers/gpsStatus';
 import { useGPSListener } from '../hooks/useGPSListener';
 import { openLocationSettings } from '../helpers/locationRedirect';
+import { getStateShortCode } from '../utils/getStateShortCode';
+import { CustomToast } from '../helpers/CommonHelpers';
 
 
 
-const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, loginToken, finalYearProgress, stateWiseResidency, userData }) => {
+
+const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COMPLIANCE_SCORE,UPDATE_STATE_THRESHOLD, loginToken, finalYearProgress, stateWiseResidency, userData, complianceScore, }) => {
     const [showStateModal, setShowStateModal] = React.useState(false);
     const [isGPSOn, setIsGPSOn] = React.useState(true);
+    const [thresholdModalVisible, setThresholdModalVisible] = React.useState(false);
+    const [selectedState, setSelectedState] = React.useState(null);
+    const [thresholdValue, setThresholdValue] = React.useState('');
     console.log('stateWiseResidency>>>>', stateWiseResidency);
+    console.log('complianceScore>>>>', complianceScore);
     console.log('userData>>>>', userData);
 
     const dispatch = useDispatch();
@@ -47,6 +54,12 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, loginTo
     //     //   stopDomigoTracking();
     //     // };
     // }, []);
+
+    const openThresholdModal = (item) => {
+        setSelectedState(item);
+        setThresholdValue(String(item.threshold));
+        setThresholdModalVisible(true);
+    };
 
     useEffect(() => {
         if (userData && userData.state === null) {
@@ -64,6 +77,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, loginTo
 
         dispatch(GET_FINAL_YEAR_PROGRESS)
         dispatch(GET_STATE_WISE_RESIDENCY)
+        dispatch(GET_COMPLIANCE_SCORE)
         // return () => {
         //   stopDomigoTracking();
         // };
@@ -89,23 +103,21 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, loginTo
 
     const isFocused = useIsFocused();
 
-    // useEffect(() => {
-    //     if (isFocused) {
-    //         const timer = setTimeout(() => {
-    //             forceEnableGPS();
-    //         }, 800); // 👈 small delay only
-    //         return () => clearTimeout(timer);
-    //     }
-    // }, [isFocused]);
 
-    // useEffect(() => {
-    //     if (isFocused) {
-    //         setTimeout(async () => {
-    //             const gps = await checkGPSStatus();
-    //             setIsGPSOn(gps);
-    //         }, 500);
-    //     }
-    // }, [isFocused])
+
+    const handleThresholdUpdate = async () => {
+        const payload = {
+            state: selectedState.state,
+            threshold: Number(thresholdValue),
+        };
+        const res = await UPDATE_STATE_THRESHOLD(payload);
+        if (res.response.message === "Success") {
+            CustomToast.show("Threshold Updated Successfully!");
+        }
+        setThresholdModalVisible(false);
+        dispatch(GET_STATE_WISE_RESIDENCY)
+    };
+    
 
 
     console.log('loginToken', loginToken);
@@ -118,6 +130,27 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, loginTo
             .map(w => w.charAt(0).toUpperCase())
             .join("");
     }
+
+
+    const getFinalStateCode = (stateName, country) => {
+        if (!stateName) return "";
+
+        // 1️⃣ Try official mapping
+        const officialCode = getStateShortCode(stateName, country);
+
+        // 2️⃣ Agar mapping se actual short code mila (2 letters)
+        if (
+            officialCode &&
+            officialCode !== stateName &&
+            officialCode.length <= 3
+        ) {
+            return officialCode;
+        }
+
+        // 3️⃣ Fallback to safe auto code
+        return getStateCodeSafe(stateName);
+    };
+
 
     const stringToHash = (str) => {
         let hash = 0;
@@ -136,21 +169,21 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, loginTo
     const getStateColor = (state) =>
         state ? getDarkPastelColor(state) : '#2C2C2C';
 
-    const getBorderColorByDays = (days, threshold = 183) => {
+    const getBorderColorByDays = (days, threshold) => {
         const percentage = (days / threshold) * 100;
 
         if (percentage <= 25) {
-            return '#65C466'; // Green
+            return '#65C466'; 
         } else if (percentage > 25 && percentage < 50) {
-            return '#EBB408'; // Yellow
+            return '#EBB408'; 
         } else {
-            return '#EE4444'; // Green (50% ya usse zyada)
+            return '#EE4444';
         }
     };
 
 
 
-    // console.log(getStateCodeSafe("  Uttar   Pradesh ")); // UP
+    // console.log(getStateCodeSafe("  Uttar Pradesh ")); // UP
 
 
 
@@ -184,6 +217,36 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, loginTo
                             <View style={styles.remainingBtn}>
                                 <Text style={styles.remainingText}>{finalYearProgress?.daysLeft} Days Left</Text>
                             </View>
+                        </View>
+                    </View>
+
+                    <View style={styles.summaryContainer}>
+                        {/* <View style={styles.summaryBox}>
+                            <View style={{ flexDirection: 'row', width: '100%', }}>
+                                <Icon name="calendar-outline" size={20} style={{ marginTop: 10 }} color={'#65C466'} />
+                                <View style={{ marginLeft: 5 }}>
+                                    <Text style={{ ...styles.summaryValue, fontSize: 15, flex: 1, marginRight: 8 }}>Total
+                                        Residency
+                                        Day</Text>
+                                    <Text style={styles.summaryValue}>240</Text>
+                                    <Text style={styles.summaryLabel}>
+                                        Across all states this financial year.
+                                    </Text>
+                                </View>
+                            </View>
+                        </View> */}
+
+                        <View style={styles.summaryBox}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5, justifyContent: 'space-between' }}>
+                                <Icon name="stats-chart-outline" size={20} style={{ marginTop: 0 }} color={colors.primary} />
+                                <Text style={{ ...styles.summaryValue, fontSize: 15, flex: 1, marginLeft: 8 }}>
+                                    Compliance
+                                    Score</Text>
+                            </View>
+                            <Text style={styles.summaryValue}>{complianceScore?.complianceScore}%</Text>
+                            <Text style={styles.summaryLabel}>
+                                Your current estimated tax compliance.
+                            </Text>
                         </View>
                     </View>
 
@@ -277,19 +340,31 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, loginTo
                                 // ]
                                 stateWiseResidency
                                     ?.map((item, index) => (
-                                        <TouchableOpacity key={index} style={[styles.stateCard, { borderColor: '#E0E0E0', width: Dimensions.get('window').width * 0.42, height: Dimensions.get('window').width * 0.42, elevation: 1, borderWidth: 0.5 }]}
-                                        onPress={()=>navigation.navigate('StateTripsScreen',{state:item.state})}>
-                                            <View style={styles.smallCircle}>
-                                                <Text style={styles.smallCircleText}>{'183'}</Text>
-                                            </View>
+                                        <View key={index} style={[styles.stateCard, { borderColor: '#E0E0E0', width: Dimensions.get('window').width * 0.42, height: Dimensions.get('window').width * 0.42, elevation: 1, borderWidth: 0.5 }]}
+                                            onPress={() => navigation.navigate('StateTripsScreen', { state: item.state })}>
+                                            <TouchableOpacity
+                                                style={styles.smallCircle}
+                                                onPress={() => openThresholdModal(item)}
+                                                activeOpacity={0.7}
+                                            >
+                                                <Text style={styles.smallCircleText}>{item?.threshold}</Text>
+                                            </TouchableOpacity>
                                             {/* <View style={{ borderRadius: 70, borderWidth: 5, borderColor: getStateColor(item.state), width: Dimensions.get('window').width * 0.35, height: Dimensions.get('window').width * 0.35, justifyContent: 'center', alignItems: 'center' }}> */}
-                                            <View style={{ borderRadius: 70, borderWidth: 5, borderColor: getBorderColorByDays(item.days), width: Dimensions.get('window').width * 0.35, height: Dimensions.get('window').width * 0.35, justifyContent: 'center', alignItems: 'center' }}>
-                                                <Text style={styles.stateCode}>{item.state.length < 2 ? item.state : getStateCodeSafe(item.state)}</Text>
+                                            <TouchableOpacity style={{ borderRadius: 70, borderWidth: 5, borderColor: getBorderColorByDays(item.days,item.threshold), width: Dimensions.get('window').width * 0.35, height: Dimensions.get('window').width * 0.35, justifyContent: 'center', alignItems: 'center' }}
+                                            onPress={() => navigation.navigate('StateTripsScreen', { state: item.state })}>
+                                                {/* <Text style={styles.stateCode}>{item.state.length < 2 ? item.state : getStateCodeSafe(item.state)}</Text> */}
+                                                {/* <Text style={styles.stateCode}>
+                                                    {getStateShortCode(item.state, item.country || "INDIA")}
+                                                </Text> */}
+                                                <Text style={styles.stateCode}>
+                                                    {getFinalStateCode(item.state, item.country || "INDIA")}
+                                                </Text>
+
                                                 <Text style={styles.stateDays}>{item.days}</Text>
                                                 <Text style={styles.daysIn}>Days in</Text>
 
-                                            </View>
-                                        </TouchableOpacity>
+                                            </TouchableOpacity>
+                                        </View>
                                     ))}
                         </View>
                     </View>
@@ -325,6 +400,49 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, loginTo
                         </View>
                     </Modal>
 
+                    <Modal
+                        transparent
+                        animationType="fade"
+                        visible={thresholdModalVisible}
+                    >
+                        <View style={styles.modalOverlay}>
+                            <View style={styles.thresholdModal}>
+                                <Text style={styles.modalTitle}>
+                                    Update Threshold
+                                </Text>
+
+                                <Text style={styles.modalSubtitle}>
+                                    {selectedState?.state}
+                                </Text>
+
+                                <TextInput
+                                    value={thresholdValue}
+                                    onChangeText={setThresholdValue}
+                                    keyboardType="numeric"
+                                    placeholder="Enter threshold days"
+                                    style={styles.input1}
+                                />
+
+                                <View style={{ flexDirection: 'row', gap: 12 }}>
+                                    <TouchableOpacity
+                                        style={styles.cancelBtn1}
+                                        onPress={() => setThresholdModalVisible(false)}
+                                    >
+                                        <Text style={styles.cancelText1}>Cancel</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        style={styles.saveBtn1}
+                                        onPress={handleThresholdUpdate}
+                                    >
+                                        <Text style={styles.saveText1}>Save</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </View>
+                    </Modal>
+
+
                 </ScrollView>
             </SafeAreaView>
         </LinearGradient>
@@ -337,14 +455,17 @@ function mapStateToProps(state) {
         userData: state.auth.userData,
         loginToken: state.auth.loginToken,
         finalYearProgress: state.common.finalYearProgress,
-        stateWiseResidency: state.common.stateWiseResidency
+        stateWiseResidency: state.common.stateWiseResidency,
+        complianceScore: state.common.complianceScore,
     };
 }
 
 
 const mapDispatchToProps = {
     GET_FINAL_YEAR_PROGRESS,
-    GET_STATE_WISE_RESIDENCY
+    GET_STATE_WISE_RESIDENCY,
+    GET_COMPLIANCE_SCORE,
+    UPDATE_STATE_THRESHOLD,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(HomeScreen);
@@ -651,7 +772,76 @@ const styles = StyleSheet.create({
         fontSize: 11,
         marginTop: 2,
     },
-
+    // SUMMARY
+    summaryContainer: {
+        // flexDirection: "row",
+        // justifyContent: "space-between",
+        marginTop: 14,
+        marginHorizontal: 16,
+        gap: 10,
+    },
+    summaryBox: {
+        // flex: 1,
+        // backgroundColor: "#fff",
+        // borderRadius: 12,
+        // padding: 12,
+        // borderWidth: 1,
+        // borderColor: "#eee",
+        width: '100%',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 16,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 2 },
+    },
+    summaryValue: { fontSize: 22, fontWeight: "700", marginTop: 4 },
+    summaryLabel: { fontSize: 12, color: "#666", marginTop: 2 },
+    thresholdModal: {
+        width: '80%',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 20,
+        alignItems: 'center',
+    },
+    
+    input1: {
+        width: '100%',
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        padding: 10,
+        marginVertical: 12,
+        fontSize: 14,
+    },
+    
+    cancelBtn1: {
+        paddingVertical: 10,
+        paddingHorizontal: 24,
+        borderRadius: 20,
+        backgroundColor: '#eee',
+    },
+    
+    saveBtn1: {
+        paddingVertical: 10,
+        paddingHorizontal: 24,
+        borderRadius: 20,
+        backgroundColor: colors.primary,
+    },
+    
+    cancelText1: {
+        color: '#333',
+        fontWeight: '600',
+    },
+    
+    saveText1: {
+        color: '#fff',
+        fontWeight: '600',
+    },
+    
 
 
 });

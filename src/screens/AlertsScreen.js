@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -10,8 +10,13 @@ import LinearGradient from "react-native-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import colors from "../theme/colors";
+import { connect, useDispatch } from "react-redux";
+import { GET_NOTIFICATION, } from '../redux/actions/action-creator';
 
-export default function AlertsScreen() {
+
+const AlertsScreen = ({GET_NOTIFICATION,notifications}) => {
+  const dispatch = useDispatch();
+
   const alerts = [
     {
       id: 1,
@@ -58,7 +63,7 @@ export default function AlertsScreen() {
     },
     {
       id: 5,
-      title: "System Maintenance Notice",
+      title: "System Maintenance and Updates",
       icon: "information-circle-outline",
       description:
         "Our services will be temporarily unavailable for maintenance on July 20th, 2 AM - 4 AM EST.",
@@ -66,6 +71,15 @@ export default function AlertsScreen() {
       color: "#999",
     },
   ];
+
+  useEffect(() => {
+    dispatch(GET_NOTIFICATION)
+    // return () => {
+    //   stopDomigoTracking();
+    // };
+}, []);
+
+console.log('notifications',notifications);
 
   return (
     <LinearGradient
@@ -118,7 +132,13 @@ export default function AlertsScreen() {
                   </View>
                 )}
               </View>
+              {
+                item.id == '5'?
+              <Text style={styles.desc}>{notifications[0].description}</Text>
+                 :
               <Text style={styles.desc}>{item.description}</Text>
+              }
+              {/* <Text style={styles.desc}>{item.description}</Text> */}
               <View style={styles.footer}>
                 <Text style={styles.time}>{item.time}</Text>
                 {item.action && (
@@ -136,6 +156,22 @@ export default function AlertsScreen() {
     </LinearGradient>
   );
 }
+
+
+function mapStateToProps(state) {
+  return {
+    userData: state.auth.userData,
+    loginToken: state.auth.loginToken,
+    notifications: state.common.notifications
+  };
+}
+
+
+const mapDispatchToProps = {
+  GET_NOTIFICATION,
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(AlertsScreen);
 
 const styles = StyleSheet.create({
   container: {
