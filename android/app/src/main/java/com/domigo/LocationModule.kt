@@ -322,7 +322,7 @@ private fun showTripCreatedNotification(
     }
 
     private fun reverseGeocodeInBackground(lat: Double, lng: Double) {
-        val url = "$GOOGLE_GEOCODING_URL?latlng=$lat,$lng&key=$googleApiKey"
+        val url = "$GOOGLE_GEOCODING_URL?latlng=$lat,$lng&language=en&key=$googleApiKey"
         
         val request = Request.Builder()
             .url(url)

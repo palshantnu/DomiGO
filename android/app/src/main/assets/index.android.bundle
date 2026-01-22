@@ -104112,7 +104112,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           console.log('🚗 Trip API Success:', {
             statusCode: data.statusCode,
             response: data.response,
-            time: new Date(data.timestamp).toLocaleString()
+            time: new Date(data.timestamp).toLocaleString(),
+            body: data.body
           });
         }));
         this.subscriptions.push(locationEventEmitter.addListener('onTripApiError', function (error) {
@@ -110143,7 +110144,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.YEAR_WISE_TIMELINE_FAILURE = exports.WEEK_WISE_TIMELINE_FAILURE = exports.UPDATE_TRIP_SUCCESS = exports.UPDATE_TRIP_REQUEST = exports.UPDATE_TRIP_FAILURE = exports.UPDATE_PERSONAL_DATA = exports.TRIP_TYPE_LIST_FAILURE = exports.TRIP_SUMMARY_DETAILS_FAILURE = exports.TRIP_MODE_LIST_SUCCESS = exports.TRIP_MODE_LIST_REQUEST = exports.TRIP_MODE_LIST_FAILURE = exports.TRIP_LIST_SUCCESS = exports.TRIP_LIST_REQUEST = exports.TRIP_LIST_FAILURE = exports.TRIP_DETAILS_FAILURE = exports.STATE_WISE_TRIPS_FAILURE = exports.STATE_WISE_RESIDENCY_FAILURE = exports.STATE_WISE_METRICS_FAILURE = exports.SIGN_UP_SUCCESS = exports.SIGN_UP_REQUEST = exports.SIGN_UP_FAILURE = exports.SIGN_IN_SUCCESS = exports.SIGN_IN_REQUEST = exports.SIGN_IN_FAILURE = exports.SET_APP_LANGUAGE = exports.RESIDENCY_DOC_LIST_SUCCESS = exports.RESIDENCY_DOC_LIST_REQUEST = exports.RESIDENCY_DOC_LIST_FAILURE = exports.RESIDENCY_DOC_DETAILS_FAILURE = exports.MONTH_WISE_TIMELINE_FAILURE = exports.LOGOUT_SUCCESS = exports.LOGOUT_REQUEST = exports.LOGOUT_FAILURE = exports.GET_YEAR_WISE_TIMELINE_SUCCESS = exports.GET_WEEK_WISE_TIMELINE_SUCCESS = exports.GET_TRIP_TYPE_LIST_SUCCESS = exports.GET_TRIP_SUMMARY_DETAILS_SUCCESS = exports.GET_TRIP_MODE_LIST_SUCCESS = exports.GET_TRIP_LIST_SUCCESS = exports.GET_TRIP_DETAILS_SUCCESS = exports.GET_STATE_WISE_TRIPS_SUCCESS = exports.GET_STATE_WISE_RESIDENCY_SUCCESS = exports.GET_STATE_WISE_METRICS_SUCCESS = exports.GET_RESIDENCY_DOC_LIST_SUCCESS = exports.GET_RESIDENCY_DOC_DETAILS_SUCCESS = exports.GET_MONTH_WISE_TIMELINE_SUCCESS = exports.GET_FINAL_YEAR_PROGRESS_SUCCESS = exports.GET_DOCUMENT_CATEGORY_LIST_SUCCESS = exports.FINAL_YEAR_PROGRESS_FAILURE = exports.DOCUMENT_CATEGORY_LIST_SUCCESS = exports.DOCUMENT_CATEGORY_LIST_REQUEST = exports.DOCUMENT_CATEGORY_LIST_FAILURE = exports.ADD_TRIP_SUCCESS = exports.ADD_TRIP_REQUEST = exports.ADD_TRIP_FAILURE = exports.ADD_DOCUMENT_RECORD_SUCCESS = exports.ADD_DOCUMENT_RECORD_REQUEST = exports.ADD_DOCUMENT_RECORD_FAILURE = void 0;
+  exports.YEAR_WISE_TIMELINE_FAILURE = exports.WEEK_WISE_TIMELINE_FAILURE = exports.UPDATE_TRIP_SUCCESS = exports.UPDATE_TRIP_REQUEST = exports.UPDATE_TRIP_FAILURE = exports.UPDATE_STATE_THRESHOLD_SUCCESS = exports.UPDATE_STATE_THRESHOLD_REQUEST = exports.UPDATE_STATE_THRESHOLD_FAILURE = exports.UPDATE_PERSONAL_DATA = exports.TRIP_TYPE_LIST_FAILURE = exports.TRIP_SUMMARY_DETAILS_FAILURE = exports.TRIP_MODE_LIST_SUCCESS = exports.TRIP_MODE_LIST_REQUEST = exports.TRIP_MODE_LIST_FAILURE = exports.TRIP_LIST_SUCCESS = exports.TRIP_LIST_REQUEST = exports.TRIP_LIST_FAILURE = exports.TRIP_DETAILS_FAILURE = exports.STATE_WISE_TRIPS_FAILURE = exports.STATE_WISE_RESIDENCY_FAILURE = exports.STATE_WISE_METRICS_FAILURE = exports.SIGN_UP_SUCCESS = exports.SIGN_UP_REQUEST = exports.SIGN_UP_FAILURE = exports.SIGN_IN_SUCCESS = exports.SIGN_IN_REQUEST = exports.SIGN_IN_FAILURE = exports.SET_APP_LANGUAGE = exports.RESIDENCY_DOC_LIST_SUCCESS = exports.RESIDENCY_DOC_LIST_REQUEST = exports.RESIDENCY_DOC_LIST_FAILURE = exports.RESIDENCY_DOC_DETAILS_FAILURE = exports.NOTIFICATION_FAILURE = exports.MONTH_WISE_TIMELINE_FAILURE = exports.LOGOUT_SUCCESS = exports.LOGOUT_REQUEST = exports.LOGOUT_FAILURE = exports.GET_YEAR_WISE_TIMELINE_SUCCESS = exports.GET_WEEK_WISE_TIMELINE_SUCCESS = exports.GET_TRIP_TYPE_LIST_SUCCESS = exports.GET_TRIP_SUMMARY_DETAILS_SUCCESS = exports.GET_TRIP_MODE_LIST_SUCCESS = exports.GET_TRIP_LIST_SUCCESS = exports.GET_TRIP_DETAILS_SUCCESS = exports.GET_STATE_WISE_TRIPS_SUCCESS = exports.GET_STATE_WISE_RESIDENCY_SUCCESS = exports.GET_STATE_WISE_METRICS_SUCCESS = exports.GET_RESIDENCY_DOC_LIST_SUCCESS = exports.GET_RESIDENCY_DOC_DETAILS_SUCCESS = exports.GET_NOTIFICATION_SUCCESS = exports.GET_MONTH_WISE_TIMELINE_SUCCESS = exports.GET_FINAL_YEAR_PROGRESS_SUCCESS = exports.GET_DOCUMENT_CATEGORY_LIST_SUCCESS = exports.GET_COMPLIANCE_SCORE_SUCCESS = exports.FINAL_YEAR_PROGRESS_FAILURE = exports.DOCUMENT_CATEGORY_LIST_SUCCESS = exports.DOCUMENT_CATEGORY_LIST_REQUEST = exports.DOCUMENT_CATEGORY_LIST_FAILURE = exports.COMPLIANCE_SCORE_FAILURE = exports.ADD_TRIP_SUCCESS = exports.ADD_TRIP_REQUEST = exports.ADD_TRIP_FAILURE = exports.ADD_DOCUMENT_RECORD_SUCCESS = exports.ADD_DOCUMENT_RECORD_REQUEST = exports.ADD_DOCUMENT_RECORD_FAILURE = void 0;
   var SIGN_IN_REQUEST = exports.SIGN_IN_REQUEST = 'SIGN_IN_REQUEST';
   var SIGN_IN_SUCCESS = exports.SIGN_IN_SUCCESS = 'SIGN_IN_SUCCESS';
   var SIGN_IN_FAILURE = exports.SIGN_IN_FAILURE = 'SIGN_IN_FAILURE';
@@ -110191,6 +110192,10 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   var GET_FINAL_YEAR_PROGRESS_SUCCESS = exports.GET_FINAL_YEAR_PROGRESS_SUCCESS = 'GET_FINAL_YEAR_PROGRESS_SUCCESS';
   var STATE_WISE_RESIDENCY_FAILURE = exports.STATE_WISE_RESIDENCY_FAILURE = 'STATE_WISE_RESIDENCY_FAILURE';
   var GET_STATE_WISE_RESIDENCY_SUCCESS = exports.GET_STATE_WISE_RESIDENCY_SUCCESS = 'GET_STATE_WISE_RESIDENCY_SUCCESS';
+  var COMPLIANCE_SCORE_FAILURE = exports.COMPLIANCE_SCORE_FAILURE = 'COMPLIANCE_SCORE_FAILURE';
+  var GET_COMPLIANCE_SCORE_SUCCESS = exports.GET_COMPLIANCE_SCORE_SUCCESS = 'GET_COMPLIANCE_SCORE_SUCCESS';
+  var NOTIFICATION_FAILURE = exports.NOTIFICATION_FAILURE = 'NOTIFICATION_FAILURE';
+  var GET_NOTIFICATION_SUCCESS = exports.GET_NOTIFICATION_SUCCESS = 'GET_NOTIFICATION_SUCCESS';
   var STATE_WISE_METRICS_FAILURE = exports.STATE_WISE_METRICS_FAILURE = 'STATE_WISE_METRICS_FAILURE';
   var GET_STATE_WISE_METRICS_SUCCESS = exports.GET_STATE_WISE_METRICS_SUCCESS = 'GET_STATE_WISE_METRICS_SUCCESS';
   var YEAR_WISE_TIMELINE_FAILURE = exports.YEAR_WISE_TIMELINE_FAILURE = 'YEAR_WISE_TIMELINE_FAILURE';
@@ -110201,6 +110206,9 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   var GET_MONTH_WISE_TIMELINE_SUCCESS = exports.GET_MONTH_WISE_TIMELINE_SUCCESS = 'GET_MONTH_WISE_TIMELINE_SUCCESS';
   var STATE_WISE_TRIPS_FAILURE = exports.STATE_WISE_TRIPS_FAILURE = 'STATE_WISE_TRIPS_FAILURE';
   var GET_STATE_WISE_TRIPS_SUCCESS = exports.GET_STATE_WISE_TRIPS_SUCCESS = 'GET_STATE_WISE_TRIPS_SUCCESS';
+  var UPDATE_STATE_THRESHOLD_REQUEST = exports.UPDATE_STATE_THRESHOLD_REQUEST = 'UPDATE_STATE_THRESHOLD_REQUEST';
+  var UPDATE_STATE_THRESHOLD_SUCCESS = exports.UPDATE_STATE_THRESHOLD_SUCCESS = 'UPDATE_STATE_THRESHOLD_SUCCESS';
+  var UPDATE_STATE_THRESHOLD_FAILURE = exports.UPDATE_STATE_THRESHOLD_FAILURE = 'UPDATE_STATE_THRESHOLD_FAILURE';
   var SET_APP_LANGUAGE = exports.SET_APP_LANGUAGE = 'SET_APP_LANGUAGE';
 },662,[],"src/redux/actions/action-types.js");
 __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports, _dependencyMap) {
@@ -110223,11 +110231,13 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     TripDetails: null,
     finalYearProgress: {},
     stateWiseResidency: [],
+    complianceScore: null,
     stateWiseMetrics: [],
     weekWiseTimeline: [],
     monthWiseTimeline: [],
     yearWiseTimeline: [],
-    stateWiseTrips: []
+    stateWiseTrips: [],
+    notifications: []
   };
   var common = exports.common = function common() {
     var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState;
@@ -110279,6 +110289,10 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         return Object.assign({}, state, {
           stateWiseResidency: payload || null
         });
+      case _$$_REQUIRE(_dependencyMap[0], "../../actions/action-types").GET_COMPLIANCE_SCORE_SUCCESS:
+        return Object.assign({}, state, {
+          complianceScore: payload || null
+        });
       case _$$_REQUIRE(_dependencyMap[0], "../../actions/action-types").GET_STATE_WISE_METRICS_SUCCESS:
         return Object.assign({}, state, {
           stateWiseMetrics: payload || null
@@ -110298,6 +110312,10 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       case _$$_REQUIRE(_dependencyMap[0], "../../actions/action-types").GET_STATE_WISE_TRIPS_SUCCESS:
         return Object.assign({}, state, {
           stateWiseTrips: payload || null
+        });
+      case _$$_REQUIRE(_dependencyMap[0], "../../actions/action-types").GET_NOTIFICATION_SUCCESS:
+        return Object.assign({}, state, {
+          notifications: payload || null
         });
       case _$$_REQUIRE(_dependencyMap[0], "../../actions/action-types").GET_FAMILY_MEMBER_SUCCESS:
         return Object.assign({}, state, {
@@ -113591,9 +113609,11 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   });
   exports.ADD_DOCUMENT_RECORD = exports.ADDTRIP = void 0;
   exports.DELETE_RESIDENCY_RECORD = DELETE_RESIDENCY_RECORD;
+  exports.GET_COMPLIANCE_SCORE = GET_COMPLIANCE_SCORE;
   exports.GET_Document_Category_LIST = GET_Document_Category_LIST;
   exports.GET_FINAL_YEAR_PROGRESS = GET_FINAL_YEAR_PROGRESS;
   exports.GET_MONTH_WISE_TIMELINE = void 0;
+  exports.GET_NOTIFICATION = GET_NOTIFICATION;
   exports.GET_RESIDENCY_RECORD_DETAILS = GET_RESIDENCY_RECORD_DETAILS;
   exports.GET_RESIDENCY_RECORD_LIST = GET_RESIDENCY_RECORD_LIST;
   exports.GET_STATE_WISE_METRICS = GET_STATE_WISE_METRICS;
@@ -113608,7 +113628,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   exports.GET_YEAR_WISE_TIMELINE = GET_YEAR_WISE_TIMELINE;
   exports.UPDATETRIP = exports.SIGNUP = exports.SIGNIN = exports.LOGOUT = void 0;
   exports.UPDATE_RESIDENCY_RECORD = UPDATE_RESIDENCY_RECORD;
-  exports.updatePersonalInfoAction = exports.getPersonalProfileDataAction = exports.changeAppLanguageAction = void 0;
+  exports.updatePersonalInfoAction = exports.getPersonalProfileDataAction = exports.changeAppLanguageAction = exports.UPDATE_STATE_THRESHOLD = void 0;
   var _asyncToGenerator2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[1], "@babel/runtime/helpers/asyncToGenerator"));
   var _axiosinstance = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[2], "../../axios/axiosinstance"));
   var _EndPoints = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[3], "../../services/EndPoints"));
@@ -114236,9 +114256,77 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       };
     }();
   }
-  function GET_STATE_WISE_METRICS() {
+  function GET_COMPLIANCE_SCORE() {
     return /*#__PURE__*/function () {
       var _ref14 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+        try {
+          var response = yield _axiosinstance.default.get('dashboard/compliance-score');
+          var responseJson = response.data;
+          // console.log('responseSTATEJson-=>', responseJson);
+
+          if (responseJson.message == 'Success') {
+            dispatch({
+              type: _$$_REQUIRE(_dependencyMap[4], "./action-types").GET_COMPLIANCE_SCORE_SUCCESS,
+              payload: responseJson.result
+            });
+            return Promise.resolve(responseJson);
+          }
+          dispatch({
+            type: COMPLIANCE_SCORE_FAILURE,
+            payload: 'COMPLIANCE_SCORE_FAILURE'
+          });
+          return Promise.reject(responseJson);
+        } catch (e) {
+          dispatch({
+            type: COMPLIANCE_SCORE_FAILURE,
+            payload: 'COMPLIANCE_SCORE_FAILURE'
+          });
+          console.log('catch error API COMPLIANCE_SCORE_FAILURE', e);
+          return Promise.reject(CommonError);
+        }
+      });
+      return function (_x14) {
+        return _ref14.apply(this, arguments);
+      };
+    }();
+  }
+  function GET_NOTIFICATION() {
+    return /*#__PURE__*/function () {
+      var _ref15 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+        try {
+          var response = yield _axiosinstance.default.get('notifications');
+          var responseJson = response.data;
+          // console.log('responseSTATEJson-=>', responseJson);
+
+          if (responseJson.message == 'Success') {
+            dispatch({
+              type: _$$_REQUIRE(_dependencyMap[4], "./action-types").GET_NOTIFICATION_SUCCESS,
+              payload: responseJson.result
+            });
+            return Promise.resolve(responseJson);
+          }
+          dispatch({
+            type: _$$_REQUIRE(_dependencyMap[4], "./action-types").NOTIFICATION_FAILURE,
+            payload: 'NOTIFICATION_FAILURE'
+          });
+          return Promise.reject(responseJson);
+        } catch (e) {
+          dispatch({
+            type: _$$_REQUIRE(_dependencyMap[4], "./action-types").NOTIFICATION_FAILURE,
+            payload: 'NOTIFICATION_FAILURE'
+          });
+          console.log('catch error API NOTIFICATION_FAILURE', e);
+          return Promise.reject(CommonError);
+        }
+      });
+      return function (_x15) {
+        return _ref15.apply(this, arguments);
+      };
+    }();
+  }
+  function GET_STATE_WISE_METRICS() {
+    return /*#__PURE__*/function () {
+      var _ref16 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           var response = yield _axiosinstance.default.get('dashboard/metrics');
           var responseJson = response.data;
@@ -114265,15 +114353,15 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x14) {
-        return _ref14.apply(this, arguments);
+      return function (_x16) {
+        return _ref16.apply(this, arguments);
       };
     }();
   }
-  function GET_YEAR_WISE_TIMELINE(_ref15) {
-    var year = _ref15.year;
+  function GET_YEAR_WISE_TIMELINE(_ref17) {
+    var year = _ref17.year;
     return /*#__PURE__*/function () {
-      var _ref16 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref18 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           var response = yield _axiosinstance.default.get(`dashboard/timeline/year?year=${year}`);
           var responseJson = response.data;
@@ -114300,16 +114388,16 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x15) {
-        return _ref16.apply(this, arguments);
+      return function (_x17) {
+        return _ref18.apply(this, arguments);
       };
     }();
   }
-  function GET_WEEK_WISE_TIMELINE(_ref17) {
-    var start = _ref17.start,
-      end = _ref17.end;
+  function GET_WEEK_WISE_TIMELINE(_ref19) {
+    var start = _ref19.start,
+      end = _ref19.end;
     return /*#__PURE__*/function () {
-      var _ref18 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref20 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           var response = yield _axiosinstance.default.get(`http://3.91.116.18:4001/api/dashboard/calendar/week?end=${end}&start=${start}`);
           // const response = await axiosinstance.get(`http://3.91.116.18:4001/api/dashboard/calendar/week?end=2025-12-28&start=2025-12-22`)
@@ -114338,8 +114426,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x16) {
-        return _ref18.apply(this, arguments);
+      return function (_x18) {
+        return _ref20.apply(this, arguments);
       };
     }();
   }
@@ -114388,13 +114476,13 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   //   })
   // })
 
-  var GET_MONTH_WISE_TIMELINE = exports.GET_MONTH_WISE_TIMELINE = function GET_MONTH_WISE_TIMELINE(_ref19) {
-    var month = _ref19.month,
-      year = _ref19.year;
+  var GET_MONTH_WISE_TIMELINE = exports.GET_MONTH_WISE_TIMELINE = function GET_MONTH_WISE_TIMELINE(_ref21) {
+    var month = _ref21.month,
+      year = _ref21.year;
     // console.log('fbfsvbv',month,year);
 
     return /*#__PURE__*/function () {
-      var _ref20 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref22 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           dispatch({
             type: 'GET_MONTH_WISE_TIMELINE'
@@ -114427,15 +114515,15 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(e);
         }
       });
-      return function (_x17) {
-        return _ref20.apply(this, arguments);
+      return function (_x19) {
+        return _ref22.apply(this, arguments);
       };
     }();
   };
-  function GET_STATE_WISE_TRIPS(_ref21) {
-    var state = _ref21.state;
+  function GET_STATE_WISE_TRIPS(_ref23) {
+    var state = _ref23.state;
     return /*#__PURE__*/function () {
-      var _ref22 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref24 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           var response = yield _axiosinstance.default.get(`trips/state/${state}`);
           var responseJson = response.data;
@@ -114462,11 +114550,56 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x18) {
-        return _ref22.apply(this, arguments);
+      return function (_x20) {
+        return _ref24.apply(this, arguments);
       };
     }();
   }
+  var UPDATE_STATE_THRESHOLD = exports.UPDATE_STATE_THRESHOLD = function UPDATE_STATE_THRESHOLD(formData) {
+    // console.log('formData', formData);
+
+    return /*#__PURE__*/function () {
+      var _ref25 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+        dispatch({
+          type: _$$_REQUIRE(_dependencyMap[4], "./action-types").UPDATE_STATE_THRESHOLD_REQUEST,
+          payload: 'UPDATE_STATE_THRESHOLD_REQUEST'
+        });
+        try {
+          var response = yield _axiosinstance.default.post('/dashboard/state-threshold', formData);
+          var responseJson = response.data;
+          // console.log('responseJson=--------=>', responseJson);
+
+          if (response.message == 'Success') {
+            dispatch({
+              type: _$$_REQUIRE(_dependencyMap[4], "./action-types").UPDATE_STATE_THRESHOLD_SUCCESS,
+              payload: responseJson
+            });
+            return {
+              response: responseJson
+            };
+          }
+          dispatch({
+            type: _$$_REQUIRE(_dependencyMap[4], "./action-types").UPDATE_STATE_THRESHOLD_FAILURE,
+            payload: 'UPDATE_STATE_THRESHOLD_FAILURE'
+          });
+          return {
+            response: responseJson
+          };
+        } catch (e) {
+          dispatch({
+            type: _$$_REQUIRE(_dependencyMap[4], "./action-types").UPDATE_STATE_THRESHOLD_FAILURE,
+            payload: 'UPDATE_STATE_THRESHOLD_FAILURE'
+          });
+          return {
+            response: e
+          };
+        }
+      });
+      return function (_x21) {
+        return _ref25.apply(this, arguments);
+      };
+    }();
+  };
   var LOGOUT = exports.LOGOUT = function LOGOUT() {
     return function (dispatch) {
       dispatch({
@@ -118418,6 +118551,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       }();
       requestLocationPermission();
     }, []);
+    console.log('country', country);
+    console.log('countryCode', countryCode);
     var extractCityStateFromAddress = /*#__PURE__*/function () {
       var _ref5 = (0, _asyncToGenerator2.default)(function* (fullAddress) {
         try {
@@ -119188,27 +119323,31 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     value: true
   });
   exports.default = void 0;
-  var _slicedToArray2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[1], "@babel/runtime/helpers/slicedToArray"));
-  var _react = _interopRequireWildcard(_$$_REQUIRE(_dependencyMap[2], "react"));
-  var _reactNative = _$$_REQUIRE(_dependencyMap[3], "react-native");
-  var _Ionicons = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[4], "react-native-vector-icons/Ionicons"));
-  var Progress = _interopRequireWildcard(_$$_REQUIRE(_dependencyMap[5], "react-native-progress"));
-  var _colors = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[6], "../theme/colors"));
-  var _Header = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[7], "../components/Header"));
-  var _reactNativeLinearGradient = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[8], "react-native-linear-gradient"));
-  var _LocationTracker = _interopRequireWildcard(_$$_REQUIRE(_dependencyMap[9], "../helpers/LocationTracker"));
-  var _MainTracker = _interopRequireWildcard(_$$_REQUIRE(_dependencyMap[10], "../helpers/MainTracker"));
-  var _jsxRuntime = _$$_REQUIRE(_dependencyMap[11], "react/jsx-runtime");
+  var _asyncToGenerator2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[1], "@babel/runtime/helpers/asyncToGenerator"));
+  var _slicedToArray2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[2], "@babel/runtime/helpers/slicedToArray"));
+  var _react = _interopRequireWildcard(_$$_REQUIRE(_dependencyMap[3], "react"));
+  var _reactNative = _$$_REQUIRE(_dependencyMap[4], "react-native");
+  var _Ionicons = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[5], "react-native-vector-icons/Ionicons"));
+  var Progress = _interopRequireWildcard(_$$_REQUIRE(_dependencyMap[6], "react-native-progress"));
+  var _colors = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[7], "../theme/colors"));
+  var _Header = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[8], "../components/Header"));
+  var _reactNativeLinearGradient = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[9], "react-native-linear-gradient"));
+  var _LocationTracker = _interopRequireWildcard(_$$_REQUIRE(_dependencyMap[10], "../helpers/LocationTracker"));
+  var _MainTracker = _interopRequireWildcard(_$$_REQUIRE(_dependencyMap[11], "../helpers/MainTracker"));
+  var _jsxRuntime = _$$_REQUIRE(_dependencyMap[12], "react/jsx-runtime");
   var _this = this,
     _jsxFileName = "D:\\Reactnativeprojects\\DomiGO\\src\\screens\\HomeScreen.js";
   function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function _interopRequireWildcard(e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (var _t in e) "default" !== _t && {}.hasOwnProperty.call(e, _t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, _t)) && (i.get || i.set) ? o(f, _t, i) : f[_t] = e[_t]); return f; })(e, t); }
   var HomeScreen = function HomeScreen(_ref) {
     var GET_FINAL_YEAR_PROGRESS = _ref.GET_FINAL_YEAR_PROGRESS,
       GET_STATE_WISE_RESIDENCY = _ref.GET_STATE_WISE_RESIDENCY,
+      GET_COMPLIANCE_SCORE = _ref.GET_COMPLIANCE_SCORE,
+      UPDATE_STATE_THRESHOLD = _ref.UPDATE_STATE_THRESHOLD,
       loginToken = _ref.loginToken,
       finalYearProgress = _ref.finalYearProgress,
       stateWiseResidency = _ref.stateWiseResidency,
-      userData = _ref.userData;
+      userData = _ref.userData,
+      complianceScore = _ref.complianceScore;
     var _React$useState = _react.default.useState(false),
       _React$useState2 = (0, _slicedToArray2.default)(_React$useState, 2),
       showStateModal = _React$useState2[0],
@@ -119217,11 +119356,24 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       _React$useState4 = (0, _slicedToArray2.default)(_React$useState3, 2),
       isGPSOn = _React$useState4[0],
       setIsGPSOn = _React$useState4[1];
+    var _React$useState5 = _react.default.useState(false),
+      _React$useState6 = (0, _slicedToArray2.default)(_React$useState5, 2),
+      thresholdModalVisible = _React$useState6[0],
+      setThresholdModalVisible = _React$useState6[1];
+    var _React$useState7 = _react.default.useState(null),
+      _React$useState8 = (0, _slicedToArray2.default)(_React$useState7, 2),
+      selectedState = _React$useState8[0],
+      setSelectedState = _React$useState8[1];
+    var _React$useState9 = _react.default.useState(''),
+      _React$useState0 = (0, _slicedToArray2.default)(_React$useState9, 2),
+      thresholdValue = _React$useState0[0],
+      setThresholdValue = _React$useState0[1];
     console.log('stateWiseResidency>>>>', stateWiseResidency);
+    console.log('complianceScore>>>>', complianceScore);
     console.log('userData>>>>', userData);
-    var dispatch = (0, _$$_REQUIRE(_dependencyMap[12], "react-redux").useDispatch)();
+    var dispatch = (0, _$$_REQUIRE(_dependencyMap[13], "react-redux").useDispatch)();
     var progress = 200 / 365;
-    var navigation = (0, _$$_REQUIRE(_dependencyMap[13], "@react-navigation/native").useNavigation)();
+    var navigation = (0, _$$_REQUIRE(_dependencyMap[14], "@react-navigation/native").useNavigation)();
     // useEffect(() => {
     //     DomigoTracker.startDomigoTracking();
 
@@ -119230,6 +119382,11 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     //     // };
     // }, []);
 
+    var openThresholdModal = function openThresholdModal(item) {
+      setSelectedState(item);
+      setThresholdValue(String(item.threshold));
+      setThresholdModalVisible(true);
+    };
     (0, _react.useEffect)(function () {
       if (userData && userData.state === null) {
         setShowStateModal(true);
@@ -119237,12 +119394,13 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     }, [userData]);
 
     // useEffect(()=>{
-    (0, _$$_REQUIRE(_dependencyMap[14], "../hooks/useGPSListener").useGPSListener)(setIsGPSOn);
+    (0, _$$_REQUIRE(_dependencyMap[15], "../hooks/useGPSListener").useGPSListener)(setIsGPSOn);
     // },[])
 
     (0, _react.useEffect)(function () {
       dispatch(GET_FINAL_YEAR_PROGRESS);
       dispatch(GET_STATE_WISE_RESIDENCY);
+      dispatch(GET_COMPLIANCE_SCORE);
       // return () => {
       //   stopDomigoTracking();
       // };
@@ -119266,26 +119424,24 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     //   }, 1500);
     // }, []);
 
-    var isFocused = (0, _$$_REQUIRE(_dependencyMap[13], "@react-navigation/native").useIsFocused)();
-
-    // useEffect(() => {
-    //     if (isFocused) {
-    //         const timer = setTimeout(() => {
-    //             forceEnableGPS();
-    //         }, 800); // 👈 small delay only
-    //         return () => clearTimeout(timer);
-    //     }
-    // }, [isFocused]);
-
-    // useEffect(() => {
-    //     if (isFocused) {
-    //         setTimeout(async () => {
-    //             const gps = await checkGPSStatus();
-    //             setIsGPSOn(gps);
-    //         }, 500);
-    //     }
-    // }, [isFocused])
-
+    var isFocused = (0, _$$_REQUIRE(_dependencyMap[14], "@react-navigation/native").useIsFocused)();
+    var handleThresholdUpdate = /*#__PURE__*/function () {
+      var _ref2 = (0, _asyncToGenerator2.default)(function* () {
+        var payload = {
+          state: selectedState.state,
+          threshold: Number(thresholdValue)
+        };
+        var res = yield UPDATE_STATE_THRESHOLD(payload);
+        if (res.response.message === "Success") {
+          _$$_REQUIRE(_dependencyMap[16], "../helpers/CommonHelpers").CustomToast.show("Threshold Updated Successfully!");
+        }
+        setThresholdModalVisible(false);
+        dispatch(GET_STATE_WISE_RESIDENCY);
+      });
+      return function handleThresholdUpdate() {
+        return _ref2.apply(this, arguments);
+      };
+    }();
     console.log('loginToken', loginToken);
     function getStateCodeSafe(state) {
       return state.toLowerCase().replace(/[^a-z\s]/g, "").split(/\s+/).map(function (w) {
@@ -119296,7 +119452,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       if (!stateName) return "";
 
       // 1️⃣ Try official mapping
-      var officialCode = (0, _$$_REQUIRE(_dependencyMap[15], "../utils/getStateShortCode").getStateShortCode)(stateName, country);
+      var officialCode = (0, _$$_REQUIRE(_dependencyMap[17], "../utils/getStateShortCode").getStateShortCode)(stateName, country);
 
       // 2️⃣ Agar mapping se actual short code mila (2 letters)
       if (officialCode && officialCode !== stateName && officialCode.length <= 3) {
@@ -119321,19 +119477,18 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     var getStateColor = function getStateColor(state) {
       return state ? getDarkPastelColor(state) : '#2C2C2C';
     };
-    var getBorderColorByDays = function getBorderColorByDays(days) {
-      var threshold = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 183;
+    var getBorderColorByDays = function getBorderColorByDays(days, threshold) {
       var percentage = days / threshold * 100;
       if (percentage <= 25) {
-        return '#65C466'; // Green
+        return '#65C466';
       } else if (percentage > 25 && percentage < 50) {
-        return '#EBB408'; // Yellow
+        return '#EBB408';
       } else {
-        return '#EE4444'; // Green (50% ya usse zyada)
+        return '#EE4444';
       }
     };
 
-    // console.log(getStateCodeSafe("  Uttar   Pradesh ")); // UP
+    // console.log(getStateCodeSafe("  Uttar Pradesh ")); // UP
 
     return /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNativeLinearGradient.default, {
       colors: ["#9ab1fa", "#ffffff"],
@@ -119347,7 +119502,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       },
       locations: [0.05, 0.55],
       style: styles.container,
-      children: /*#__PURE__*/(0, _jsxRuntime.jsxs)(_$$_REQUIRE(_dependencyMap[16], "react-native-safe-area-context").SafeAreaView, {
+      children: /*#__PURE__*/(0, _jsxRuntime.jsxs)(_$$_REQUIRE(_dependencyMap[18], "react-native-safe-area-context").SafeAreaView, {
         edges: ['top', 'left', 'right'],
         style: {
           flex: 1,
@@ -119383,9 +119538,43 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 })
               })]
             })]
+          }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
+            style: styles.summaryContainer,
+            children: /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+              style: styles.summaryBox,
+              children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+                style: {
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginBottom: 5,
+                  justifyContent: 'space-between'
+                },
+                children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_Ionicons.default, {
+                  name: "stats-chart-outline",
+                  size: 20,
+                  style: {
+                    marginTop: 0
+                  },
+                  color: _colors.default.primary
+                }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+                  style: Object.assign({}, styles.summaryValue, {
+                    fontSize: 15,
+                    flex: 1,
+                    marginLeft: 8
+                  }),
+                  children: "Compliance Score"
+                })]
+              }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
+                style: styles.summaryValue,
+                children: [complianceScore == null ? void 0 : complianceScore.complianceScore, "%"]
+              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+                style: styles.summaryLabel,
+                children: "Your current estimated tax compliance."
+              })]
+            })
           }), !isGPSOn && /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
             activeOpacity: 0.8,
-            onPress: _$$_REQUIRE(_dependencyMap[17], "../helpers/locationRedirect").openLocationSettings,
+            onPress: _$$_REQUIRE(_dependencyMap[19], "../helpers/locationRedirect").openLocationSettings,
             style: styles.locationBanner,
             children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
               style: styles.locationIcon,
@@ -119476,7 +119665,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
               //     { code: 'UT', days: 45, color: '#28a0dd', threshold: 183 },
               // ]
               stateWiseResidency == null ? void 0 : stateWiseResidency.map(function (item, index) {
-                return /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
+                return /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
                   style: [styles.stateCard, {
                     borderColor: '#E0E0E0',
                     width: _reactNative.Dimensions.get('window').width * 0.42,
@@ -119489,21 +119678,30 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                       state: item.state
                     });
                   },
-                  children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
+                  children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.TouchableOpacity, {
                     style: styles.smallCircle,
+                    onPress: function onPress() {
+                      return openThresholdModal(item);
+                    },
+                    activeOpacity: 0.7,
                     children: /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
                       style: styles.smallCircleText,
-                      children: '183'
+                      children: item == null ? void 0 : item.threshold
                     })
-                  }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+                  }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
                     style: {
                       borderRadius: 70,
                       borderWidth: 5,
-                      borderColor: getBorderColorByDays(item.days),
+                      borderColor: getBorderColorByDays(item.days, item.threshold),
                       width: _reactNative.Dimensions.get('window').width * 0.35,
                       height: _reactNative.Dimensions.get('window').width * 0.35,
                       justifyContent: 'center',
                       alignItems: 'center'
+                    },
+                    onPress: function onPress() {
+                      return navigation.navigate('StateTripsScreen', {
+                        state: item.state
+                      });
                     },
                     children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
                       style: styles.stateCode,
@@ -119548,6 +119746,51 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 })]
               })
             })
+          }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Modal, {
+            transparent: true,
+            animationType: "fade",
+            visible: thresholdModalVisible,
+            children: /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
+              style: styles.modalOverlay,
+              children: /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+                style: styles.thresholdModal,
+                children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+                  style: styles.modalTitle,
+                  children: "Update Threshold"
+                }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+                  style: styles.modalSubtitle,
+                  children: selectedState == null ? void 0 : selectedState.state
+                }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.TextInput, {
+                  value: thresholdValue,
+                  onChangeText: setThresholdValue,
+                  keyboardType: "numeric",
+                  placeholder: "Enter threshold days",
+                  style: styles.input1
+                }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+                  style: {
+                    flexDirection: 'row',
+                    gap: 12
+                  },
+                  children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.TouchableOpacity, {
+                    style: styles.cancelBtn1,
+                    onPress: function onPress() {
+                      return setThresholdModalVisible(false);
+                    },
+                    children: /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+                      style: styles.cancelText1,
+                      children: "Cancel"
+                    })
+                  }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.TouchableOpacity, {
+                    style: styles.saveBtn1,
+                    onPress: handleThresholdUpdate,
+                    children: /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+                      style: styles.saveText1,
+                      children: "Save"
+                    })
+                  })]
+                })]
+              })
+            })
           })]
         })]
       })
@@ -119558,14 +119801,17 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       userData: state.auth.userData,
       loginToken: state.auth.loginToken,
       finalYearProgress: state.common.finalYearProgress,
-      stateWiseResidency: state.common.stateWiseResidency
+      stateWiseResidency: state.common.stateWiseResidency,
+      complianceScore: state.common.complianceScore
     };
   }
   var mapDispatchToProps = {
-    GET_FINAL_YEAR_PROGRESS: _$$_REQUIRE(_dependencyMap[18], "../redux/actions/action-creator").GET_FINAL_YEAR_PROGRESS,
-    GET_STATE_WISE_RESIDENCY: _$$_REQUIRE(_dependencyMap[18], "../redux/actions/action-creator").GET_STATE_WISE_RESIDENCY
+    GET_FINAL_YEAR_PROGRESS: _$$_REQUIRE(_dependencyMap[20], "../redux/actions/action-creator").GET_FINAL_YEAR_PROGRESS,
+    GET_STATE_WISE_RESIDENCY: _$$_REQUIRE(_dependencyMap[20], "../redux/actions/action-creator").GET_STATE_WISE_RESIDENCY,
+    GET_COMPLIANCE_SCORE: _$$_REQUIRE(_dependencyMap[20], "../redux/actions/action-creator").GET_COMPLIANCE_SCORE,
+    UPDATE_STATE_THRESHOLD: _$$_REQUIRE(_dependencyMap[20], "../redux/actions/action-creator").UPDATE_STATE_THRESHOLD
   };
-  var _default = exports.default = (0, _$$_REQUIRE(_dependencyMap[12], "react-redux").connect)(mapStateToProps, mapDispatchToProps)(HomeScreen);
+  var _default = exports.default = (0, _$$_REQUIRE(_dependencyMap[13], "react-redux").connect)(mapStateToProps, mapDispatchToProps)(HomeScreen);
   var styles = _reactNative.StyleSheet.create({
     container: {
       flex: 1
@@ -119844,9 +120090,84 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       color: '#FFEAEA',
       fontSize: 11,
       marginTop: 2
+    },
+    // SUMMARY
+    summaryContainer: {
+      // flexDirection: "row",
+      // justifyContent: "space-between",
+      marginTop: 14,
+      marginHorizontal: 16,
+      gap: 10
+    },
+    summaryBox: {
+      // flex: 1,
+      // backgroundColor: "#fff",
+      // borderRadius: 12,
+      // padding: 12,
+      // borderWidth: 1,
+      // borderColor: "#eee",
+      width: '100%',
+      backgroundColor: '#fff',
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 16,
+      elevation: 3,
+      shadowColor: '#000',
+      shadowOpacity: 0.1,
+      shadowRadius: 6,
+      shadowOffset: {
+        width: 0,
+        height: 2
+      }
+    },
+    summaryValue: {
+      fontSize: 22,
+      fontWeight: "700",
+      marginTop: 4
+    },
+    summaryLabel: {
+      fontSize: 12,
+      color: "#666",
+      marginTop: 2
+    },
+    thresholdModal: {
+      width: '80%',
+      backgroundColor: '#fff',
+      borderRadius: 12,
+      padding: 20,
+      alignItems: 'center'
+    },
+    input1: {
+      width: '100%',
+      borderWidth: 1,
+      borderColor: '#ddd',
+      borderRadius: 8,
+      padding: 10,
+      marginVertical: 12,
+      fontSize: 14
+    },
+    cancelBtn1: {
+      paddingVertical: 10,
+      paddingHorizontal: 24,
+      borderRadius: 20,
+      backgroundColor: '#eee'
+    },
+    saveBtn1: {
+      paddingVertical: 10,
+      paddingHorizontal: 24,
+      borderRadius: 20,
+      backgroundColor: _colors.default.primary
+    },
+    cancelText1: {
+      color: '#333',
+      fontWeight: '600'
+    },
+    saveText1: {
+      color: '#fff',
+      fontWeight: '600'
     }
   });
-},714,[1,39,79,17,615,715,839,840,634,841,648,182,691,842,962,971,680,973,699],"src/screens/HomeScreen.js");
+},714,[1,178,39,79,17,615,715,839,840,634,841,648,182,691,842,962,677,971,680,973,699],"src/screens/HomeScreen.js");
 __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports, _dependencyMap) {
   var _interopRequireDefault = _$$_REQUIRE(_dependencyMap[0], "@babel/runtime/helpers/interopRequireDefault");
   Object.defineProperty(exports, "__esModule", {
@@ -189142,16 +189463,20 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.default = AlertsScreen;
-  var _react = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[1], "react"));
+  exports.default = void 0;
+  var _react = _interopRequireWildcard(_$$_REQUIRE(_dependencyMap[1], "react"));
   var _reactNative = _$$_REQUIRE(_dependencyMap[2], "react-native");
   var _reactNativeLinearGradient = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[3], "react-native-linear-gradient"));
   var _Ionicons = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[4], "react-native-vector-icons/Ionicons"));
   var _colors = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[5], "../theme/colors"));
   var _jsxRuntime = _$$_REQUIRE(_dependencyMap[6], "react/jsx-runtime");
-  var _jsxFileName = "D:\\Reactnativeprojects\\DomiGO\\src\\screens\\AlertsScreen.js";
-  function AlertsScreen() {
-    var _this = this;
+  var _this = this,
+    _jsxFileName = "D:\\Reactnativeprojects\\DomiGO\\src\\screens\\AlertsScreen.js";
+  function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function _interopRequireWildcard(e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (var _t in e) "default" !== _t && {}.hasOwnProperty.call(e, _t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, _t)) && (i.get || i.set) ? o(f, _t, i) : f[_t] = e[_t]); return f; })(e, t); }
+  var AlertsScreen = function AlertsScreen(_ref) {
+    var GET_NOTIFICATION = _ref.GET_NOTIFICATION,
+      notifications = _ref.notifications;
+    var dispatch = (0, _$$_REQUIRE(_dependencyMap[7], "react-redux").useDispatch)();
     var alerts = [{
       id: 1,
       title: "Residency Threshold Alert",
@@ -189189,12 +189514,19 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       color: "#007AFF"
     }, {
       id: 5,
-      title: "System Maintenance Notice",
+      title: "System Maintenance and Updates",
       icon: "information-circle-outline",
       description: "Our services will be temporarily unavailable for maintenance on July 20th, 2 AM - 4 AM EST.",
       time: "2 weeks ago",
       color: "#999"
     }];
+    (0, _react.useEffect)(function () {
+      dispatch(GET_NOTIFICATION);
+      // return () => {
+      //   stopDomigoTracking();
+      // };
+    }, []);
+    console.log('notifications', notifications);
     return /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNativeLinearGradient.default, {
       colors: ['#9ab1fa', '#ffffff'],
       start: {
@@ -189207,7 +189539,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       },
       locations: [0.05, 0.55],
       style: styles.container,
-      children: /*#__PURE__*/(0, _jsxRuntime.jsxs)(_$$_REQUIRE(_dependencyMap[7], "react-native-safe-area-context").SafeAreaView, {
+      children: /*#__PURE__*/(0, _jsxRuntime.jsxs)(_$$_REQUIRE(_dependencyMap[8], "react-native-safe-area-context").SafeAreaView, {
         edges: ['top', 'left', 'right'],
         style: styles.container,
         children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
@@ -189246,7 +189578,10 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                     children: item.type
                   })
                 })]
-              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+              }), item.id == '5' ? /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+                style: styles.desc,
+                children: notifications[0].description
+              }) : /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
                 style: styles.desc,
                 children: item.description
               }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
@@ -189271,7 +189606,18 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         })]
       })
     });
+  };
+  function mapStateToProps(state) {
+    return {
+      userData: state.auth.userData,
+      loginToken: state.auth.loginToken,
+      notifications: state.common.notifications
+    };
   }
+  var mapDispatchToProps = {
+    GET_NOTIFICATION: _$$_REQUIRE(_dependencyMap[9], "../redux/actions/action-creator").GET_NOTIFICATION
+  };
+  var _default = exports.default = (0, _$$_REQUIRE(_dependencyMap[7], "react-redux").connect)(mapStateToProps, mapDispatchToProps)(AlertsScreen);
   var styles = _reactNative.StyleSheet.create({
     container: {
       flex: 1
@@ -189372,7 +189718,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       padding: 5
     }
   });
-},1328,[1,79,17,634,615,839,182,680],"src/screens/AlertsScreen.js");
+},1328,[1,79,17,634,615,839,182,691,680,699],"src/screens/AlertsScreen.js");
 __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports, _dependencyMap) {
   var _interopRequireDefault = _$$_REQUIRE(_dependencyMap[0], "@babel/runtime/helpers/interopRequireDefault");
   Object.defineProperty(exports, "__esModule", {
@@ -189586,7 +189932,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
                   children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
                     style: styles.title,
-                    children: "Export Data"
+                    children: "Compliance Score Export"
                   }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
                     style: styles.subtitle,
                     children: "Download your complete residency record"
@@ -251629,7 +251975,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       return {
         id: index.toString(),
         state: item.state,
-        taxDays: item.daysTracked,
+        daysIn: item.daysIn,
+        taxDays: item.taxDays,
         daysWorked: item.daysWorked,
         hoursWorked: item.hoursWorked,
         travelDays: item.travelDays,
@@ -251700,8 +252047,11 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
             //     { label: '', value: '' },
             // ];
             var stats = [{
-              label: 'Tax Days in',
-              value: item.taxDays
+              label: 'Days in',
+              value: item.daysIn
+            }, {
+              label: 'Travel Days',
+              value: item.travelDays
             }, {
               label: 'Days Worked',
               value: item.daysWorked
@@ -251709,10 +252059,10 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
               label: 'Hours Worked',
               value: item.hoursWorked
             }, {
-              label: 'Travel Days',
-              value: item.travelDays
+              label: 'Tax Days',
+              value: item.taxDays
             }, {
-              label: 'Est. Wages',
+              label: 'Taxable Wages',
               value: item.wages
             }, {
               label: '',
