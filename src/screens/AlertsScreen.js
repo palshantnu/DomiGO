@@ -74,9 +74,6 @@ const AlertsScreen = ({GET_NOTIFICATION,notifications}) => {
 
   useEffect(() => {
     dispatch(GET_NOTIFICATION)
-    // return () => {
-    //   stopDomigoTracking();
-    // };
 }, []);
 
 console.log('notifications',notifications);
@@ -132,13 +129,13 @@ console.log('notifications',notifications);
                   </View>
                 )}
               </View>
-              {
+              {/* {
                 item.id == '5'?
               <Text style={styles.desc}>{notifications[0].description}</Text>
                  :
               <Text style={styles.desc}>{item.description}</Text>
-              }
-              {/* <Text style={styles.desc}>{item.description}</Text> */}
+              } */}
+              <Text style={styles.desc}>{item.description}</Text>
               <View style={styles.footer}>
                 <Text style={styles.time}>{item.time}</Text>
                 {item.action && (

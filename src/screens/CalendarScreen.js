@@ -18,22 +18,39 @@ import Header from '../components/Header';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import CustomScroll from '../components/CustomScroll';
-import { GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIMELINE, GET_YEAR_WISE_TIMELINE } from '../redux/actions/action-creator';
+import { GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIMELINE, GET_YEAR_WISE_TIMELINE,GET_MISSING_ACTIVITY_LIST } from '../redux/actions/action-creator';
 import { connect } from 'react-redux';
+import { useFocusEffect } from '@react-navigation/native';
 
-function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIMELINE, GET_YEAR_WISE_TIMELINE, yearWiseTimeline, weekWiseTimeline, monthWiseTimeline }) {
+function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIMELINE, GET_YEAR_WISE_TIMELINE,GET_MISSING_ACTIVITY_LIST,missingActivityList, yearWiseTimeline, weekWiseTimeline, monthWiseTimeline }) {
   const [selectedTab, setSelectedTab] = useState('Month');
   const [selectedResidencyType, setSelectedResidencyType] = useState('past');
   const [tripModalVisible, setTripModalVisible] = useState(false);
   const [selectedTrips, setSelectedTrips] = useState([]);
   const [openWeekIndex, setOpenWeekIndex] = useState(null);
   const [openIndex, setOpenIndex] = useState(null);
+  const [showMissingModal, setShowMissingModal] = useState(false);
+  const [selectedMissingDate, setSelectedMissingDate] = useState(null);
+  const [dayActionModalVisible, setDayActionModalVisible] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [showYearDropdown, setShowYearDropdown] = useState(false);
+  const yearOptions = useMemo(() => {
+    return [
+      currentYear - 2,
+      currentYear - 1,
+      currentYear,
+    ];
+  }, []);
+
 
 
 
   console.log('yearWiseTimeline', yearWiseTimeline);
   console.log('weekWiseTimeline', weekWiseTimeline);
   console.log('monthWiseTimeline', monthWiseTimeline);
+  console.log('missingActivityList', missingActivityList);
 
   const getCurrentWeekDates = () => {
     const today = new Date();
@@ -69,12 +86,27 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     const { start, end } = getCurrentWeekDates();
 
     GET_WEEK_WISE_TIMELINE({ start, end });;
-    GET_YEAR_WISE_TIMELINE({ year: today.getFullYear() });
+    GET_YEAR_WISE_TIMELINE({ year: selectedYear });
     GET_MONTH_WISE_TIMELINE({
       month: today.getMonth() + 1, // JS months 0-based
       year: today.getFullYear(),
     });
+    GET_MISSING_ACTIVITY_LIST()
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      GET_MISSING_ACTIVITY_LIST();
+    }, [])
+  );
+
+  const onYearSelect = (year) => {
+    setSelectedYear(year);
+    setShowYearDropdown(false);
+
+    // 🔁 Redux call
+    GET_YEAR_WISE_TIMELINE({ year });
+  };
 
 
   const STATE_COLOR_MAP = {
@@ -85,25 +117,158 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     "Arizona": "#1d3b73",
   };
 
+  const MISSING_DOT = {
+    key: 'missing',
+    color: '#FF3B30',   // red-ish (attention)
+  };
 
-  const getMarkedDates = (monthWiseTimeline) => {
-    const result = monthWiseTimeline || {};
+  const TODAY_MISSING_DOT = {
+    key: 'missing-today',
+    color: '#FF9500', // orange
+  };
+  const isWeekend = (dateStr) => {
+    const day = new Date(dateStr).getDay();
+    return day === 0 || day === 6; // Sunday or Saturday
+  };
+  const getMarkedDates = (monthWiseTimeline, year, month) => {
     const marked = {};
 
-    Object.keys(result).forEach(date => {
-      const uniqueStates = [
-        ...new Set(result[date].map(item => item.destinationState))
-      ];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-      marked[date] = {
-        dots: uniqueStates.map(state => ({
-          color: STATE_COLOR_MAP[state] || '#999'
-        }))
-      };
-    });
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const trips = monthWiseTimeline?.[dateStr] || [];
+
+      const dots = [];
+
+      const currentDate = new Date(dateStr);
+      currentDate.setHours(0, 0, 0, 0);
+
+      // 1️⃣ State dots (agar trips hain)
+      if (trips.length > 0) {
+        const uniqueStates = [
+          ...new Set(trips.map(t => t.destinationState)),
+        ];
+
+        uniqueStates.forEach(state => {
+          dots.push({
+            key: state,
+            color: STATE_COLOR_MAP[state] || '#999',
+          });
+        });
+      }
+
+      // 2️⃣ Manual (red) dot — past + today (ALWAYS)
+      if (currentDate <= today) {
+        dots.push(MISSING_DOT);
+      }
+      marked[dateStr] = { dots };
+
+      const weekend = isWeekend(dateStr);
+
+      marked[dateStr] = {
+        dots,
+        ...(weekend && {
+          customStyles: {
+            text: {
+              color: '#D32F2F', // weekend text color
+              fontWeight: '600',
+            },
+            container: {
+              backgroundColor: '#FFF5F5', // light red / grey
+              borderRadius: 8,
+            },
+          },
+        })}
+    }
+
 
     return marked;
   };
+
+  const missingMap = useMemo(() => {
+    const map = {};
+    (missingActivityList || []).forEach(item => {
+      const dateKey = item.date.split('T')[0]; // 2026-01-04
+      map[dateKey] = item;
+    });
+    return map;
+  }, [missingActivityList]);
+  
+  const missingDataForDay = missingMap[selectedDate];
+  const isMissingAlreadyAdded = !!missingDataForDay;
+
+  // const getMarkedDates = (monthWiseTimeline, year, month) => {
+  //   const marked = {};
+
+  //   // 1️⃣ Month ke saare days nikalo
+  //   const daysInMonth = new Date(year, month, 0).getDate();
+
+  //   for (let day = 1; day <= daysInMonth; day++) {
+  //     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  //     const trips = monthWiseTimeline?.[dateStr] || [];
+
+  //     const dots = [];
+
+  //     // 2️⃣ Agar trips hain → state dots
+  //     if (trips.length > 0) {
+  //       const uniqueStates = [
+  //         ...new Set(trips.map(t => t.destinationState)),
+  //       ];
+
+  //       uniqueStates.forEach(state => {
+  //         dots.push({
+  //           key: state,
+  //           color: STATE_COLOR_MAP[state] || '#999',
+  //         });
+  //       });
+  //     }
+
+  //     // 3️⃣ Missing day logic
+  //     const today = new Date();
+  //     today.setHours(0, 0, 0, 0);
+
+  //     const currentDate = new Date(dateStr);
+  //     currentDate.setHours(0, 0, 0, 0);
+
+  //     if (trips.length === 0 && currentDate <= today) {
+  //       dots.push(MISSING_DOT);
+  //     }
+  //     if (trips.length === 0 && currentDate.getTime() === today.getTime()) {
+  //       dots.push(TODAY_MISSING_DOT);
+  //     }
+
+
+  //     marked[dateStr] = {
+  //       dots,
+  //     };
+  //   }
+
+  //   return marked;
+  // };
+
+
+  // const getMarkedDates = (monthWiseTimeline) => {
+  //   const result = monthWiseTimeline || {};
+  //   const marked = {};
+
+  //   Object.keys(result).forEach(date => {
+  //     const uniqueStates = [
+  //       ...new Set(result[date].map(item => item.destinationState))
+  //     ];
+
+  //     marked[date] = {
+  //       dots: uniqueStates.map(state => ({
+  //         color: STATE_COLOR_MAP[state] || '#999'
+  //       }))
+  //     };
+  //   });
+
+  //   return marked;
+  // };
 
 
 
@@ -151,19 +316,22 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     })
   ).current;
 
-
-
-
-  //   const handleDayPress = (day) => {
-  //   console.log('DAY PRESSED 👉', day);
-  // };
-
-
+  const today = new Date();
 
   const markedDates = useMemo(
-    () => getMarkedDates(monthWiseTimeline),
+    () =>
+      getMarkedDates(
+        monthWiseTimeline,
+        today.getFullYear(),
+        today.getMonth() + 1
+      ),
     [monthWiseTimeline]
   );
+
+  // const markedDates = useMemo(
+  //   () => getMarkedDates(monthWiseTimeline),
+  //   [monthWiseTimeline]
+  // );
 
 
   //   const handleDayPress = (day) => {
@@ -193,27 +361,77 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   // };
 
 
+  //////////////////////////111///////////////////
+
+  // const handleDayPress = (day) => {
+  //   const dateKey = day.dateString;
+  //   // const tripsForDay = monthWiseTimeline?.[dateKey] || [];
+
+  //   const tripsForDay = (monthWiseTimeline[dateKey] || []).filter(
+  //     t =>
+  //       !(t.originCity === t.destinationCity &&
+  //         t.originState === t.destinationState)
+  //   );
+
+  //   console.log('Trips on', dateKey, tripsForDay);
+
+  //   if (tripsForDay.length === 1) {
+  //     // navigation.navigate('AddTrip', { id: tripsForDay[0].id });
+  //     navigation.navigate('DayDetail', tripsForDay[0].id)
+  //   }
+  //   else if (tripsForDay.length > 1) {
+  //     setSelectedTrips(tripsForDay);
+  //     setTripModalVisible(true);
+  //   }
+  // };
+
+
+  // const handleDayPress = (day) => {
+  //   const dateKey = day.dateString;
+  //   const tripsForDay = monthWiseTimeline?.[dateKey] || [];
+
+  //   if (tripsForDay.length === 0) {
+  //     setSelectedMissingDate(dateKey);
+  //     setShowMissingModal(true);
+  //     return;
+  //   }
+  //   if (currentDate > today) {
+  //     return;
+  //   }
+
+  //   if (tripsForDay.length === 1) {
+  //     navigation.navigate('DayDetail', tripsForDay[0]);
+  //   } else {
+  //     setSelectedTrips(tripsForDay);
+  //     setTripModalVisible(true);
+  //   }
+  // };
   const handleDayPress = (day) => {
     const dateKey = day.dateString;
-    // const tripsForDay = monthWiseTimeline?.[dateKey] || [];
+    const tripsForDay = monthWiseTimeline?.[dateKey] || [];
 
-    const tripsForDay = (monthWiseTimeline[dateKey] || []).filter(
-      t =>
-        !(t.originCity === t.destinationCity &&
-          t.originState === t.destinationState)
-    );
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    console.log('Trips on', dateKey, tripsForDay);
+    const currentDate = new Date(dateKey);
+    currentDate.setHours(0, 0, 0, 0);
 
-    if (tripsForDay.length === 1) {
-      // navigation.navigate('AddTrip', { id: tripsForDay[0].id });
-      navigation.navigate('DayDetail', tripsForDay[0].id)
-    }
-    else if (tripsForDay.length > 1) {
-      setSelectedTrips(tripsForDay);
-      setTripModalVisible(true);
-    }
+    // ❌ Future date → kuch nahi
+    if (currentDate > today) return;
+
+    // ✅ Store context
+    setSelectedDate(dateKey);
+    setSelectedTrips(tripsForDay);
+
+    // ✅ Always open same modal
+    setDayActionModalVisible(true);
   };
+
+
+
+
+
+
   useEffect(() => {
     console.log('Modal visible changed 👉', tripModalVisible);
   }, [tripModalVisible])
@@ -872,6 +1090,52 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                   // markedDates={getMarkedDates(monthWiseTimeline)}
                   markedDates={markedDates}
                   onDayPress={handleDayPress}
+                  dayComponent={({ date, state, marking }) => {
+                    const weekend = isWeekend(date.dateString);
+                
+                    return (
+                      <TouchableOpacity
+                        onPress={() => handleDayPress({ dateString: date.dateString })}
+                        disabled={state === 'disabled'}
+                        style={{ alignItems: 'center', paddingVertical: 4 }}
+                      >
+                        {/* Day number */}
+                        <Text
+                          style={{
+                            color:
+                              state === 'disabled'
+                                ? '#d9e1e8'
+                                : weekend
+                                ? '#D32F2F' // 🔴 Sat–Sun
+                                : '#2d4150',
+                            fontWeight: weekend ? '600' : '400',
+                            fontSize: 16,
+                          }}
+                        >
+                          {date.day}
+                        </Text>
+                
+                        {/* Dots (IMPORTANT) */}
+                        {marking?.dots && (
+                          <View style={{ flexDirection: 'row', marginTop: 2 }}>
+                            {marking.dots.map((dot, index) => (
+                              <View
+                                key={index}
+                                style={{
+                                  width: 6,
+                                  height: 6,
+                                  borderRadius: 3,
+                                  backgroundColor: dot.color,
+                                  marginHorizontal: 1,
+                                }}
+                              />
+                            ))}
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  }}
+
 
                   theme={{
                     backgroundColor: '#ffffff',
@@ -890,6 +1154,8 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                     textDayFontSize: 16,
                     textMonthFontSize: 16,
                     textDayHeaderFontSize: 16,
+                    
+                    
                   }}
                 />
               </View>
@@ -954,7 +1220,9 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
               </View>
             </TouchableOpacity>
           </View>}
-          {selectedTab === 'Year' &&
+          {selectedTab === 'Year' && (
+
+
             // <View style={{ flex: 1 }}>
             //   <View style={{
             //     flexDirection: 'row',
@@ -1053,18 +1321,62 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
 
             // </View>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {/* {weeklyData.map(renderWeekCard)} */}
-              {weeklyData.map((item, index) => (
-                <YearWeekCard
-                  key={index}
-                  item={item}
-                  index={index}
-                />
-              ))}
-            </ScrollView>
+            <>
+              <View style={styles.yearHeader}>
+                <TouchableOpacity
+                  style={styles.yearDropdownBtn}
+                  onPress={() => setShowYearDropdown(!showYearDropdown)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.yearText}>
+                    {selectedYear}
+                  </Text>
+                  <Ionicons
+                    name={showYearDropdown ? 'chevron-up' : 'chevron-down'}
+                    size={18}
+                    color="#000"
+                    style={{ marginLeft: 6 }}
+                  />
+                </TouchableOpacity>
 
-          }
+                {/* Dropdown */}
+                {showYearDropdown && (
+                  <View style={styles.yearDropdown}>
+                    {yearOptions.map((year) => (
+                      <TouchableOpacity
+                        key={year}
+                        style={[
+                          styles.yearOption,
+                          year === selectedYear && styles.yearOptionActive,
+                        ]}
+                        onPress={() => onYearSelect(year)}
+                      >
+                        <Text
+                          style={[
+                            styles.yearOptionText,
+                            year === selectedYear && styles.yearOptionTextActive,
+                          ]}
+                        >
+                          {year}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {/* {weeklyData.map(renderWeekCard)} */}
+                {weeklyData.map((item, index) => (
+                  <YearWeekCard
+                    key={index}
+                    item={item}
+                    index={index}
+                  />
+                ))}
+              </ScrollView>
+            </>
+          )}
         </View>
         {selectedTab == 'Year' && <TouchableOpacity
           style={styles.fab}
@@ -1187,6 +1499,79 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
           </View>
         </Modal>
 
+        <Modal
+          visible={dayActionModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setDayActionModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.actionModal}>
+
+              <Text style={styles.modalTitle}>
+                {selectedDate}
+              </Text>
+
+              {/* ✅ Trips option (sirf jab trips ho) */}
+              {selectedTrips.length > 0 && (
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={() => {
+                    setDayActionModalVisible(false);
+
+                    if (selectedTrips.length === 1) {
+                      navigation.navigate('DayDetail', selectedTrips[0]);
+                    } else {
+                      setTripModalVisible(true);
+                    }
+                  }}
+                >
+                  <Text style={styles.actionText}>
+                    View Trips ({selectedTrips.length})
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+              {/* ✅ Manual option (ALWAYS for past/today) */}
+              <TouchableOpacity
+                style={[styles.actionBtn, {backgroundColor: isMissingAlreadyAdded ? '#FF9500' : '#FF3B30' }]}
+                onPress={() => {
+                  setDayActionModalVisible(false);
+                  // navigation.navigate('AddMissingDayScreen', {
+                  //   date: selectedDate,
+                  // });
+                  if (isMissingAlreadyAdded) {
+                    navigation.navigate('AddMissingDayScreen', {
+                         date: selectedDate,
+                        isEdit: true,
+                        data: missingDataForDay,
+                    });
+                  } else {
+                    navigation.navigate('AddMissingDayScreen', {
+                      isEdit: false,
+                      date: selectedDate,
+                    });
+                  }
+                }}
+              >
+                <Text style={[styles.actionText, { color: '#fff' }]}>
+                {isMissingAlreadyAdded ? 'Edit Missing Day' : 'Add Missing Day'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setDayActionModalVisible(false)}
+                style={{ marginTop: 15 }}
+              >
+                <Text style={{ color: '#007AFF' }}>Cancel</Text>
+              </TouchableOpacity>
+
+            </View>
+          </View>
+        </Modal>
+
+
+
       </SafeAreaView>
     </LinearGradient>
   );
@@ -1201,6 +1586,7 @@ function mapStateToProps(state) {
     yearWiseTimeline: state.common.yearWiseTimeline,
     weekWiseTimeline: state.common.weekWiseTimeline,
     monthWiseTimeline: state.common.monthWiseTimeline,
+    missingActivityList: state.common.missingActivityList,
   };
 }
 
@@ -1208,7 +1594,8 @@ function mapStateToProps(state) {
 const mapDispatchToProps = {
   GET_WEEK_WISE_TIMELINE,
   GET_MONTH_WISE_TIMELINE,
-  GET_YEAR_WISE_TIMELINE
+  GET_YEAR_WISE_TIMELINE,
+  GET_MISSING_ACTIVITY_LIST,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(CalendarScreen);
@@ -1927,5 +2314,93 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
   },
+
+  missingModal: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 16,
+    margin: 20,
+    alignItems: 'center',
+  },
+
+  addMissingBtn: {
+    backgroundColor: '#FF3B30',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 25,
+  },
+  actionModal: {
+    backgroundColor: '#fff',
+    margin: 20,
+    borderRadius: 16,
+    padding: 20,
+  },
+
+  actionBtn: {
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: '#F1F1F1',
+    marginTop: 12,
+    alignItems: 'center',
+  },
+
+  actionText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+  },
+  yearHeader: {
+    alignItems: 'center',
+    marginBottom: 12,
+    zIndex: 10,
+  },
+  
+  yearDropdownBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: '#F1F1F1',
+    borderRadius: 20,
+  },
+  
+  yearText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+  },
+  
+  yearDropdown: {
+    position: 'absolute',
+    top: 45,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    width: 120,
+  },
+  
+  yearOption: {
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  
+  yearOptionActive: {
+    backgroundColor: '#EAF1FF',
+  },
+  
+  yearOptionText: {
+    fontSize: 15,
+    color: '#333',
+  },
+  
+  yearOptionTextActive: {
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  
+
 
 });

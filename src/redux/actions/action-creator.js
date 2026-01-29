@@ -53,7 +53,17 @@ import {
   UPDATE_STATE_THRESHOLD_SUCCESS,
   UPDATE_STATE_THRESHOLD_FAILURE,
   NOTIFICATION_FAILURE,
-  GET_NOTIFICATION_SUCCESS
+  GET_NOTIFICATION_SUCCESS,
+  GET_TYPE_OF_DAY_LIST_SUCCESS,
+  GET_STATES_LIST_SUCCESS,
+  ADD_MISSINGDAY_SUCCESS,
+  ADD_MISSINGDAY_REQUEST,
+  ADD_MISSINGDAY_FAILURE,
+  GET_MISSING_ACTIVITY_LIST_SUCCESS,
+  MISSING_ACTIVITY_LIST_FAILURE,
+  UPDATE_MISSINGDAY_REQUEST,
+  UPDATE_MISSINGDAY_SUCCESS,
+  UPDATE_MISSINGDAY_FAILURE
 
 } from './action-types';
 import axiosinstance from '../../axios/axiosinstance';
@@ -921,6 +931,164 @@ export const UPDATE_STATE_THRESHOLD = (formData) => {
         payload: 'UPDATE_STATE_THRESHOLD_FAILURE',
       })
       return ({ response: e })
+    }
+  }
+}
+
+export function GET_TYPE_OF_DAY_LIST() {
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.get('type-of-day')
+      const responseJson = response.data;
+      // console.log('responseJson-=>', responseJson);
+
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_TYPE_OF_DAY_LIST_SUCCESS,
+          payload: responseJson,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: TYPE_OF_DAY_LIST_FAILURE,
+        payload: 'TYPE_OF_DAY_LIST_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: TYPE_OF_DAY_LIST_FAILURE,
+        payload: 'TYPE_OF_DAY_LIST_FAILURE',
+      })
+      console.log('catch error API TYPE_OF_DAY_LIST_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+
+export function GET_STATES_LIST() {
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.get('states')
+      const responseJson = response.data;
+      // console.log('responseJson-=>', responseJson);
+
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_STATES_LIST_SUCCESS,
+          payload: responseJson,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: STATES_LIST_FAILURE,
+        payload: 'STATES_LIST_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: STATES_LIST_FAILURE,
+        payload: 'STATES_LIST_FAILURE',
+      })
+      console.log('catch error API STATES_LIST_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+
+export const ADDMISSINGDAY = (formData) => {
+  return async (dispatch) => {
+    dispatch({
+      type: ADD_MISSINGDAY_REQUEST,
+      payload: 'ADD_MISSINGDAY_REQUEST',
+    })
+    try {
+      const response = await axiosinstance.post('activity', formData)
+      const responseJson = response.data;
+      console.log('responseJson==>', responseJson);
+
+      if (response.message == 'Success') {
+        dispatch({
+          type: ADD_MISSINGDAY_SUCCESS,
+          payload: responseJson,
+        })
+        return { response: responseJson }
+      }
+      dispatch({
+        type: ADD_MISSINGDAY_FAILURE,
+        payload: 'ADD_MISSINGDAY_FAILURE',
+      })
+      return ({ response: responseJson })
+    }
+    catch (e) {
+      dispatch({
+        type: ADD_MISSINGDAY_FAILURE,
+        payload: 'ADD_MISSINGDAY_FAILURE',
+      })
+      return ({ response: e })
+    }
+  }
+}
+
+export const UPDATEMISSINGDAY = (formData) => {
+  return async (dispatch) => {
+    dispatch({
+      type: UPDATE_MISSINGDAY_REQUEST,
+      payload: 'UPDATE_MISSINGDAY_REQUEST',
+    })
+    try {
+      const response = await axiosinstance.patch(`activity/${formData.id}`, formData)
+      const responseJson = response.data;
+      // console.log('responseJson==>', responseJson);
+
+      if (response.message == 'Success') {
+        dispatch({
+          type: UPDATE_MISSINGDAY_SUCCESS,
+          payload: responseJson,
+        })
+        return { response: responseJson }
+      }
+      dispatch({
+        type: UPDATE_MISSINGDAY_FAILURE,
+        payload: 'UPDATE_MISSINGDAY_FAILURE',
+      })
+      return ({ response: responseJson })
+    }
+    catch (e) {
+      dispatch({
+        type: UPDATE_MISSINGDAY_FAILURE,
+        payload: 'UPDATE_MISSINGDAY_FAILURE',
+      })
+      return ({ response: e })
+    }
+  }
+}
+
+export function GET_MISSING_ACTIVITY_LIST() {
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.get('activity')
+      const responseJson = response.data;
+      // console.log('responseJson-=>', responseJson);
+
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_MISSING_ACTIVITY_LIST_SUCCESS,
+          payload: responseJson,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: MISSING_ACTIVITY_LIST_FAILURE,
+        payload: 'MISSING_ACTIVITY_LIST_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: MISSING_ACTIVITY_LIST_FAILURE,
+        payload: 'MISSING_ACTIVITY_LIST_FAILURE',
+      })
+      console.log('catch error API MISSING_ACTIVITY_LIST_FAILURE', e)
+      return Promise.reject(CommonError)
     }
   }
 }

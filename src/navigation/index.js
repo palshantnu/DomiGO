@@ -11,6 +11,7 @@ import AddTripScreen from '../screens/AddTripScreen';
 import AlertsScreen from '../screens/AlertsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import TripDetailScreen from '../screens/TripDetailScreen';
+import AddMissingDayScreen from '../screens/AddMissingDayScreen';
 import colors from '../theme/colors';
 import TaxResidencyIntro from '../screens/TaxResidencyIntro';
 import SettingsNavigation from './SettingsNavigation';
@@ -170,6 +171,11 @@ const RootNavigator = (props) => {
       <Stack.Screen
         name="StateTripsScreen"
         component={StateTripsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="AddMissingDayScreen"
+        component={AddMissingDayScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

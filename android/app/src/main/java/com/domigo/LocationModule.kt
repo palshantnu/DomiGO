@@ -41,7 +41,7 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         .build()
 
     // Configuration
-    private var locationInterval: Long = 20000L // 20 seconds
+    private var locationInterval: Long = 20000L 
     private var locationDistance: Float = 0f
     private var googleApiKey: String = ""
     private var domigoToken: String = ""
@@ -56,6 +56,8 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     private var previousLng: Double? = null
     private var previousCity: String = ""
     private var previousStateName: String = ""
+    private var previousStateCode: String = ""
+    private var previousCountryCode: String = ""
     private var previousEnterTime: Long = 0L
 
 
@@ -352,6 +354,8 @@ private fun showTripCreatedNotification(
                                 
                                 var city = ""
                                 var state = ""
+                                var stateCode = ""
+                                var countryCode = ""
                                 var fullAddress = firstResult.getString("formatted_address")
                                 
                                 for (i in 0 until addressComponents.length()) {
@@ -367,6 +371,10 @@ private fun showTripCreatedNotification(
                                             }
                                             "administrative_area_level_1" -> {
                                                 state = component.getString("long_name")
+                                                stateCode = component.getString("short_name")
+                                            }
+                                            "country" -> {
+                                                countryCode = component.getString("short_name") // IN, US, JP
                                             }
                                         }
                                     }
@@ -380,6 +388,8 @@ private fun showTripCreatedNotification(
                                     putDouble("longitude", lng)
                                     putString("city", city)
                                     putString("state", state)
+                                    putString("stateCode", stateCode)
+                                    putString("countryCode", countryCode)
                                     putString("fullAddress", fullAddress)
                                     putDouble("timestamp", System.currentTimeMillis().toDouble())
                                 }
@@ -390,6 +400,8 @@ private fun showTripCreatedNotification(
                     previousLng = lng
                     previousCity = city
                     previousStateName = state
+                    previousStateCode = stateCode
+                    previousCountryCode = countryCode
                     previousEnterTime = System.currentTimeMillis()
 
                     Log.d(TAG, "Initialized previous state tracking")
@@ -398,7 +410,7 @@ private fun showTripCreatedNotification(
                                 sendEvent("onAddressResolved", addressData)
                                 
                                 // Send to Domigo API with conditions
-                                sendToDomigoAPI(lat, lng, city, state, fullAddress)
+                                sendToDomigoAPI(lat, lng, city, state,stateCode,countryCode, fullAddress)
                             }
                         } else {
                             Log.e(TAG, "Google Geocoding API error: $status")
@@ -419,12 +431,14 @@ private fun showTripCreatedNotification(
 
 
 
-    private fun sendToDomigoAPI(lat: Double, lng: Double, city: String, state: String, address: String) {
+    private fun sendToDomigoAPI(lat: Double, lng: Double, city: String, state: String, stateCode: String, countryCode: String, address: String) {
        
 
         val currentTime = System.currentTimeMillis()
         val timeDifference = currentTime - lastApiTime
         val stateChanged = state != lastState
+        val sameState = stateCode == previousStateCode
+        val sameCountry = countryCode == previousCountryCode
         val timePassed = timeDifference >= FOUR_HOURS_MS
 
         // Only send to API if state changed or 4 hours passed
@@ -434,10 +448,14 @@ private fun showTripCreatedNotification(
                 return
             }
 
-                if (state == previousStateName) {
-        Log.d(TAG, "🏠 Same state ($state), no trip required")
-        return
-    }
+        if (state == previousStateName) {
+            Log.d(TAG, "🏠 Same state ($state), no trip required")
+             return
+          }
+          if (sameState && sameCountry) {
+            Log.d(TAG, "🏠 Same state ($state), no trip required")
+             return
+          }
 
     Log.d(TAG, "🚦 STATE CHANGED: $previousStateName → $state")
 
@@ -445,7 +463,6 @@ private fun showTripCreatedNotification(
 
     Log.d(TAG, "STATE CHANGED! Triggering trip API")
 
-    // Build trip API call
     sendTripFormData(
         originLat = previousLat ?: lat,
         originLng = previousLng ?: lng,

@@ -148,7 +148,10 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
         }
 
         // 3️⃣ Fallback to safe auto code
+        if (stateName.length > 2){
         return getStateCodeSafe(stateName);
+        }
+        return stateName
     };
 
 
@@ -236,7 +239,10 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                             </View>
                         </View> */}
 
-                        <View style={styles.summaryBox}>
+                        <TouchableOpacity style={styles.summaryBox}
+                        onPress={()=> navigation.navigate('Settings', {
+                            screen: 'ReportsExport',
+                        })}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5, justifyContent: 'space-between' }}>
                                 <Icon name="stats-chart-outline" size={20} style={{ marginTop: 0 }} color={colors.primary} />
                                 <Text style={{ ...styles.summaryValue, fontSize: 15, flex: 1, marginLeft: 8 }}>
@@ -247,7 +253,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                             <Text style={styles.summaryLabel}>
                                 Your current estimated tax compliance.
                             </Text>
-                        </View>
+                        </TouchableOpacity>
                     </View>
 
                     {!isGPSOn && (
@@ -320,7 +326,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                             </TouchableOpacity>
 
                             <TouchableOpacity
-                                // onPress={()=>DomigoTracker.startDomigoTracking()}
+                                onPress={()=>navigation.navigate('Calendar')}
                                 style={styles.rightTab}>
                                 <Text style={styles.inactiveText}>Calendar</Text>
                             </TouchableOpacity>
@@ -350,7 +356,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                                                 <Text style={styles.smallCircleText}>{item?.threshold}</Text>
                                             </TouchableOpacity>
                                             {/* <View style={{ borderRadius: 70, borderWidth: 5, borderColor: getStateColor(item.state), width: Dimensions.get('window').width * 0.35, height: Dimensions.get('window').width * 0.35, justifyContent: 'center', alignItems: 'center' }}> */}
-                                            <TouchableOpacity style={{ borderRadius: 70, borderWidth: 5, borderColor: getBorderColorByDays(item.days,item.threshold), width: Dimensions.get('window').width * 0.35, height: Dimensions.get('window').width * 0.35, justifyContent: 'center', alignItems: 'center' }}
+                                            <TouchableOpacity style={{ borderRadius: 70, borderWidth: 5, borderColor: getBorderColorByDays(item.days,item.threshold), width: Dimensions.get('window').width * 0.30, height: Dimensions.get('window').width * 0.30, justifyContent: 'center', alignItems: 'center' }}
                                             onPress={() => navigation.navigate('StateTripsScreen', { state: item.state })}>
                                                 {/* <Text style={styles.stateCode}>{item.state.length < 2 ? item.state : getStateCodeSafe(item.state)}</Text> */}
                                                 {/* <Text style={styles.stateCode}>
@@ -576,8 +582,8 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 15,
         right: -1,
-        width: 36,
-        height: 20,
+        width: 46,
+        height: 25,
         borderTopLeftRadius: 18,
         borderBottomLeftRadius: 18,
         backgroundColor: colors.primary,

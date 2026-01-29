@@ -104094,7 +104094,9 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           console.log(`🏠 Domigo ${_reactNative.Platform.OS} - Address:`, {
             city: addressData.city,
             state: addressData.state,
-            address: addressData.fullAddress
+            address: addressData.fullAddress,
+            stateCode: addressData.stateCode,
+            countryCode: addressData.countryCode
           });
         }));
         this.subscriptions.push(locationEventEmitter.addListener('onApiSuccess', function (result) {
@@ -189522,9 +189524,6 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     }];
     (0, _react.useEffect)(function () {
       dispatch(GET_NOTIFICATION);
-      // return () => {
-      //   stopDomigoTracking();
-      // };
     }, []);
     console.log('notifications', notifications);
     return /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNativeLinearGradient.default, {

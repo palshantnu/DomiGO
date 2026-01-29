@@ -183,7 +183,9 @@ setupEventListeners() {
         console.log(`🏠 Domigo ${Platform.OS} - Address:`, {
           city: addressData.city,
           state: addressData.state,
-          address: addressData.fullAddress
+          address: addressData.fullAddress,
+          stateCode: addressData.stateCode,
+          countryCode: addressData.countryCode
         });
       })
     );

@@ -155,7 +155,7 @@ export default function SettingsScreen() {
               <View style={styles.rowLeft}>
                 <ICON_File_dock height={24} width={24} />
                 <View>
-                  <Text style={styles.title}>Compliance Score Export</Text>
+                  <Text style={styles.title}>Compliance Score</Text>
                   <Text style={styles.subtitle}>
                     Download your complete residency record
                   </Text>
