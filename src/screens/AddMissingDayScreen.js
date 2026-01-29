@@ -79,10 +79,22 @@ const AddMissingDayScreen = ({
   // useEffect(() => {
   //   const day = new Date(date).getDay();
   //   if (day === 0 || day === 6) {
-  //     setTypeOfDay("Weekend");
+  //     setTypeOfDay(4);
   //   }
   // }, [date]);
+  const weekendTypeId = useMemo(() => {
+    return typeOfDayList?.find(item => item.name === "Weekend")?.id;
+  }, [typeOfDayList]);
 
+  useEffect(() => {
+    if (isEdit) return; // edit mode me overwrite nahi karega
+    if (!date || !weekendTypeId) return;
+  
+    const day = new Date(date).getDay(); // 0 = Sunday, 6 = Saturday
+    if (day === 0 || day === 6) {
+      setTypeOfDay(weekendTypeId);
+    }
+  }, [date, weekendTypeId, isEdit]);
 
   
   useEffect(() => {
@@ -251,9 +263,17 @@ const AddMissingDayScreen = ({
               // defaultOption={
               //   typeOfDay ? { key: typeOfDay?.id, value: typeOfDay?.name } : null
               // }
+              // defaultOption={
+              //   isEdit && editData.typeOfDayId
+              //     ? { key: editData.typeOfDay.id, value: editData.typeOfDay.name }
+              //     : null
+              // }
               defaultOption={
-                isEdit && editData.typeOfDayId
-                  ? { key: editData.typeOfDay.id, value: editData.typeOfDay.name }
+                typeOfDay
+                  ? {
+                      key: typeOfDay,
+                      value: typeOfDayList?.find(i => i.id === typeOfDay)?.name
+                    }
                   : null
               }
               search={false}
