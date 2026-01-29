@@ -240,9 +240,12 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                         </View> */}
 
                         <TouchableOpacity style={styles.summaryBox}
-                        onPress={()=> navigation.navigate('Settings', {
-                            screen: 'ReportsExport',
-                        })}>
+                        // onPress={()=> navigation.navigate('Settings', {
+                        //     screen: 'ReportsExport',
+                        // })
+                        // }
+                        onPress={()=> navigation.navigate('ReportsExport')}
+                        >
                             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5, justifyContent: 'space-between' }}>
                                 <Icon name="stats-chart-outline" size={20} style={{ marginTop: 0 }} color={colors.primary} />
                                 <Text style={{ ...styles.summaryValue, fontSize: 15, flex: 1, marginLeft: 8 }}>

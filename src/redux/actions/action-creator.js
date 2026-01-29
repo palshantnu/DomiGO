@@ -63,7 +63,8 @@ import {
   MISSING_ACTIVITY_LIST_FAILURE,
   UPDATE_MISSINGDAY_REQUEST,
   UPDATE_MISSINGDAY_SUCCESS,
-  UPDATE_MISSINGDAY_FAILURE
+  UPDATE_MISSINGDAY_FAILURE,
+  COMPLIANCE_SCORE_FAILURE
 
 } from './action-types';
 import axiosinstance from '../../axios/axiosinstance';

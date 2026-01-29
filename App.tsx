@@ -82,22 +82,22 @@ function App() {
     return () => subscription.remove();
   }, []);
 
-    useEffect(() => {
-    const emitter = new NativeEventEmitter(NativeModules.LocationTracker);
+  //   useEffect(() => {
+  //   const emitter = new NativeEventEmitter(NativeModules.LocationTracker);
 
-    const sub = emitter.addListener(
-      'onTripNotificationClick',
-      data => {
-        console.log('🔔 Trip notification clicked', data);
+  //   const sub = emitter.addListener(
+  //     'onTripNotificationClick',
+  //     data => {
+  //       console.log('🔔 Trip notification clicked', data);
 
-        navigationRef.current?.navigate('TripDetail', {
-          tripId: data.tripId,
-        });
-      }
-    );
+  //       navigationRef.current?.navigate('TripDetail', {
+  //         tripId: data.tripId,
+  //       });
+  //     }
+  //   );
 
-    return () => sub.remove();
-  }, []);
+  //   return () => sub.remove();
+  // }, []);
 
 
   useEffect(() => {

@@ -161,10 +161,10 @@ const StateTripsScreen = ({ route,GET_STATE_WISE_TRIPS,navigation,stateWiseTrips
 
     const stateName = stateWiseTrips?.[0]?.destinationState ?? 'State';
 
-    const totalTrips = stateWiseTrips.length;
-const totalDays = stateWiseTrips.reduce((sum, i) => sum + i.daysSpent, 0);
+    const totalTrips = stateWiseTrips?.length;
+const totalDays = stateWiseTrips?.reduce((sum, i) => sum + i.daysSpent, 0);
 
-const sortedByDate = [...stateWiseTrips].sort(
+const sortedByDate = [...stateWiseTrips]?.sort(
     (a, b) => new Date(a.startDate) - new Date(b.startDate)
 );
 

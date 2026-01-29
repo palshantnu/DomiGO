@@ -26,6 +26,7 @@ import { ICON_ADD, ICON_CALENDAR, ICON_HOME, ICON_NOTIFICATION, ICON_SETTINGS } 
 import { connect } from 'react-redux';
 import { LOGOUT } from '../redux/actions/action-creator';
 import SplashScreen from '../screens/SplashScreen';
+import ReportsExportScreen from '../screens/ReportsExportScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -178,6 +179,11 @@ const RootNavigator = (props) => {
         component={AddMissingDayScreen}
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+                name="ReportsExport"
+                component={ReportsExportScreen}
+                options={{ headerShown: false }}
+              />
     </Stack.Navigator>
   );
 }
