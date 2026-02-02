@@ -746,7 +746,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
             // NEW: Check if trip should be sent (with cooldown and not already processing)
             let tripCooldownPassed = currentTimeSeconds - (lastTripProcessedTime / 1000) >= TRIP_COOLDOWN_SECONDS
             
-            if stateChanged && previousStateName != "" && !geocodeFailed && !isProcessingTrip && tripCooldownPassed {
+            if stateChanged && previousStateName != "" && !geocodeFailed && !isProcessingTrip {
                 isProcessingTrip = true
                 lastTripProcessedTime = currentTimeMs
                 
@@ -965,8 +965,8 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         addField("endDate", formatDate(destinationEnterDate))
 
         addField("attachments", "[]")
-        addField("modeId", "2")
-        addField("typeId", "6")
+        addField("modeId", "1")
+        addField("typeId", "1")
 
         body.append("--\(boundary)--\r\n".data(using: .utf8)!)
         request.httpBody = body

@@ -30,7 +30,10 @@ const CustomScroll = ({ children }) => {
 
   return (
     <View style={{ flex: 1 }}>
+
       <Animated.ScrollView
+        style={{ flex: 1 }}   // ✅ IMPORTANT LINE
+        contentContainerStyle={{ paddingBottom: 20 }}
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
         onContentSizeChange={(w, h) => setContentHeight(h)}
@@ -44,19 +47,23 @@ const CustomScroll = ({ children }) => {
       </Animated.ScrollView>
 
       {/* Custom Scroll Indicator */}
-      <View style={styles.indicatorTrack}>
-        <Animated.View
-          style={[
-            styles.indicator,
-            {
-              height: indicatorSize,
-              transform: [{ translateY: scrollIndicator }],
-            },
-          ]}
-        />
-      </View>
+      {scrollViewHeight > 0 && (
+        <View style={styles.indicatorTrack}>
+          <Animated.View
+            style={[
+              styles.indicator,
+              {
+                height: indicatorSize,
+                transform: [{ translateY: scrollIndicator }],
+              },
+            ]}
+          />
+        </View>
+      )}
+
     </View>
   );
+
 };
 
 const styles = StyleSheet.create({
@@ -71,9 +78,9 @@ const styles = StyleSheet.create({
   },
   indicator: {
     width: 8,
-    backgroundColor: "#28a0dd", 
+    backgroundColor: "#28a0dd",
     borderRadius: 2,
   },
-}); 
+});
 
 export default CustomScroll;

@@ -18,11 +18,11 @@ import Header from '../components/Header';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import CustomScroll from '../components/CustomScroll';
-import { GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIMELINE, GET_YEAR_WISE_TIMELINE,GET_MISSING_ACTIVITY_LIST } from '../redux/actions/action-creator';
+import { GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIMELINE, GET_YEAR_WISE_TIMELINE, GET_MISSING_ACTIVITY_LIST } from '../redux/actions/action-creator';
 import { connect } from 'react-redux';
 import { useFocusEffect } from '@react-navigation/native';
 
-function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIMELINE, GET_YEAR_WISE_TIMELINE,GET_MISSING_ACTIVITY_LIST,missingActivityList, yearWiseTimeline, weekWiseTimeline, monthWiseTimeline }) {
+function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIMELINE, GET_YEAR_WISE_TIMELINE, GET_MISSING_ACTIVITY_LIST, missingActivityList, yearWiseTimeline, weekWiseTimeline, monthWiseTimeline }) {
   const [selectedTab, setSelectedTab] = useState('Month');
   const [selectedResidencyType, setSelectedResidencyType] = useState('past');
   const [tripModalVisible, setTripModalVisible] = useState(false);
@@ -182,7 +182,8 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
               borderRadius: 8,
             },
           },
-        })}
+        })
+      }
     }
 
 
@@ -197,7 +198,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     });
     return map;
   }, [missingActivityList]);
-  
+
   const missingDataForDay = missingMap[selectedDate];
   const isMissingAlreadyAdded = !!missingDataForDay;
 
@@ -1092,7 +1093,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                   onDayPress={handleDayPress}
                   dayComponent={({ date, state, marking }) => {
                     const weekend = isWeekend(date.dateString);
-                
+
                     return (
                       <TouchableOpacity
                         onPress={() => handleDayPress({ dateString: date.dateString })}
@@ -1106,15 +1107,15 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                               state === 'disabled'
                                 ? '#d9e1e8'
                                 : weekend
-                                ? '#D32F2F' // 🔴 Sat–Sun
-                                : '#2d4150',
+                                  ? '#D32F2F' // 🔴 Sat–Sun
+                                  : '#2d4150',
                             fontWeight: weekend ? '600' : '400',
                             fontSize: 16,
                           }}
                         >
                           {date.day}
                         </Text>
-                
+
                         {/* Dots (IMPORTANT) */}
                         {marking?.dots && (
                           <View style={{ flexDirection: 'row', marginTop: 2 }}>
@@ -1154,8 +1155,8 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                     textDayFontSize: 16,
                     textMonthFontSize: 16,
                     textDayHeaderFontSize: 16,
-                    
-                    
+
+
                   }}
                 />
               </View>
@@ -1175,51 +1176,56 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
               </View>
             </View>
           )}
-          {selectedTab == 'Week' && <View style={{ position: 'relative', height: '90%', borderWidth: 0.5, borderColor: '#E0E0E0', padding: 10, borderRadius: 10 }}>
-            {selectedTab == 'Week' && <CustomScroll>
-
-
-              {regulatoryCalendar.map(renderRegulatorySection)}
-
-            </CustomScroll>}
-            <TouchableOpacity
+          {selectedTab === 'Week' && (
+            <View
               style={{
-                position: 'absolute',
-                bottom: 20,
-                left: 20,
-                right: 20,
-                borderRadius: 30,
-                overflow: 'hidden',
-                elevation: 5,
-                shadowColor: '#000',
-                shadowOpacity: 0.2,
-                shadowRadius: 6,
-                shadowOffset: { width: 0, height: 3 },
+                position: 'relative',
+                flex: 1,
+                borderWidth: 0.5,
+                borderColor: '#E0E0E0',
+                padding: 10,
+                borderRadius: 10,
               }}
-              onPress={() => navigation.navigate('WeeklyReportScreen')} // your target screen
-              activeOpacity={0.9}
             >
-              <View
+              {regulatoryCalendar.length === 0 ? (
 
+
+                <View style={styles.emptyContainer}>
+                  <Ionicons name="calendar-outline" size={50} color="#ccc" />
+                  <Text style={styles.emptyText}>
+                    No trip found in this week
+                  </Text>
+                </View>
+
+              ) : (
+
+                <CustomScroll>
+                  {regulatoryCalendar.map(renderRegulatorySection)}
+                </CustomScroll>
+
+              )}
+
+              <TouchableOpacity
                 style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  paddingVertical: 14,
+                  position: 'absolute',
+                  bottom: 20,
+                  left: 20,
+                  right: 20,
                   borderRadius: 30,
-
-                  backgroundColor: colors.primary
+                  elevation: 5,
+                  backgroundColor: colors.primary,
+                  paddingVertical: 14,
+                  alignItems: 'center',
                 }}
+                onPress={() => navigation.navigate('WeeklyReportScreen')}
               >
+                <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>
+                  View Weekly Detail
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
-                <Text style={{
-                  color: '#fff',
-                  fontSize: 16,
-                  fontWeight: '600',
-                }}>View Weekly Detail</Text>
-              </View>
-            </TouchableOpacity>
-          </View>}
           {selectedTab === 'Year' && (
 
 
@@ -1534,7 +1540,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
               {/* ✅ Manual option (ALWAYS for past/today) */}
               <TouchableOpacity
-                style={[styles.actionBtn, {backgroundColor: isMissingAlreadyAdded ? '#FF9500' : '#FF3B30' }]}
+                style={[styles.actionBtn, { backgroundColor: isMissingAlreadyAdded ? '#FF9500' : '#FF3B30' }]}
                 onPress={() => {
                   setDayActionModalVisible(false);
                   // navigation.navigate('AddMissingDayScreen', {
@@ -1542,9 +1548,9 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                   // });
                   if (isMissingAlreadyAdded) {
                     navigation.navigate('AddMissingDayScreen', {
-                         date: selectedDate,
-                        isEdit: true,
-                        data: missingDataForDay,
+                      date: selectedDate,
+                      isEdit: true,
+                      data: missingDataForDay,
                     });
                   } else {
                     navigation.navigate('AddMissingDayScreen', {
@@ -1555,7 +1561,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                 }}
               >
                 <Text style={[styles.actionText, { color: '#fff' }]}>
-                {isMissingAlreadyAdded ? 'Edit Missing Day' : 'Add Missing Day'}
+                  {isMissingAlreadyAdded ? 'Edit Missing Day' : 'Add Missing Day'}
                 </Text>
               </TouchableOpacity>
 
@@ -2354,7 +2360,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     zIndex: 10,
   },
-  
+
   yearDropdownBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2363,13 +2369,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#F1F1F1',
     borderRadius: 20,
   },
-  
+
   yearText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#000',
   },
-  
+
   yearDropdown: {
     position: 'absolute',
     top: 45,
@@ -2381,26 +2387,39 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     width: 120,
   },
-  
+
   yearOption: {
     paddingVertical: 10,
     alignItems: 'center',
   },
-  
+
   yearOptionActive: {
     backgroundColor: '#EAF1FF',
   },
-  
+
   yearOptionText: {
     fontSize: 15,
     color: '#333',
   },
-  
+
   yearOptionTextActive: {
     fontWeight: '600',
     color: colors.primary,
   },
-  
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    opacity: 0.7,
+  },
+
+  emptyText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#888',
+    fontWeight: '500',
+  },
+
 
 
 });
