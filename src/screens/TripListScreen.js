@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  RefreshControl,
 } from "react-native";
 import Header from "../components/Header";
 import Ionicons from "react-native-vector-icons/Ionicons";
@@ -15,68 +16,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import LinearGradient from "react-native-linear-gradient";
 import { connect, useDispatch } from "react-redux";
 import { GET_TRIP_LIST_LIST } from "../redux/actions/action-creator";
+import { CustomToast } from "../helpers/CommonHelpers";
+
 
 
 const TripListScreen = ({ tripList }) => {
+  const [refreshing, setRefreshing] = React.useState(false)
   console.log('tripList==>', tripList);
   const dispatch = useDispatch();
-  const trips = [
-    {
-      id: 1,
-      type: "Leisure",
-      impact: "Low Impact",
-      impactBg: "#00d250",
-      impactColor: "#fff",
-      city: "Miami, Florida",
-      date: "Jan 15, 2024 - Jan 20, 2024",
-      days: 5,
-      risk: "Low Risk",
-    },
-    {
-      id: 2,
-      type: "Business",
-      impact: "Moderate Impact",
-      impactBg: "#00d250",
-      impactColor: "#fff",
-      city: "New York City, New York",
-      date: "Feb 10, 2024 - Feb 28, 2024",
-      days: 18,
-      risk: "Low Risk",
-    },
-    {
-      id: 3,
-      type: "Business",
-      impact: "Moderate Impact",
-      impactBg: "#00d250",
-      impactColor: "#fff",
-      city: "Los Angeles, California",
-      date: "Mar 05, 2024 - Mar 25, 2024",
-      days: 20,
-      risk: "Low Risk",
-    },
-    {
-      id: 4,
-      type: "Leisure",
-      impact: "Low Impact",
-      impactBg: "#00d250",
-      impactColor: "#fff",
-      city: "Dallas, Texas",
-      date: "Apr 01, 2024 - Apr 10, 2024",
-      days: 10,
-      risk: "Low Risk",
-    },
-    {
-      id: 5,
-      type: "Business",
-      impact: "High Impact",
-      impactBg: "#00d250",
-      impactColor: "#fff",
-      city: "Houston, Texas",
-      date: "May 10, 2024 - Jun 15, 2024",
-      days: 37,
-      risk: "Low Risk",
-    },
-  ];
+
   const navigation = useNavigation();
   const API_Function = useCallback(
     (startup = false) =>
@@ -97,6 +45,17 @@ const TripListScreen = ({ tripList }) => {
     });
     return unsubscribe;
   }, [navigation]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      API_Function()
+    } catch (e) {
+        console.log('Refresh error', e);
+    }
+    setRefreshing(false);
+    // CustomToast.show(" refreshed");
+};
   return (
     <LinearGradient
       colors={["#9ab1fa", "#ffffff"]}
@@ -111,6 +70,14 @@ const TripListScreen = ({ tripList }) => {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={colors.primary}      // iOS
+                colors={[colors.primary]}       // Android
+            />
+        }
         >
 
           <View style={styles.sectionHeader}>

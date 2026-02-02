@@ -9,6 +9,7 @@ import {
     Dimensions,
     Modal,
     TextInput,
+    RefreshControl,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Progress from 'react-native-progress';
@@ -39,6 +40,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
     const [thresholdModalVisible, setThresholdModalVisible] = React.useState(false);
     const [selectedState, setSelectedState] = React.useState(null);
     const [thresholdValue, setThresholdValue] = React.useState('');
+    const [refreshing, setRefreshing] = React.useState(false)
     console.log('stateWiseResidency>>>>', stateWiseResidency);
     console.log('complianceScore>>>>', complianceScore);
     console.log('userData>>>>', userData);
@@ -60,6 +62,22 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
         setThresholdValue(String(item.threshold));
         setThresholdModalVisible(true);
     };
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+    
+        try {
+            await dispatch(GET_FINAL_YEAR_PROGRESS);
+            await dispatch(GET_STATE_WISE_RESIDENCY);
+            await dispatch(GET_COMPLIANCE_SCORE);
+        } catch (e) {
+            console.log('Refresh error', e);
+        }
+    
+        setRefreshing(false);
+        CustomToast.show("Dashboard refreshed");
+    };
+    
 
     useEffect(() => {
         if (userData && userData.state === null) {
@@ -200,7 +218,15 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
         >
             <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1, backgroundColor: 'none' }}>
                 <Header title={'Dashboard'} />
-                <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+                <ScrollView style={styles.container} showsVerticalScrollIndicator={false}
+                   refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor={colors.primary}      // iOS
+                        colors={[colors.primary]}       // Android
+                    />
+                }>
 
                     <View
                         style={{
@@ -358,6 +384,14 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                                             >
                                                 <Text style={styles.smallCircleText}>{item?.threshold}</Text>
                                             </TouchableOpacity>
+                                            <TouchableOpacity
+                                                style={[styles.smallCircle1,{backgroundColor:getBorderColorByDays(item.days,item.threshold)}]}
+                                                onPress={() => openThresholdModal(item)}
+                                                activeOpacity={0.7}
+                                            >
+                                                <Text style={[styles.smallCircleText,]}>{item?.threshold - item.days}</Text>
+                                            </TouchableOpacity>
+
                                             {/* <View style={{ borderRadius: 70, borderWidth: 5, borderColor: getStateColor(item.state), width: Dimensions.get('window').width * 0.35, height: Dimensions.get('window').width * 0.35, justifyContent: 'center', alignItems: 'center' }}> */}
                                             <TouchableOpacity style={{ borderRadius: 70, borderWidth: 5, borderColor: getBorderColorByDays(item.days,item.threshold), width: Dimensions.get('window').width * 0.30, height: Dimensions.get('window').width * 0.30, justifyContent: 'center', alignItems: 'center' }}
                                             onPress={() => navigation.navigate('StateTripsScreen', { state: item.state })}>
@@ -373,6 +407,8 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                                                 <Text style={styles.daysIn}>Days in</Text>
 
                                             </TouchableOpacity>
+
+                                            
                                         </View>
                                     ))}
                         </View>
@@ -589,6 +625,20 @@ const styles = StyleSheet.create({
         height: 25,
         borderTopLeftRadius: 18,
         borderBottomLeftRadius: 18,
+        backgroundColor: colors.primary,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+    },
+    smallCircle1: {
+        position: 'absolute',
+        top: 15,
+        left: -1,
+        width: 46,
+        height: 25,
+        borderTopRightRadius: 18,
+        borderBottomRightRadius: 18,
         backgroundColor: colors.primary,
         justifyContent: 'center',
         alignItems: 'center',

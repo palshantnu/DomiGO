@@ -152,13 +152,14 @@ const MetricsScreen = ({ GET_STATE_WISE_METRICS, loginToken, stateWiseMetrics })
             style={styles.container}
         >
             <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
-                <Header title="DemiGO Tracker" />
+                <Header title="DomiGO Tracker" />
 
                 <View style={styles.tabsContainer}>
                     <TouchableOpacity style={[styles.tabButton, styles.activeTab]}>
                         <Text style={[styles.tabText, styles.activeTabText]}>Metrics</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.tabButton}>
+                    <TouchableOpacity style={styles.tabButton}
+                     onPress={()=>navigation.navigate('Calendar')}>
                         <Text style={styles.tabText}>Calendar</Text>
                     </TouchableOpacity>
                 </View>
@@ -183,13 +184,14 @@ const MetricsScreen = ({ GET_STATE_WISE_METRICS, loginToken, stateWiseMetrics })
                             { label: 'Hours Worked', value: item.hoursWorked },
                             { label: 'Tax Days', value: item.taxDays },
                             { label: 'Taxable Wages', value: item.wages },
-                            { label: '', value: '' },
                         ];
 
                         return (
                             <View key={item.id} style={styles.card}>
-                                <View style={[styles.stateBox, { backgroundColor: item.bgColor }]}>
-                                    <Text style={styles.stateText}>{item.state.length < 2 ? item.state : getStateCodeSafe(item.state)}</Text>
+                                {/* <View style={[styles.stateBox, { backgroundColor: item.bgColor }]}> */}
+                                <View style={[styles.stateBox, { backgroundColor: '#65C466' }]}>
+                                    {/* <Text style={styles.stateText}>{item.state.length < 2 ? item.state : getStateCodeSafe(item.state)}</Text> */}
+                                    <Text style={styles.stateText}>{item.state}</Text>
                                 </View>
 
                                 <View style={styles.cardContent}>
@@ -280,7 +282,7 @@ const styles = StyleSheet.create({
         paddingBottom: 120,
     },
     card: {
-        flexDirection: 'row',
+        // flexDirection: 'row',
         backgroundColor: '#fff',
         borderRadius: 15,
         marginHorizontal: 15,
@@ -292,11 +294,14 @@ const styles = StyleSheet.create({
         elevation: 3,
     },
     stateBox: {
-        width: 55,
+        width: '100%',
         justifyContent: 'center',
         alignItems: 'center',
         borderTopLeftRadius: 15,
-        borderBottomLeftRadius: 15,
+        borderTopRightRadius: 15,
+        paddingVertical:10,
+        // borderBottomLeftRadius: 15,
+        // borderRadius:15
     },
     stateText: {
         color: '#fff',

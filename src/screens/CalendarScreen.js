@@ -735,7 +735,6 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
           </TouchableOpacity>
         </View>
 
-        {/* ===== EXPANDED CONTENT (NICHE) ===== */}
         {isOpen && (
           <View style={styles.expandedContainer}>
             {item.trips.map(trip => (
