@@ -23,6 +23,7 @@ import DomigoTracker from "../../helpers/MainTracker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
+import appleAuth from '@invertase/react-native-apple-authentication';
 
 GoogleSignin.configure({
   webClientId: '354808270826-gns6qrt56geta1g46vv26j9l3n3jk415.apps.googleusercontent.com', // Firebase se
@@ -148,7 +149,69 @@ const LoginScreen = ({ navigation, signIn }) => {
       setButtonLoader(false);
     }
   };
-  
+const signInWithApple = async () => {
+  try {
+    if (!netInfo) {
+      CustomToast.show("No internet connection");
+      return;
+    }
+
+    setButtonLoader(true);
+
+    // Perform Apple sign-in request
+    const appleAuthRequestResponse = await appleAuth.performRequest({
+      requestedOperation: appleAuth.Operation.LOGIN,
+      requestedScopes: [
+        appleAuth.Scope.EMAIL,
+        appleAuth.Scope.FULL_NAME,
+      ],
+    });
+
+    const { identityToken, nonce } = appleAuthRequestResponse;
+
+    if (!identityToken) {
+      throw new Error("Apple Sign-In failed - no identity token");
+    }
+
+    // Create Firebase credential with the nonce
+    const appleCredential = auth.AppleAuthProvider.credential(
+      identityToken,
+      nonce
+    );
+
+    // Sign in to Firebase
+    const userCredential = await auth().signInWithCredential(appleCredential);
+    const firebaseToken = await userCredential.user.getIdToken();
+
+    console.log("Apple User:", userCredential.user);
+
+    // Here you can call your backend API with the firebaseToken
+    // For example:
+    // const response = await callLoginApi(signIn({ token: firebaseToken, provider: 'apple' }));
+    
+    // await AsyncStorage.setItem('DOMIGO_TRACKING_ENABLED', '1');
+    // DomigoTracker.startDomigoTracking(firebaseToken);
+
+    // navigation.reset({
+    //   index: 0,
+    //   routes: [{ name: "Main" }],
+    // });
+
+    CustomToast.show("Apple Login Success");
+
+  } catch (error) {
+    console.log("Apple SignIn Error ❌", error);
+    
+    if (error.code === 'auth/unknown') {
+      CustomToast.show("Apple Sign-In configuration issue");
+    } else {
+      CustomToast.show(error.message || "Apple Sign-In failed");
+    }
+  } finally {
+    setButtonLoader(false);
+  }
+};
+
   // const signInWithGoogle = async () => {
   //   if (!netInfo) {
   //     CustomToast.show("No internet connection");
@@ -295,7 +358,7 @@ const LoginScreen = ({ navigation, signIn }) => {
               style={styles.socialIcon}
             />
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={signInWithApple}>
             <Image
               source={require("../../assets/image/apple.png")}
               style={styles.socialIcon}

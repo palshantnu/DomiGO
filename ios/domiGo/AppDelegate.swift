@@ -5,6 +5,7 @@ import ReactAppDependencyProvider
 import CoreLocation
 import BackgroundTasks
 import UserNotifications
+import Firebase
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate, UNUserNotificationCenterDelegate {
@@ -32,7 +33,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
         
         // Setup notification center
         setupNotificationCenter()
-        
+      FirebaseApp.configure()
         // Initialize location manager
         setupLocationManager()
         
