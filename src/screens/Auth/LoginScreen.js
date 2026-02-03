@@ -21,6 +21,12 @@ import { startBackgroundLocation } from "../../helpers/LocationTracker";
 import { startDomigoTracking } from "../../helpers/MainTracker";
 import DomigoTracker from "../../helpers/MainTracker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import auth from '@react-native-firebase/auth';
+
+GoogleSignin.configure({
+  webClientId: '354808270826-gns6qrt56geta1g46vv26j9l3n3jk415.apps.googleusercontent.com', // Firebase se
+});
 
 
 const LoginScreen = ({ navigation, signIn }) => {
@@ -29,6 +35,8 @@ const LoginScreen = ({ navigation, signIn }) => {
   const { callApi: callLoginApi, loading: loginLoading } = useAPI();
   const [netInfo, setNetInfo] = useState(true);
   const [buttonLoader, setButtonLoader] = useState(false);
+
+
 
   const validateForm = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -93,6 +101,102 @@ const LoginScreen = ({ navigation, signIn }) => {
 
     return () => unsubscribe();
   }, []);
+
+
+  const signInWithGoogle = async () => {
+    try {
+      if (!netInfo) {
+        CustomToast.show("No internet connection");
+        return;
+      }
+  
+      setButtonLoader(true);
+  
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
+  
+      const userInfo = await GoogleSignin.signIn();
+  
+      console.log('Google userInfo 👉', userInfo);
+  
+      if (!userInfo.data.idToken) {
+        throw new Error('idToken not received from Google');
+      }
+  
+      const googleCredential =
+        auth.GoogleAuthProvider.credential(userInfo.data.idToken);
+  
+      const userCredential =
+        await auth().signInWithCredential(googleCredential);
+  
+      const firebaseToken = await userCredential.user.getIdToken();
+  
+      // await AsyncStorage.setItem('DOMIGO_TRACKING_ENABLED', '1');
+      // DomigoTracker.startDomigoTracking(firebaseToken);
+  
+      // navigation.reset({
+      //   index: 0,
+      //   routes: [{ name: "Main" }],
+      // });
+  
+      CustomToast.show("Google Login Success");
+    } catch (error) {
+      console.log("Google SignIn Error ❌", error);
+      CustomToast.show(error.message || "Google Sign-In failed");
+    } finally {
+      setButtonLoader(false);
+    }
+  };
+  
+  // const signInWithGoogle = async () => {
+  //   if (!netInfo) {
+  //     CustomToast.show("No internet connection");
+  //     return;
+  //   }
+  
+  //   try {
+  //     setButtonLoader(true);
+  
+  //     // Android play services check
+  //     await GoogleSignin.hasPlayServices({
+  //       showPlayServicesUpdateDialog: true,
+  //     });
+  
+  //     // Google sign-in
+  //     const { idToken } = await GoogleSignin.signIn();
+  
+  //     // Firebase credential
+  //     const googleCredential =
+  //       auth.GoogleAuthProvider.credential(idToken);
+  
+  //     // Firebase login
+  //     const userCredential = await auth().signInWithCredential(
+  //       googleCredential
+  //     );
+  
+  //     console.log('Google User:', userCredential.user);
+  
+  //     // OPTIONAL: token agar backend chahiye
+  //     const firebaseToken = await userCredential.user.getIdToken();
+  
+  //     await AsyncStorage.setItem('DOMIGO_TRACKING_ENABLED', '1');
+  //     DomigoTracker.startDomigoTracking(firebaseToken);
+  
+  //     navigation.reset({
+  //       index: 0,
+  //       routes: [{ name: "Main" }],
+  //     });
+  
+  //     CustomToast.show("Login Successfully");
+  //   } catch (error) {
+  //     console.log('Google SignIn Error:', error);
+  //     CustomToast.show("Google Sign-In failed");
+  //   } finally {
+  //     setButtonLoader(false);
+  //   }
+  // };
+  
 
   return (
     <LinearGradient
@@ -179,7 +283,7 @@ const LoginScreen = ({ navigation, signIn }) => {
         <Text style={styles.orText}>or Sign in with</Text>
 
         <View style={styles.socialContainer}>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={signInWithGoogle}>
             <Image
               source={require("../../assets/image/google.png")}
               style={styles.socialIcon}

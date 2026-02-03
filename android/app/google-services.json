@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "354808270826",
+    "project_id": "domig0",
+    "storage_bucket": "domig0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:354808270826:android:305d664df49577a0942c93",
+        "android_client_info": {
+          "package_name": "com.gohome.domigo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "354808270826-9dh17hgpmpguodb0jtsrbbqh0575jfgk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gohome.domigo",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "354808270826-p6lj8o8etds9qn98knsvfpbp920bu0oa.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQenfbBsk-Q3rLzbZBGS9_Fsgee3dWMJk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "354808270826-p6lj8o8etds9qn98knsvfpbp920bu0oa.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

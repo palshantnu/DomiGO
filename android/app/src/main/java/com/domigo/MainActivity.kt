@@ -1,4 +1,4 @@
-package com.domigo
+package com.gohome.domigo
 
 import android.content.Intent
 import android.os.Bundle

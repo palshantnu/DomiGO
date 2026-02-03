@@ -337,11 +337,12 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                         <Text style={styles.sectionTitle}>Insights Menu</Text>
 
                         <View style={styles.toggleContainer}>
-                            <TouchableOpacity style={styles.leftTab}>
+                            <TouchableOpacity style={styles.leftTab}
+                            onPress={() => navigation.navigate('Metrics')}>
                                 <Text style={styles.activeText}>Metrics</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity style={styles.centerCircle} onPress={() => navigation.navigate('Metrics')}>
+                            {/* <TouchableOpacity style={styles.centerCircle} onPress={() => navigation.navigate('Metrics')}>
                                 <View style={{
                                     backgroundColor: colors.white, padding: 1, width: 35,
                                     height: 35, borderRadius: 21,
@@ -352,7 +353,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                                 }}>
                                     <Text style={{ color: colors.primary, fontWeight: '700' }}>D</Text>
                                 </View>
-                            </TouchableOpacity>
+                            </TouchableOpacity> */}
 
                             <TouchableOpacity
                                 onPress={()=>navigation.navigate('Calendar')}
