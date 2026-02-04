@@ -423,10 +423,11 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                                                         }
                                                     >
                                                         {/* LEFT THRESHOLD FLAG */}
-                                                        <View style={styles.leftFlag}>
+                                                        <TouchableOpacity style={styles.leftFlag}
+                                                        onPress={()=>openThresholdModal(item)}>
                                                             <Text style={styles.flagText}>T</Text>
                                                             <Text style={styles.flagValue}>{item.threshold}</Text>
-                                                        </View>
+                                                        </TouchableOpacity>
 
                                                         {/* RIGHT COUNTDOWN FLAG */}
                                                         <View
@@ -1109,7 +1110,8 @@ const styles = StyleSheet.create({
         // borderBottomRightRadius: 20,
         borderTopLeftRadius: 20,
         borderBottomLeftRadius: 20,
-        backgroundColor: '#555',
+        // backgroundColor: '#555',
+        backgroundColor: colors.primary,
         justifyContent: 'center',
         alignItems: 'center',
         // zIndex: 5,              // 🔥 MUST
