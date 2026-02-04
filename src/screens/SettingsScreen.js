@@ -57,6 +57,18 @@ export default function SettingsScreen() {
               </View>
               <Ionicons name="chevron-forward" size={18} color="#999" />
             </TouchableOpacity>
+            <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('ReportsExport')}>
+              <View style={styles.rowLeft}>
+                <ICON_File_dock height={24} width={24} />
+                <View>
+                  <Text style={styles.title}>Compliance Score</Text>
+                  <Text style={styles.subtitle}>
+                    Download your complete residency record
+                  </Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#999" />
+            </TouchableOpacity>
             <TouchableOpacity style={styles.row}>
               <TouchableOpacity style={styles.rowLeft}
               onPress={() => navigation.navigate('ResidencyHistory')}>
@@ -67,6 +79,31 @@ export default function SettingsScreen() {
                   <Text style={styles.subtitle}>Manage Documents</Text>
                 </View>
               </TouchableOpacity>
+              <Ionicons name="chevron-forward" size={18} color="#999" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.row}
+              onPress={async () => {
+                dispatch(LOGOUT());
+                await AsyncStorage.removeItem('DOMIGO_TRACKING_ENABLED');
+                CustomToast.show('LogOut User Successfully');
+                DomigoTracker.stopDomigoTracking();
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: "Login" }],
+                });
+              }}
+            >
+              <View style={styles.rowLeft}>
+
+                <Ionicons name="log-out-outline" size={24} color="#d9534f" />
+                <View style={{ width: '100%' }}>
+                  <Text style={[styles.title]}>Logout</Text>
+                  <Text style={[styles.subtitle]}>
+                    Sign out from your account
+                  </Text>
+                </View>
+              </View>
               <Ionicons name="chevron-forward" size={18} color="#999" />
             </TouchableOpacity>
             {/* <TouchableOpacity style={styles.row}>
@@ -151,18 +188,7 @@ export default function SettingsScreen() {
               />
             </View>
 
-            <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('ReportsExport')}>
-              <View style={styles.rowLeft}>
-                <ICON_File_dock height={24} width={24} />
-                <View>
-                  <Text style={styles.title}>Compliance Score</Text>
-                  <Text style={styles.subtitle}>
-                    Download your complete residency record
-                  </Text>
-                </View>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color="#999" />
-            </TouchableOpacity>
+
 
             <TouchableOpacity style={styles.row}
               onPress={() => navigation.navigate("PrivacyPolicyScreen")}>
@@ -177,7 +203,7 @@ export default function SettingsScreen() {
               </View>
               <Ionicons name="chevron-forward" size={18} color="#999" />
             </TouchableOpacity>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.row}
               onPress={async () => {
                 dispatch(LOGOUT());
@@ -201,7 +227,7 @@ export default function SettingsScreen() {
                 </View>
               </View>
               <Ionicons name="chevron-forward" size={18} color="#999" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
         </ScrollView>
       </SafeAreaView>

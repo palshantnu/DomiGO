@@ -73,6 +73,13 @@ useEffect(() => {
               <Text style={styles.tripTitle}>{TripSummaryDetails?.trip?.originState} to {TripSummaryDetails?.trip?.destinationState}</Text>
             </View>
             <Text style={styles.tripDate}>{new Date(TripSummaryDetails?.trip?.startDate).toDateString()} - {new Date(TripSummaryDetails?.trip?.endDate).toDateString()}</Text>
+            {TripSummaryDetails?.trip?.creationType && (
+                <View style={styles.creationTypeBadge}>
+                  <Text style={styles.creationTypeText}>
+                    Trip Type: {TripSummaryDetails?.trip?.creationType.toUpperCase()}
+                  </Text>
+                </View>
+              )}
 
             <Image
               source={{
@@ -361,5 +368,19 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#000",
   },
-
+  creationTypeBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "#EEF3FF",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
+    marginBottom: 15,
+  },
+  
+  creationTypeText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#3C9BF4",
+  },
+  
 });

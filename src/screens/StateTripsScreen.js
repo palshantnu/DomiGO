@@ -6,6 +6,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GET_STATE_WISE_TRIPS } from '../redux/actions/action-creator';
 import { connect } from 'react-redux';
+import Ionicons from "react-native-vector-icons/Ionicons";
 
 
 export const result = [
@@ -139,42 +140,42 @@ const IMPACT_COLORS = {
     'High Impact': '#dc3c41',
 };
 
-const StateTripsScreen = ({ route,GET_STATE_WISE_TRIPS,navigation,stateWiseTrips}) => {
+const StateTripsScreen = ({ route, GET_STATE_WISE_TRIPS, navigation, stateWiseTrips }) => {
 
-    console.log('stateWiseTrips',stateWiseTrips);
-      const { state } = route.params;
-      console.log('state>>>>>>>',state);
-      
+    console.log('stateWiseTrips', stateWiseTrips);
+    const { state } = route.params;
+    console.log('state>>>>>>>', state);
 
-    
 
-    
-      useEffect(() => {
+
+
+
+    useEffect(() => {
         const today = new Date();
         // const { start, end } = getCurrentWeekDates();
-    
+
         // GET_STATE_WISE_TRIPS({ start, end });;
         // GET_STATE_WISE_TRIPS({ start, end });;
         GET_STATE_WISE_TRIPS({ state: state });
-      }, []);
+    }, []);
 
 
     const stateName = stateWiseTrips?.[0]?.destinationState ?? 'State';
 
     const totalTrips = stateWiseTrips?.length;
-const totalDays = stateWiseTrips?.reduce((sum, i) => sum + i.daysSpent, 0);
+    const totalDays = stateWiseTrips?.reduce((sum, i) => sum + i.daysSpent, 0);
 
-const sortedByDate = [...stateWiseTrips]?.sort(
-    (a, b) => new Date(a.startDate) - new Date(b.startDate)
-);
+    const sortedByDate = [...stateWiseTrips]?.sort(
+        (a, b) => new Date(a.startDate) - new Date(b.startDate)
+    );
 
-const summary = {
-    totalTrips,
-    totalDays,
-    firstDate: sortedByDate[0]?.startDate,
-    lastDate: sortedByDate[sortedByDate.length - 1]?.endDate,
-    risk: result[0]?.residencyRisk,
-};
+    const summary = {
+        totalTrips,
+        totalDays,
+        firstDate: sortedByDate[0]?.startDate,
+        lastDate: sortedByDate[sortedByDate.length - 1]?.endDate,
+        risk: result[0]?.residencyRisk,
+    };
 
     // 🔢 Calculations for header
     // const summary = useMemo(() => {
@@ -244,55 +245,68 @@ const summary = {
                         contentContainerStyle={{ padding: 16 }}
                         renderItem={({ item }) => (
                             // <View style={styles.card}>
-                                      <TouchableOpacity style={styles.cardWrapper}
-                                      onPress={() => navigation.navigate('DayDetail', item)}>
-                                
-                                        {/* ===== MAIN CARD ROW (UNCHANGED) ===== */}
-                                        <View style={styles.rowContainer}>
-                                            <View
-                                                        style={[
-                                                          styles.colorStrip,
-                                                          { backgroundColor: '#289FDE' },
-                                                        ]}
-                                                      />
-                                            <View style={styles.card}>
-                                <View style={styles.cardTop}>
-                                    <Text style={styles.route}>
-                                        {item.originCity} → {item.destinationCity}
-                                    </Text>
+                            <TouchableOpacity style={styles.cardWrapper}
+                                onPress={() => navigation.navigate('DayDetail', item)}>
 
+                                {/* ===== MAIN CARD ROW (UNCHANGED) ===== */}
+                                <View style={styles.rowContainer}>
                                     <View
                                         style={[
-                                            styles.impactBadge,
-                                            {
-                                                backgroundColor:
-                                                    IMPACT_COLORS[item.impactLevel] + '20',
-                                            },
+                                            styles.colorStrip,
+                                            { backgroundColor: '#289FDE' },
                                         ]}
-                                    >
-                                        <Text
-                                            style={[
-                                                styles.impactText,
-                                                { color: IMPACT_COLORS[item.impactLevel] },
-                                            ]}
-                                        >
-                                            {item.impactLevel}
-                                        </Text>
+                                    />
+                                    <View style={styles.card}>
+                                        <View style={styles.cardTop}>
+                                            <Text style={styles.route}>
+                                                {item.originCity} → {item.destinationCity}
+                                            </Text>
+
+                                            <View
+                                                style={[
+                                                    styles.impactBadge,
+                                                    {
+                                                        backgroundColor:
+                                                            IMPACT_COLORS[item.impactLevel] + '20',
+                                                    },
+                                                ]}
+                                            >
+                                                <Text
+                                                    style={[
+                                                        styles.impactText,
+                                                        { color: IMPACT_COLORS[item.impactLevel] },
+                                                    ]}
+                                                >
+                                                    {item.impactLevel}
+                                                </Text>
+                                            </View>
+                                        </View>
+
+                                        <View style={styles.cardFooter}>
+                                            <Text style={styles.date}>
+                                                {dayjs(item.startDate).format('DD MMM')} –{' '}
+                                                {dayjs(item.endDate).format('DD MMM YYYY')}
+                                            </Text>
+                                            <View style={styles.typeRow}>
+                                                <Ionicons
+                                                    name={
+                                                        item.modeName === "Business" ? "briefcase-outline" : "leaf-outline"
+                                                    }
+                                                    size={15}
+                                                    color="#4CAF50"
+                                                    style={{ marginRight: 5 }}
+                                                />
+                                                <Text style={styles.typeText}>{item.modeName}</Text>
+                                            </View>
+                                        </View>
+
+                                        <View style={styles.cardFooter}>
+                                            <Text style={styles.meta}>{item.daysSpent} Days</Text>
+                                            <Text style={styles.meta}>
+                                                {item.typeName} • {item.modeName}
+                                            </Text>
+                                        </View>
                                     </View>
-                                </View>
-
-                                <Text style={styles.date}>
-                                    {dayjs(item.startDate).format('DD MMM')} –{' '}
-                                    {dayjs(item.endDate).format('DD MMM YYYY')}
-                                </Text>
-
-                                <View style={styles.cardFooter}>
-                                    <Text style={styles.meta}>{item.daysSpent} Days</Text>
-                                    <Text style={styles.meta}>
-                                        {item.typeName} • {item.modeName}
-                                    </Text>
-                                </View>
-                                </View>
                                 </View>
                             </TouchableOpacity>
                         )}
@@ -306,16 +320,16 @@ const summary = {
 
 
 function mapStateToProps(state) {
-  return {
-    userData: state.auth.userData,
-    loginToken: state.auth.loginToken,
-    stateWiseTrips: state.common.stateWiseTrips,
-  };
+    return {
+        userData: state.auth.userData,
+        loginToken: state.auth.loginToken,
+        stateWiseTrips: state.common.stateWiseTrips,
+    };
 }
 
 
 const mapDispatchToProps = {
-  GET_STATE_WISE_TRIPS,
+    GET_STATE_WISE_TRIPS,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(StateTripsScreen);
@@ -333,15 +347,15 @@ const styles = StyleSheet.create({
         // borderBottomLeftRadius: 20,
         // borderBottomRightRadius: 20,
         elevation: 2,
-        alignItems:'center',
-        justifyContent:'space-between',
-        flexDirection:'row'
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexDirection: 'row'
     },
 
     stateTitle: {
         fontSize: 22,
         fontWeight: '700',
-    
+
     },
 
     headerRow: {
@@ -377,25 +391,25 @@ const styles = StyleSheet.create({
         // borderRadius: 14,
         padding: 14,
         // paddingHorizontal:26,
-        width:'100%',
+        width: '100%',
         // marginBottom: 12,
         elevation: 1,
     },
-      cardWrapper: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E6E6E6',
-    marginBottom: 12,
-    overflow: 'hidden',
-  },
+    cardWrapper: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#E6E6E6',
+        marginBottom: 12,
+        overflow: 'hidden',
+    },
 
-  rowContainer: {
-    flexDirection: 'row',
-  },
+    rowContainer: {
+        flexDirection: 'row',
+    },
     colorStrip: {
-    width: 8,
-  },
+        width: 8,
+    },
 
     cardTop: {
         flexDirection: 'row',
@@ -436,4 +450,13 @@ const styles = StyleSheet.create({
         color: '#6e6e73',
         fontWeight: '500',
     },
+    typeRow: {
+        flexDirection: "row",
+        alignItems: "center",
+      },
+      typeText: {
+        fontSize: 13,
+        color: "#444",
+        fontWeight: "500",
+      },
 });

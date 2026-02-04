@@ -202,76 +202,6 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   const missingDataForDay = missingMap[selectedDate];
   const isMissingAlreadyAdded = !!missingDataForDay;
 
-  // const getMarkedDates = (monthWiseTimeline, year, month) => {
-  //   const marked = {};
-
-  //   // 1️⃣ Month ke saare days nikalo
-  //   const daysInMonth = new Date(year, month, 0).getDate();
-
-  //   for (let day = 1; day <= daysInMonth; day++) {
-  //     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-  //     const trips = monthWiseTimeline?.[dateStr] || [];
-
-  //     const dots = [];
-
-  //     // 2️⃣ Agar trips hain → state dots
-  //     if (trips.length > 0) {
-  //       const uniqueStates = [
-  //         ...new Set(trips.map(t => t.destinationState)),
-  //       ];
-
-  //       uniqueStates.forEach(state => {
-  //         dots.push({
-  //           key: state,
-  //           color: STATE_COLOR_MAP[state] || '#999',
-  //         });
-  //       });
-  //     }
-
-  //     // 3️⃣ Missing day logic
-  //     const today = new Date();
-  //     today.setHours(0, 0, 0, 0);
-
-  //     const currentDate = new Date(dateStr);
-  //     currentDate.setHours(0, 0, 0, 0);
-
-  //     if (trips.length === 0 && currentDate <= today) {
-  //       dots.push(MISSING_DOT);
-  //     }
-  //     if (trips.length === 0 && currentDate.getTime() === today.getTime()) {
-  //       dots.push(TODAY_MISSING_DOT);
-  //     }
-
-
-  //     marked[dateStr] = {
-  //       dots,
-  //     };
-  //   }
-
-  //   return marked;
-  // };
-
-
-  // const getMarkedDates = (monthWiseTimeline) => {
-  //   const result = monthWiseTimeline || {};
-  //   const marked = {};
-
-  //   Object.keys(result).forEach(date => {
-  //     const uniqueStates = [
-  //       ...new Set(result[date].map(item => item.destinationState))
-  //     ];
-
-  //     marked[date] = {
-  //       dots: uniqueStates.map(state => ({
-  //         color: STATE_COLOR_MAP[state] || '#999'
-  //       }))
-  //     };
-  //   });
-
-  //   return marked;
-  // };
-
-
 
   const screenHeight = Dimensions.get('window').height;
   const translateY = useRef(new Animated.Value(screenHeight)).current;
@@ -329,84 +259,6 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     [monthWiseTimeline]
   );
 
-  // const markedDates = useMemo(
-  //   () => getMarkedDates(monthWiseTimeline),
-  //   [monthWiseTimeline]
-  // );
-
-
-  //   const handleDayPress = (day) => {
-  //   const selectedDate = day.dateString;
-  //   const tripsForDay = monthWiseTimeline[selectedDate] || [];
-
-  // //   const tripsForDay = (monthWiseTimeline[selectedDate] || []).filter(
-  // //   t =>
-  // //     !(t.originCity === t.destinationCity &&
-  // //       t.originState === t.destinationState)
-  // // );
-
-  //   if (tripsForDay.length === 1) {
-  //     // Single trip → direct navigation
-  //     navigation.navigate('AddTrip', 
-  //      tripsForDay[0].id,
-
-  //     //   {
-  //     //   id: tripsForDay[0].id,
-  //     // }
-  //   );
-  //   } else if (tripsForDay.length > 1) {
-  //     // Multiple trips → open modal
-  //     setSelectedTrips(tripsForDay);
-  //     setTripModalVisible(true);
-  //   }
-  // };
-
-
-  //////////////////////////111///////////////////
-
-  // const handleDayPress = (day) => {
-  //   const dateKey = day.dateString;
-  //   // const tripsForDay = monthWiseTimeline?.[dateKey] || [];
-
-  //   const tripsForDay = (monthWiseTimeline[dateKey] || []).filter(
-  //     t =>
-  //       !(t.originCity === t.destinationCity &&
-  //         t.originState === t.destinationState)
-  //   );
-
-  //   console.log('Trips on', dateKey, tripsForDay);
-
-  //   if (tripsForDay.length === 1) {
-  //     // navigation.navigate('AddTrip', { id: tripsForDay[0].id });
-  //     navigation.navigate('DayDetail', tripsForDay[0].id)
-  //   }
-  //   else if (tripsForDay.length > 1) {
-  //     setSelectedTrips(tripsForDay);
-  //     setTripModalVisible(true);
-  //   }
-  // };
-
-
-  // const handleDayPress = (day) => {
-  //   const dateKey = day.dateString;
-  //   const tripsForDay = monthWiseTimeline?.[dateKey] || [];
-
-  //   if (tripsForDay.length === 0) {
-  //     setSelectedMissingDate(dateKey);
-  //     setShowMissingModal(true);
-  //     return;
-  //   }
-  //   if (currentDate > today) {
-  //     return;
-  //   }
-
-  //   if (tripsForDay.length === 1) {
-  //     navigation.navigate('DayDetail', tripsForDay[0]);
-  //   } else {
-  //     setSelectedTrips(tripsForDay);
-  //     setTripModalVisible(true);
-  //   }
-  // };
   const handleDayPress = (day) => {
     const dateKey = day.dateString;
     const tripsForDay = monthWiseTimeline?.[dateKey] || [];
@@ -431,6 +283,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
 
 
+  
 
 
   useEffect(() => {
@@ -454,29 +307,6 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   };
 
   const legendStates = getLegendStates(monthWiseTimeline);
-
-
-
-  // const getWeekCalendarData = (weekResult = {}) => {
-  //   return Object.keys(weekResult).map(date => {
-  //     const formattedDate = new Date(date).toLocaleDateString('en-IN', {
-  //       day: '2-digit',
-  //       month: 'long',
-  //       year: 'numeric'
-  //     });
-
-  //     return {
-  //       period: formattedDate,
-  //       entries: weekResult[date].map((item, index) => ({
-  //         _id:item.id,
-  //         id: item.destinationState?.slice(0, 3).toUpperCase(),
-  //         name: item.destinationCity,
-  //         location: item.destinationState,
-  //         day: new Date(date).toLocaleDateString('en-US', { weekday: 'short' })
-  //       }))
-  //     };
-  //   });
-  // };
 
   const getWeekCalendarData = (weekResult = {}) => {
     return Object.keys(weekResult).map(date => {
@@ -537,148 +367,131 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   };
 
 
-  const getYearWeeklyData = (yearWiseTimeline = {}) => {
+  
+
+  // const normalizeYearData = (yearWiseTimeline = {}) => {
+  //   const normalized = {};
+  
+  //   Object.entries(yearWiseTimeline).forEach(([date, value]) => {
+  //     console.log(
+  //       "API KEY:", date,
+  //       "Parsed:", new Date(date).toISOString().split("T")[0]
+  //     );
+  //     if (!normalized[date]) {
+  //       normalized[date] = {
+  //         trips: [],
+  //         activity: null,
+  //       };
+  //     }
+  
+  //     if (value.type === "trip") {
+  //       normalized[date].trips.push(value.data);
+  //     }
+  
+  //     if (value.type === "activity") {
+  //       normalized[date].activity = value.data;
+  //     }
+  //   });
+  
+  //   return normalized;
+  // };
+
+  const normalizeYearData = (yearWiseTimeline = {}) => {
+    const normalized = {};
+  
+    Object.entries(yearWiseTimeline).forEach(([date, value]) => {
+      if (!normalized[date]) {
+        normalized[date] = {
+          trips: [],
+          activity: null,
+        };
+      }
+  
+      // 🟢 TRIP
+      if (value?.type === "trip" && value?.data) {
+        normalized[date].trips.push(value.data);
+      }
+  
+      // 🟠 ACTIVITY
+      if (value?.type === "activity" && value?.data) {
+        normalized[date].activity = value.data;
+      }
+    });
+  
+    return normalized;
+  };
+  
+
+  
+  const getYearWeeklyData = (normalizedData = {}) => {
     const weekMap = {};
-
-    Object.entries(yearWiseTimeline).forEach(([date, trips]) => {
+  
+    Object.entries(normalizedData).forEach(([date, dayData]) => {
       const weekKey = getWeekKey(date);
-
+  
       if (!weekMap[weekKey]) {
         weekMap[weekKey] = [];
       }
-
-      // ✅ FORCE trips to always be an array
-      const tripArray = Array.isArray(trips) ? trips : trips ? [trips] : [];
-
-      weekMap[weekKey].push(...tripArray);
+  
+      weekMap[weekKey].push({
+        date,
+        ...dayData,
+      });
     });
-
+  
     return Object.keys(weekMap).map((week, index) => ({
       id: index + 1,
       week,
-      trips: weekMap[week],
-      color:
-        STATE_COLOR_MAP[weekMap[week][0]?.destinationState] ||
-        colors.primary,
+      days: weekMap[week],
     }));
   };
 
 
+  // const getYearWeeklyData = (yearWiseTimeline = {}) => {
+  //   const weekMap = {};
 
+  //   Object.entries(yearWiseTimeline).forEach(([date, trips]) => {
+  //     const weekKey = getWeekKey(date);
 
-  const weeklyData = getYearWeeklyData(yearWiseTimeline);
+  //     if (!weekMap[weekKey]) {
+  //       weekMap[weekKey] = [];
+  //     }
 
+  //     // ✅ FORCE trips to always be an array
+  //     const tripArray = Array.isArray(trips) ? trips : trips ? [trips] : [];
 
-  // const renderWeekCard = (item, index) => {
-  //   const isOpen = openWeekIndex === index;
-
-  //   return (
-  //     <View key={index} style={styles.weekCard}>
-  //       {/* HEADER */}
-  //       <TouchableOpacity
-  //         activeOpacity={0.8}
-  //         onPress={() =>
-  //           setOpenWeekIndex(isOpen ? null : index)
-  //         }
-  //         style={styles.weekHeader}
-  //       >
-  //         <Text style={styles.weekTitle}>{item.week}</Text>
-  //         <Ionicons
-  //           name={isOpen ? 'chevron-up' : 'chevron-down'}
-  //           size={20}
-  //           color="#666"
-  //         />
-  //       </TouchableOpacity>
-
-  //       {/* EXPANDED CONTENT */}
-  //       {isOpen && (
-  //         <View style={styles.weekContent}>
-  //           {item.trips.map(trip => (
-  //             <TouchableOpacity
-  //               key={trip.id}
-  //               style={styles.tripRow}
-  //               onPress={() =>
-  //                 navigation.navigate('DayDetail', trip)
-  //               }
-  //             >
-  //               <View style={styles.tripLine}>
-  //                 <View style={styles.dotBlue} />
-  //                 <Text style={styles.tripText}>
-  //                   {trip.originCity}, {trip.originState}
-  //                 </Text>
-  //               </View>
-
-  //               <View style={styles.tripLine}>
-  //                 <View style={styles.dotGreen} />
-  //                 <Text style={styles.tripText}>
-  //                   {trip.destinationCity}, {trip.destinationState}
-  //                 </Text>
-  //               </View>
-  //             </TouchableOpacity>
-  //           ))}
-  //         </View>
-  //       )}
-  //     </View>
-  //   );
-  // };
-
-
-
-  // const getWeekCalendarData = (weekResult = {}) => {
-  //   return Object.keys(weekResult).map(date => {
-  //     const trips = weekResult[date];
-
-  //     const formattedDate = new Date(date).toLocaleDateString('en-IN', {
-  //       day: '2-digit',
-  //       month: 'short',
-  //     });
-
-  //     const day = new Date(date).toLocaleDateString('en-US', {
-  //       weekday: 'short',
-  //     });
-
-  //     const locations = [];
-
-  //     let lastLocationKey = null;
-
-  //     trips.forEach(trip => {
-  //       const originKey = `${trip.originCity}-${trip.originState}`;
-  //       const destinationKey = `${trip.destinationCity}-${trip.destinationState}`;
-
-  //       // ORIGIN (no navigation)
-  //       if (originKey !== lastLocationKey) {
-  //         locations.push({
-  //           type: 'origin',
-  //           city: trip.originCity,
-  //           state: trip.originState,
-  //         });
-  //         lastLocationKey = originKey;
-  //       }
-
-  //       // DESTINATION (tap enabled)
-  //       if (destinationKey !== lastLocationKey) {
-  //         locations.push({
-  //           type: 'destination',
-  //           city: trip.destinationCity,
-  //           state: trip.destinationState,
-  //           tripId: trip.id,
-  //         });
-  //         lastLocationKey = destinationKey;
-  //       }
-
-  //       // separator marker after each trip
-  //       locations.push({ type: 'separator' });
-  //     });
-
-  //     return {
-  //       date,
-  //       formattedDate,
-  //       day,
-  //       locations,
-  //     };
+  //     weekMap[weekKey].push(...tripArray);
   //   });
+
+  //   return Object.keys(weekMap).map((week, index) => ({
+  //     id: index + 1,
+  //     week,
+  //     trips: weekMap[week],
+  //     color:
+  //       STATE_COLOR_MAP[weekMap[week][0]?.destinationState] ||
+  //       colors.primary,
+  //   }));
   // };
 
+
+  const normalizedYearData = useMemo(
+    () => normalizeYearData(yearWiseTimeline),
+    [yearWiseTimeline]
+  );
+  const weeklyData = useMemo(
+    () => getYearWeeklyData(normalizedYearData),
+    [normalizedYearData]
+  );
+  // const weeklyData = getYearWeeklyData(yearWiseTimeline);
+
+
+  
+  // const weeklyData = useMemo(
+  //   () => getYearWeeklyData(normalizedYearData),
+  //   [normalizedYearData]
+  // );
+
+  console.log('weeklyData>>>>>',weeklyData);
 
   const YearWeekCard = ({ item, index }) => {
     const isOpen = openIndex === index;
@@ -735,7 +548,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
           </TouchableOpacity>
         </View>
 
-        {isOpen && (
+        {/* {isOpen && (
           <View style={styles.expandedContainer}>
             {item.trips.map(trip => (
               <TouchableOpacity
@@ -745,23 +558,113 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                   navigation.navigate('DayDetail', trip)
                 }
               >
-                <View style={styles.tripLine}>
-                  <View style={styles.blueDot} />
-                  <Text style={styles.tripText}>
-                    {trip.originCity}, {trip.originState}
-                  </Text>
-                </View>
+                <View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'center'}}>
+               
+                <View>
+                  <View style={styles.tripLine}>
+                    <View style={styles.blueDot} />
+                    <Text style={styles.tripText}>
+                      {trip.originCity}, {trip.originState}
+                    </Text>
+                  </View>
 
-                <View style={styles.tripLine}>
-                  <View style={styles.greenDot} />
-                  <Text style={styles.tripText}>
-                    {trip.destinationCity}, {trip.destinationState}
-                  </Text>
+                  <View style={styles.tripLine}>
+                    <View style={styles.greenDot} />
+                    <Text style={styles.tripText}>
+                      {trip.destinationCity}, {trip.destinationState}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.typeRow}>
+                  <Ionicons
+                    name={
+                      trip.creationType === "Business" ? "briefcase-outline" : "leaf-outline"
+                    }
+                    size={15}
+                    color="#4CAF50"
+                    style={{ marginRight: 5 }}
+                  />
+                  <Text style={styles.typeText}>{trip.creationType}</Text>
+                </View>
                 </View>
               </TouchableOpacity>
             ))}
           </View>
+        )} */}
+        {isOpen && (
+  <View style={styles.expandedContainer}>
+    
+    {item.days.map((day, idx) => {
+      console.log('dayyyyy',day)
+    return(
+      <View key={idx} style={{ marginBottom: 12 }}>
+        
+        {/* DATE LABEL */}
+        <Text style={{ fontSize: 13, fontWeight: "600", color: "#555" }}>
+          {day.date}
+        </Text>
+
+        {/* 🚗 TRIPS */}
+        {day?.trips?.map(trip => (
+          <TouchableOpacity
+            key={trip.id}
+            style={styles.tripRow}
+            onPress={() => navigation.navigate("DayDetail", trip)}
+          >
+            <View style={styles.tripLine}>
+              <View style={styles.blueDot} />
+              <Text style={styles.tripText}>
+                {trip.originCity}, {trip.originState}
+              </Text>
+            </View>
+
+            <View style={styles.tripLine}>
+              <View style={styles.greenDot} />
+              <Text style={styles.tripText}>
+                {trip.destinationCity}, {trip.destinationState}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        ))}
+
+        {/* 🟠 ACTIVITY */}
+        {day.activity && (
+          <TouchableOpacity
+            style={{
+              backgroundColor: "#FFF3E0",
+              borderRadius: 8,
+              padding: 10,
+              marginTop: 6,
+            }}
+            onPress={() =>
+              navigation.navigate("AddMissingDayScreen", {
+                date: day.date,
+                isEdit: true,
+                data: day.activity,
+              })
+            }
+          >
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Ionicons
+                name="alert-circle-outline"
+                size={16}
+                color="#FF9500"
+              />
+              <Text style={{ marginLeft: 6, fontWeight: "600" }}>
+                {day.activity.typeOfDay?.name}
+              </Text>
+            </View>
+
+            <Text style={{ marginLeft: 22, color: "#666" }}>
+              {day.activity.state?.name}
+            </Text>
+          </TouchableOpacity>
         )}
+      </View>
+    )})}
+  </View>
+)}
+
       </View>
     );
   };
@@ -808,73 +711,6 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
   const timelineData = getTimelineData(yearWiseTimeline);
 
-  // const getYearData = (data = []) => {
-  //   console.log('dataaaaaa',data);
-
-  //   const formatDate = (date) =>
-  //   new Date(date).toLocaleDateString('en-IN', {
-  //     day: '2-digit',
-  //     month: 'short',
-  //   });
-  //   return data[].map((item, index) => ({
-  //     id: index + 1,
-  //     // date: `${new Date(item.startDate).toLocaleDateString('en-IN')} - 
-  //     //      ${new Date(item.endDate).toLocaleDateString('en-IN')}`,
-  //     date: `${formatDate(item.startDate)} - ${formatDate(item.endDate)}`,
-  //     location: `${item.city}, ${item.state}`,
-  //     days: `${item.days} Day${item.days > 1 ? 's' : ''}`,
-  //     color: STATE_COLOR_MAP[item.state] || colors.primary,
-  //     // color: colors.primary,
-  //     manual: item.isManual
-  //   }));
-  // };
-
-  // const today = new Date();
-
-  // const yearData = getYearData(yearWiseTimeline || []);
-
-  // const residenciesDataa = yearData.filter(item => {
-  //   const end = new Date(item.date.split('-')[1]);
-  //   return selectedResidencyType === 'past'
-  //     ? end < today
-  //     : end >= today;
-  // });
-
-
-
-
-  // const regulatoryCalendar = [
-  //   {
-  //     period: 'August 12 - August 18, 2024',
-  //     entries: [
-  //       { id: 'AUD', name: 'Lay Ayes', location: 'California', day: "mon" },
-  //       { id: 'NOT', name: 'Picker', location: 'Kissen', day: "tou" },
-  //       { id: 'AUD', name: 'Sun Fushido', location: 'Call for Is', day: "mon" },
-  //       { id: 'NOT', name: 'Lay Vogue', location: 'Hoyoda', day: "mon" },
-  //       { id: 'NOT', name: 'Set Lake', location: 'City, Utah', day: "mon" },
-  //       { id: 'AUD', name: 'Mars', location: 'Nevada', day: "mon" },
-  //       { id: 'AUD', name: 'Portland', location: 'Oregon', day: "mon" },
-  //       { id: 'AUD', name: 'Screp', location: 'Wash Lake', day: "mon" },
-  //       { id: 'AUD', name: 'Buffalo', location: 'Oregon', day: "mon" },
-  //       { id: 'AUD', name: 'Southern', location: 'Wash Lake', day: "mon" },
-  //     ]
-  //   },
-  //   {
-  //     period: 'August 19 - August 25, 2024',
-  //     entries: [
-  //       { id: 'AUD', name: 'Santa', location: 'Texas', day: "mon" },
-  //       { id: 'AUD', name: 'Elgin', location: 'Texas', day: "mon" },
-  //       { id: 'AUD', name: 'Hudson', location: 'Texas', day: "mon" },
-  //       { id: 'AUD', name: 'North Pacific', location: '', day: "mon" },
-  //       { id: 'AUD', name: 'Canada', location: 'Florida', day: "mon" },
-  //       { id: 'AUD', name: 'Tampa', location: 'Florida', day: "mon" },
-  //       { id: 'AUD', name: 'Austin', location: 'Georgia', day: "mon" },
-  //       { id: 'AUD', name: 'Chattleton', location: 'South Carolina', day: "mon" },
-  //       { id: 'AUD', name: 'Chicago', location: 'North Carolina', day: "mon" },
-  //       { id: 'AUD', name: 'Ralph', location: 'North Carolina', day: "mon" },
-  //     ]
-  //   }
-  // ];
   const residenciesData = {
     past: [
       { id: 1, date: '01 Jan - 07 Jan', location: 'New York, USA', days: '7 Days', color: '#28a0dd' },
@@ -913,51 +749,6 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
       </View>
     </TouchableOpacity>
   );
-
-  // const renderRegulatorySection = (section, index) => (
-  //   <View key={index} style={styles.regulatorySection}>
-  //     <Text style={styles.periodTitle}>{section.period}</Text>
-  //     {section.entries.map(renderRegulatoryEntry)}
-  //     {index < regulatoryCalendar.length - 1 && <View style={styles.separator} />}
-  //   </View>
-  // );
-
-
-
-
-  //   const renderRegulatorySection = (section, index) => (
-  //   <View key={index} style={styles.regulatorySection}>
-
-  //     {/* Date bubble */}
-  //     <View style={styles.dateRow}>
-  //       <View style={styles.dateCircle}>
-  //         <Text style={styles.dateText}>{section.formattedDate}</Text>
-  //         <Text style={styles.dayText}>{section.day}</Text>
-  //       </View>
-
-  //       {/* Locations */}
-  //       <View style={{ flex: 1 }}>
-  //         {section.locations.map((item, idx) => (
-  //           <TouchableOpacity key={idx} style={styles.locationRow}
-  //           onPress={() =>item.type === 'origin'?console.log('hiiii') : navigation.navigate('DayDetail', item)}>
-  //             <View
-  //               style={[
-  //                 styles.dot,
-  //                 { backgroundColor: item.type === 'origin' ? '#2F80ED' : '#27AE60' },
-  //               ]}
-  //             />
-  //             <Text style={styles.locationText}>
-  //               {item.city}, {item.state}
-  //             </Text>
-  //           </TouchableOpacity>
-  //         ))}
-  //           {/* <View style={styles.separator} /> */}
-  //       </View>
-  //     </View>
-
-  //     {index < regulatoryCalendar.length - 1 && <View style={styles.separator} />}
-  //   </View>
-  // );
 
 
   const renderRegulatorySection = (section, index) => (
@@ -1029,7 +820,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
       style={styles.container}
     >
       <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
-        <Header title={'Residency Calendar'} />
+        <Header title={'Calendar'} />
 
         <View style={styles.content}>
           <View style={styles.tabs}>
@@ -1056,29 +847,6 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
               <View style={styles.calendarWrapper} pointerEvents="auto">
                 <Calendar
                   markingType={'multi-dot'}
-                  // markedDates={{
-                  //   '2025-11-01': {
-                  //     dots: [{ color: '#28a0dd' }],
-                  //   },
-                  //   '2025-11-08': {
-                  //     dots: [{ color: '#34c759' }],
-                  //   },
-                  //   '2025-11-15': {
-                  //     dots: [{ color: '#5ac8fa' }],
-                  //   },
-                  //   '2025-11-22': {
-                  //     dots: [
-                  //       { color: '#34c759' },
-                  //       { color: '#a5f1a9' },
-                  //     ],
-                  //   },
-                  //   '2025-11-29': {
-                  //     dots: [
-                  //       { color: '#007aff' },
-                  //       { color: '#1d3b73' },
-                  //     ],
-                  //   },
-                  // }}
                   onMonthChange={(monthData) => {
                     console.log('Month Changed =>', monthData);
 
@@ -1389,50 +1157,6 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
           <Ionicons name="add" size={30} color="#fff" />
         </TouchableOpacity>}
 
-        {/* <Modal
-          visible={tripModalVisible}
-          transparent
-          animationType="slide"
-          onRequestClose={() => setTripModalVisible(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-              <Text style={styles.modalTitle}>Trips</Text>
-
-              <FlatList
-                data={selectedTrips}
-                keyExtractor={(item) => item.id.toString()}
-                ItemSeparatorComponent={() => <View style={styles.tripDivider} />}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={styles.tripRow}
-                    onPress={() => {
-                      setTripModalVisible(false);
-                      // navigation.navigate('AddTrip', { id: item.id });
-                      navigation.navigate('DayDetail', item)
-                    }}
-                  >
-                    <View>
-                      <Text style={styles.tripCity}>
-                        {item.originCity} → {item.destinationCity}
-                      </Text>
-                      <Text style={styles.tripState}>
-                        {item.originState} → {item.destinationState}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                )}
-              />
-
-              <TouchableOpacity
-                style={styles.closeBtn}
-                onPress={() => setTripModalVisible(false)}
-              >
-                <Text style={styles.closeText}>Close</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal> */}
         <Modal
           visible={tripModalVisible}
           transparent
@@ -2192,53 +1916,6 @@ const styles = StyleSheet.create({
     color: '#333',
   },
 
-
-
-  //   dateRow: {
-  //   flexDirection: 'row',
-  //   alignItems: 'flex-start',
-  //   marginBottom: 12,
-  // },
-
-  // dateCircle: {
-  //   width: 60,
-  //   height: 60,
-  //   borderRadius: 30,
-  //   backgroundColor: '#F1F1F1',
-  //   justifyContent: 'center',
-  //   alignItems: 'center',
-  //   marginRight: 15,
-  // },
-
-  // dateText: {
-  //   fontSize: 12,
-  //   fontWeight: '600',
-  // },
-
-  // dayText: {
-  //   fontSize: 12,
-  //   color: '#666',
-  // },
-
-  // locationRow: {
-  //   flexDirection: 'row',
-  //   alignItems: 'center',
-  //   marginBottom: 6,
-  // },
-
-  // dot: {
-  //   width: 8,
-  //   height: 8,
-  //   borderRadius: 4,
-  //   marginRight: 10,
-  // },
-
-  // locationText: {
-  //   fontSize: 14,
-  //   color: '#333',
-  // },
-
-
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
@@ -2417,6 +2094,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#888',
     fontWeight: '500',
+  },
+  typeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  typeText: {
+    fontSize: 13,
+    color: "#444",
+    fontWeight: "500",
   },
 
 

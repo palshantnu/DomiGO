@@ -45,8 +45,8 @@ const AddTripScreen = ({
   const route = useRoute();
   const id = route?.params?.id ?? null;
   const isEdit = !!id;
-  console.log('isEdit',isEdit,id);
-  
+  console.log('isEdit', isEdit, id);
+
 
   const dispatch = useDispatch()
   const [selectedMode, setSelectedMode] = useState(null);
@@ -113,7 +113,7 @@ const AddTripScreen = ({
   }, [TripDetails]);
   useEffect(() => {
     if (!isEdit) {
-    
+
       setSelectedMode(null);
       setSelectedType(null);
       setOrigin("");
@@ -128,7 +128,7 @@ const AddTripScreen = ({
       setAttachment(null);
     }
   }, [isEdit]);
-  
+
 
 
   const searchPlaces = async (text, setter) => {
@@ -266,6 +266,9 @@ const AddTripScreen = ({
     dispatch(GET_TRIP_TYPE_LIST());
   }, []);
 
+  const isAutomatic = TripDetails?.creationType === "automatic";
+
+
   return (
     <LinearGradient
       colors={["#9ab1fa", "#ffffff"]}
@@ -279,7 +282,16 @@ const AddTripScreen = ({
 
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Trip Details</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={styles.sectionTitle}>Trip Details</Text>
+              {TripDetails?.creationType && (
+                <View style={styles.creationTypeBadge}>
+                  <Text style={styles.creationTypeText}>
+                    Trip Type: {TripDetails.creationType.toUpperCase()}
+                  </Text>
+                </View>
+              )}
+            </View>
 
 
             <View style={{ position: "relative" }}>
@@ -293,6 +305,7 @@ const AddTripScreen = ({
                     searchPlaces(text, setOriginSuggestions);
                   }}
                   style={styles.input}
+                  editable={!isAutomatic}
                 />
               </View>
 
@@ -343,6 +356,7 @@ const AddTripScreen = ({
                     searchPlaces(text, setDestinationSuggestions);
                   }}
                   style={styles.input}
+                  editable={!isAutomatic}
                 />
               </View>
 
@@ -546,7 +560,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginLeft: 10,
     color: "#000",
-    placeholderTextColor:'#111'
+    placeholderTextColor: '#111'
   },
 
   suggestionBox: {
@@ -663,6 +677,21 @@ const styles = StyleSheet.create({
     color: "#000",
     paddingVertical: 8,
     fontSize: 14,
-  }
+  },
+  creationTypeBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "#EEF3FF",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
+    marginBottom: 15,
+  },
+  
+  creationTypeText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#3C9BF4",
+  },
+  
 
 });

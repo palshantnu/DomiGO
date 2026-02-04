@@ -719,10 +719,40 @@ export function GET_STATE_WISE_METRICS() {
 }
 
 
+// export function GET_YEAR_WISE_TIMELINE({year}) {
+//   return async (dispatch) => {
+//     try {
+//       const response = await axiosinstance.get(`dashboard/timeline/year?year=${year}`)
+//       const responseJson = response.data;
+//       // console.log('responseYEARJson-=>', responseJson);
+
+//       if (responseJson.message == 'Success') {
+//         dispatch({
+//           type: GET_YEAR_WISE_TIMELINE_SUCCESS,
+//           payload: responseJson.result,
+//         })
+//         return Promise.resolve(responseJson)
+//       }
+//       dispatch({
+//         type: YEAR_WISE_TIMELINE_FAILURE,
+//         payload: 'YEAR_WISE_TIMELINE_FAILURE',
+//       })
+//       return Promise.reject(responseJson)
+//     } catch (e) {
+//       dispatch({
+//         type: YEAR_WISE_TIMELINE_FAILURE,
+//         payload: 'YEAR_WISE_TIMELINE_FAILURE',
+//       })
+//       console.log('catch error API YEAR_WISE_TIMELINE_FAILURE', e)
+//       return Promise.reject(CommonError)
+//     }
+//   }
+// }
 export function GET_YEAR_WISE_TIMELINE({year}) {
   return async (dispatch) => {
     try {
-      const response = await axiosinstance.get(`dashboard/timeline/year?year=${year}`)
+      // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
+      const response = await axiosinstance.get(`dashboard/v1/timeline/year?year=2026`)
       const responseJson = response.data;
       // console.log('responseYEARJson-=>', responseJson);
 

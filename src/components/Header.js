@@ -1,21 +1,26 @@
-import { StyleSheet, Text, View, Image } from 'react-native'
+import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native'
 import React from 'react'
 import colors from '../theme/colors'
 import Icon from 'react-native-vector-icons/Ionicons';
 
-const Header = ({ title }) => {
+const Header = ({ title, navigation }) => {
     return (
         <View style={styles.header}>
-            <View style={styles.headerLeft}>
+            <TouchableOpacity style={styles.headerLeft}
+                onPress={() => navigation.navigate('Settings', {
+                    screen: 'Profile',
+                })
+                }>
                 <Image
                     // source={{ uri: 'https://i.pravatar.cc/100' }}
                     source={{ uri: 'https://cdn-icons-png.flaticon.com/128/3135/3135715.png' }}
                     style={styles.avatar}
                 />
 
-            </View>
+            </TouchableOpacity>
             <Text style={styles.headerTitle}>{title}</Text>
-            <Icon name="notifications-outline" style={{ backgroundColor: '#fff', padding: 10, borderRadius: 30 }} size={24} color="#000" />
+            <Icon name="notifications-outline" style={{ backgroundColor: '#fff', padding: 10, borderRadius: 30 }} size={24} color="#000"
+                onPress={() => navigation.navigate('Alerts')} />
         </View>
     )
 }

@@ -93,7 +93,7 @@ const MetricsScreen = ({ GET_STATE_WISE_METRICS, loginToken, stateWiseMetrics })
             .join("");
     }
 
-        const stringToHash = (str) => {
+    const stringToHash = (str) => {
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
             hash = str.charCodeAt(i) + ((hash << 5) - hash);
@@ -110,22 +110,41 @@ const MetricsScreen = ({ GET_STATE_WISE_METRICS, loginToken, stateWiseMetrics })
     const getStateColor = (state) =>
         state ? getDarkPastelColor(state) : '#2C2C2C';
 
+    const getBorderColorByDays = (days, threshold) => {
+        const percentage = (days / threshold) * 100;
+
+        if (percentage <= 25) {
+            return '#65C466'; // safe
+        } else if (percentage > 25 && percentage < 50) {
+            return '#EBB408'; // warning
+        } else {
+            return '#EE4444'; // danger
+        }
+    };
 
 
-    const metricsData = stateWiseMetrics.map((item, index) => ({
-        id: index.toString(),
-        state: item.state,
-        daysIn: item.daysIn,
-        taxDays: item.taxDays,
-        daysWorked: item.daysWorked,
-        hoursWorked: item.hoursWorked,
-        travelDays: item.travelDays,
-        wages: item.estimatedWages,
-        progress: item.progressDays / 10, // example: assuming max = 10 days
-        progressLabel: `${item.progressDays} Days`,
-        // bgColor: '#E6F0FF', // you can make this dynamic if needed
-        bgColor: getStateColor(item.state)
-    }));
+
+    const metricsData = stateWiseMetrics.map((item, index) => {
+        const daysLeft = Math.max(item.threshold - item.travelDays, 0);
+        return ({
+            id: index.toString(),
+            state: item.state,
+            daysIn: item.daysIn,
+            taxDays: item.taxDays,
+            daysLeft,
+            daysWorked: item.daysWorked,
+            hoursWorked: item.hoursWorked,
+            travelDays: item.travelDays,
+            wages: item.estimatedWages,
+            // progress: item.progressDays / 10, // example: assuming max = 10 days
+            progress: daysLeft / item.threshold,
+            progressColor: getBorderColorByDays(item.travelDays, item.threshold),
+            progressLabel: `${daysLeft} Days`,
+            // progressLabel: `${item.progressDays} Days`,
+            // bgColor: '#E6F0FF', // you can make this dynamic if needed
+            bgColor: getStateColor(item.state)
+        })
+    });
 
 
     const dispatch = useDispatch();
@@ -152,9 +171,9 @@ const MetricsScreen = ({ GET_STATE_WISE_METRICS, loginToken, stateWiseMetrics })
             style={styles.container}
         >
             <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
-                <Header title="DomiGO Tracker" />
+                <Header title="Metrics" />
 
-                <View style={styles.tabsContainer}>
+                {/* <View style={styles.tabsContainer}>
                     <TouchableOpacity style={[styles.tabButton, styles.activeTab]}>
                         <Text style={[styles.tabText, styles.activeTabText]}>Metrics</Text>
                     </TouchableOpacity>
@@ -162,7 +181,7 @@ const MetricsScreen = ({ GET_STATE_WISE_METRICS, loginToken, stateWiseMetrics })
                      onPress={()=>navigation.navigate('Calendar')}>
                         <Text style={styles.tabText}>Calendar</Text>
                     </TouchableOpacity>
-                </View>
+                </View> */}
 
                 <ScrollView
                     contentContainerStyle={styles.scrollContent}
@@ -182,14 +201,14 @@ const MetricsScreen = ({ GET_STATE_WISE_METRICS, loginToken, stateWiseMetrics })
                             { label: 'Travel Days', value: item.travelDays },
                             { label: 'Days Worked', value: item.daysWorked },
                             { label: 'Hours Worked', value: item.hoursWorked },
-                            { label: 'Tax Days', value: item.taxDays },
-                            { label: 'Taxable Wages', value: item.wages },
+                            { label: 'Est Taxable Days', value: item.taxDays },
+                            { label: 'Est Taxable Liability', value: item.wages },
                         ];
 
                         return (
                             <View key={item.id} style={styles.card}>
                                 {/* <View style={[styles.stateBox, { backgroundColor: item.bgColor }]}> */}
-                                <View style={[styles.stateBox, { backgroundColor: '#65C466' }]}>
+                                <View style={[styles.stateBox, { backgroundColor: colors.primary }]}>
                                     {/* <Text style={styles.stateText}>{item.state.length < 2 ? item.state : getStateCodeSafe(item.state)}</Text> */}
                                     <Text style={styles.stateText}>{item.state}</Text>
                                 </View>
@@ -199,8 +218,8 @@ const MetricsScreen = ({ GET_STATE_WISE_METRICS, loginToken, stateWiseMetrics })
                                         <CustomProgressBar
                                             progress={item.progress}
                                             height={18}
-                                            bgColor="#3170E2"
-                                            label={item.progress * 10}
+                                            bgColor={item.progressColor} 
+                                            label={item.progressLabel}
                                         />
                                     </View>
 
@@ -299,7 +318,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderTopLeftRadius: 15,
         borderTopRightRadius: 15,
-        paddingVertical:10,
+        paddingVertical: 10,
         // borderBottomLeftRadius: 15,
         // borderRadius:15
     },
@@ -321,7 +340,7 @@ const styles = StyleSheet.create({
     },
     col: {
         flex: 1 / 3,
-        alignItems: 'flex-start',
+        alignItems: 'center',
         marginVertical: 8,
     },
     bigValue: {

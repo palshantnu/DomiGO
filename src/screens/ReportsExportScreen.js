@@ -33,7 +33,7 @@ export default function ReportsExportScreen() {
             style={styles.container}
         >
             <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
-                <Header title="Reports & Exports" />
+                <Header title="Reports and Exports" />
 
                 <ScrollView
                     showsVerticalScrollIndicator={false}
