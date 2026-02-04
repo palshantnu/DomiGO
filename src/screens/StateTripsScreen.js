@@ -143,6 +143,8 @@ const IMPACT_COLORS = {
 const StateTripsScreen = ({ route, GET_STATE_WISE_TRIPS, navigation, stateWiseTrips }) => {
 
     console.log('stateWiseTrips', stateWiseTrips);
+
+    const trips = stateWiseTrips ?? [];
     const { state } = route.params;
     console.log('state>>>>>>>', state);
 
@@ -160,12 +162,12 @@ const StateTripsScreen = ({ route, GET_STATE_WISE_TRIPS, navigation, stateWiseTr
     }, []);
 
 
-    const stateName = stateWiseTrips?.[0]?.destinationState ?? 'State';
+    const stateName = trips?.[0]?.destinationState ?? 'State';
 
-    const totalTrips = stateWiseTrips?.length;
-    const totalDays = stateWiseTrips?.reduce((sum, i) => sum + i.daysSpent, 0);
+    const totalTrips = trips?.length;
+    const totalDays = trips?.reduce((sum, i) => sum + i.daysSpent, 0);
 
-    const sortedByDate = [...stateWiseTrips]?.sort(
+    const sortedByDate = [...trips]?.sort(
         (a, b) => new Date(a.startDate) - new Date(b.startDate)
     );
 
@@ -240,7 +242,7 @@ const StateTripsScreen = ({ route, GET_STATE_WISE_TRIPS, navigation, stateWiseTr
 
                     {/* ===== TRIPS LIST ===== */}
                     <FlatList
-                        data={stateWiseTrips}
+                        data={trips}
                         keyExtractor={(item) => item.id.toString()}
                         contentContainerStyle={{ padding: 16 }}
                         renderItem={({ item }) => (
