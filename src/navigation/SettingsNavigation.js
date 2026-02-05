@@ -13,6 +13,8 @@ import CreateResidencyRecordScreen from '../screens/CreateResidencyRecordScreen'
 import ResidencyRecordDetailsScreen from '../screens/ResidencyRecordDetailsScreen';
 import ResidencyHistoryScreen from '../screens/ResidencyRecords';
 import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
+import HelpSupportScreen from '../screens/HelpSupportScreen';
+import AboutUsScreen from '../screens/AboutUsScreen';
 
 
 export default function SettingsNavigation() {
@@ -67,6 +69,16 @@ export default function SettingsNavigation() {
         <Stack.Screen
           name="PrivacyPolicyScreen"
           component={PrivacyPolicyScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="HelpSupportScreen"
+          component={HelpSupportScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AboutUsScreen"
+          component={AboutUsScreen}
           options={{ headerShown: false }}
         />
 

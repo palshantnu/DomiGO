@@ -19,21 +19,21 @@ import { connect } from "react-redux";
 import { getPersonalProfileDataAction } from "../redux/actions/action-creator";
 import { getUserPersonalDataSelelctor } from "../redux/selectors/common";
 import colors from "../theme/colors";
+import { GET_PRIVACY_POLICY, } from '../redux/actions/action-creator';
 
 
-const PrivacyPolicyScreen = ({
-    userPersonalData,
-    getPersonalProfileDataAction
-}) => {
+
+const PrivacyPolicyScreen = ({GET_PRIVACY_POLICY, privacyPolicy}) => {
     const navigation = useNavigation();
 
-    const getData = async () => {
-        await getPersonalProfileDataAction();
-    };
-
     useEffect(() => {
-        getData();
-    }, []);
+        GET_PRIVACY_POLICY();
+      }, []);
+
+      
+  console.log('privacypolicy', privacyPolicy);
+
+
     const { width } = Dimensions.get("window");
 
     const SETTINGS = [
@@ -125,6 +125,21 @@ const InfoRow = ({ icon, value, isLast }) => (
         <Text style={styles.infoText}>{value}</Text>
     </View>
 );
+
+function mapStateToProps(state) {
+    return {
+      userData: state.auth.userData,
+      loginToken: state.auth.loginToken,
+      privacyPolicy: state.common.privacyPolicy,
+    };
+  }
+  
+  
+  const mapDispatchToProps = {
+    GET_PRIVACY_POLICY,
+  };
+  
+  export default connect(mapStateToProps, mapDispatchToProps)(PrivacyPolicyScreen);
 
 const styles = StyleSheet.create({
     container: {
@@ -289,15 +304,6 @@ const styles = StyleSheet.create({
     },
 
 });
-function mapStateToProps(state) {
-    return {
-        userPersonalData: getUserPersonalDataSelelctor(state),
-    }
-}
 
-const mapDispatchToProps = {
-    getPersonalProfileDataAction,
-}
-export default connect(mapStateToProps, mapDispatchToProps)(PrivacyPolicyScreen);
 
 

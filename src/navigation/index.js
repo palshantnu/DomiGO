@@ -27,6 +27,7 @@ import { connect } from 'react-redux';
 import { LOGOUT } from '../redux/actions/action-creator';
 import SplashScreen from '../screens/SplashScreen';
 import ReportsExportScreen from '../screens/ReportsExportScreen';
+import DayEntryScreen from '../screens/DayEntryScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -182,6 +183,11 @@ const RootNavigator = (props) => {
       <Stack.Screen
                 name="ReportsExport"
                 component={ReportsExportScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="DayEntryScreen"
+                component={DayEntryScreen}
                 options={{ headerShown: false }}
               />
     </Stack.Navigator>

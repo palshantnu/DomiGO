@@ -43,6 +43,16 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
       currentYear,
     ];
   }, []);
+  const today = new Date();
+
+  const [visibleMonth, setVisibleMonth] = useState({
+    month: today.getMonth() + 1,
+    year: today.getFullYear(),
+  });
+
+
+  
+
 
 
 
@@ -247,16 +257,25 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     })
   ).current;
 
-  const today = new Date();
+  // const today = new Date();
 
+  // const markedDates = useMemo(
+  //   () =>
+  //     getMarkedDates(
+  //       monthWiseTimeline,
+  //       today.getFullYear(),
+  //       today.getMonth() + 1
+  //     ),
+  //   [monthWiseTimeline]
+  // );
   const markedDates = useMemo(
     () =>
       getMarkedDates(
         monthWiseTimeline,
-        today.getFullYear(),
-        today.getMonth() + 1
+        visibleMonth.year,
+        visibleMonth.month
       ),
-    [monthWiseTimeline]
+    [monthWiseTimeline, visibleMonth]
   );
 
   const handleDayPress = (day) => {
@@ -283,7 +302,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
 
 
-  
+
 
 
   useEffect(() => {
@@ -367,11 +386,11 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   };
 
 
-  
+
 
   // const normalizeYearData = (yearWiseTimeline = {}) => {
   //   const normalized = {};
-  
+
   //   Object.entries(yearWiseTimeline).forEach(([date, value]) => {
   //     console.log(
   //       "API KEY:", date,
@@ -383,22 +402,22 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   //         activity: null,
   //       };
   //     }
-  
+
   //     if (value.type === "trip") {
   //       normalized[date].trips.push(value.data);
   //     }
-  
+
   //     if (value.type === "activity") {
   //       normalized[date].activity = value.data;
   //     }
   //   });
-  
+
   //   return normalized;
   // };
 
   const normalizeYearData = (yearWiseTimeline = {}) => {
     const normalized = {};
-  
+
     Object.entries(yearWiseTimeline).forEach(([date, value]) => {
       if (!normalized[date]) {
         normalized[date] = {
@@ -406,39 +425,39 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
           activity: null,
         };
       }
-  
+
       // 🟢 TRIP
       if (value?.type === "trip" && value?.data) {
         normalized[date].trips.push(value.data);
       }
-  
+
       // 🟠 ACTIVITY
       if (value?.type === "activity" && value?.data) {
         normalized[date].activity = value.data;
       }
     });
-  
+
     return normalized;
   };
-  
 
-  
+
+
   const getYearWeeklyData = (normalizedData = {}) => {
     const weekMap = {};
-  
+
     Object.entries(normalizedData).forEach(([date, dayData]) => {
       const weekKey = getWeekKey(date);
-  
+
       if (!weekMap[weekKey]) {
         weekMap[weekKey] = [];
       }
-  
+
       weekMap[weekKey].push({
         date,
         ...dayData,
       });
     });
-  
+
     return Object.keys(weekMap).map((week, index) => ({
       id: index + 1,
       week,
@@ -485,13 +504,13 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   // const weeklyData = getYearWeeklyData(yearWiseTimeline);
 
 
-  
+
   // const weeklyData = useMemo(
   //   () => getYearWeeklyData(normalizedYearData),
   //   [normalizedYearData]
   // );
 
-  console.log('weeklyData>>>>>',weeklyData);
+  console.log('weeklyData>>>>>', weeklyData);
 
   const YearWeekCard = ({ item, index }) => {
     const isOpen = openIndex === index;
@@ -592,78 +611,79 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
           </View>
         )} */}
         {isOpen && (
-  <View style={styles.expandedContainer}>
-    
-    {item.days.map((day, idx) => {
-      console.log('dayyyyy',day)
-    return(
-      <View key={idx} style={{ marginBottom: 12 }}>
-        
-        {/* DATE LABEL */}
-        <Text style={{ fontSize: 13, fontWeight: "600", color: "#555" }}>
-          {day.date}
-        </Text>
+          <View style={styles.expandedContainer}>
 
-        {/* 🚗 TRIPS */}
-        {day?.trips?.map(trip => (
-          <TouchableOpacity
-            key={trip.id}
-            style={styles.tripRow}
-            onPress={() => navigation.navigate("DayDetail", trip)}
-          >
-            <View style={styles.tripLine}>
-              <View style={styles.blueDot} />
-              <Text style={styles.tripText}>
-                {trip.originCity}, {trip.originState}
-              </Text>
-            </View>
+            {item.days.map((day, idx) => {
+              console.log('dayyyyy', day)
+              return (
+                <View key={idx} style={{ marginBottom: 12 }}>
 
-            <View style={styles.tripLine}>
-              <View style={styles.greenDot} />
-              <Text style={styles.tripText}>
-                {trip.destinationCity}, {trip.destinationState}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        ))}
+                  {/* DATE LABEL */}
+                  <Text style={{ fontSize: 13, fontWeight: "600", color: "#555" }}>
+                    {day.date}
+                  </Text>
 
-        {/* 🟠 ACTIVITY */}
-        {day.activity && (
-          <TouchableOpacity
-            style={{
-              backgroundColor: "#FFF3E0",
-              borderRadius: 8,
-              padding: 10,
-              marginTop: 6,
-            }}
-            onPress={() =>
-              navigation.navigate("AddMissingDayScreen", {
-                date: day.date,
-                isEdit: true,
-                data: day.activity,
-              })
-            }
-          >
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Ionicons
-                name="alert-circle-outline"
-                size={16}
-                color="#FF9500"
-              />
-              <Text style={{ marginLeft: 6, fontWeight: "600" }}>
-                {day.activity.typeOfDay?.name}
-              </Text>
-            </View>
+                  {/* 🚗 TRIPS */}
+                  {day?.trips?.map(trip => (
+                    <TouchableOpacity
+                      key={trip.id}
+                      style={styles.tripRow}
+                      onPress={() => navigation.navigate("DayDetail", trip)}
+                    >
+                      <View style={styles.tripLine}>
+                        <View style={styles.blueDot} />
+                        <Text style={styles.tripText}>
+                          {trip.originCity}, {trip.originState}
+                        </Text>
+                      </View>
 
-            <Text style={{ marginLeft: 22, color: "#666" }}>
-              {day.activity.state?.name}
-            </Text>
-          </TouchableOpacity>
+                      <View style={styles.tripLine}>
+                        <View style={styles.greenDot} />
+                        <Text style={styles.tripText}>
+                          {trip.destinationCity}, {trip.destinationState}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+
+                  {/* 🟠 ACTIVITY */}
+                  {day.activity && (
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: "#FFF3E0",
+                        borderRadius: 8,
+                        padding: 10,
+                        marginTop: 6,
+                      }}
+                      onPress={() =>
+                        navigation.navigate("AddMissingDayScreen", {
+                          date: day.date,
+                          isEdit: true,
+                          data: day.activity,
+                        })
+                      }
+                    >
+                      <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        <Ionicons
+                          name="alert-circle-outline"
+                          size={16}
+                          color="#FF9500"
+                        />
+                        <Text style={{ marginLeft: 6, fontWeight: "600" }}>
+                          {day.activity.typeOfDay?.name}
+                        </Text>
+                      </View>
+
+                      <Text style={{ marginLeft: 22, color: "#666" }}>
+                        {day.activity.state?.name}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )
+            })}
+          </View>
         )}
-      </View>
-    )})}
-  </View>
-)}
 
       </View>
     );
@@ -847,14 +867,26 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
               <View style={styles.calendarWrapper} pointerEvents="auto">
                 <Calendar
                   markingType={'multi-dot'}
-                  onMonthChange={(monthData) => {
-                    console.log('Month Changed =>', monthData);
+                  // onMonthChange={(monthData) => {
+                  //   console.log('Month Changed =>', monthData);
 
+                  //   GET_MONTH_WISE_TIMELINE({
+                  //     month: monthData.month,
+                  //     year: monthData.year,
+                  //   });
+                  // }}
+                  onMonthChange={(monthData) => {
+                    setVisibleMonth({
+                      month: monthData.month,
+                      year: monthData.year,
+                    });
+                  
                     GET_MONTH_WISE_TIMELINE({
                       month: monthData.month,
                       year: monthData.year,
                     });
                   }}
+                  
                   // markedDates={getMarkedDates(monthWiseTimeline)}
                   markedDates={markedDates}
                   onDayPress={handleDayPress}
@@ -1188,6 +1220,12 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                       closeModal();
                       // navigation.navigate('AddTrip', { id: item.id });
                       navigation.navigate('DayDetail', item)
+                      // navigation.navigate("DayEntryScreen", {
+                      //   mode: "TRIP", // or "TRIP"
+                      //   date: "2026-01-03",
+                      //   isEdit: true,
+                      //   data: item
+                      // });
                     }}
                   >
                     {/* Origin */}
@@ -1250,6 +1288,13 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
                     if (selectedTrips.length === 1) {
                       navigation.navigate('DayDetail', selectedTrips[0]);
+                      // navigation.navigate("DayEntryScreen", {
+                      //   mode: "TRIP", // or "TRIP"
+                      //   date: "2026-01-03",
+                      //   isEdit: true,
+                      //   data: selectedTrips[0]
+                      // });
+
                     } else {
                       setTripModalVisible(true);
                     }
@@ -1281,6 +1326,27 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                       date: selectedDate,
                     });
                   }
+                  // if (isMissingAlreadyAdded) {
+                  //   navigation.navigate('DayEntryScreen', {
+                  //     mode: "MISSING_DAY",
+                  //     date: selectedDate,
+                  //     isEdit: true,
+                  //     data: missingDataForDay,
+                  //   });
+                  // } else {
+                  //   navigation.navigate('DayEntryScreen', {
+                  //     isEdit: false,
+                  //     date: selectedDate,
+                  //     mode: "MISSING_DAY",
+                  //   });
+                  // }
+                // navigation.navigate("DayEntryScreen", {
+                //   // mode: "MISSING_DAY", // or "TRIP"
+                //   mode: "TRIP", // or "TRIP"
+                //   date: selectedDate,
+                //   isEdit: true,
+                //   data: missingDataForDay
+                // });
                 }}
               >
                 <Text style={[styles.actionText, { color: '#fff' }]}>

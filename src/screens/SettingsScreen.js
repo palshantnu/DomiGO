@@ -8,6 +8,9 @@ import {
   Switch,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import AntDesign from "react-native-vector-icons/AntDesign";
+import SimpleLineIcons from "react-native-vector-icons/SimpleLineIcons";
 import Header from "../components/Header";
 import colors from "../theme/colors";
 import { useNavigation } from "@react-navigation/native";
@@ -198,6 +201,35 @@ export default function SettingsScreen() {
                   <Text style={styles.title}>Privacy Policy</Text>
                   <Text style={styles.subtitle}>
                     Review our data handling and privacy guidelines
+                  </Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#999" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.row}
+              onPress={() => navigation.navigate("HelpSupportScreen")}>
+              <View style={styles.rowLeft}>
+                {/* <ICON_Lock height={24} width={24} /> */}
+              <MaterialIcons name="support-agent" size={24} color={colors.primary} />
+                <View>
+                  <Text style={styles.title}>Help & Support</Text>
+                  <Text style={styles.subtitle}>
+                  Get the help you need, right when you need it
+                  </Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#999" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.row}
+              onPress={() => navigation.navigate("AboutUsScreen")}>
+              <View style={styles.rowLeft}>
+                {/* <ICON_Lock height={24} width={24} /> */}
+              {/* <AntDesign name="exclamation-circle" size={24} color={colors.primary} /> */}
+              <SimpleLineIcons name="exclamation" size={24} color={colors.primary} />
+                <View>
+                  <Text style={styles.title}>AboutUs</Text>
+                  <Text style={styles.subtitle}>
+                  Get the help you need, right when you need it
                   </Text>
                 </View>
               </View>

@@ -64,7 +64,17 @@ import {
   UPDATE_MISSINGDAY_REQUEST,
   UPDATE_MISSINGDAY_SUCCESS,
   UPDATE_MISSINGDAY_FAILURE,
-  COMPLIANCE_SCORE_FAILURE
+  COMPLIANCE_SCORE_FAILURE,
+  GET_REPORTS_SUCCESS,
+  REPORTS_FAILURE,
+  GET_FAQS_SUCCESS,
+  FAQS_FAILURE,
+  GET_SUPPORT_CONTACT_SUCCESS,
+  SUPPORT_CONTACT_FAILURE,
+  GET_ABOUT_APP_SUCCESS,
+  ABOUT_APP_FAILURE,
+  GET_PRIVACY_POLICY_SUCCESS,
+  PRIVACY_POLICY_FAILURE
 
 } from './action-types';
 import axiosinstance from '../../axios/axiosinstance';
@@ -752,7 +762,7 @@ export function GET_YEAR_WISE_TIMELINE({year}) {
   return async (dispatch) => {
     try {
       // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
-      const response = await axiosinstance.get(`dashboard/v1/timeline/year?year=2026`)
+      const response = await axiosinstance.get(`dashboard/v1/timeline/year?year=${year}`)
       const responseJson = response.data;
       // console.log('responseYEARJson-=>', responseJson);
 
@@ -1119,6 +1129,158 @@ export function GET_MISSING_ACTIVITY_LIST() {
         payload: 'MISSING_ACTIVITY_LIST_FAILURE',
       })
       console.log('catch error API MISSING_ACTIVITY_LIST_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+
+export function GET_REPORTS({ type, date }) {
+  console.log('type','date', type, date);
+  return async (dispatch) => {
+    try {
+      // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
+      const response = await axiosinstance.get(`dashboard/reports?type=${type}&date=2026-02-01`)
+      const responseJson = response.data;
+      console.log('responseYEARJson-=>', responseJson);
+
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_REPORTS_SUCCESS,
+          payload: responseJson.result,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: REPORTS_FAILURE,
+        payload: 'REPORTS_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: REPORTS_FAILURE,
+        payload: 'REPORTS_FAILURE',
+      })
+      console.log('catch error API YEAR_WISE_TIMELINE_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+
+export function GET_FAQS() {
+  return async (dispatch) => {
+    try {
+      // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
+      const response = await axiosinstance.get(`faqs`)
+      const responseJson = response.data;
+      // console.log('responseYEARJson-=>', responseJson);
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_FAQS_SUCCESS,
+          payload: responseJson.result,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: FAQS_FAILURE,
+        payload: 'FAQS_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: FAQS_FAILURE,
+        payload: 'FAQS_FAILURE',
+      })
+      console.log('catch error API FAQS_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+
+export function GET_SUPPORT_CONTACT() {
+  return async (dispatch) => {
+    try {
+      // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
+      const response = await axiosinstance.get(`support-contact`)
+      const responseJson = response.data;
+      // console.log('responseYEARJson-=>', responseJson);
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_SUPPORT_CONTACT_SUCCESS,
+          payload: responseJson.result,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: SUPPORT_CONTACT_FAILURE,
+        payload: 'SUPPORT_CONTACT_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: SUPPORT_CONTACT_FAILURE,
+        payload: 'SUPPORT_CONTACT_FAILURE',
+      })
+      console.log('catch error API SUPPORT_CONTACT_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+
+export function GET_ABOUT_APP() {
+  return async (dispatch) => {
+    try {
+      // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
+      const response = await axiosinstance.get(`app-about`)
+      const responseJson = response.data;
+      // console.log('responseYEARJson-=>', responseJson);
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_ABOUT_APP_SUCCESS,
+          payload: responseJson.result,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: ABOUT_APP_FAILURE,
+        payload: 'ABOUT_APP_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: ABOUT_APP_FAILURE,
+        payload: 'ABOUT_APP_FAILURE',
+      })
+      console.log('catch error API ABOUT_APP_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+
+export function GET_PRIVACY_POLICY() {
+  return async (dispatch) => {
+    try {
+      // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
+      const response = await axiosinstance.get(`privacy-policy`)
+      const responseJson = response.data;
+      // console.log('responseYEARJson-=>', responseJson);
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_PRIVACY_POLICY_SUCCESS,
+          payload: responseJson.result,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: PRIVACY_POLICY_FAILURE,
+        payload: 'PRIVACY_POLICY_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: PRIVACY_POLICY_FAILURE,
+        payload: 'PRIVACY_POLICY_FAILURE',
+      })
+      console.log('catch error API PRIVACY_POLICY_FAILURE', e)
       return Promise.reject(CommonError)
     }
   }
