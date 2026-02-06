@@ -407,92 +407,52 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                                 //     { code: 'UT', days: 45, color: '#28a0dd', threshold: 183 },
                                 // ]
                                 // stateWiseResidency
-                                    // ?.map((item, index) => (
-                                        <View style={styles.circleGrid}>
-                                            {sortedStateResidency?.map((item, index) => {
-                                                const isHomeState = item.state === userData?.state;
-                                                const daysLeft = item.threshold - item.days;
+                                sortedStateResidency
+                                    ?.map((item, index) => {
+                                        const isHomeState = item.state === userData?.state;
+                                        const daysLeft = item.threshold - item.days;
+                                        return(
+                                        
+                                        // <View style={styles.circleGrid}>
+                                        //     {sortedStateResidency?.map((item, index) => {
+                                                // const isHomeState = item.state === userData?.state;
+                                                // const daysLeft = item.threshold - item.days;
 
-                                                return (
-                                                    <TouchableOpacity
-                                                        key={index}
-                                                        activeOpacity={0.85}
-                                                        style={styles.circleWrapper}
-                                                        onPress={() =>
-                                                            navigation.navigate('StateTripsScreen', { state: item.state })
-                                                        }
-                                                    >
-                                                        {/* LEFT THRESHOLD FLAG */}
-                                                        <TouchableOpacity style={styles.leftFlag}
-                                                        onPress={()=>openThresholdModal(item)}>
-                                                            <Text style={styles.flagText}>T</Text>
-                                                            <Text style={styles.flagValue}>{item.threshold}</Text>
-                                                        </TouchableOpacity>
+                                        //         return (
+                                        //             <TouchableOpacity
+                                        //                 key={index}
+                                        //                 activeOpacity={0.85}
+                                        //                 style={styles.circleWrapper}
+                                        //                 onPress={() =>
+                                        //                     navigation.navigate('StateTripsScreen', { state: item.state })
+                                        //                 }
+                                        //             >
+                                        //                 {/* LEFT THRESHOLD FLAG */}
+                                        //                 <TouchableOpacity style={styles.leftFlag}
+                                        //                 onPress={()=>openThresholdModal(item)}>
+                                        //                     <Text style={styles.flagText}>T</Text>
+                                        //                     <Text style={styles.flagValue}>{item.threshold}</Text>
+                                        //                 </TouchableOpacity>
 
-                                                        {/* RIGHT COUNTDOWN FLAG */}
-                                                        <View
-                                                            style={[
-                                                                styles.rightFlag,
-                                                                { backgroundColor: getBorderColorByDays(item.days, item.threshold) },
-                                                            ]}
-                                                        >
-                                                            <Text style={styles.flagValue}>{daysLeft}</Text>
-                                                            <Text style={styles.leftText}>Left</Text>
-                                                        </View>
+                                        //                 {/* RIGHT COUNTDOWN FLAG */}
+                                        //                 <View
+                                        //                     style={[
+                                        //                         styles.rightFlag,
+                                        //                         { backgroundColor: getBorderColorByDays(item.days, item.threshold) },
+                                        //                     ]}
+                                        //                 >
+                                        //                     <Text style={styles.flagValue}>{daysLeft}</Text>
+                                        //                     <Text style={styles.leftText}>Left</Text>
+                                        //                 </View>
 
-                                                        {/* MAIN CIRCLE */}
-                                                        <View
-                                                            style={[
-                                                                styles.circle,
-                                                                { borderColor: getBorderColorByDays(item.days, item.threshold) },
-                                                            ]}
-                                                        >
-                                                            {isHomeState && (
-                                                                <Icon
-                                                                    name="home"
-                                                                    size={14}
-                                                                    color="#333"
-                                                                    style={styles.homeIcon}
-                                                                />
-                                                            )}
-
-                                                            <Text style={styles.circleCode}>
-                                                                {getFinalStateCode(item.state, item.country || 'INDIA')}
-                                                            </Text>
-
-                                                            <Text style={styles.circleDays}>{item.days}</Text>
-                                                            <Text style={styles.circleLabel}>Days In</Text>
-                                                        </View>
-                                                    </TouchableOpacity>
-                                                );
-                                            })}
-                                        </View>
-
-                                        // <View key={index} style={[styles.stateCard, { width: Dimensions.get('window').width * 0.42, height: Dimensions.get('window').width * 0.42 }]}
-                                        //     onPress={() => navigation.navigate('StateTripsScreen', { state: item.state })}>
-                                        //     <TouchableOpacity
-                                        //         style={styles.smallCircle}
-                                        //         onPress={() => openThresholdModal(item)}
-                                        //         activeOpacity={0.7}
-                                        //     >
-                                        //         <Text style={styles.smallCircleText}>{item?.threshold}</Text>
-                                        //     </TouchableOpacity>
-                                        //     <TouchableOpacity
-                                        //         style={[styles.smallCircle1, { backgroundColor: getBorderColorByDays(item.days, item.threshold) }]}
-                                        //         onPress={() => openThresholdModal(item)}
-                                        //         activeOpacity={0.7}
-                                        //     >
-                                        //         <Text style={[styles.smallCircleText,]}>{item?.threshold - item.days}</Text>
-                                        //     </TouchableOpacity>
-
-                                        //     {/* <View style={{ borderRadius: 70, borderWidth: 5, borderColor: getStateColor(item.state), width: Dimensions.get('window').width * 0.35, height: Dimensions.get('window').width * 0.35, justifyContent: 'center', alignItems: 'center' }}> */}
-                                        //     <TouchableOpacity style={{ borderRadius: 70, borderWidth: 5, borderColor: getBorderColorByDays(item.days, item.threshold), width: Dimensions.get('window').width * 0.30, height: Dimensions.get('window').width * 0.30, justifyContent: 'center', alignItems: 'center' }}
-                                        //         onPress={() => navigation.navigate('StateTripsScreen', { state: item.state })}>
-                                        //         {/* <Text style={styles.stateCode}>{item.state.length < 2 ? item.state : getStateCodeSafe(item.state)}</Text> */}
-                                        //         {/* <Text style={styles.stateCode}>
-                                        //             {getStateShortCode(item.state, item.country || "INDIA")}
-                                        //         </Text> */}
-                                        //          {item.state === userData?.state && (
+                                        //                 {/* MAIN CIRCLE */}
+                                        //                 <View
+                                        //                     style={[
+                                        //                         styles.circle,
+                                        //                         { borderColor: getBorderColorByDays(item.days, item.threshold) },
+                                        //                     ]}
+                                        //                 >
+                                        //                     {isHomeState && (
                                         //                         <Icon
                                         //                             name="home"
                                         //                             size={14}
@@ -500,20 +460,67 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                                         //                             style={styles.homeIcon}
                                         //                         />
                                         //                     )}
-                                        //         <Text style={styles.stateCode}>
-                                        //             {getFinalStateCode(item.state, item.country || "INDIA")}
-                                        //         </Text>
-                                        //         <View>
 
-                                        //         <Text style={styles.stateDays}>{item.days}</Text>
-                                        //         </View>
-                                        //         <Text style={styles.daysIn}>Days in</Text>
+                                        //                     <Text style={styles.circleCode}>
+                                        //                         {getFinalStateCode(item.state, item.country || 'INDIA')}
+                                        //                     </Text>
 
-                                        //     </TouchableOpacity>
-
-
+                                        //                     <Text style={styles.circleDays}>{item.days}</Text>
+                                        //                     <Text style={styles.circleLabel}>Days In</Text>
+                                        //                 </View>
+                                        //             </TouchableOpacity>
+                                        //         );
+                                        //     })}
                                         // </View>
-                                    // ))
+
+                                        <View key={index} style={[styles.stateCard, { width: Dimensions.get('window').width * 0.42, height: Dimensions.get('window').width * 0.42,elevation: 1, borderWidth: 0.5, borderColor: '#E0E0E0' }]}
+                                            onPress={() => navigation.navigate('StateTripsScreen', { state: item.state })}>
+                                            <TouchableOpacity
+                                                style={styles.smallCircle1}
+                                                onPress={() => openThresholdModal(item)}
+                                                activeOpacity={0.7}
+                                            >
+                                                <Text style={styles.smallCircleText}>{item?.threshold}</Text>
+                                            </TouchableOpacity>
+                                            <Text style={styles.smallCircle1Text}>Total</Text>
+                                            <TouchableOpacity
+                                                style={[styles.smallCircle, { backgroundColor: getBorderColorByDays(item.days, item.threshold) }]}
+                                                onPress={() => openThresholdModal(item)}
+                                                activeOpacity={0.7}
+                                            >
+                                                <Text style={[styles.smallCircleText,]}>{item?.threshold - item.days}</Text>
+                                            </TouchableOpacity>
+                                            <Text style={styles.smallCircle1Text1}>Left</Text>
+                                            {isHomeState && (
+                                                                <Icon
+                                                                    name="home"
+                                                                    size={24}
+                                                                    color={colors.primary}
+                                                                    style={styles.homeIcon}
+                                                                />
+                                                            )}
+                                            {/* <View style={{ borderRadius: 70, borderWidth: 5, borderColor: getStateColor(item.state), width: Dimensions.get('window').width * 0.35, height: Dimensions.get('window').width * 0.35, justifyContent: 'center', alignItems: 'center' }}> */}
+                                            <TouchableOpacity style={{ borderRadius: 70, borderWidth: 5, borderColor: getBorderColorByDays(item.days, item.threshold), width: Dimensions.get('window').width * 0.28, height: Dimensions.get('window').width * 0.28, justifyContent: 'center', alignItems: 'center' ,marginTop:20}}
+                                                onPress={() => navigation.navigate('StateTripsScreen', { state: item.state })}>
+                                                {/* <Text style={styles.stateCode}>{item.state.length < 2 ? item.state : getStateCodeSafe(item.state)}</Text> */}
+                                                {/* <Text style={styles.stateCode}>
+                                                    {getStateShortCode(item.state, item.country || "INDIA")}
+                                                </Text> */}
+                                               
+                                                <Text style={styles.stateCode}>
+                                                    {getFinalStateCode(item.state, item.country || "INDIA")}
+                                                </Text>
+                                                <View>
+
+                                                <Text style={styles.stateDays}>{item.days}</Text>
+                                                </View>
+                                                <Text style={styles.daysIn}>Days in</Text>
+
+                                            </TouchableOpacity>
+
+
+                                        </View>
+                                    )})
                                     }
                         </View>
                     </View>
@@ -697,9 +704,9 @@ const styles = StyleSheet.create({
     },
     stateCard: {
         width: '47%',
-        height: 140,
-        // borderWidth: 0.5,
-        // borderRadius: 16,
+        height: 150,
+        borderWidth: 0.5,
+        borderRadius: 16,
         marginBottom: 16,
         alignItems: 'center',
         justifyContent: 'center',
@@ -709,13 +716,13 @@ const styles = StyleSheet.create({
     stateCode: {
         fontSize: 22,
         fontWeight: '700',
-        marginBottom: 4,
+        marginBottom: 0,
     },
     stateDays: {
         fontSize: 26,
         fontWeight: '700',
         color: '#000',
-        marginBottom: 2,
+        // marginBottom: 2,
     },
     daysIn: {
         color: '#555',
@@ -749,6 +756,41 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#E0E0E0',
     },
+    smallCircle1Text: {
+        position: 'absolute',
+        fontSize:13,
+        fontWeight:'600',
+        top: 38,
+        left:2,
+        // width: 46,
+        // height: 25,
+        // borderTopRightRadius: 18,
+        // borderBottomRightRadius: 18,
+        // backgroundColor: colors.primary,
+        justifyContent: 'center',
+        alignItems: 'center',
+        // borderWidth: 1,
+        // borderColor: '#E0E0E0',
+
+    },
+    smallCircle1Text1: {
+        position: 'absolute',
+        fontSize:13,
+        fontWeight:'600',
+        top: 38,
+        right: 2,
+        // width: 46,
+        height: 25,
+        // borderTopRightRadius: 18,
+        // borderBottomRightRadius: 18,
+        // backgroundColor: colors.primary,
+        justifyContent: 'center',
+        alignItems: 'center',
+        // borderWidth: 1,
+        // borderColor: '#E0E0E0',
+
+    },
+
     smallCircleText: {
         fontSize: 12,
         fontWeight: '500',
@@ -1154,7 +1196,7 @@ const styles = StyleSheet.create({
 
     homeIcon: {
         position: 'absolute',
-        bottom: 50,
+        bottom: 10,
         left: 10,
     },
 

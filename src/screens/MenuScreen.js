@@ -16,6 +16,8 @@ import { useNavigation } from "@react-navigation/native";
 import { connect } from "react-redux";
 import { getUserPersonalDataSelelctor } from "../redux/selectors/common";
 import { getPersonalProfileDataAction } from "../redux/actions/action-creator";
+import { GET_SUPPORT_CONTACT } from "../redux/actions/action-creator";
+
 
 const colors = {
   primary: "#28A0DD",
@@ -27,14 +29,16 @@ const colors = {
   success: "#28a745",
 };
 
-const MenuScreen = ({ userPersonalData, getPersonalProfileDataAction, }) => {
-  console.log('userPersonalData', userPersonalData);
+const MenuScreen = ({ userPersonalData, getPersonalProfileDataAction,GET_SUPPORT_CONTACT,supportContact }) => {
+  // console.log('userPersonalData', userPersonalData);
+  // console.log('supportContact', supportContact);
   const getData = async () => {
     await getPersonalProfileDataAction();
   };
 
   useEffect(() => {
     getData();
+    GET_SUPPORT_CONTACT()
   }, []);
   const navigation = useNavigation();
   return (
@@ -95,7 +99,7 @@ const MenuScreen = ({ userPersonalData, getPersonalProfileDataAction, }) => {
             {/* <MenuRow onPress={() => { navigation.navigate('ResidencyHistory') }} icon="home-outline" label="Domicile / Residency Settings" /> */}
             <MenuRow
               icon="mail-outline"
-              label="support@domigo-go.com"
+              label={supportContact[0]?.email}
               isLast
             />
           </View>
@@ -240,10 +244,12 @@ function mapStateToProps(state) {
 
   return {
     userPersonalData: getUserPersonalDataSelelctor(state),
+    supportContact: state.common.supportContact,
   }
 }
 
 const mapDispatchToProps = {
   getPersonalProfileDataAction,
+  GET_SUPPORT_CONTACT
 }
 export default connect(mapStateToProps, mapDispatchToProps)(MenuScreen);
