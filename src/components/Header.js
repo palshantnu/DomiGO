@@ -2,8 +2,10 @@ import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native'
 import React from 'react'
 import colors from '../theme/colors'
 import Icon from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native';
 
-const Header = ({ title, navigation }) => {
+const Header = ({ title }) => {
+    const navigation = useNavigation();
     return (
         <View style={styles.header}>
             <TouchableOpacity style={styles.headerLeft}

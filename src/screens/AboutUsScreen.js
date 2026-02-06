@@ -14,19 +14,20 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import Header from "../components/Header";
 import { connect } from "react-redux";
 import { GET_ABOUT_APP, } from '../redux/actions/action-creator';
+import { useNavigation } from "@react-navigation/native";
 
 
-const AboutUsScreen = ({GET_ABOUT_APP,aboutApp}) => {
+const AboutUsScreen = ({ GET_ABOUT_APP, aboutApp }) => {
 
-    useEffect(() => {
-        GET_ABOUT_APP();
-      }, []);  
+  useEffect(() => {
+    GET_ABOUT_APP();
+  }, []);
   console.log('aboutApp', aboutApp);
 
   const openWebsite = () => {
     Linking.openURL("https://www.domigo.app");
   };
-
+  const navigation = useNavigation();
   return (
     <LinearGradient
       colors={["#9ab1fa", "#ffffff"]}
@@ -36,9 +37,9 @@ const AboutUsScreen = ({GET_ABOUT_APP,aboutApp}) => {
       style={{ flex: 1 }}
     >
       <SafeAreaView style={{ flex: 1 }}>
-        <Header title="About Us" />
+        <Header title="About Us" navigation={navigation} />
 
-        <ScrollView
+        {aboutApp?.length > 0 && < ScrollView
           contentContainerStyle={styles.container}
           showsVerticalScrollIndicator={false}
         >
@@ -47,7 +48,7 @@ const AboutUsScreen = ({GET_ABOUT_APP,aboutApp}) => {
             <Text style={styles.sectionTitle}>About DomiGo</Text>
 
             <Text style={styles.description}>
-             {aboutApp[0]?.aboutText}
+              {aboutApp[0]?.aboutText}
             </Text>
 
             {/* Website */}
@@ -77,7 +78,7 @@ const AboutUsScreen = ({GET_ABOUT_APP,aboutApp}) => {
             <View style={styles.infoRow}>
               <Text style={styles.label}>Created By</Text>
               <Text style={styles.value}>
-              {aboutApp[0]?.createdBy}
+                {aboutApp[0]?.createdBy}
               </Text>
             </View>
           </View>
@@ -85,7 +86,7 @@ const AboutUsScreen = ({GET_ABOUT_APP,aboutApp}) => {
           {/* Footer Logo */}
           <View style={styles.footer}>
             <Image
-            //   source={require("../assets/image/domigo.png")}
+              //   source={require("../assets/image/domigo.png")}
               source={require("../assets/image/logo.png")}
               style={styles.logo}
               resizeMode="contain"
@@ -94,107 +95,106 @@ const AboutUsScreen = ({GET_ABOUT_APP,aboutApp}) => {
               © {new Date().getFullYear()} Go Home Technologies LLC
             </Text>
           </View>
-        </ScrollView>
+        </ScrollView>}
       </SafeAreaView>
-    </LinearGradient>
+    </LinearGradient >
   );
 };
 function mapStateToProps(state) {
-    return {
-      userData: state.auth.userData,
-      loginToken: state.auth.loginToken,
-      aboutApp: state.common.aboutApp,
-    };
-  }
-  
-  
-  const mapDispatchToProps = {
-    GET_ABOUT_APP,
+  return {
+    userData: state.auth.userData,
+    loginToken: state.auth.loginToken,
+    aboutApp: state.common.aboutApp,
   };
-  
-  export default connect(mapStateToProps, mapDispatchToProps)(AboutUsScreen);
+}
+
+
+const mapDispatchToProps = {
+  GET_ABOUT_APP,
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(AboutUsScreen);
 
 const styles = StyleSheet.create({
-    container: {
-      paddingHorizontal: 18,
-      paddingBottom: 30,
-      flexGrow: 1,
-    },
-  
-    card: {
-      backgroundColor: "#fff",
-      borderRadius: 14,
-      padding: 16,
-      marginTop: 16,
-      borderWidth: 1,
-      borderColor: "#E5E7EB",
-    },
-  
-    sectionTitle: {
-      fontSize: 18,
-      fontWeight: "700",
-      color: "#0F172A",
-      marginBottom: 10,
-    },
-  
-    description: {
-      fontSize: 14,
-      color: "#475569",
-      lineHeight: 20,
-      marginBottom: 14,
-    },
-  
-    row: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      paddingVertical: 12,
-    },
-  
-    rowLeft: {
-      flexDirection: "row",
-      alignItems: "center",
-    },
-  
-    rowText: {
-      fontSize: 14,
-      color: "#2563EB",
-      marginLeft: 10,
-      fontWeight: "500",
-    },
-  
-    infoRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      paddingVertical: 10,
-    },
-  
-    label: {
-      fontSize: 14,
-      color: "#475569",
-    },
-  
-    value: {
-      fontSize: 14,
-      color: "#0F172A",
-      fontWeight: "600",
-    },
-  
-    footer: {
-      marginTop: "auto",
-      alignItems: "center",
-      paddingTop: 30,
-    },
-  
-    logo: {
-      height: 26,        // 🔹 small
-      width: 100,
-      marginBottom: 8,
-    },
-  
-    footerText: {
-      fontSize: 12,
-      color: "#64748B",
-    },
-  });
-  
+  container: {
+    paddingHorizontal: 18,
+    paddingBottom: 30,
+    flexGrow: 1,
+  },
+
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    padding: 16,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#0F172A",
+    marginBottom: 10,
+  },
+
+  description: {
+    fontSize: 14,
+    color: "#475569",
+    lineHeight: 20,
+    marginBottom: 14,
+  },
+
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+  },
+
+  rowLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  rowText: {
+    fontSize: 14,
+    color: "#2563EB",
+    marginLeft: 10,
+    fontWeight: "500",
+  },
+
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+  },
+
+  label: {
+    fontSize: 14,
+    color: "#475569",
+  },
+
+  value: {
+    fontSize: 14,
+    color: "#0F172A",
+    fontWeight: "600",
+  },
+
+  footer: {
+    marginTop: "auto",
+    alignItems: "center",
+    paddingTop: 30,
+  },
+
+  logo: {
+    height: 26,        // 🔹 small
+    width: 100,
+    marginBottom: 8,
+  },
+
+  footerText: {
+    fontSize: 12,
+    color: "#64748B",
+  },
+});

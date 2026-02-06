@@ -29,9 +29,9 @@ const colors = {
   success: "#28a745",
 };
 
-const MenuScreen = ({ userPersonalData, getPersonalProfileDataAction,GET_SUPPORT_CONTACT,supportContact }) => {
+const MenuScreen = ({ userPersonalData, getPersonalProfileDataAction, GET_SUPPORT_CONTACT, supportContact }) => {
   // console.log('userPersonalData', userPersonalData);
-  // console.log('supportContact', supportContact);
+  console.log('supportContact', supportContact);
   const getData = async () => {
     await getPersonalProfileDataAction();
   };
@@ -97,11 +97,11 @@ const MenuScreen = ({ userPersonalData, getPersonalProfileDataAction,GET_SUPPORT
           <Text style={styles.sectionTitle}>Support</Text>
           <View style={styles.card}>
             {/* <MenuRow onPress={() => { navigation.navigate('ResidencyHistory') }} icon="home-outline" label="Domicile / Residency Settings" /> */}
-            <MenuRow
+            {supportContact.length > 0 && <MenuRow
               icon="mail-outline"
               label={supportContact[0]?.email}
               isLast
-            />
+            />}
           </View>
         </ScrollView>
       </SafeAreaView>

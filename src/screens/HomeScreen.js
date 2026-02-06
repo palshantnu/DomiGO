@@ -760,7 +760,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         fontSize:13,
         fontWeight:'600',
-        top: 38,
+        top: 42,
         left:2,
         // width: 46,
         // height: 25,
@@ -777,7 +777,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         fontSize:13,
         fontWeight:'600',
-        top: 38,
+        top: 42,
         right: 2,
         // width: 46,
         height: 25,
@@ -1054,15 +1054,19 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
 
-    metricBox: {
-        width: '30%',
-        backgroundColor: '#fff',
-        borderRadius: 14,
-        paddingVertical: 16,
-        alignItems: 'center',
-        // justifyContent:'center',
-        elevation: 3,
-    },
+  metricBox: {
+  width: '30%',
+  backgroundColor: '#fff',
+  borderRadius: 14,
+  paddingVertical: 16,
+  alignItems: 'center',
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 0 },
+  shadowOpacity: 0.15,
+  shadowRadius: 4,
+  elevation: 3,
+},
+
 
     metricValue: {
         fontSize: 22,

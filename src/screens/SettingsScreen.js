@@ -40,7 +40,7 @@ export default function SettingsScreen() {
       style={styles.container}
     >
       <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
-        <Header title={'Settings'} />
+        <Header title={'Settings'} navigation={navigation} />
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 40 }}

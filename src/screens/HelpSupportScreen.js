@@ -72,17 +72,17 @@ const FAQItem = ({ item, isOpen, onPress }) => {
 };
 
 
-const HelpSupportScreen = ({GET_FAQS,GET_SUPPORT_CONTACT,faqs,supportContact}) => {
+const HelpSupportScreen = ({ GET_FAQS, GET_SUPPORT_CONTACT, faqs, supportContact }) => {
     const [openId, setOpenId] = useState(null);
 
     useEffect(() => {
         GET_FAQS();
         GET_SUPPORT_CONTACT();
-      }, []);
+    }, []);
 
-      
-  console.log('faqs', faqs);
-  console.log('supportContact', supportContact);
+
+    console.log('faqs', faqs);
+    console.log('supportContact', supportContact);
 
 
     return (
@@ -96,52 +96,53 @@ const HelpSupportScreen = ({GET_FAQS,GET_SUPPORT_CONTACT,faqs,supportContact}) =
             <SafeAreaView style={{ flex: 1 }}>
                 <Header title="Help & Support" />
 
-                <ScrollView
-                    contentContainerStyle={styles.container}
-                    showsVerticalScrollIndicator={false}
-                >
-                    {/* FAQ */}
-                    <View style={styles.card}>
-                        <Text style={styles.sectionTitle}>Frequently Asked Question?</Text>
+                {supportContact?.length > 0 &&
+                    faqs?.length > 0 && <ScrollView
+                        contentContainerStyle={styles.container}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        {/* FAQ */}
+                        <View style={styles.card}>
+                            <Text style={styles.sectionTitle}>Frequently Asked Question?</Text>
 
-                        {FAQS.map((item, index) => (
-                            <View
-                                key={item.id}
-                                style={index !== FAQS.length - 1 && styles.rowBorder}
-                            >
-                                <FAQItem
-                                    item={item}
-                                    isOpen={openId === item.id}
-                                    onPress={() =>
-                                        setOpenId(openId === item.id ? null : item.id)
-                                    }
-                                />
+                            {FAQS.map((item, index) => (
+                                <View
+                                    key={item.id}
+                                    style={index !== FAQS.length - 1 && styles.rowBorder}
+                                >
+                                    <FAQItem
+                                        item={item}
+                                        isOpen={openId === item.id}
+                                        onPress={() =>
+                                            setOpenId(openId === item.id ? null : item.id)
+                                        }
+                                    />
+                                </View>
+                            ))}
+                        </View>
+
+                        {/* Contact Support */}
+                        <View style={styles.card}>
+                            <Text style={styles.sectionTitle}>Contact Support</Text>
+
+                            <View style={styles.contactRow}>
+                                <Ionicons name="mail-outline" size={18} color="#2563EB" />
+                                <Text style={styles.contactText}>{supportContact[0]?.email}</Text>
                             </View>
-                        ))}
-                    </View>
 
-                    {/* Contact Support */}
-                    <View style={styles.card}>
-                        <Text style={styles.sectionTitle}>Contact Support</Text>
+                            <View style={styles.contactRow}>
+                                <Ionicons name="call-outline" size={18} color="#22C55E" />
+                                <Text style={styles.contactText}>+1 {supportContact[0]?.phone}</Text>
+                            </View>
 
-                        <View style={styles.contactRow}>
-                            <Ionicons name="mail-outline" size={18} color="#2563EB" />
-                            <Text style={styles.contactText}>{supportContact[0]?.email}</Text>
+                            <TouchableOpacity style={styles.primaryButton}>
+                                <Text style={styles.primaryButtonText}>Send Us a Message</Text>
+                                <Ionicons name="send" size={16} color="#fff" />
+                            </TouchableOpacity>
                         </View>
 
-                        <View style={styles.contactRow}>
-                            <Ionicons name="call-outline" size={18} color="#22C55E" />
-                            <Text style={styles.contactText}>+1 {supportContact[0]?.phone}</Text>
-                        </View>
-
-                        <TouchableOpacity style={styles.primaryButton}>
-                            <Text style={styles.primaryButtonText}>Send Us a Message</Text>
-                            <Ionicons name="send" size={16} color="#fff" />
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Troubleshooting */}
-                    {/* <View style={styles.card}>
+                        {/* Troubleshooting */}
+                        {/* <View style={styles.card}>
                         <Text style={styles.sectionTitle}>Troubleshooting Tips</Text>
 
                         {TIPS.map((item) => (
@@ -159,27 +160,27 @@ const HelpSupportScreen = ({GET_FAQS,GET_SUPPORT_CONTACT,faqs,supportContact}) =
                             </Text>
                         </TouchableOpacity>
                     </View> */}
-                </ScrollView>
+                    </ScrollView>}
             </SafeAreaView>
         </LinearGradient>
     );
 };
 function mapStateToProps(state) {
     return {
-      userData: state.auth.userData,
-      loginToken: state.auth.loginToken,
-      faqs: state.common.faqs,
-      supportContact: state.common.supportContact,
+        userData: state.auth.userData,
+        loginToken: state.auth.loginToken,
+        faqs: state.common.faqs,
+        supportContact: state.common.supportContact,
     };
-  }
-  
-  
-  const mapDispatchToProps = {
+}
+
+
+const mapDispatchToProps = {
     GET_FAQS,
     GET_SUPPORT_CONTACT,
-  };
-  
-  export default connect(mapStateToProps, mapDispatchToProps)(HelpSupportScreen);
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(HelpSupportScreen);
 const styles = StyleSheet.create({
     container: {
         paddingHorizontal: 18,
@@ -234,7 +235,7 @@ const styles = StyleSheet.create({
     },
 
     primaryButton: {
-        backgroundColor: "#2563EB",
+        backgroundColor: colors.primary,
         marginTop: 14,
         paddingVertical: 12,
         borderRadius: 22,
@@ -296,17 +297,17 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "space-between",
         paddingVertical: 14,
-      },
-      
-      answerContainer: {
+    },
+
+    answerContainer: {
         paddingBottom: 12,
         paddingRight: 24,
-      },
-      
-      answerText: {
+    },
+
+    answerText: {
         fontSize: 13,
         color: "#475569",
         lineHeight: 18,
-      },
-       
+    },
+
 });
