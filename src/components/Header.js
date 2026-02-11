@@ -1,11 +1,23 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native'
-import React from 'react'
+import React, { useEffect } from 'react'
 import colors from '../theme/colors'
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
+import { connect } from 'react-redux';
+import { getPersonalProfileDataAction } from "../redux/actions/action-creator";
+import { getUserPersonalDataSelelctor } from "../redux/selectors/common";
 
-const Header = ({ title }) => {
+const Header = ({ title, userPersonalData, getPersonalProfileDataAction }) => {
+
     const navigation = useNavigation();
+
+    const getData = async () => {
+        await getPersonalProfileDataAction();
+    };
+
+    useEffect(() => {
+        getData();
+    }, []);
     return (
         <View style={styles.header}>
             <TouchableOpacity style={styles.headerLeft}
@@ -13,9 +25,17 @@ const Header = ({ title }) => {
                     screen: 'Profile',
                 })
                 }>
-                <Image
+                {/* <Image
                     // source={{ uri: 'https://i.pravatar.cc/100' }}
                     source={{ uri: 'https://cdn-icons-png.flaticon.com/128/3135/3135715.png' }}
+                    style={styles.avatar}
+                /> */}
+                <Image
+                    source={{
+                        uri: userPersonalData?.profileImageSignedUrl
+                            ? userPersonalData.profileImageSignedUrl
+                            : 'https://cdn-icons-png.flaticon.com/128/3135/3135715.png'
+                    }}
                     style={styles.avatar}
                 />
 
@@ -27,7 +47,17 @@ const Header = ({ title }) => {
     )
 }
 
-export default Header
+// export default Header
+function mapStateToProps(state) {
+    return {
+        userPersonalData: getUserPersonalDataSelelctor(state),
+    }
+}
+
+const mapDispatchToProps = {
+    getPersonalProfileDataAction,
+}
+export default connect(mapStateToProps, mapDispatchToProps)(Header);
 
 const styles = StyleSheet.create({
     header: {

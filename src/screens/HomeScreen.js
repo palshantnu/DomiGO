@@ -207,7 +207,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
             style={styles.container}
         >
             <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1, backgroundColor: 'none' }}>
-                <Header title={'Dashboard'} navigation={navigation}/>
+                <Header title={'Dashboard'} navigation={navigation} />
                 <ScrollView style={styles.container} showsVerticalScrollIndicator={false}
                     refreshControl={
                         <RefreshControl
@@ -263,7 +263,6 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                             </Text> */}
                         </View>
 
-                        {/* READINESS SCORE */}
                         <TouchableOpacity
                             style={styles.metricBox}
                             onPress={() => navigation.navigate('ReportsExport')}
@@ -281,8 +280,8 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                     </View>
 
 
-                    <View style={styles.summaryContainer}>
-                        {/* <View style={styles.summaryBox}>
+                    {/* <View style={styles.summaryContainer}>
+                        <View style={styles.summaryBox}>
                             <View style={{ flexDirection: 'row', width: '100%', }}>
                                 <Icon name="calendar-outline" size={20} style={{ marginTop: 10 }} color={'#65C466'} />
                                 <View style={{ marginLeft: 5 }}>
@@ -295,9 +294,9 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                                     </Text>
                                 </View>
                             </View>
-                        </View> */}
+                        </View>
 
-                        {/* <TouchableOpacity style={styles.summaryBox}
+                        <TouchableOpacity style={styles.summaryBox}
                             // onPress={()=> navigation.navigate('Settings', {
                             //     screen: 'ReportsExport',
                             // })
@@ -314,8 +313,8 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                             <Text style={styles.summaryLabel}>
                                 Your current estimated tax compliance.
                             </Text>
-                        </TouchableOpacity> */}
-                    </View>
+                        </TouchableOpacity>
+                    </View> */}
 
                     {!isGPSOn && (
                         <TouchableOpacity
@@ -365,8 +364,8 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                     )} */}
 
 
-                    <View style={{ ...styles.section, elevation: 2, backgroundColor: '#fafafa', borderRadius: 10 }}>
-                        <Text style={styles.sectionTitle}>Insights Menu</Text>
+                    <View style={{ ...styles.section, elevation: 0, backgroundColor: '#fafafa', borderRadius: 10 }}>
+                        {/* <Text style={styles.sectionTitle}>Insights Menu</Text> */}
 
                         <View style={styles.toggleContainer}>
                             <TouchableOpacity style={styles.leftTab}
@@ -397,7 +396,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
 
 
                     <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>State-wise Residency Overview</Text>
+                        {/* <Text style={styles.sectionTitle}>State-wise Residency Overview</Text> */}
                         <View style={styles.stateGrid}>
                             {
                                 // [
@@ -411,117 +410,118 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                                     ?.map((item, index) => {
                                         const isHomeState = item.state === userData?.state;
                                         const daysLeft = item.threshold - item.days;
-                                        return(
-                                        
-                                        // <View style={styles.circleGrid}>
-                                        //     {sortedStateResidency?.map((item, index) => {
-                                                // const isHomeState = item.state === userData?.state;
-                                                // const daysLeft = item.threshold - item.days;
+                                        return (
 
-                                        //         return (
-                                        //             <TouchableOpacity
-                                        //                 key={index}
-                                        //                 activeOpacity={0.85}
-                                        //                 style={styles.circleWrapper}
-                                        //                 onPress={() =>
-                                        //                     navigation.navigate('StateTripsScreen', { state: item.state })
-                                        //                 }
-                                        //             >
-                                        //                 {/* LEFT THRESHOLD FLAG */}
-                                        //                 <TouchableOpacity style={styles.leftFlag}
-                                        //                 onPress={()=>openThresholdModal(item)}>
-                                        //                     <Text style={styles.flagText}>T</Text>
-                                        //                     <Text style={styles.flagValue}>{item.threshold}</Text>
-                                        //                 </TouchableOpacity>
+                                            // <View style={styles.circleGrid}>
+                                            //     {sortedStateResidency?.map((item, index) => {
+                                            // const isHomeState = item.state === userData?.state;
+                                            // const daysLeft = item.threshold - item.days;
 
-                                        //                 {/* RIGHT COUNTDOWN FLAG */}
-                                        //                 <View
-                                        //                     style={[
-                                        //                         styles.rightFlag,
-                                        //                         { backgroundColor: getBorderColorByDays(item.days, item.threshold) },
-                                        //                     ]}
-                                        //                 >
-                                        //                     <Text style={styles.flagValue}>{daysLeft}</Text>
-                                        //                     <Text style={styles.leftText}>Left</Text>
-                                        //                 </View>
+                                            //         return (
+                                            //             <TouchableOpacity
+                                            //                 key={index}
+                                            //                 activeOpacity={0.85}
+                                            //                 style={styles.circleWrapper}
+                                            //                 onPress={() =>
+                                            //                     navigation.navigate('StateTripsScreen', { state: item.state })
+                                            //                 }
+                                            //             >
+                                            //                 {/* LEFT THRESHOLD FLAG */}
+                                            //                 <TouchableOpacity style={styles.leftFlag}
+                                            //                 onPress={()=>openThresholdModal(item)}>
+                                            //                     <Text style={styles.flagText}>T</Text>
+                                            //                     <Text style={styles.flagValue}>{item.threshold}</Text>
+                                            //                 </TouchableOpacity>
 
-                                        //                 {/* MAIN CIRCLE */}
-                                        //                 <View
-                                        //                     style={[
-                                        //                         styles.circle,
-                                        //                         { borderColor: getBorderColorByDays(item.days, item.threshold) },
-                                        //                     ]}
-                                        //                 >
-                                        //                     {isHomeState && (
-                                        //                         <Icon
-                                        //                             name="home"
-                                        //                             size={14}
-                                        //                             color="#333"
-                                        //                             style={styles.homeIcon}
-                                        //                         />
-                                        //                     )}
+                                            //                 {/* RIGHT COUNTDOWN FLAG */}
+                                            //                 <View
+                                            //                     style={[
+                                            //                         styles.rightFlag,
+                                            //                         { backgroundColor: getBorderColorByDays(item.days, item.threshold) },
+                                            //                     ]}
+                                            //                 >
+                                            //                     <Text style={styles.flagValue}>{daysLeft}</Text>
+                                            //                     <Text style={styles.leftText}>Left</Text>
+                                            //                 </View>
 
-                                        //                     <Text style={styles.circleCode}>
-                                        //                         {getFinalStateCode(item.state, item.country || 'INDIA')}
-                                        //                     </Text>
+                                            //                 {/* MAIN CIRCLE */}
+                                            //                 <View
+                                            //                     style={[
+                                            //                         styles.circle,
+                                            //                         { borderColor: getBorderColorByDays(item.days, item.threshold) },
+                                            //                     ]}
+                                            //                 >
+                                            //                     {isHomeState && (
+                                            //                         <Icon
+                                            //                             name="home"
+                                            //                             size={14}
+                                            //                             color="#333"
+                                            //                             style={styles.homeIcon}
+                                            //                         />
+                                            //                     )}
 
-                                        //                     <Text style={styles.circleDays}>{item.days}</Text>
-                                        //                     <Text style={styles.circleLabel}>Days In</Text>
-                                        //                 </View>
-                                        //             </TouchableOpacity>
-                                        //         );
-                                        //     })}
-                                        // </View>
+                                            //                     <Text style={styles.circleCode}>
+                                            //                         {getFinalStateCode(item.state, item.country || 'INDIA')}
+                                            //                     </Text>
 
-                                        <View key={index} style={[styles.stateCard, { width: Dimensions.get('window').width * 0.42, height: Dimensions.get('window').width * 0.42,elevation: 1, borderWidth: 0.5, borderColor: '#E0E0E0' }]}
-                                            onPress={() => navigation.navigate('StateTripsScreen', { state: item.state })}>
-                                            <TouchableOpacity
-                                                style={styles.smallCircle1}
-                                                onPress={() => openThresholdModal(item)}
-                                                activeOpacity={0.7}
-                                            >
-                                                <Text style={styles.smallCircleText}>{item?.threshold}</Text>
-                                            </TouchableOpacity>
-                                            <Text style={styles.smallCircle1Text}>Total</Text>
-                                            <TouchableOpacity
-                                                style={[styles.smallCircle, { backgroundColor: getBorderColorByDays(item.days, item.threshold) }]}
-                                                onPress={() => openThresholdModal(item)}
-                                                activeOpacity={0.7}
-                                            >
-                                                <Text style={[styles.smallCircleText,]}>{item?.threshold - item.days}</Text>
-                                            </TouchableOpacity>
-                                            <Text style={styles.smallCircle1Text1}>Left</Text>
-                                            {isHomeState && (
-                                                                <Icon
-                                                                    name="home"
-                                                                    size={24}
-                                                                    color={colors.primary}
-                                                                    style={styles.homeIcon}
-                                                                />
-                                                            )}
-                                            {/* <View style={{ borderRadius: 70, borderWidth: 5, borderColor: getStateColor(item.state), width: Dimensions.get('window').width * 0.35, height: Dimensions.get('window').width * 0.35, justifyContent: 'center', alignItems: 'center' }}> */}
-                                            <TouchableOpacity style={{ borderRadius: 70, borderWidth: 5, borderColor: getBorderColorByDays(item.days, item.threshold), width: Dimensions.get('window').width * 0.28, height: Dimensions.get('window').width * 0.28, justifyContent: 'center', alignItems: 'center' ,marginTop:20}}
+                                            //                     <Text style={styles.circleDays}>{item.days}</Text>
+                                            //                     <Text style={styles.circleLabel}>Days In</Text>
+                                            //                 </View>
+                                            //             </TouchableOpacity>
+                                            //         );
+                                            //     })}
+                                            // </View>
+
+                                            <View key={index} style={[styles.stateCard, { width: Dimensions.get('window').width * 0.42, height: Dimensions.get('window').width * 0.42, elevation: 1, borderWidth: 0.5, borderColor: '#E0E0E0' }]}
                                                 onPress={() => navigation.navigate('StateTripsScreen', { state: item.state })}>
-                                                {/* <Text style={styles.stateCode}>{item.state.length < 2 ? item.state : getStateCodeSafe(item.state)}</Text> */}
-                                                {/* <Text style={styles.stateCode}>
+                                                <TouchableOpacity
+                                                    style={styles.smallCircle1}
+                                                    onPress={() => openThresholdModal(item)}
+                                                    activeOpacity={0.7}
+                                                >
+                                                    <Text style={styles.smallCircleText}>{item?.threshold}</Text>
+                                                </TouchableOpacity>
+                                                <Text style={styles.smallCircle1Text}>Total</Text>
+                                                <TouchableOpacity
+                                                    style={[styles.smallCircle, { backgroundColor: getBorderColorByDays(item.days, item.threshold) }]}
+                                                    onPress={() => openThresholdModal(item)}
+                                                    activeOpacity={0.7}
+                                                >
+                                                    <Text style={[styles.smallCircleText,]}>{item?.threshold - item.days}</Text>
+                                                </TouchableOpacity>
+                                                <Text style={styles.smallCircle1Text1}>Left</Text>
+                                                {isHomeState && (
+                                                    <Icon
+                                                        name="home"
+                                                        size={24}
+                                                        color={colors.primary}
+                                                        style={styles.homeIcon}
+                                                    />
+                                                )}
+                                                {/* <View style={{ borderRadius: 70, borderWidth: 5, borderColor: getStateColor(item.state), width: Dimensions.get('window').width * 0.35, height: Dimensions.get('window').width * 0.35, justifyContent: 'center', alignItems: 'center' }}> */}
+                                                <TouchableOpacity style={{ borderRadius: 70, borderWidth: 5, borderColor: getBorderColorByDays(item.days, item.threshold), width: Dimensions.get('window').width * 0.28, height: Dimensions.get('window').width * 0.28, justifyContent: 'center', alignItems: 'center', marginTop: 20 }}
+                                                    onPress={() => navigation.navigate('StateTripsScreen', { state: item.state })}>
+                                                    {/* <Text style={styles.stateCode}>{item.state.length < 2 ? item.state : getStateCodeSafe(item.state)}</Text> */}
+                                                    {/* <Text style={styles.stateCode}>
                                                     {getStateShortCode(item.state, item.country || "INDIA")}
                                                 </Text> */}
-                                               
-                                                <Text style={styles.stateCode}>
-                                                    {getFinalStateCode(item.state, item.country || "INDIA")}
-                                                </Text>
-                                                <View>
 
-                                                <Text style={styles.stateDays}>{item.days}</Text>
-                                                </View>
-                                                <Text style={styles.daysIn}>Days in</Text>
+                                                    <Text style={styles.stateCode}>
+                                                        {getFinalStateCode(item.state, item.country || "INDIA")}
+                                                    </Text>
+                                                    <View>
 
-                                            </TouchableOpacity>
+                                                        <Text style={styles.stateDays}>{item.days}</Text>
+                                                    </View>
+                                                    <Text style={styles.daysIn}>Days in</Text>
+
+                                                </TouchableOpacity>
 
 
-                                        </View>
-                                    )})
-                                    }
+                                            </View>
+                                        )
+                                    })
+                            }
                         </View>
                     </View>
                     <Modal
@@ -634,9 +634,9 @@ const styles = StyleSheet.create({
     },
 
     section: {
-        marginBottom: 24,
+        // marginBottom: 24,
         padding: 16,
-        margin: 10
+        // margin: 10
     },
     sectionTitle: {
         fontSize: 16,
@@ -758,10 +758,10 @@ const styles = StyleSheet.create({
     },
     smallCircle1Text: {
         position: 'absolute',
-        fontSize:13,
-        fontWeight:'600',
+        fontSize: 13,
+        // fontWeight: '600',
         top: 42,
-        left:2,
+        left: 2,
         // width: 46,
         // height: 25,
         // borderTopRightRadius: 18,
@@ -775,8 +775,8 @@ const styles = StyleSheet.create({
     },
     smallCircle1Text1: {
         position: 'absolute',
-        fontSize:13,
-        fontWeight:'600',
+        fontSize: 13,
+        // fontWeight: '600',
         top: 42,
         right: 2,
         // width: 46,
@@ -1050,33 +1050,33 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginHorizontal: 16,
-        marginTop: 12,
-        marginBottom: 16,
+        marginTop: 4,
+        marginBottom: 4,
     },
 
-  metricBox: {
-  width: '30%',
-  backgroundColor: '#fff',
-  borderRadius: 14,
-  paddingVertical: 16,
-  alignItems: 'center',
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 0 },
-  shadowOpacity: 0.15,
-  shadowRadius: 4,
-  elevation: 3,
-},
+    metricBox: {
+        width: '30%',
+        backgroundColor: '#fff',
+        borderRadius: 14,
+        paddingVertical: 16,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 3,
+    },
 
 
     metricValue: {
         fontSize: 22,
-        fontWeight: '700',
+        // fontWeight: '700',
         color: '#000',
     },
 
     metricLabel: {
         fontSize: 13,
-        fontWeight: '600',
+        // fontWeight: '600',
         marginTop: 4,
     },
 
@@ -1182,20 +1182,20 @@ const styles = StyleSheet.create({
         fontSize: 10,
         color: '#fff',
         fontWeight: '700',
-        lineHeight:12
+        lineHeight: 12
     },
 
     flagValue: {
         fontSize: 12,
         color: '#fff',
         fontWeight: '700',
-        lineHeight:16
+        lineHeight: 16
     },
 
     leftText: {
         fontSize: 9,
         color: '#fff',
-        lineHeight:10
+        lineHeight: 10
     },
 
     homeIcon: {

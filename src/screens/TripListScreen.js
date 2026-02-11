@@ -19,6 +19,18 @@ import { GET_TRIP_LIST_LIST } from "../redux/actions/action-creator";
 import { CustomToast } from "../helpers/CommonHelpers";
 
 
+function getTodayDateYYYYMMDD() {
+  const today = new Date();
+
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0'); // months 0-based hote hain
+  const day = String(today.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+
+
 
 const TripListScreen = ({ tripList }) => {
   const [refreshing, setRefreshing] = React.useState(false)
@@ -51,11 +63,15 @@ const TripListScreen = ({ tripList }) => {
     try {
       API_Function()
     } catch (e) {
-        console.log('Refresh error', e);
+      console.log('Refresh error', e);
     }
     setRefreshing(false);
     // CustomToast.show(" refreshed");
-};
+  };
+
+  const todayDate = getTodayDateYYYYMMDD();
+console.log(todayDate); // e.g. 2026-01-03
+
   return (
     <LinearGradient
       colors={["#9ab1fa", "#ffffff"]}
@@ -72,17 +88,26 @@ const TripListScreen = ({ tripList }) => {
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                tintColor={colors.primary}      // iOS
-                colors={[colors.primary]}       // Android
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.primary}      // iOS
+              colors={[colors.primary]}       // Android
             />
-        }
+          }
         >
 
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recent Trips</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('AddTrip')} style={styles.addTripButton}>
+            <TouchableOpacity onPress={() => {
+              // navigation.navigate('AddTrip')} 
+              navigation.navigate("DayEntryScreen", {
+                mode: "TRIP", // or "TRIP"
+                date: todayDate,
+                isEdit: false,
+                // data: item
+              })}
+            }
+              style={styles.addTripButton}>
               <Ionicons style={{ backgroundColor: colors.primary, borderRadius: 40 }} name="add" size={20} color={colors.white} />
               <Text style={styles.addTripText}>Add Trip</Text>
             </TouchableOpacity>
@@ -91,7 +116,7 @@ const TripListScreen = ({ tripList }) => {
 
           {tripList.map((trip) => (
             <TouchableOpacity key={trip.id} style={styles.card}
-             onPress={() => navigation.navigate('DayDetail', trip)}>
+              onPress={() => navigation.navigate('DayDetail', trip)}>
 
               <View style={styles.topRow}>
                 <View style={styles.typeRow}>
@@ -103,7 +128,7 @@ const TripListScreen = ({ tripList }) => {
                     color="#4CAF50"
                     style={{ marginRight: 5 }}
                   />
-                  <Text style={styles.typeText}>{trip?.type?.name}</Text>
+                  <Text style={styles.typeText}>{trip?.creationType}</Text>
                 </View>
                 <View
                   style={[styles.impactBadge, { backgroundColor: '#00d250' }]}
@@ -116,7 +141,8 @@ const TripListScreen = ({ tripList }) => {
 
 
               <Text style={styles.cityText}>{trip.destinationCity},{trip.destinationState}</Text>
-              <Text style={styles.dateText}>{new Date(trip.endDate).toDateString()}</Text>
+              {/* <Text style={styles.dateText}>{new Date(trip.endDate).toDateString()}</Text> */}
+              <Text style={styles.dateText}>{new Date(trip.date).toDateString()}</Text>
 
               <View style={styles.divider} />
 
@@ -137,7 +163,15 @@ const TripListScreen = ({ tripList }) => {
 
               </View>
               <TouchableOpacity
-                onPress={() => navigation.navigate('AddTrip', { id: trip.id })}
+                // onPress={() => navigation.navigate('AddTrip', { id: trip.id })}
+                onPress={() =>{
+                  navigation.navigate("DayEntryScreen", {
+                    mode: "TRIP", // or "TRIP"
+                    date: todayDate,
+                    isEdit: true,
+                    data: trip
+                  })}
+                }
                 style={{
                   width: 36,
                   height: 36,

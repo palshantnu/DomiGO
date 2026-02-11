@@ -208,7 +208,7 @@ const MetricsScreen = ({ GET_STATE_WISE_METRICS, loginToken, stateWiseMetrics })
                         return (
                             <View key={item.id} style={styles.card}>
                                 {/* <View style={[styles.stateBox, { backgroundColor: item.bgColor }]}> */}
-                                <View style={[styles.stateBox, { backgroundColor: colors.primary }]}>
+                                <View style={[styles.stateBox, { backgroundColor: "#fff" }]}>
                                     {/* <Text style={styles.stateText}>{item.state.length < 2 ? item.state : getStateCodeSafe(item.state)}</Text> */}
                                     <Text style={styles.stateText}>{item.state}</Text>
                                 </View>
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
         // borderRadius:15
     },
     stateText: {
-        color: '#fff',
+        color: '#111',
         fontSize: 18,
         fontWeight: '700',
     },

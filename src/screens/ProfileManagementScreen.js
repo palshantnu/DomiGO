@@ -10,6 +10,7 @@ import {
   Platform,
   PermissionsAndroid,
   KeyboardAvoidingView,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
@@ -30,6 +31,8 @@ import { SliderButton } from "../components/SliderButton";
 import Geolocation from '@react-native-community/geolocation'
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import GoogleAutoComplete from '../components/GoogleAutoComplete';
+import { launchCamera, launchImageLibrary } from "react-native-image-picker";
+
 
 const ProfileManagementScreen = ({
   userPersonalData,
@@ -42,6 +45,7 @@ const ProfileManagementScreen = ({
   const navigation = useNavigation();
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
+  const [profileImage, setProfileImage] = useState(null);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -51,6 +55,10 @@ const ProfileManagementScreen = ({
   const [countryCode, setCountryCode] = useState("");
   const [stateName, setStateName] = useState("");
   const [city, setCity] = useState("");
+  const [profileImageUrl, setProfileImageUrl] = useState(null);
+  const [profileImageFile, setProfileImageFile] = useState(null);
+
+
 
   const getLocation = async () => {
     Geolocation.getCurrentPosition(
@@ -122,6 +130,9 @@ const ProfileManagementScreen = ({
       setMobile(userPersonalData.mobile ?? "");
       setCity(userPersonalData.city ?? "");
       setStateName(userPersonalData.state ?? "");
+      setProfileImage(userPersonalData.profileImageSignedUrl ?? null);
+      setProfileImageUrl(userPersonalData.profileImageSignedUrl);
+      setProfileImageFile(null);
     }
   }, [userPersonalData]);
 
@@ -131,10 +142,49 @@ const ProfileManagementScreen = ({
     address,
     state: stateName,
     city,
+    profileImage
     // current_password: currentPassword,
     // new_password: newPassword,
   };
   console.log('personalData', personalData);
+
+  const createFormData = () => {
+    const formData = new FormData();
+
+    formData.append("name", name);
+    formData.append("mobile", mobile);
+    formData.append("address", address);
+    formData.append("state", stateName);
+    formData.append("city", city);
+
+    // if (profileImage) {
+    //   formData.append("profileImage", {
+    //     uri: profileImage.uri,
+    //     name: profileImage.fileName || "profile.jpg",
+    //     type: profileImage.type || "image/jpeg",
+    //   });
+    // }
+    // if (profileImage) {
+    //   formData.append("profileImage", {
+    //     uri:
+    //       Platform.OS === "android"
+    //         ? profileImage.uri
+    //         : profileImage.uri.replace("file://", ""),
+    //     name: profileImage.fileName || "profile.jpg",
+    //     type: profileImage.type || "image/jpeg",
+    //   });
+    // }
+    if (profileImageFile) {
+      formData.append("profileImage", {
+        uri: profileImageFile.uri,
+        name: profileImageFile.fileName,
+        type: profileImageFile.type,
+      });
+    }
+
+
+    return formData;
+  };
 
 
   const requestLocationPermission = async () => {
@@ -201,13 +251,59 @@ const ProfileManagementScreen = ({
 
   //   getLocation();
   // }, []);
+  const openImagePicker = () => {
+    Alert.alert(
+      "Select Image",
+      "Choose an option",
+      [
+        { text: "Camera", onPress: openCamera },
+        { text: "Gallery", onPress: openGallery },
+        { text: "Cancel", style: "cancel" },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const openCamera = () => {
+    launchCamera(
+      {
+        mediaType: "photo",
+        cameraType: "back",
+        quality: 0.7,
+      },
+      (response) => {
+        if (response.didCancel || response.errorCode) return;
+        setProfileImageFile(response.assets[0]);
+      }
+    );
+  };
+
+  const openGallery = () => {
+    launchImageLibrary(
+      {
+        mediaType: "photo",
+        quality: 0.7,
+      },
+      (response) => {
+        if (response.didCancel || response.errorCode) return;
+        setProfileImageFile(response.assets[0]);
+      }
+    );
+  };
+
+  useEffect(() => {
+    console.log("Selected Image:", profileImage);
+  }, [profileImage]);
+
+
 
   const UpdateProfile = async () => {
+    const formData = createFormData();
     setButtonLoader(true);
-    callUpdatePersonalInfoApi(updatePersonalInfoAction(personalData))
+    callUpdatePersonalInfoApi(updatePersonalInfoAction(formData))
       .then((res) => {
         console.log('res--->', res);
-        setButtonLoader(true);
+        setButtonLoader(false);
         if (res.data.success) {
           CustomToast.show("Profile updated successfully");
           navigation.goBack();
@@ -215,7 +311,7 @@ const ProfileManagementScreen = ({
 
       })
       .catch((e) => {
-        setButtonLoader(true);
+        setButtonLoader(false);
         console.log('res--->', e);
         CustomToast.show("Something went wrong");
       });
@@ -242,16 +338,22 @@ const ProfileManagementScreen = ({
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.profileWrapper}>
-              <View>
+              <TouchableOpacity onPress={openImagePicker}>
                 <Image
-                  // source={{ uri: "https://i.pravatar.cc/150" }}
-                    source={{ uri: 'https://cdn-icons-png.flaticon.com/128/3135/3135715.png' }}
+                  source={{
+                    uri: profileImageFile?.uri
+                      ? profileImageFile.uri
+                      : profileImageUrl
+                        ? profileImageUrl
+                        : "https://cdn-icons-png.flaticon.com/128/3135/3135715.png",
+                  }}
                   style={styles.profileImage}
                 />
-                {/* <TouchableOpacity style={styles.plusButton}>
+
+                <TouchableOpacity style={styles.plusButton}>
                   <Ionicons name="add" size={18} color="#fff" />
-                </TouchableOpacity> */}
-              </View>
+                </TouchableOpacity>
+              </TouchableOpacity>
 
               <Text style={styles.profileName}>{name || "User"}</Text>
               <Text style={styles.profileEmail}>
@@ -369,7 +471,7 @@ const ProfileManagementScreen = ({
                     stateName={stateName}
                     isStateSearch={false}
                     onSelect={setCity}
-                     value={city}
+                    value={city}
                   />
 
                 </View>

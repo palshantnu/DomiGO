@@ -49,8 +49,11 @@ const ProfileScreen = ({
                     <View style={styles.profileWrapper}>
                         <View>
                             <Image
-                                // source={{ uri: "https://i.pravatar.cc/150" }}
-                                source={{ uri: 'https://cdn-icons-png.flaticon.com/128/3135/3135715.png' }}
+                                source={{
+                                    uri: userPersonalData?.profileImageSignedUrl
+                                        ? userPersonalData.profileImageSignedUrl
+                                        : 'https://cdn-icons-png.flaticon.com/128/3135/3135715.png'
+                                }}
                                 style={styles.profileImage}
                             />
                             {/* <TouchableOpacity style={styles.plusButton}>

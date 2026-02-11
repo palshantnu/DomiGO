@@ -329,7 +329,13 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
   const getWeekCalendarData = (weekResult = {}) => {
     return Object.keys(weekResult).map(date => {
-      const trips = weekResult[date];
+      // const trips = weekResult[date];
+      const entry = weekResult[date];
+
+      const trips =
+      entry?.type === "trip" && entry?.data
+        ? [entry.data]
+        : [];
 
       const formattedDate = new Date(date).toLocaleDateString('en-IN', {
         day: '2-digit',
@@ -343,7 +349,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
       // Build locations list like image
       const locations = [];
 
-      trips.forEach(trip => {
+      trips?.forEach(trip => {
         // Origin
         locations.push({
           type: 'origin',
@@ -415,30 +421,58 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   //   return normalized;
   // };
 
+  // const normalizeYearData = (yearWiseTimeline = {}) => {
+  //   const normalized = {};
+
+  //   Object.entries(yearWiseTimeline).forEach(([date, value]) => {
+  //     console.log('value>>>>>>',value);
+  //     if (!normalized[date]) {
+  //       normalized[date] = {
+  //         trips: [],
+  //         activity: null,
+  //       };
+  //     }
+
+  //     // 🟢 TRIP
+  //     if (value?.type === "trip" && value?.data) {
+  //       normalized[date].trips.push(value.data);
+  //     }
+
+  //     // 🟠 ACTIVITY
+  //     if (value?.type === "activity" && value?.data) {
+  //       normalized[date].activity = value.data;
+  //     }
+  //   });
+
+  //   return normalized;
+  // };
+
   const normalizeYearData = (yearWiseTimeline = {}) => {
     const normalized = {};
-
-    Object.entries(yearWiseTimeline).forEach(([date, value]) => {
-      if (!normalized[date]) {
-        normalized[date] = {
-          trips: [],
-          activity: null,
-        };
-      }
-
-      // 🟢 TRIP
-      if (value?.type === "trip" && value?.data) {
-        normalized[date].trips.push(value.data);
-      }
-
-      // 🟠 ACTIVITY
-      if (value?.type === "activity" && value?.data) {
-        normalized[date].activity = value.data;
-      }
+  
+    Object.entries(yearWiseTimeline).forEach(([date, items]) => {
+      normalized[date] = {
+        trips: [],
+        activity: null,
+      };
+  
+      if (!Array.isArray(items)) return;
+  
+      items.forEach(item => {
+        if (item.kind === "trip") {
+          normalized[date].trips.push(item);
+        }
+  
+        if (item.kind === "missing") {
+          normalized[date].activity = item;
+        }
+      });
     });
-
+  
     return normalized;
   };
+  
+  
 
 
 
@@ -656,7 +690,13 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                         marginTop: 6,
                       }}
                       onPress={() =>
-                        navigation.navigate("AddMissingDayScreen", {
+                        // navigation.navigate("AddMissingDayScreen", {
+                        //   date: day.date,
+                        //   isEdit: true,
+                        //   data: day.activity,
+                        // })
+                        navigation.navigate('DayEntryScreen', {
+                          mode: "MISSING_DAY",
                           date: day.date,
                           isEdit: true,
                           data: day.activity,
@@ -1219,13 +1259,13 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                     onPress={() => {
                       closeModal();
                       // navigation.navigate('AddTrip', { id: item.id });
-                      navigation.navigate('DayDetail', item)
-                      // navigation.navigate("DayEntryScreen", {
-                      //   mode: "TRIP", // or "TRIP"
-                      //   date: "2026-01-03",
-                      //   isEdit: true,
-                      //   data: item
-                      // });
+                      // navigation.navigate('DayDetail', item)
+                      navigation.navigate("DayEntryScreen", {
+                        mode: "TRIP", // or "TRIP"
+                        date: selectedDate,
+                        isEdit: true,
+                        data: item
+                      });
                     }}
                   >
                     {/* Origin */}
@@ -1287,13 +1327,13 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                     setDayActionModalVisible(false);
 
                     if (selectedTrips.length === 1) {
-                      navigation.navigate('DayDetail', selectedTrips[0]);
-                      // navigation.navigate("DayEntryScreen", {
-                      //   mode: "TRIP", // or "TRIP"
-                      //   date: "2026-01-03",
-                      //   isEdit: true,
-                      //   data: selectedTrips[0]
-                      // });
+                      // navigation.navigate('DayDetail', selectedTrips[0]);
+                      navigation.navigate("DayEntryScreen", {
+                        mode: "TRIP", // or "TRIP"
+                        date: selectedDate,
+                        isEdit: true,
+                        data: selectedTrips[0]
+                      });
 
                     } else {
                       setTripModalVisible(true);
@@ -1314,32 +1354,32 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                   // navigation.navigate('AddMissingDayScreen', {
                   //   date: selectedDate,
                   // });
-                  if (isMissingAlreadyAdded) {
-                    navigation.navigate('AddMissingDayScreen', {
-                      date: selectedDate,
-                      isEdit: true,
-                      data: missingDataForDay,
-                    });
-                  } else {
-                    navigation.navigate('AddMissingDayScreen', {
-                      isEdit: false,
-                      date: selectedDate,
-                    });
-                  }
                   // if (isMissingAlreadyAdded) {
-                  //   navigation.navigate('DayEntryScreen', {
-                  //     mode: "MISSING_DAY",
+                  //   navigation.navigate('AddMissingDayScreen', {
                   //     date: selectedDate,
                   //     isEdit: true,
                   //     data: missingDataForDay,
                   //   });
                   // } else {
-                  //   navigation.navigate('DayEntryScreen', {
+                  //   navigation.navigate('AddMissingDayScreen', {
                   //     isEdit: false,
                   //     date: selectedDate,
-                  //     mode: "MISSING_DAY",
                   //   });
                   // }
+                  if (isMissingAlreadyAdded) {
+                    navigation.navigate('DayEntryScreen', {
+                      mode: "MISSING_DAY",
+                      date: selectedDate,
+                      isEdit: true,
+                      data: missingDataForDay,
+                    });
+                  } else {
+                    navigation.navigate('DayEntryScreen', {
+                      isEdit: false,
+                      date: selectedDate,
+                      mode: "MISSING_DAY",
+                    });
+                  }
                 // navigation.navigate("DayEntryScreen", {
                 //   // mode: "MISSING_DAY", // or "TRIP"
                 //   mode: "TRIP", // or "TRIP"

@@ -88,13 +88,15 @@ const DayEntryScreen = ({
     const date = route.params?.date;
 
     console.log('isTrip', isTrip);
+    console.log('date', date);
+    console.log('editData', editData);
 
 
     console.log('isTravelling', isTravelling);
 
     /* ---------------- STATE ---------------- */
 
-    // 1️⃣ Location
+    // 1️⃣ User Location
     const [stateId, setStateId] = useState(null);
 
     // 2️⃣ Type of day
@@ -109,11 +111,16 @@ const DayEntryScreen = ({
     // 5️⃣ Hours worked
     const [hoursWorked, setHoursWorked] = useState("");
 
+    // 1️⃣ User Location
+    const [remoteLocation, setRemoteLocation] = useState(null);
+
     // 6️⃣ Travelling
     const [isTravelling, setIsTravelling] = useState(false);
 
     // 7️⃣ Trip Type
     const [tripType, setTripType] = useState(null);
+
+    const [creationType, setCreationType] = useState("manual");
 
     // 8️⃣ Mode of travel
     const [tripMode, setTripMode] = useState(null);
@@ -177,7 +184,7 @@ const DayEntryScreen = ({
         if (isTrip) {
             setIsTravelling(true);
         }
-    }, [isTrip,isEdit,editData]);
+    }, [isTrip, isEdit, editData]);
 
     /* ---------------- EDIT PREFILL ---------------- */
 
@@ -219,6 +226,8 @@ const DayEntryScreen = ({
         setNotes(editData.notes || "");
         setTripType(editData.tripTypeId || null);
         setTripMode(editData.tripModeId || null);
+        setRemoteLocation(editData.remoteLocation || null);
+        setCreationType(editData.creationType || "");
 
 
         if (editData.attachments?.length) {
@@ -274,8 +283,10 @@ const DayEntryScreen = ({
 
     const handleSave = () => {
         const payload = {
+            date:date,
             typeOfDayId: Number(typeOfDay),
             isCommissionDay,
+            kind:isTrip ? "trip" : "missing",
             isRemoteWork,
             remoteHours: isRemoteWork ? Number(hoursWorked) : 0,
             isTravelling,
@@ -287,6 +298,8 @@ const DayEntryScreen = ({
             proofType,
             notes,
             attachments: attachment ? [attachment] : [],
+            creationType,
+            remoteLocation,
         };
 
         if (!isTrip) {
@@ -309,7 +322,8 @@ const DayEntryScreen = ({
 
         const action = isTrip
             ? isEdit ? UPDATETRIP(payload) : ADDTRIP(payload)
-            : isEdit ? UPDATEMISSINGDAY(payload) : ADDMISSINGDAY(payload);
+            // : isEdit ? UPDATEMISSINGDAY(payload) : ADDMISSINGDAY(payload);
+            : isEdit ? UPDATETRIP(payload) : ADDTRIP(payload);
 
         setLoading(true);
         dispatch(action)
@@ -324,7 +338,77 @@ const DayEntryScreen = ({
             });
     };
 
-    /* ---------------- UI ---------------- */
+    // const handleSave = () => {
+    //     const formData = new FormData();
+    
+    //     formData.append("typeOfDayId", Number(typeOfDay));
+    //     formData.append("isCommissionDay", isCommissionDay);
+    //     formData.append("isRemoteWork", isRemoteWork);
+    //     formData.append("remoteHours", isRemoteWork ? Number(hoursWorked) : 0);
+    //     formData.append("isTravelling", isTravelling);
+    //     formData.append("tripTypeId", tripType);
+    //     formData.append("tripModeId", tripMode);
+    //     formData.append("confirmationNo", confirmationNo || "");
+    //     formData.append("vendor", vendor || "");
+    //     formData.append("hasProof", hasProof);
+    //     formData.append("proofType", proofType || "");
+    //     formData.append("notes", notes || "");
+    //     formData.append("creationType", "manual");
+    //     formData.append("remoteLocation", remoteLocation || "");
+    
+    //     // ✅ Attachments (File)
+    //     if (attachment) {
+    //         formData.append("attachments", attachment);
+    //         // agar multiple ho:
+    //         // attachments.forEach(file => formData.append("attachments", file));
+    //     }
+    
+    //     // ✅ Non-trip fields
+    //     if (!isTrip) {
+    //         formData.append("stateId", stateId);
+    //         formData.append(
+    //             "date",
+    //             new Date(date).toISOString().split("T")[0]
+    //         );
+    //     }
+    
+    //     // ✅ Trip fields
+    //     if (isTrip) {
+    //         formData.append("originCity", startData.city);
+    //         formData.append("originState", startData.state);
+    //         formData.append("originLat", startData.lat);
+    //         formData.append("originLng", startData.lng);
+    
+    //         formData.append("destinationCity", endData.city);
+    //         formData.append("destinationState", endData.state);
+    //         formData.append("destinationLat", endData.lat);
+    //         formData.append("destinationLng", endData.lng);
+    //     }
+    
+    //     // ✅ Edit case
+    //     if (isEdit) {
+    //         formData.append("id", editData.id);
+    //     }
+    
+    //     const action = isTrip
+    //         ? isEdit ? UPDATETRIP(formData) : ADDTRIP(formData)
+    //         : isEdit ? UPDATETRIP(formData) : ADDTRIP(formData);
+    
+    //     setLoading(true);
+    //     dispatch(action)
+    //         .then((res) => {
+    //             setLoading(false);
+    //             CustomToast.show(isEdit ? "Updated Successfully" : "Saved Successfully");
+    //             // navigation.goBack();
+    //             console.log('e======>',res);
+    //         })
+    //         .catch((e) => {
+    //             setLoading(false);
+    //             console.log('e======>',e);
+    //             CustomToast.show("Something went wrong");
+    //         });
+    // };
+    
 
     return (
         <LinearGradient
@@ -347,7 +431,7 @@ const DayEntryScreen = ({
                                 <SelectList
                                     data={statesList?.map((i) => ({ key: i.id, value: i.name }))}
                                     setSelected={setStateId}
-                                    save="key"
+                                    save="value"
                                     defaultOption={getDefaultOption(statesList, stateId)}
                                     boxStyles={styles.dropdownBox}
                                 />
@@ -358,7 +442,7 @@ const DayEntryScreen = ({
                             <>
                                 <FieldLabel title="Start Location" />
 
-                                <TextInput
+                                {/* <TextInput
                                     value={startLocation}
                                     onChangeText={(text) => {
                                         setStartLocation(text);
@@ -366,11 +450,24 @@ const DayEntryScreen = ({
                                     }}
                                     placeholder="Enter start location"
                                     placeholderTextColor="#777"
-                                    editable={ editData?.creationType != "automatic"}
+                                    editable={editData?.creationType != "automatic"}
                                     style={styles.input}
+                                /> */}
+                                <TextInput
+                                    placeholder="Origin Location"
+                                    value={startLocation}
+                                    onChangeText={(text) => {
+                                        setStartLocation(text);
+                                        searchPlaces(text, setStartSuggestions);
+                                    }}
+                                    style={styles.input}
+                                    //   editable={!isAutomatic}
+                                    placeholderTextColor="#777"
+                                    editable={editData?.creationType != "automatic"}
+
                                 />
 
-                                {startSuggestions.map((item) => (
+                                {/* {startSuggestions.map((item) => (
                                     <TouchableOpacity
                                         key={item.place_id}
                                         style={styles.suggestionItem}
@@ -399,11 +496,48 @@ const DayEntryScreen = ({
                                     >
                                         <Text>{item.description}</Text>
                                     </TouchableOpacity>
-                                ))}
+                                ))} */}
+                                {startSuggestions.length > 0 && (
+                                    <View style={styles.suggestionBox}>
+                                        {startSuggestions.map((item) => (
+                                            <TouchableOpacity
+                                                key={item.place_id}
+                                                onPress={async () => {
+                                                    setStartLocation(item.description);
+                                                    setStartSuggestions([]);
+                                                      console.log('item>>>>>>>>>>',item);
+                                                    const details = await getPlaceDetails(item.place_id);
+
+                                                    const lat = details.geometry.location.lat;
+                                                    const lng = details.geometry.location.lng;
+
+                                                    const city =
+                                                        details.address_components.find((c) =>
+                                                            c.types.includes("locality")
+                                                        )?.long_name || "";
+
+                                                    // const state =
+                                                    //     details.address_components.find((c) =>
+                                                    //         c.types.includes("administrative_area_level_1")
+                                                    //     )?.short_name || "";
+                                                        const state =
+                                                        details.address_components.find((c) =>
+                                                            c.types.includes("administrative_area_level_1")
+                                                        )?.long_name || "";
+
+                                                    setStartData({ city, state, lat, lng });
+                                                }}
+                                                style={styles.suggestionItem}
+                                            >
+                                                <Text style={{ color: "#000" }}>{item.description}</Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+                                )}
 
                                 <FieldLabel title="End Location" />
 
-                                <TextInput
+                                {/* <TextInput
                                     value={endLocation}
                                     onChangeText={(text) => {
                                         setEndLocation(text);
@@ -411,11 +545,24 @@ const DayEntryScreen = ({
                                     }}
                                     placeholder="Enter end location"
                                     placeholderTextColor="#777"
-                                    editable={ editData?.creationType != "automatic"}
+                                    editable={editData?.creationType != "automatic"}
                                     style={styles.input}
+                                /> */}
+                                <TextInput
+                                    placeholder="Destination Location"
+                                    value={endLocation}
+                                    onChangeText={(text) => {
+                                        setEndLocation(text);
+                                        searchPlaces(text, setEndSuggestions);
+                                    }}
+                                    style={styles.input}
+                                    //   editable={!isAutomatic}
+                                    placeholderTextColor="#777"
+                                    editable={editData?.creationType != "automatic"}
+
                                 />
 
-                                {endSuggestions.map((item) => (
+                                {/* {endSuggestions.map((item) => (
                                     <TouchableOpacity
                                         key={item.place_id}
                                         style={styles.suggestionItem}
@@ -444,7 +591,44 @@ const DayEntryScreen = ({
                                     >
                                         <Text>{item.description}</Text>
                                     </TouchableOpacity>
-                                ))}
+                                ))} */}
+                                {endSuggestions.length > 0 && (
+                                    <View style={styles.suggestionBox}>
+                                        {endSuggestions.map((item) => (
+                                            <TouchableOpacity
+                                                key={item.place_id}
+                                                onPress={async () => {
+                                                    setEndLocation(item.description);
+                                                    setEndSuggestions([]);
+
+                                                    const details = await getPlaceDetails(item.place_id);
+
+                                                    const lat = details.geometry.location.lat;
+                                                    const lng = details.geometry.location.lng;
+
+                                                    const city =
+                                                        details.address_components.find((c) =>
+                                                            c.types.includes("locality")
+                                                        )?.long_name || "";
+
+                                                    // const state =
+                                                    //     details.address_components.find((c) =>
+                                                    //         c.types.includes("administrative_area_level_1")
+                                                    //     )?.short_name || "";
+                                                        const state =
+                                                        details.address_components.find((c) =>
+                                                            c.types.includes("administrative_area_level_1")
+                                                        )?.long_name || "";
+
+                                                    setEndData({ city, state, lat, lng });
+                                                }}
+                                                style={styles.suggestionItem}
+                                            >
+                                                <Text style={{ color: "#000" }}>{item.description}</Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+                                )}
                             </>
                         )}
 
@@ -474,6 +658,19 @@ const DayEntryScreen = ({
                                     keyboardType="numeric"
                                     placeholder="Enter hours"
                                     placeholderTextColor="#777"
+                                />
+                            </>
+                        )}
+
+                        {isRemoteWork && !isTrip && (
+                            <>
+                                <FieldLabel title="Work (State)" />
+                                <SelectList
+                                    data={statesList?.map((i) => ({ key: i.id, value: i.name }))}
+                                    setSelected={setRemoteLocation}
+                                    save="value"
+                                    defaultOption={getDefaultOption(statesList, stateId)}
+                                    boxStyles={styles.dropdownBox}
                                 />
                             </>
                         )}
@@ -516,12 +713,12 @@ const DayEntryScreen = ({
                                     }))}
                                     setSelected={setTripMode}
                                     save="key"
-                                    // defaultOption={getDefaultOption(tripModeList, tripMode)}
-                                    defaultOption={
-                                        isEdit && tripMode?.mode
-                                          ? { key: tripMode.mode.id, value: tripMode.mode.name }
-                                          : null
-                                      }
+                                    defaultOption={getDefaultOption(tripModeList, tripMode)}
+                                    // defaultOption={
+                                    //     isEdit && tripMode?.mode
+                                    //         ? { key: tripMode.mode.id, value: tripMode.mode.name }
+                                    //         : null
+                                    // }
                                     boxStyles={styles.dropdownBox}
                                     inputStyles={styles.dropdownInput}
                                 />
@@ -554,10 +751,16 @@ const DayEntryScreen = ({
                                 <FieldLabel title="Proof Type" />
                                 <SelectList
                                     data={[
-                                        { key: "Receipt", value: "Receipt" },
-                                        { key: "Credit card statement", value: "Credit card statement" },
-                                        { key: "Other", value: "Other" },
+                                        { key: "receipt", value: "receipt" },
+                                        { key: "credit_card", value: "credit_card" },
+                                        { key: "other", value: "other" },
                                     ]}
+                                    // defaultOption={getDefaultOption(data, proofType)}
+                                    defaultOption={
+                                        editData?.proofType
+                                            ? { key: editData.proofType, value: editData.proofType }
+                                            : null
+                                    }
                                     setSelected={setProofType}
                                     boxStyles={styles.dropdownBox}
                                 />
@@ -692,5 +895,22 @@ const styles = StyleSheet.create({
         color: "#fff",
         fontSize: 16,
         fontWeight: "600",
+    },
+    suggestionBox: {
+        backgroundColor: "#fff",
+        position: "absolute",
+        top: 60,
+        left: 10,
+        right: 10,
+        borderRadius: 10,
+        padding: 10,
+        zIndex: 999,
+        elevation: 5,
+    },
+
+    suggestionItem: {
+        paddingVertical: 10,
+        borderBottomWidth: 0.5,
+        borderColor: "#ddd",
     },
 });

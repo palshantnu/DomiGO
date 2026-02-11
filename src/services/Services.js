@@ -9,7 +9,18 @@ export const logoutService = () =>
 
 export const getUserPersonalInfoService = (token) => 
   axiosinstance.get(`${EndPoints.getUserPersonalInfo}`)
-export const updateUserPersonalInfoService = (data) => axiosinstance.put(EndPoints.updateUserPersonalInfo, data)
+// export const updateUserPersonalInfoService = (data) => axiosinstance.put('users/v1/profile', data)
+export const updateUserPersonalInfoService = (data) =>
+  axiosinstance.put(
+    'users/v1/profile',
+    data,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        Accept: 'application/json',
+      },
+    }
+  );
 
 export const changePasswordService = (data) => axiosinstance.patch(EndPoints.changePassword, data)
 

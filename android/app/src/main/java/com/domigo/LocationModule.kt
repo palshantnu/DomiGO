@@ -25,6 +25,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import java.util.Calendar
 
 
 class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
@@ -33,6 +34,10 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     private lateinit var locationManager: LocationManager
     private lateinit var locationListener: LocationListener
     private var isTracking = false
+
+    init {
+        LocationModuleHolder.module = this
+    }
 
     // HTTP client for background network calls
     private val httpClient = OkHttpClient.Builder()
@@ -132,6 +137,7 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
             startForegroundService()
             setupLocationListener()
             isTracking = true
+            scheduleMidnightMissingDay()
             Log.d(TAG, "Location tracking started successfully with interval: $locationInterval ms")
         } catch (e: SecurityException) {
             Log.e(TAG, "SecurityException: ${e.message}")
@@ -310,6 +316,46 @@ private fun showTripCreatedNotification(
 
 
 
+private fun scheduleMidnightMissingDay() {
+
+    val calendar = Calendar.getInstance().apply {
+        timeInMillis = System.currentTimeMillis()
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 5)
+        add(Calendar.DAY_OF_MONTH, 1) // next midnight
+    }
+    // calendar.add(Calendar.MINUTE, 1) 
+
+    val intent = Intent(context, MissingDayReceiver::class.java)
+
+    val pendingIntent = PendingIntent.getBroadcast(
+        context,
+        8888,
+        intent,
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    )
+
+    val alarmManager =
+        context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+    // alarmManager.setExactAndAllowWhileIdle(
+    //     AlarmManager.RTC_WAKEUP,
+    //     calendar.timeInMillis,
+    //     pendingIntent
+    // )
+    alarmManager.setAndAllowWhileIdle(
+    AlarmManager.RTC_WAKEUP,
+    calendar.timeInMillis,
+    pendingIntent
+)
+
+    Log.d(TAG, "⏰ Midnight missing-day alarm scheduled")
+}
+
+
+
+
 
 
     private fun formatDate(timestamp: Long): String {
@@ -441,50 +487,144 @@ private fun showTripCreatedNotification(
         val sameCountry = countryCode == previousCountryCode
         val timePassed = timeDifference >= FOUR_HOURS_MS
 
+        if (previousStateCode.isEmpty()) {
+            previousStateCode = stateCode
+            previousCountryCode = countryCode
+            previousStateName = state
+            previousLat = lat
+            previousLng = lng
+            previousCity = city
+            previousEnterTime = System.currentTimeMillis()
+            Log.d(TAG, "📍 Initial state captured: $stateCode")
+            return
+        }
+
         // Only send to API if state changed or 4 hours passed
    
-            if (!stateChanged && !timePassed) {
-                Log.d(TAG, "⏳ No API update required")
-                return
-            }
+        //     if (!stateChanged && !timePassed) {
+        //         Log.d(TAG, "⏳ No API update required")
+        //         return
+        //     }
 
-        if (state == previousStateName) {
-            Log.d(TAG, "🏠 Same state ($state), no trip required")
-             return
-          }
-          if (sameState && sameCountry) {
-            Log.d(TAG, "🏠 Same state ($state), no trip required")
-             return
-          }
+        // if (state == previousStateName) {
+        //     Log.d(TAG, "🏠 Same state ($state), no trip required")
+        //      return
+        //   }
+        //   if (sameState && sameCountry) {
+        //     Log.d(TAG, "🏠 Same state ($state), no trip required")
+        //      return
+        //   }
 
     Log.d(TAG, "🚦 STATE CHANGED: $previousStateName → $state")
 
 
 
     Log.d(TAG, "STATE CHANGED! Triggering trip API")
+    if (stateCode == previousStateCode && countryCode == previousCountryCode) {
+        Log.d(TAG, "🏠 Same state ($stateCode), skipping trip")
+    } else {
+        Log.d(TAG, "🚗 STATE CHANGED: $previousStateCode → $stateCode")
+    
+        sendEntryFormData(
+            kind = "trip",
+            date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
+    
+            typeOfDayId = null,
+            isCommissionDay = false,
+            isRemoteWork = false,
+            remoteHours = 0,
+            isTravelling = true,
+            tripTypeId = 1,
+            tripModeId = 1,
+            confirmationNo = "",
+            vendor = "",
+            hasProof = false,
+            proofType = "",
+            notes = "",
+            creationType = "automatic",
+            remoteLocation = "",
+            stateId = null,
+    
+            originCity = previousCity,
+            originState = previousStateName,
+            originLat = previousLat,
+            originLng = previousLng,
+    
+            destinationCity = city,
+            destinationState = state,
+            destinationLat = lat,
+            destinationLng = lng
+        )
+    
+        // UPDATE STATE AFTER TRIP
+        previousStateCode = stateCode
+        previousCountryCode = countryCode
+        previousStateName = state
+        previousLat = lat
+        previousLng = lng
+        previousCity = city
+        previousEnterTime = System.currentTimeMillis()
+    }
 
-    sendTripFormData(
-        originLat = previousLat ?: lat,
-        originLng = previousLng ?: lng,
-        originCity = previousCity,
-        originState = previousStateName,
-        originStartDate = previousEnterTime,
+    // sendTripFormData(
+    //     originLat = previousLat ?: lat,
+    //     originLng = previousLng ?: lng,
+    //     originCity = previousCity,
+    //     originState = previousStateName,
+    //     originStartDate = previousEnterTime,
 
-        destinationLat = lat,
-        destinationLng = lng,
-        destinationCity = city,
-        destinationState = state,
-        destinationEnterDate = System.currentTimeMillis()
-    )
+    //     destinationLat = lat,
+    //     destinationLng = lng,
+    //     destinationCity = city,
+    //     destinationState = state,
+    //     destinationEnterDate = System.currentTimeMillis()
+    // )
+//     sendEntryFormData(
+//     kind = "trip",
+//     // date = formatDate(System.currentTimeMillis()),
+//     date = SimpleDateFormat(
+//         "yyyy-MM-dd",
+//         Locale.getDefault()
+//     ).format(Date()),
+//     typeOfDayId = null,
+//     isCommissionDay = false,
+//     isRemoteWork = false,
+//     remoteHours = 0,
+//     isTravelling = true,
+//     tripTypeId = 1,
+//     tripModeId = 1,
+//     confirmationNo = "",
+//     vendor = "",
+//     hasProof = false,
+//     proofType = "",
+//     notes = "",
+//     creationType = "automatic",
+//     remoteLocation = "",
+//     stateId = null,
 
-    // Reset previous state to new state
-    previousLat = lat
-    previousLng = lng
-    previousCity = city
-    previousStateName = state
-    previousEnterTime = System.currentTimeMillis()
+//     originCity = previousCity,
+//     originState = previousStateName,
+//     originLat = previousLat,
+//     originLng = previousLng,
+
+//     destinationCity = city,
+//     destinationState = state,
+//     destinationLat = lat,
+//     destinationLng = lng
+// )
 
 
+//     // Reset previous state to new state
+//     previousLat = lat
+//     previousLng = lng
+//     previousCity = city
+//     previousStateName = state
+//     previousEnterTime = System.currentTimeMillis()
+
+if (!stateChanged && !timePassed) {
+    Log.d(TAG, "⏳ Location API skipped")
+    return
+}
         val jsonBody = JSONObject().apply {
             put("latitude", lat)
             put("longitude", lng)
@@ -572,110 +712,298 @@ private fun showTripCreatedNotification(
 
 
 
-private fun sendTripFormData(
-    originLat: Double,
-    originLng: Double,
-    originCity: String,
-    originState: String,
-    originStartDate: Long,
+// private fun sendTripFormData(
+//     originLat: Double,
+//     originLng: Double,
+//     originCity: String,
+//     originState: String,
+//     originStartDate: Long,
 
-    destinationLat: Double,
-    destinationLng: Double,
-    destinationCity: String,
-    destinationState: String,
-    destinationEnterDate: Long
+//     destinationLat: Double,
+//     destinationLng: Double,
+//     destinationCity: String,
+//     destinationState: String,
+//     destinationEnterDate: Long
+// ) {
+//     val bodyDebug = Arguments.createMap()
+
+// bodyDebug.putString("originLat", originLat.toString())
+// bodyDebug.putString("originLng", originLng.toString())
+// bodyDebug.putString("originCity", originCity)
+// bodyDebug.putString("originState", originState)
+// bodyDebug.putString("startDate", formatDate(originStartDate))
+
+// bodyDebug.putString("destinationLat", destinationLat.toString())
+// bodyDebug.putString("destinationLng", destinationLng.toString())
+// bodyDebug.putString("destinationCity", destinationCity)
+// bodyDebug.putString("destinationState", destinationState)
+// bodyDebug.putString("endDate", formatDate(destinationEnterDate))
+// bodyDebug.putString("attachments", "[]")
+// bodyDebug.putString("modeId", "11")
+// bodyDebug.putString("typeId", "10")
+
+//     val formBody = MultipartBody.Builder()
+//         .setType(MultipartBody.FORM)
+
+//         // ORIGIN
+//         .addFormDataPart("originLat", originLat.toString())
+//         .addFormDataPart("originLng", originLng.toString())
+//         .addFormDataPart("originCity", originCity)
+//         .addFormDataPart("originState", originState)
+//         .addFormDataPart("startDate", formatDate(originStartDate))
+
+//         // DESTINATION
+//         .addFormDataPart("destinationLat", destinationLat.toString())
+//         .addFormDataPart("destinationLng", destinationLng.toString())
+//         .addFormDataPart("destinationCity", destinationCity)
+//         .addFormDataPart("destinationState", destinationState)
+//         .addFormDataPart("endDate", formatDate(destinationEnterDate))
+//         .addFormDataPart("attachments", "[]")
+//         .addFormDataPart("modeId", 1.toString())
+//         .addFormDataPart("typeId", 1.toString())
+
+//         .build()
+
+//     val request = Request.Builder()
+//         .url("http://3.91.116.18:4001/api/trips")  // replace with your addTrip URL
+//         .post(formBody)
+//         .addHeader("Authorization", "Bearer $domigoToken")
+//         .build()
+
+//     httpClient.newCall(request).enqueue(object : okhttp3.Callback {
+//         override fun onFailure(call: Call, e: IOException) {
+//     val errorData = Arguments.createMap().apply {
+//         putString("error", e.message)
+//         putDouble("timestamp", System.currentTimeMillis().toDouble())
+//     }
+//     sendEvent("onTripApiError", errorData)
+// }
+
+//         override fun onResponse(call: Call, response: Response) {
+//     val responseBody = response.body?.string() ?: ""
+
+//     Log.d(TAG, "🚗 Trip API Response: ${response.code}")
+    
+//     if (response.isSuccessful) {
+//         try {
+//             val json = JSONObject(responseBody)
+//             val tripId = json
+//                 .optJSONObject("result")
+//                 ?.optInt("id")
+//                 ?.toString()
+
+//             if (tripId != null) {
+//                 showTripCreatedNotification(
+//                     title = "🚗 Trip Created",
+//                     message = "Tap to view trip details",
+//                     tripId = tripId
+//                 )
+//             }
+//         } catch (e: Exception) {
+//             Log.e(TAG, "Trip parse error: ${e.message}")
+//         }
+//     }
+
+//     val eventData = Arguments.createMap().apply {
+//         putInt("statusCode", response.code)
+//         putBoolean("success", response.isSuccessful)
+//         putString("response", responseBody)
+//         putDouble("timestamp", System.currentTimeMillis().toDouble())
+//         putMap("body", bodyDebug)
+//     }
+
+//     sendEvent("onTripApiResponse", eventData)
+// }
+//     })
+// }
+
+private fun sendEntryFormData(
+    kind: String, // "trip" | "missing"
+
+    // COMMON
+    date: String?,
+    typeOfDayId: Int?,
+    isCommissionDay: Boolean,
+    isRemoteWork: Boolean,
+    remoteHours: Int?,
+    isTravelling: Boolean,
+    tripTypeId: Int?,
+    tripModeId: Int?,
+    confirmationNo: String?,
+    vendor: String?,
+    hasProof: Boolean,
+    proofType: String?,
+    notes: String?,
+    creationType: String?,
+    remoteLocation: String?,
+    stateId: String?,
+
+    // TRIP ONLY
+    originCity: String?,
+    originState: String?,
+    originLat: Double?,
+    originLng: Double?,
+    destinationCity: String?,
+    destinationState: String?,
+    destinationLat: Double?,
+    destinationLng: Double?
 ) {
-    val bodyDebug = Arguments.createMap()
 
-bodyDebug.putString("originLat", originLat.toString())
-bodyDebug.putString("originLng", originLng.toString())
-bodyDebug.putString("originCity", originCity)
-bodyDebug.putString("originState", originState)
-bodyDebug.putString("startDate", formatDate(originStartDate))
+    fun s(v: String?) = v ?: ""
+    fun i(v: Int?) = v?.toString() ?: ""
+    fun d(v: Double?) = v?.toString() ?: ""
+    fun b(v: Boolean) = if (v) "true" else "false"
 
-bodyDebug.putString("destinationLat", destinationLat.toString())
-bodyDebug.putString("destinationLng", destinationLng.toString())
-bodyDebug.putString("destinationCity", destinationCity)
-bodyDebug.putString("destinationState", destinationState)
-bodyDebug.putString("endDate", formatDate(destinationEnterDate))
-bodyDebug.putString("attachments", "[]")
-bodyDebug.putString("modeId", "11")
-bodyDebug.putString("typeId", "10")
-
-    val formBody = MultipartBody.Builder()
+    val body = MultipartBody.Builder()
         .setType(MultipartBody.FORM)
 
-        // ORIGIN
-        .addFormDataPart("originLat", originLat.toString())
-        .addFormDataPart("originLng", originLng.toString())
-        .addFormDataPart("originCity", originCity)
-        .addFormDataPart("originState", originState)
-        .addFormDataPart("startDate", formatDate(originStartDate))
-
-        // DESTINATION
-        .addFormDataPart("destinationLat", destinationLat.toString())
-        .addFormDataPart("destinationLng", destinationLng.toString())
-        .addFormDataPart("destinationCity", destinationCity)
-        .addFormDataPart("destinationState", destinationState)
-        .addFormDataPart("endDate", formatDate(destinationEnterDate))
+        // ===== SAME AS JS =====
+        .addFormDataPart("kind", kind)
+        .addFormDataPart("date", s(date))
+        // .addFormDataPart("typeOfDayId", i(typeOfDayId))
+        .addFormDataPart("typeOfDayId", 1.toString())
+        .addFormDataPart("isCommissionDay", b(isCommissionDay))
+        .addFormDataPart("isRemoteWork", b(isRemoteWork))
+        .addFormDataPart("remoteHours", i(remoteHours))
+        .addFormDataPart("isTravelling", b(isTravelling))
+        .addFormDataPart("tripTypeId", i(tripTypeId))
+        .addFormDataPart("tripModeId", i(tripModeId))
+        .addFormDataPart("confirmationNo", s(confirmationNo))
+        .addFormDataPart("vendor", s(vendor))
+        .addFormDataPart("hasProof", b(hasProof))
+        .addFormDataPart("proofType", "other")
+        .addFormDataPart("notes", s(notes))
+        .addFormDataPart("creationType", s(creationType))
+        .addFormDataPart("remoteLocation", s(remoteLocation))
         .addFormDataPart("attachments", "[]")
-        .addFormDataPart("modeId", 1.toString())
-        .addFormDataPart("typeId", 1.toString())
 
-        .build()
+
+        // if (typeOfDayId != null) {
+        //     body.addFormDataPart("typeOfDayId", typeOfDayId.toString())
+        // }
+
+    // ===== MISSING DAY =====
+    if (kind == "missing") {
+        body.addFormDataPart("stateId", s(stateId))
+    }
+
+    // ===== TRIP =====
+    if (kind == "trip") {
+        body
+            .addFormDataPart("originCity", s(originCity))
+            .addFormDataPart("originState", s(originState))
+            .addFormDataPart("originLat", d(originLat))
+            .addFormDataPart("originLng", d(originLng))
+
+            .addFormDataPart("destinationCity", s(destinationCity))
+            .addFormDataPart("destinationState", s(destinationState))
+            .addFormDataPart("destinationLat", d(destinationLat))
+            .addFormDataPart("destinationLng", d(destinationLng))
+    }
 
     val request = Request.Builder()
-        .url("http://3.91.116.18:4001/api/trips")  // replace with your addTrip URL
-        .post(formBody)
+        // .url("http://3.91.116.18:4001/api/trips")
+        .url("http://3.91.116.18:4001/api/trip-days")
+        .post(body.build())
         .addHeader("Authorization", "Bearer $domigoToken")
         .build()
 
+    // httpClient.newCall(request).enqueue(object : okhttp3.Callback {
+
+    //     override fun onFailure(call: Call, e: IOException) {
+    //         Log.e(TAG, "❌ API failed: ${e.message}")
+    //     }
+
+    //     override fun onResponse(call: Call, response: Response) {
+    //         Log.d(TAG, "✅ API success: ${response.code}")
+    //     }
+    // })
     httpClient.newCall(request).enqueue(object : okhttp3.Callback {
+
         override fun onFailure(call: Call, e: IOException) {
-    val errorData = Arguments.createMap().apply {
-        putString("error", e.message)
-        putDouble("timestamp", System.currentTimeMillis().toDouble())
-    }
-    sendEvent("onTripApiError", errorData)
-}
-
-        override fun onResponse(call: Call, response: Response) {
-    val responseBody = response.body?.string() ?: ""
-
-    Log.d(TAG, "🚗 Trip API Response: ${response.code}")
+            Log.e(TAG, "❌ Entry API failed: ${e.message}")
     
-    if (response.isSuccessful) {
-        try {
-            val json = JSONObject(responseBody)
-            val tripId = json
-                .optJSONObject("result")
-                ?.optInt("id")
-                ?.toString()
-
-            if (tripId != null) {
-                showTripCreatedNotification(
-                    title = "🚗 Trip Created",
-                    message = "Tap to view trip details",
-                    tripId = tripId
-                )
+            val errorData = Arguments.createMap().apply {
+                putBoolean("success", false)
+                putString("error", e.message)
+                putString("kind", kind)
+                putString("date", date)
+                putDouble("timestamp", System.currentTimeMillis().toDouble())
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Trip parse error: ${e.message}")
+    
+            sendEvent("onTripApiError", errorData)
         }
-    }
-
-    val eventData = Arguments.createMap().apply {
-        putInt("statusCode", response.code)
-        putBoolean("success", response.isSuccessful)
-        putString("response", responseBody)
-        putDouble("timestamp", System.currentTimeMillis().toDouble())
-        putMap("body", bodyDebug)
-    }
-
-    sendEvent("onTripApiResponse", eventData)
-}
+    
+        override fun onResponse(call: Call, response: Response) {
+            val responseBody = response.body?.string() ?: ""
+    
+            Log.d(TAG, "✅ Entry API success: ${response.code}")
+    
+            val eventData = Arguments.createMap().apply {
+                putBoolean("success", response.isSuccessful)
+                putInt("statusCode", response.code)
+                putString("response", responseBody)
+                putString("kind", kind)
+                putString("date", date)
+                putDouble("timestamp", System.currentTimeMillis().toDouble())
+            }
+    
+            sendEvent("onTripApiResponse", eventData)
+        }
     })
 }
+
+
+
+fun createMissingDay() {
+
+    if (previousStateCode.isNullOrEmpty()) {
+        Log.d(TAG, "❌ Missing day skipped: state not available")
+        return
+    }
+
+    val today = SimpleDateFormat(
+        "yyyy-MM-dd",
+        Locale.getDefault()
+    ).format(Date())
+
+    Log.d(TAG, "🌙 Creating missing day for $today")
+
+    sendEntryFormData(
+        kind = "missing",
+        date = today,
+        typeOfDayId = null,
+        isCommissionDay = false,
+        isRemoteWork = false,
+        remoteHours = 0,
+        isTravelling = false,
+        tripTypeId = null,
+        tripModeId = null,
+        confirmationNo = "",
+        vendor = "",
+        hasProof = false,
+        proofType = "",
+        notes = "",
+        creationType = "automatic",
+        remoteLocation = "",
+        stateId = previousStateName,
+
+        // trip fields empty
+        originCity = null,
+        originState = null,
+        originLat = null,
+        originLng = null,
+        destinationCity = null,
+        destinationState = null,
+        destinationLat = null,
+        destinationLng = null
+    )
+
+    // 🔁 Next day ke liye alarm dobara lagao
+    scheduleMidnightMissingDay()
+}
+
+
 
 
 

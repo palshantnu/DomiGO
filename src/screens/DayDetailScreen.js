@@ -70,13 +70,14 @@ useEffect(() => {
           <View style={styles.card}>
             <View style={styles.tripInfoHeader}>
               <Ionicons name="location-outline" size={20} color={colors.primary} />
-              <Text style={styles.tripTitle}>{TripSummaryDetails?.trip?.originState} to {TripSummaryDetails?.trip?.destinationState}</Text>
+              <Text style={styles.tripTitle}>{TripSummaryDetails?.tripDay?.originState} to {TripSummaryDetails?.tripDay?.destinationState}</Text>
             </View>
-            <Text style={styles.tripDate}>{new Date(TripSummaryDetails?.trip?.startDate).toDateString()} - {new Date(TripSummaryDetails?.trip?.endDate).toDateString()}</Text>
-            {TripSummaryDetails?.trip?.creationType && (
+            {/* <Text style={styles.tripDate}>{new Date(TripSummaryDetails?.tripDay?.startDate).toDateString()} - {new Date(TripSummaryDetails?.tripDay?.endDate).toDateString()}</Text> */}
+            <Text style={styles.tripDate}>{new Date(TripSummaryDetails?.tripDay?.date).toDateString()}</Text>
+            {TripSummaryDetails?.tripDay?.creationType && (
                 <View style={styles.creationTypeBadge}>
                   <Text style={styles.creationTypeText}>
-                    Trip Type: {TripSummaryDetails?.trip?.creationType.toUpperCase()}
+                    Trip Type: {TripSummaryDetails?.tripDay?.creationType.toUpperCase()}
                   </Text>
                 </View>
               )}
@@ -147,7 +148,7 @@ useEffect(() => {
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Timeline of Events</Text>
 
-            {TripSummaryDetails?.events.map((item, index) => (
+            {/* {TripSummaryDetails?.events.map((item, index) => (
               <View key={index} style={styles.timelineItem}>
                 <View style={styles.timelineIconContainer}>
                   <View style={styles.timelineCircle}>
@@ -162,11 +163,18 @@ useEffect(() => {
                   <Text style={styles.descText}>{item.description}</Text>
                 </View>
               </View>
-            ))}
+            ))} */}
           </View>
 
 
-          <TouchableOpacity onPress={() => navigation.navigate('AddTrip', {  id: trip.id })} style={styles.editButton}>
+          {/* <TouchableOpacity onPress={() => navigation.navigate('AddTrip', {  id: trip.id })} style={styles.editButton}> */}
+          <TouchableOpacity onPress={() =>  navigation.navigate("DayEntryScreen", {
+                        mode: "TRIP", // or "TRIP"
+                        date: "2026-01-03",
+                        isEdit: true,
+                        data: trip
+                      })} 
+          style={styles.editButton}>
             <Ionicons name="pencil-outline" size={18} color="#fff" />
             <Text style={styles.editButtonText}>Edit Trip </Text>
           </TouchableOpacity>

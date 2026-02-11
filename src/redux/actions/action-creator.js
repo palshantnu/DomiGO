@@ -140,7 +140,7 @@ export const getPersonalProfileDataAction = () => (dispatch, getState) => new Pr
   const state = getState()
   const token = getAuthToken(state)
   getUserPersonalInfoService(token).then((res) => {
-    // console.log('res====>', res);
+    console.log('res====>', res);
 
     sendDataToReducer(dispatch, UPDATE_PERSONAL_DATA, res?.data?.result);
     resolve(res?.data?.result)
@@ -153,13 +153,13 @@ export const updatePersonalInfoAction = (data) => (dispatch, getState) => new Pr
   const state = getState()
   // const userData = getUserDataSelelctor(state);
   // data.user_id = userData?.id;
-  const formData = jsonToFormData(data)
+  // const formData = jsonToFormData(data)
   // console.log('formData==>', formData);
+        console.log('aaaaaadata',data);
+  updateUserPersonalInfoService(data).then(async(res) => {
+    console.log('res===>', res.data.success);
 
-  updateUserPersonalInfoService(data).then((res) => {
-    // console.log('res===>', res.data.success);
-
-    dispatch(getPersonalProfileDataAction())
+    await dispatch(getPersonalProfileDataAction())
     resolve(res)
   }).catch((error) => {
     const errorResponse = error?.response?.data?.error;
@@ -167,15 +167,27 @@ export const updatePersonalInfoAction = (data) => (dispatch, getState) => new Pr
     reject({ error })
   })
 })
+// export const updatePersonalInfoAction =
+//   (data) => (dispatch, getState) =>
+//   console.log('dataaaaa',data);
+//     new Promise((resolve, reject) => {
+
+    // });
+
 
 export const ADDTRIP = (formData) => {
+  console.log('FormData>>>>>>>>',formData);
   return async (dispatch) => {
     dispatch({
       type: ADD_TRIP_REQUEST,
       payload: 'ADD_TRIP_REQUEST',
     })
     try {
-      const response = await axiosinstance.post(EndPoints.addTrip, formData)
+      // console.log('hellooooo')
+      // const response = await axiosinstance.post(EndPoints.addTrip, formData)
+      const response = await axiosinstance.post('trip-days', formData)
+      console.log('response',response);
+      // console.log('hello')
       const responseJson = response.data;
       // console.log('responseJson==>', responseJson);
 
@@ -197,20 +209,27 @@ export const ADDTRIP = (formData) => {
         type: ADD_TRIP_FAILURE,
         payload: 'ADD_TRIP_FAILURE',
       })
+      console.log('e----->',e);
       return ({ response: e })
     }
   }
 }
 export const UPDATETRIP = (formData) => {
+  console.log('FormData>>>>>>>>',formData);
   return async (dispatch) => {
     dispatch({
       type: UPDATE_TRIP_REQUEST,
       payload: 'UPDATE_TRIP_REQUEST',
     })
     try {
-      const response = await axiosinstance.put(`${EndPoints.UpdateTrip}/${formData.id}`, formData)
+      // const response = await axiosinstance.put(`${EndPoints.UpdateTrip}/${formData.id}`, formData)
+      // const response = await axiosinstance.post('trip-days', formData)
+      console.log('helloooo');
+      const response = await axiosinstance.put(`${'trip-days'}/${formData.id}`, formData)
+      console.log('helloooo');
+
       const responseJson = response.data;
-      // console.log('responseJson==>', responseJson);
+      console.log('responseJson==>', responseJson);
 
       if (response.message == 'Success') {
         dispatch({
@@ -230,6 +249,7 @@ export const UPDATETRIP = (formData) => {
         type: UPDATE_TRIP_FAILURE,
         payload: 'UPDATE_TRIP_FAILURE',
       })
+      console.log('e----->',e);
       return ({ response: e })
     }
   }
@@ -238,7 +258,8 @@ export const UPDATETRIP = (formData) => {
 export function GET_TRIP_DETAILS(id) {
   return async (dispatch) => {
     try {
-      const response = await axiosinstance.get(`trips/${id}`);
+      // const response = await axiosinstance.get(`trips/${id}`);
+      const response = await axiosinstance.get(`trip-days/${id}`);
       const responseJson = response.data;
 
       console.log("DETAILS API =>", responseJson);
@@ -272,7 +293,8 @@ export function GET_TRIP_DETAILS(id) {
 export function GET_TRIP_SUMMARY_DETAILS(id) {
   return async (dispatch) => {
     try {
-      const response = await axiosinstance.get(`trips/${id}/detail`);
+      const response = await axiosinstance.get(`trip-days/${id}/detail`);
+      // const response = await axiosinstance.get(`trips/${id}/detail`);
       const responseJson = response.data;
 
       console.log("DETAILS API =>", responseJson);
@@ -307,9 +329,10 @@ export function GET_TRIP_SUMMARY_DETAILS(id) {
 export function GET_TRIP_LIST_LIST() {
   return async (dispatch) => {
     try {
-      const response = await axiosinstance.get('trips')
+      // const response = await axiosinstance.get('trips')
+      const response = await axiosinstance.get('trip-days')
       const responseJson = response.data;
-      // console.log('responseJson-=>', responseJson);
+      console.log('responseJson-=>', responseJson);
 
       if (responseJson.message == 'Success') {
         dispatch({
@@ -610,7 +633,8 @@ export function GET_FINAL_YEAR_PROGRESS() {
 export function GET_STATE_WISE_RESIDENCY() {
   return async (dispatch) => {
     try {
-      const response = await axiosinstance.get('dashboard/state-days')
+      // const response = await axiosinstance.get('dashboard/state-days')
+      const response = await axiosinstance.get('dashboard/v2/state-days')
       const responseJson = response.data;
       // console.log('responseSTATEJson-=>', responseJson);
 
@@ -640,7 +664,8 @@ export function GET_STATE_WISE_RESIDENCY() {
 export function GET_COMPLIANCE_SCORE() {
   return async (dispatch) => {
     try {
-      const response = await axiosinstance.get('dashboard/compliance-score')
+      // const response = await axiosinstance.get('dashboard/compliance-score')
+      const response = await axiosinstance.get('dashboard/v2/compliance-score')
       const responseJson = response.data;
       // console.log('responseSTATEJson-=>', responseJson);
 
@@ -701,7 +726,8 @@ export function GET_NOTIFICATION() {
 export function GET_STATE_WISE_METRICS() {
   return async (dispatch) => {
     try {
-      const response = await axiosinstance.get('dashboard/metrics')
+      // const response = await axiosinstance.get('dashboard/metrics')
+      const response = await axiosinstance.get('dashboard/v2/metrics')
       const responseJson = response.data;
       // console.log('responseMetricsJson-=>', responseJson);
 
@@ -762,7 +788,8 @@ export function GET_YEAR_WISE_TIMELINE({year}) {
   return async (dispatch) => {
     try {
       // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
-      const response = await axiosinstance.get(`dashboard/v1/timeline/year?year=${year}`)
+      // const response = await axiosinstance.get(`dashboard/v1/timeline/year?year=${year}`)
+      const response = await axiosinstance.get(`dashboard/v2/timeline/year?year=${year}`)
       const responseJson = response.data;
       // console.log('responseYEARJson-=>', responseJson);
 
@@ -795,6 +822,7 @@ export function GET_WEEK_WISE_TIMELINE({ start, end }) {
   return async (dispatch) => {
     try {
       const response = await axiosinstance.get(`http://3.91.116.18:4001/api/dashboard/calendar/week?end=${end}&start=${start}`)
+      // const response = await axiosinstance.get(`http://3.91.116.18:4001/api/dashboard/v2/calendar/week?end=${end}&start=${start}`)
       // const response = await axiosinstance.get(`http://3.91.116.18:4001/api/dashboard/calendar/week?end=2025-12-28&start=2025-12-22`)
       // const response = await axiosinstance.get(`http://3.91.116.18:4001/api/dashboard/calendar/week?end=2025-12-07&start=2025-12-01`)
       const responseJson = response.data;
@@ -878,8 +906,11 @@ export const GET_MONTH_WISE_TIMELINE = ({ month, year }) => {
       // month ko 2 digit me convert karo
       const formattedMonth = String(month).padStart(2, '0');
 
+      // const response = await axiosinstance.get(
+      //   `dashboard/calendar/month?month=${year}-${formattedMonth}`
+      // );
       const response = await axiosinstance.get(
-        `dashboard/calendar/month?month=${year}-${formattedMonth}`
+        `dashboard/v2/calendar/month?month=${year}-${formattedMonth}`
       );
 
       const responseJson = response.data;
@@ -1139,7 +1170,8 @@ export function GET_REPORTS({ type, date }) {
   return async (dispatch) => {
     try {
       // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
-      const response = await axiosinstance.get(`dashboard/reports?type=${type}&date=2026-02-01`)
+      // const response = await axiosinstance.get(`dashboard/reports?type=${type}&date=2026-02-01`)
+      const response = await axiosinstance.get(`dashboard/v2/reports?type=${type}&date=2026-02-01`)
       const responseJson = response.data;
       console.log('responseYEARJson-=>', responseJson);
 
