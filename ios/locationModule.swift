@@ -44,19 +44,19 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     private let LAST_TRIP_TIME_KEY = "LocationTracker_lastTripTime"  // NEW: Store last trip time
     private let INITIAL_STATE_LOADED_KEY = "LocationTracker_initialStateLoaded"  // NEW: Track initial load
     private let BACKGROUND_LOCATION_KEY = "LatestBackgroundLocation"
+override init() {
+    super.init()
+    print("📍 LocationTracker initialized")
+    setupLocationManager()
+    loadPersistedState()
 
-    override init() {
-        super.init()
-        print("📍 LocationTracker initialized")
-        setupLocationManager()
-        loadPersistedState()
-        // setupNotificationObservers()
-        
-        // Delay checking pending locations to allow app to fully initialize
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            self.checkForPendingBackgroundLocations()
-        }
+    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+        self.checkForPendingBackgroundLocations()
     }
+
+    scheduleMidnightMissingDay() // 👈 ADD THIS
+}
+
 
     // private func setupNotificationObservers() {
     //     NotificationCenter.default.addObserver(
@@ -711,127 +711,156 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     }
 
     // ✅ UPDATED: 4 HOUR AND STATE CHANGE CHECK WITH DEDUPLICATION
-    private func checkAndSendToAPI(
-        lat: Double, lng: Double, city: String, state: String, address: String, 
-        isBackground: Bool = false, geocodeFailed: Bool = false
-    ) {
-        let currentTimeMs = Date().timeIntervalSince1970 * 1000  // milliseconds
-        let currentTimeSeconds = Date().timeIntervalSince1970  // seconds
+  // ✅ UPDATED: 4 HOUR AND STATE CHANGE CHECK WITH DEDUPLICATION
+private func checkAndSendToAPI(
+    lat: Double, lng: Double, city: String, state: String, address: String, 
+    isBackground: Bool = false, geocodeFailed: Bool = false
+) {
+    let currentTimeMs = Date().timeIntervalSince1970 * 1000  // milliseconds
+    let currentTimeSeconds = Date().timeIntervalSince1970  // seconds
+    
+    // Convert lastApiTime from ms to seconds for comparison
+    let lastApiTimeSeconds = lastApiTime / 1000
+    let timeDifferenceSeconds = currentTimeSeconds - lastApiTimeSeconds
+    
+    let stateChanged = state != lastState
+    let timePassed = timeDifferenceSeconds >= FOUR_HOURS_IN_SECONDS
+    
+    print("⏰ Time difference: \(timeDifferenceSeconds / 60) minutes")
+    print("🏛️ State changed: \(stateChanged) (last: '\(lastState)', current: '\(state)')")
+    print("🕒 4 hours passed: \(timePassed)")
+    print("📱 Processing mode: \(isBackground ? "Background" : "Foreground")")
+    print("🗺️ Geocode status: \(geocodeFailed ? "Failed" : "Success")")
+    
+    if stateChanged || timePassed {
+        print("✅ Conditions met - Sending to API")
         
-        // Convert lastApiTime from ms to seconds for comparison
-        let lastApiTimeSeconds = lastApiTime / 1000
-        let timeDifferenceSeconds = currentTimeSeconds - lastApiTimeSeconds
+        // Initialize previous location if needed
+        if previousEnterTime == 0 {
+            previousLat = lat
+            previousLng = lng
+            previousCity = city
+            previousStateName = state
+            previousEnterTime = currentTimeMs
+        }
         
-        let stateChanged = state != lastState
-        let timePassed = timeDifferenceSeconds >= FOUR_HOURS_IN_SECONDS
+        // NEW: Check if trip should be sent (with cooldown and not already processing)
+        let tripCooldownPassed = currentTimeSeconds - (lastTripProcessedTime / 1000) >= TRIP_COOLDOWN_SECONDS
         
-        print("⏰ Time difference: \(timeDifferenceSeconds / 60) minutes")
-        print("🏛️ State changed: \(stateChanged) (last: '\(lastState)', current: '\(state)')")
-        print("🕒 4 hours passed: \(timePassed)")
-        print("📱 Processing mode: \(isBackground ? "Background" : "Foreground")")
-        print("🗺️ Geocode status: \(geocodeFailed ? "Failed" : "Success")")
-        
-        if stateChanged || timePassed {
-            print("✅ Conditions met - Sending to API")
+        // For TRIP when state changes
+        if stateChanged && previousStateName != "" && !geocodeFailed && !isProcessingTrip {
+            isProcessingTrip = true
+            lastTripProcessedTime = currentTimeMs
             
-            // Initialize previous location if needed
-            if previousEnterTime == 0 {
-                previousLat = lat
-                previousLng = lng
-                previousCity = city
-                previousStateName = state
-                previousEnterTime = currentTimeMs
-            }
+            // Get today's date in YYYY-MM-DD format
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd"
+            let today = dateFormatter.string(from: Date())
             
-            // NEW: Check if trip should be sent (with cooldown and not already processing)
-            let tripCooldownPassed = currentTimeSeconds - (lastTripProcessedTime / 1000) >= TRIP_COOLDOWN_SECONDS
-            
-            if stateChanged && previousStateName != "" && !geocodeFailed && !isProcessingTrip {
-                isProcessingTrip = true
-                lastTripProcessedTime = currentTimeMs
+            // Send TRIP entry
+            sendTripFormData(
+                kind: "trip",
+                date: today,
+                typeOfDayId: 1, // Default value
+                isCommissionDay: false,
+                isRemoteWork: false,
+                remoteHours: 0,
+                isTravelling: true,
+                tripTypeId: 1,
+                tripModeId: 1,
+                confirmationNo: "",
+                vendor: "",
+                hasProof: false,
+                proofType: "other",
+                notes: "Auto-tracked trip",
+                creationType: "automatic",
+                remoteLocation: "",
+                stateId: nil, // Not used for trip
                 
-                sendTripFormData(
-                    originLat: previousLat ?? lat,
-                    originLng: previousLng ?? lng,
-                    originCity: previousCity,
-                    originState: previousStateName,
-                    originStartDate: previousEnterTime,
-                    destinationLat: lat,
-                    destinationLng: lng,
-                    destinationCity: city,
-                    destinationState: state,
-                    destinationEnterDate: currentTimeMs
-                )
-            } else if stateChanged && !tripCooldownPassed {
-                print("⏳ Skipping trip API - cooldown period active")
-            }
-            
-            // Always send to Domigo API (even with empty city/state if geocode failed)
-            sendToDomigoAPI(
-                lat: lat, 
-                lng: lng, 
-                city: city, 
-                state: state, 
-                address: address,
-                isBackground: isBackground
+                // Trip specific fields
+                originCity: previousCity,
+                originState: previousStateName,
+                originLat: previousLat,
+                originLng: previousLng,
+                destinationCity: city,
+                destinationState: state,
+                destinationLat: lat,
+                destinationLng: lng
             )
-            
-            // Update tracking values
-            lastState = state
-            lastApiTime = currentTimeMs
-            
-            // Update previous location data (only if geocoding succeeded)
-            if !geocodeFailed {
-                previousLat = lat
-                previousLng = lng
-                previousCity = city
-                previousStateName = state
-                previousEnterTime = currentTimeMs
-            }
-            
-            // Save to persistent storage
-            saveState()
-            
-            // Notify JavaScript if in background
-            if isBackground {
-                sendEvent(withName: "onBackgroundLocationProcessed", body: [
-                    "latitude": lat,
-                    "longitude": lng,
-                    "city": city,
-                    "state": state,
-                    "timestamp": currentTimeMs,
-                    "stateChanged": stateChanged,
-                    "timePassed": timePassed,
-                    "geocodeFailed": geocodeFailed,
-                    "tripSent": stateChanged && previousStateName != "" && !geocodeFailed && tripCooldownPassed,
-                ])
-            }
-            
-            // Reset trip processing flag after a delay
-            if isProcessingTrip {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
-                    self.isProcessingTrip = false
-                }
-            }
-        } else {
-            print("⏳ No API update required (No state change & 4hr not passed)")
-            
-            // Still notify for background updates even if no API call
-            if isBackground {
-                sendEvent(withName: "onBackgroundLocationProcessed", body: [
-                    "latitude": lat,
-                    "longitude": lng,
-                    "city": city,
-                    "state": state,
-                    "timestamp": currentTimeMs,
-                    "stateChanged": stateChanged,
-                    "timePassed": timePassed,
-                    "apiCalled": false,
-                    "geocodeFailed": geocodeFailed,
-                ])
+        } else if stateChanged && !tripCooldownPassed {
+            print("⏳ Skipping trip API - cooldown period active")
+        }
+        
+        // For MISSING day - you might want to call this separately when user enters a state
+        // This would be a different endpoint call, not automatically from location updates
+        // You could call this when you detect the user has been in a state without a recorded entry
+        
+        // Always send to Domigo API (even with empty city/state if geocode failed)
+        sendToDomigoAPI(
+            lat: lat, 
+            lng: lng, 
+            city: city, 
+            state: state, 
+            address: address,
+            isBackground: isBackground
+        )
+        
+        // Update tracking values
+        lastState = state
+        lastApiTime = currentTimeMs
+        
+        // Update previous location data (only if geocoding succeeded)
+        if !geocodeFailed {
+            previousLat = lat
+            previousLng = lng
+            previousCity = city
+            previousStateName = state
+            previousEnterTime = currentTimeMs
+        }
+        
+        // Save to persistent storage
+        saveState()
+        
+        // Notify JavaScript if in background
+        if isBackground {
+            sendEvent(withName: "onBackgroundLocationProcessed", body: [
+                "latitude": lat,
+                "longitude": lng,
+                "city": city,
+                "state": state,
+                "timestamp": currentTimeMs,
+                "stateChanged": stateChanged,
+                "timePassed": timePassed,
+                "geocodeFailed": geocodeFailed,
+                "tripSent": stateChanged && previousStateName != "" && !geocodeFailed && tripCooldownPassed,
+            ])
+        }
+        
+        // Reset trip processing flag after a delay
+        if isProcessingTrip {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                self.isProcessingTrip = false
             }
         }
+    } else {
+        print("⏳ No API update required (No state change & 4hr not passed)")
+        
+        // Still notify for background updates even if no API call
+        if isBackground {
+            sendEvent(withName: "onBackgroundLocationProcessed", body: [
+                "latitude": lat,
+                "longitude": lng,
+                "city": city,
+                "state": state,
+                "timestamp": currentTimeMs,
+                "stateChanged": stateChanged,
+                "timePassed": timePassed,
+                "apiCalled": false,
+                "geocodeFailed": geocodeFailed,
+            ])
+        }
     }
+}
 
     private func sendToDomigoAPI(
         lat: Double, lng: Double, city: String, state: String, address: String,
@@ -911,95 +940,229 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         task.resume()
     }
 
-    private func sendTripFormData(
-        originLat: Double,
-        originLng: Double,
-        originCity: String,
-        originState: String,
-        originStartDate: TimeInterval,
+private func scheduleMidnightMissingDay() {
+    let calendar = Calendar.current
+    var components = calendar.dateComponents([.year, .month, .day], from: Date())
+    components.day! += 1
+    components.hour = 0
+    components.minute = 0
+    components.second = 5
 
-        destinationLat: Double,
-        destinationLng: Double,
-        destinationCity: String,
-        destinationState: String,
-        destinationEnterDate: TimeInterval
-    ) {
+    let midnight = calendar.date(from: components)!
 
-        guard let domigoToken = config["domigoToken"] as? String else {
-            print("❌ Domigo token not configured for trip API")
-            return
-        }
+    let delay = midnight.timeIntervalSinceNow
 
-        let boundary = UUID().uuidString
-        guard let url = URL(string: "http://3.91.116.18:4001/api/trips") else {
-            print("❌ Invalid trip API URL")
+    print("⏰ Missing-day scheduled in \(delay) seconds")
+
+    DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+        self.createMissingDay()
+        self.scheduleMidnightMissingDay() // reschedule next day
+    }
+}
+private func createMissingDay() {
+
+    // 🔥 Always reload persisted state first
+    loadPersistedState()
+
+    // fallback: use lastState if previous empty
+    let stateToSend = previousStateName.isEmpty ? lastState : previousStateName
+
+    guard !stateToSend.isEmpty else {
+        print("❌ Missing day skipped — no state available")
+        return
+    }
+
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd"
+    let today = formatter.string(from: Date())
+
+    print("🌙 Creating missing day for \(today) in \(stateToSend)")
+
+    sendTripFormData(
+        kind: "missing",
+        date: today,
+        typeOfDayId: nil,
+        isCommissionDay: false,
+        isRemoteWork: false,
+        remoteHours: 0,
+        isTravelling: false,
+        tripTypeId: nil,
+        tripModeId: nil,
+        confirmationNo: "",
+        vendor: "",
+        hasProof: false,
+        proofType: "other",
+        notes: "",
+        creationType: "automatic",
+        remoteLocation: "",
+        stateId: stateToSend,
+
+        originCity: nil,
+        originState: nil,
+        originLat: nil,
+        originLng: nil,
+        destinationCity: nil,
+        destinationState: nil,
+        destinationLat: nil,
+        destinationLng: nil
+    )
+}
+
+
+
+
+  private func sendTripFormData(
+    kind: String, // "trip" or "missing"
+    
+    // COMMON
+    date: String?,
+    typeOfDayId: Int?,
+    isCommissionDay: Bool,
+    isRemoteWork: Bool,
+    remoteHours: Int?,
+    isTravelling: Bool,
+    tripTypeId: Int?,
+    tripModeId: Int?,
+    confirmationNo: String?,
+    vendor: String?,
+    hasProof: Bool,
+    proofType: String?,
+    notes: String?,
+    creationType: String?,
+    remoteLocation: String?,
+    stateId: String?,
+    
+    // TRIP ONLY
+    originCity: String?,
+    originState: String?,
+    originLat: Double?,
+    originLng: Double?,
+    destinationCity: String?,
+    destinationState: String?,
+    destinationLat: Double?,
+    destinationLng: Double?
+) {
+    
+    guard let domigoToken = config["domigoToken"] as? String else {
+        print("❌ Domigo token not configured for trip API")
+        return
+    }
+    
+    let boundary = UUID().uuidString
+    guard let url = URL(string: "http://3.91.116.18:4001/api/trip-days") else {
+        print("❌ Invalid trip API URL")
+        return
+    }
+    
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("Bearer \(domigoToken)", forHTTPHeaderField: "Authorization")
+    request.setValue(
+        "multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+    
+    var body = Data()
+    
+    func addField(_ name: String, _ value: String) {
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n".data(using: .utf8)!)
+        body.append("\(value)\r\n".data(using: .utf8)!)
+    }
+    
+    func addOptionalField(_ name: String, _ value: String?) {
+        guard let value = value, !value.isEmpty else { return }
+        addField(name, value)
+    }
+    
+    func addOptionalIntField(_ name: String, _ value: Int?) {
+        guard let value = value else { return }
+        addField(name, String(value))
+    }
+    
+    func addOptionalDoubleField(_ name: String, _ value: Double?) {
+        guard let value = value else { return }
+        addField(name, String(value))
+    }
+    
+    func boolToString(_ value: Bool) -> String {
+        return value ? "true" : "false"
+    }
+    
+    // ===== COMMON FIELDS FOR ALL KINDS =====
+    addField("kind", kind)
+    addOptionalField("date", date)
+    addOptionalIntField("typeOfDayId", typeOfDayId ?? 1) // Default to 1 if nil
+    addField("isCommissionDay", boolToString(isCommissionDay))
+    addField("isRemoteWork", boolToString(isRemoteWork))
+    addOptionalIntField("remoteHours", remoteHours)
+    addField("isTravelling", boolToString(isTravelling))
+    addOptionalIntField("tripTypeId", tripTypeId)
+    addOptionalIntField("tripModeId", tripModeId)
+    addOptionalField("confirmationNo", confirmationNo)
+    addOptionalField("vendor", vendor)
+    addField("hasProof", boolToString(hasProof))
+    addField("proofType", proofType ?? "other")
+    addOptionalField("notes", notes)
+    addOptionalField("creationType", creationType)
+    addOptionalField("remoteLocation", remoteLocation)
+    addField("attachments", "[]")
+    
+    // ===== MISSING DAY SPECIFIC FIELDS =====
+    if kind == "missing" {
+        addOptionalField("state", stateId)
+    }
+    
+    // ===== TRIP SPECIFIC FIELDS =====
+    if kind == "trip" {
+        addOptionalField("originCity", originCity)
+        addOptionalField("originState", originState)
+        addOptionalDoubleField("originLat", originLat)
+        addOptionalDoubleField("originLng", originLng)
+        
+        addOptionalField("destinationCity", destinationCity)
+        addOptionalField("destinationState", destinationState)
+        addOptionalDoubleField("destinationLat", destinationLat)
+        addOptionalDoubleField("destinationLng", destinationLng)
+    }
+    
+    body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+    request.httpBody = body
+    
+    let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+        guard let self = self else { return }
+        
+        if let error = error {
+            print("❌ Trip API error: \(error.localizedDescription)")
+            self.sendEvent(
+                withName: "onTripApiError",
+                body: [
+                    "success": false,
+                    "error": error.localizedDescription,
+                    "kind": kind,
+                    "date": date ?? "",
+                    "timestamp": Date().timeIntervalSince1970 * 1000,
+                ])
             return
         }
         
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("Bearer \(domigoToken)", forHTTPHeaderField: "Authorization")
-        request.setValue(
-            "multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-
-        var body = Data()
-
-        func addField(_ name: String, _ value: String) {
-            body.append("--\(boundary)\r\n".data(using: .utf8)!)
-            body.append("Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n".data(using: .utf8)!)
-            body.append("\(value)\r\n".data(using: .utf8)!)
-        }
-
-        // ORIGIN
-        addField("originLat", "\(originLat)")
-        addField("originLng", "\(originLng)")
-        addField("originCity", originCity)
-        addField("originState", originState)
-        addField("startDate", formatDate(originStartDate))
-
-        // DESTINATION
-        addField("destinationLat", "\(destinationLat)")
-        addField("destinationLng", "\(destinationLng)")
-        addField("destinationCity", destinationCity)
-        addField("destinationState", destinationState)
-        addField("endDate", formatDate(destinationEnterDate))
-
-        addField("attachments", "[]")
-        addField("modeId", "1")
-        addField("typeId", "1")
-
-        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
-        request.httpBody = body
-
-        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-            guard let self = self else { return }
-
-            if let error = error {
-                print("❌ Trip API error: \(error.localizedDescription)")
-                self.sendEvent(
-                    withName: "onTripApiError",
-                    body: [
-                        "error": error.localizedDescription,
-                        "timestamp": Date().timeIntervalSince1970 * 1000,
-                    ])
-                return
-            }
-
-            let status = (response as? HTTPURLResponse)?.statusCode ?? 0
-            let resText = String(data: data ?? Data(), encoding: .utf8) ?? ""
-            
-            print("📡 Trip API Response - Status: \(status), Response: \(resText)")
-
-            self.sendEvent(
-                withName: "onTripApiResponse",
-                body: [
-                    "statusCode": status,
-                    "success": status == 200 || status == 201,
-                    "response": resText,
-                    "timestamp": Date().timeIntervalSince1970 * 1000,
-                ])
-        }.resume()
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        let resText = String(data: data ?? Data(), encoding: .utf8) ?? ""
+        
+        print("📡 Trip API Response - Status: \(status), Kind: \(kind), Response: \(resText)")
+        
+        self.sendEvent(
+            withName: "onTripApiResponse",
+            body: [
+                "success": status == 200 || status == 201,
+                "statusCode": status,
+                "response": resText,
+                "kind": kind,
+                "date": date ?? "",
+                "timestamp": Date().timeIntervalSince1970 * 1000,
+            ])
     }
+    
+    task.resume()
+}
     
     deinit {
         NotificationCenter.default.removeObserver(self)

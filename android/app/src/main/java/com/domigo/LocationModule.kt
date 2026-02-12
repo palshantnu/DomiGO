@@ -982,7 +982,7 @@ fun createMissingDay() {
         confirmationNo = "",
         vendor = "",
         hasProof = false,
-        proofType = "",
+        proofType = "other",
         notes = "",
         creationType = "automatic",
         remoteLocation = "",
