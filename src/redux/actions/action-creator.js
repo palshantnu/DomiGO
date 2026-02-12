@@ -226,7 +226,7 @@ export const UPDATETRIP = (formData) => {
       // const response = await axiosinstance.post('trip-days', formData)
       console.log('helloooo');
       const response = await axiosinstance.put(`${'trip-days'}/${formData.id}`, formData)
-      console.log('helloooo');
+      console.log('helloooo',response);
 
       const responseJson = response.data;
       console.log('responseJson==>', responseJson);
@@ -245,6 +245,18 @@ export const UPDATETRIP = (formData) => {
       return ({ response: responseJson })
     }
     catch (e) {
+        if (e.response) {
+          // Server ne response diya (400, 500 etc)
+          console.log('Status:', e.response.status);
+          console.log('Data:', e.response.data);
+          console.log('Headers:', e.response.headers);
+        } else if (e.request) {
+          // Request gayi but response nahi aaya
+          console.log('No response:', e.request);
+        } else {
+          // Request set karte time e
+          console.log('e message:', e.message);
+        }
       dispatch({
         type: UPDATE_TRIP_FAILURE,
         payload: 'UPDATE_TRIP_FAILURE',
@@ -821,8 +833,8 @@ export function GET_WEEK_WISE_TIMELINE({ start, end }) {
   
   return async (dispatch) => {
     try {
-      const response = await axiosinstance.get(`http://3.91.116.18:4001/api/dashboard/calendar/week?end=${end}&start=${start}`)
-      // const response = await axiosinstance.get(`http://3.91.116.18:4001/api/dashboard/v2/calendar/week?end=${end}&start=${start}`)
+      // const response = await axiosinstance.get(`http://3.91.116.18:4001/api/dashboard/calendar/week?end=${end}&start=${start}`)
+      const response = await axiosinstance.get(`http://3.91.116.18:4001/api/dashboard/v2/calendar/week?end=${end}&start=${start}`)
       // const response = await axiosinstance.get(`http://3.91.116.18:4001/api/dashboard/calendar/week?end=2025-12-28&start=2025-12-22`)
       // const response = await axiosinstance.get(`http://3.91.116.18:4001/api/dashboard/calendar/week?end=2025-12-07&start=2025-12-01`)
       const responseJson = response.data;
@@ -944,7 +956,8 @@ export const GET_MONTH_WISE_TIMELINE = ({ month, year }) => {
 export function GET_STATE_WISE_TRIPS({state}) {  
   return async (dispatch) => {
     try {
-      const response = await axiosinstance.get(`trips/state/${state}`)
+      // const response = await axiosinstance.get(`trips/state/${state}`)
+      const response = await axiosinstance.get(`trip-days/state/${state}`)
       const responseJson = response.data;
       // console.log('responseYEARJson-=>', responseJson);
 

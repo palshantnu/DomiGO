@@ -97,7 +97,7 @@ const DayEntryScreen = ({
     /* ---------------- STATE ---------------- */
 
     // 1️⃣ User Location
-    const [stateId, setStateId] = useState(null);
+    const [stateId, setStateId] = useState("");
 
     // 2️⃣ Type of day
     const [typeOfDay, setTypeOfDay] = useState(null);
@@ -188,35 +188,90 @@ const DayEntryScreen = ({
 
     /* ---------------- EDIT PREFILL ---------------- */
 
+    // useEffect(() => {
+    //     if (!isEdit || !editData || !isTrip) return;
+
+    //     setStartLocation(
+    //         `${editData.originCity}, ${editData.originState}`
+    //     );
+    //     setEndLocation(
+    //         `${editData.destinationCity}, ${editData.destinationState}`
+    //     );
+
+    //     setStartData({
+    //         city: editData.originCity,
+    //         state: editData.originState,
+    //         lat: editData.originLat,
+    //         lng: editData.originLng,
+    //     });
+
+    //     setEndData({
+    //         city: editData.destinationCity,
+    //         state: editData.destinationState,
+    //         lat: editData.destinationLat,
+    //         lng: editData.destinationLng,
+    //     });
+    //     setStateId(editData.state || null);
+    //     setTypeOfDay(editData.typeOfDayId || null);
+    //     setIsCommissionDay(!!editData.isCommissionDay);
+    //     setIsRemoteWork(!!editData.isRemoteWork);
+    //     setHoursWorked(editData.remoteHours ? String(editData.remoteHours) : "");
+    //     // setIsTravelling(!!editData.isTravelling);
+    //     setTripType(editData.tripTypeId || null);
+    //     setTripMode(editData.tripModeId || null);
+    //     setConfirmationNo(editData.confirmationNo || "");
+    //     setVendor(editData.vendor || "");
+    //     setHasProof(!!editData.hasProof);
+    //     setProofType(editData.proofType || null);
+    //     setNotes(editData.notes || "");
+    //     setTripType(editData.tripTypeId || null);
+    //     setTripMode(editData.tripModeId || null);
+    //     setRemoteLocation(editData.remoteLocation || null);
+    //     setCreationType(editData.creationType || "");
+
+
+    //     if (editData.attachments?.length) {
+    //         setAttachment(editData.attachments[0]);
+    //     }
+    // }, [isEdit, editData, isTrip]);
+
+
     useEffect(() => {
-        if (!isEdit || !editData || !isTrip) return;
+        if (!isEdit || !editData) return;
 
-        setStartLocation(
-            `${editData.originCity}, ${editData.originState}`
-        );
-        setEndLocation(
-            `${editData.destinationCity}, ${editData.destinationState}`
-        );
+        // ✅ NON-TRIP (Missing day)
+        if (!isTrip) {
+            setStateId(editData.state || "");
+        }
 
-        setStartData({
-            city: editData.originCity,
-            state: editData.originState,
-            lat: editData.originLat,
-            lng: editData.originLng,
-        });
+        // ✅ TRIP
+        if (isTrip) {
+            setStartLocation(
+                `${editData.originCity}, ${editData.originState}`
+            );
+            setEndLocation(
+                `${editData.destinationCity}, ${editData.destinationState}`
+            );
 
-        setEndData({
-            city: editData.destinationCity,
-            state: editData.destinationState,
-            lat: editData.destinationLat,
-            lng: editData.destinationLng,
-        });
-        setStateId(editData.stateId || null);
+            setStartData({
+                city: editData.originCity,
+                state: editData.originState,
+                lat: editData.originLat,
+                lng: editData.originLng,
+            });
+
+            setEndData({
+                city: editData.destinationCity,
+                state: editData.destinationState,
+                lat: editData.destinationLat,
+                lng: editData.destinationLng,
+            });
+        }
+
         setTypeOfDay(editData.typeOfDayId || null);
         setIsCommissionDay(!!editData.isCommissionDay);
         setIsRemoteWork(!!editData.isRemoteWork);
         setHoursWorked(editData.remoteHours ? String(editData.remoteHours) : "");
-        // setIsTravelling(!!editData.isTravelling);
         setTripType(editData.tripTypeId || null);
         setTripMode(editData.tripModeId || null);
         setConfirmationNo(editData.confirmationNo || "");
@@ -224,11 +279,8 @@ const DayEntryScreen = ({
         setHasProof(!!editData.hasProof);
         setProofType(editData.proofType || null);
         setNotes(editData.notes || "");
-        setTripType(editData.tripTypeId || null);
-        setTripMode(editData.tripModeId || null);
         setRemoteLocation(editData.remoteLocation || null);
-        setCreationType(editData.creationType || "");
-
+        setCreationType(editData.creationType || "manual");
 
         if (editData.attachments?.length) {
             setAttachment(editData.attachments[0]);
@@ -283,10 +335,10 @@ const DayEntryScreen = ({
 
     const handleSave = () => {
         const payload = {
-            date:date,
+            date: date,
             typeOfDayId: Number(typeOfDay),
             isCommissionDay,
-            kind:isTrip ? "trip" : "missing",
+            kind: isTrip ? "trip" : "missing",
             isRemoteWork,
             remoteHours: isRemoteWork ? Number(hoursWorked) : 0,
             isTravelling,
@@ -303,7 +355,7 @@ const DayEntryScreen = ({
         };
 
         if (!isTrip) {
-            payload.stateId = stateId;
+            payload.state = stateId;
             payload.date = new Date(date).toISOString().split("T")[0];
         }
         if (isTrip) {
@@ -340,7 +392,7 @@ const DayEntryScreen = ({
 
     // const handleSave = () => {
     //     const formData = new FormData();
-    
+
     //     formData.append("typeOfDayId", Number(typeOfDay));
     //     formData.append("isCommissionDay", isCommissionDay);
     //     formData.append("isRemoteWork", isRemoteWork);
@@ -355,14 +407,14 @@ const DayEntryScreen = ({
     //     formData.append("notes", notes || "");
     //     formData.append("creationType", "manual");
     //     formData.append("remoteLocation", remoteLocation || "");
-    
+
     //     // ✅ Attachments (File)
     //     if (attachment) {
     //         formData.append("attachments", attachment);
     //         // agar multiple ho:
     //         // attachments.forEach(file => formData.append("attachments", file));
     //     }
-    
+
     //     // ✅ Non-trip fields
     //     if (!isTrip) {
     //         formData.append("stateId", stateId);
@@ -371,29 +423,29 @@ const DayEntryScreen = ({
     //             new Date(date).toISOString().split("T")[0]
     //         );
     //     }
-    
+
     //     // ✅ Trip fields
     //     if (isTrip) {
     //         formData.append("originCity", startData.city);
     //         formData.append("originState", startData.state);
     //         formData.append("originLat", startData.lat);
     //         formData.append("originLng", startData.lng);
-    
+
     //         formData.append("destinationCity", endData.city);
     //         formData.append("destinationState", endData.state);
     //         formData.append("destinationLat", endData.lat);
     //         formData.append("destinationLng", endData.lng);
     //     }
-    
+
     //     // ✅ Edit case
     //     if (isEdit) {
     //         formData.append("id", editData.id);
     //     }
-    
+
     //     const action = isTrip
     //         ? isEdit ? UPDATETRIP(formData) : ADDTRIP(formData)
     //         : isEdit ? UPDATETRIP(formData) : ADDTRIP(formData);
-    
+
     //     setLoading(true);
     //     dispatch(action)
     //         .then((res) => {
@@ -408,7 +460,7 @@ const DayEntryScreen = ({
     //             CustomToast.show("Something went wrong");
     //         });
     // };
-    
+
 
     return (
         <LinearGradient
@@ -428,15 +480,47 @@ const DayEntryScreen = ({
                         {!isTrip && (
                             <>
                                 <FieldLabel title="Location (State)" />
-                                <SelectList
-                                    data={statesList?.map((i) => ({ key: i.id, value: i.name }))}
-                                    setSelected={setStateId}
-                                    save="value"
-                                    defaultOption={getDefaultOption(statesList, stateId)}
-                                    boxStyles={styles.dropdownBox}
+
+                                <TextInput
+                                    placeholder="Enter State"
+                                    value={stateId}
+                                    onChangeText={(text) => {
+                                        setStateId(text);
+                                        searchPlaces(text, setEndSuggestions);
+                                    }}
+                                    style={styles.input}
+                                    placeholderTextColor="#777"
+                                    editable={editData?.creationType !== "automatic"}
                                 />
+
+                                {endSuggestions.length > 0 && (
+                                    <View style={styles.suggestionBox}>
+                                        {endSuggestions.map((item) => (
+                                            <TouchableOpacity
+                                                key={item.place_id}
+                                                onPress={async () => {
+                                                    const details = await getPlaceDetails(item.place_id);
+
+                                                    const state =
+                                                        details.address_components.find((c) =>
+                                                            c.types.includes("administrative_area_level_1")
+                                                        )?.long_name || item.description;
+
+                                                    setStateId(state);      // ✅ MAIN FIX
+                                                    setEndSuggestions([]);
+                                                }}
+                                                style={styles.suggestionItem}
+                                            >
+                                                <Text style={{ color: "#000" }}>
+                                                    {item.description}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+                                )}
                             </>
                         )}
+
                         {/* ===== FIRST BOX : START & END LOCATION (TRIP ONLY) ===== */}
                         {isTrip && (
                             <>
@@ -505,7 +589,7 @@ const DayEntryScreen = ({
                                                 onPress={async () => {
                                                     setStartLocation(item.description);
                                                     setStartSuggestions([]);
-                                                      console.log('item>>>>>>>>>>',item);
+                                                    console.log('item>>>>>>>>>>', item);
                                                     const details = await getPlaceDetails(item.place_id);
 
                                                     const lat = details.geometry.location.lat;
@@ -520,7 +604,7 @@ const DayEntryScreen = ({
                                                     //     details.address_components.find((c) =>
                                                     //         c.types.includes("administrative_area_level_1")
                                                     //     )?.short_name || "";
-                                                        const state =
+                                                    const state =
                                                         details.address_components.find((c) =>
                                                             c.types.includes("administrative_area_level_1")
                                                         )?.long_name || "";
@@ -615,7 +699,7 @@ const DayEntryScreen = ({
                                                     //     details.address_components.find((c) =>
                                                     //         c.types.includes("administrative_area_level_1")
                                                     //     )?.short_name || "";
-                                                        const state =
+                                                    const state =
                                                         details.address_components.find((c) =>
                                                             c.types.includes("administrative_area_level_1")
                                                         )?.long_name || "";
@@ -669,7 +753,7 @@ const DayEntryScreen = ({
                                     data={statesList?.map((i) => ({ key: i.id, value: i.name }))}
                                     setSelected={setRemoteLocation}
                                     save="value"
-                                    defaultOption={getDefaultOption(statesList, stateId)}
+                                    defaultOption={getDefaultOption(statesList, remoteLocation)}
                                     boxStyles={styles.dropdownBox}
                                 />
                             </>

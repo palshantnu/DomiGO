@@ -51,7 +51,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   });
 
 
-  
+
 
 
 
@@ -106,6 +106,15 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
   useFocusEffect(
     React.useCallback(() => {
+      const today = new Date();
+      const { start, end } = getCurrentWeekDates();
+  
+      GET_WEEK_WISE_TIMELINE({ start, end });;
+      GET_YEAR_WISE_TIMELINE({ year: selectedYear });
+      GET_MONTH_WISE_TIMELINE({
+        month: today.getMonth() + 1, // JS months 0-based
+        year: today.getFullYear(),
+      });
       GET_MISSING_ACTIVITY_LIST();
     }, [])
   );
@@ -200,6 +209,11 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     return marked;
   };
 
+  const getMissingFromMonth = (monthWiseTimeline, dateKey) => {
+    const dayData = monthWiseTimeline?.[dateKey] || [];
+    return dayData.find(item => item.kind === "missing") || null;
+  };
+
   const missingMap = useMemo(() => {
     const map = {};
     (missingActivityList || []).forEach(item => {
@@ -210,7 +224,10 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   }, [missingActivityList]);
 
   const missingDataForDay = missingMap[selectedDate];
-  const isMissingAlreadyAdded = !!missingDataForDay;
+
+  console.log('missingDataForDay', missingDataForDay);
+  // const isMissingAlreadyAdded = !!missingDataForDay;
+  const isMissingAlreadyAdded = !!selectedMissingDate;
 
 
   const screenHeight = Dimensions.get('window').height;
@@ -278,9 +295,32 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     [monthWiseTimeline, visibleMonth]
   );
 
+  // const handleDayPress = (day) => {
+  //   const dateKey = day.dateString;
+  //   const tripsForDay = monthWiseTimeline?.[dateKey] || [];
+
+  //   const today = new Date();
+  //   today.setHours(0, 0, 0, 0);
+
+  //   const currentDate = new Date(dateKey);
+  //   currentDate.setHours(0, 0, 0, 0);
+
+  //   // ❌ Future date → kuch nahi
+  //   if (currentDate > today) return;
+
+  //   // ✅ Store context
+  //   setSelectedDate(dateKey);
+  //   setSelectedTrips(tripsForDay);
+
+  //   // ✅ Always open same modal
+  //   setDayActionModalVisible(true);
+  // };
+
+
+
   const handleDayPress = (day) => {
     const dateKey = day.dateString;
-    const tripsForDay = monthWiseTimeline?.[dateKey] || [];
+    const dayData = monthWiseTimeline?.[dateKey] || [];
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -288,19 +328,24 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     const currentDate = new Date(dateKey);
     currentDate.setHours(0, 0, 0, 0);
 
-    // ❌ Future date → kuch nahi
+    // ❌ Future date block
     if (currentDate > today) return;
 
-    // ✅ Store context
-    setSelectedDate(dateKey);
-    setSelectedTrips(tripsForDay);
+    // ✅ TRIPS
+    const trips = dayData.filter(d => d.kind === "trip");
 
-    // ✅ Always open same modal
+    // ✅ MISSING (LATEST ONE)
+    const missingEntry = [...dayData]
+      .filter(d => d.kind === "missing")
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+
+    // 🔥 STORE STATE
+    setSelectedDate(dateKey);
+    setSelectedTrips(trips);
+    setSelectedMissingDate(missingEntry || null);
+
     setDayActionModalVisible(true);
   };
-
-
-
 
 
 
@@ -327,53 +372,102 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
   const legendStates = getLegendStates(monthWiseTimeline);
 
-  const getWeekCalendarData = (weekResult = {}) => {
-    return Object.keys(weekResult).map(date => {
-      // const trips = weekResult[date];
-      const entry = weekResult[date];
+  // const getWeekCalendarData = (weekResult = {}) => {
+  //   return Object.keys(weekResult).map(date => {
+  //     // const trips = weekResult[date];
+  //     const entry = weekResult[date];
 
-      const trips =
-      entry?.type === "trip" && entry?.data
-        ? [entry.data]
-        : [];
+  //     const trips =
+  //     entry?.type === "trip" && entry?.data
+  //       ? [entry.data]
+  //       : [];
 
-      const formattedDate = new Date(date).toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-      });
+  //     const formattedDate = new Date(date).toLocaleDateString('en-IN', {
+  //       day: '2-digit',
+  //       month: 'short',
+  //     });
 
-      const day = new Date(date).toLocaleDateString('en-US', {
-        weekday: 'short',
-      });
+  //     const day = new Date(date).toLocaleDateString('en-US', {
+  //       weekday: 'short',
+  //     });
 
-      // Build locations list like image
-      const locations = [];
+  //     // Build locations list like image
+  //     const locations = [];
 
-      trips?.forEach(trip => {
-        // Origin
-        locations.push({
-          type: 'origin',
-          city: trip.originCity,
-          state: trip.originState,
-        });
+  //     trips?.forEach(trip => {
+  //       // Origin
+  //       locations.push({
+  //         type: 'origin',
+  //         city: trip.originCity,
+  //         state: trip.originState,
+  //       });
 
-        // Destination
-        locations.push({
-          type: 'destination',
-          city: trip.destinationCity,
-          state: trip.destinationState,
-          id: trip.id,
-        });
-      });
+  //       // Destination
+  //       locations.push({
+  //         type: 'destination',
+  //         city: trip.destinationCity,
+  //         state: trip.destinationState,
+  //         id: trip.id,
+  //       });
+  //     });
 
-      return {
-        date,
-        formattedDate,
-        day,
-        locations,
-      };
+  //     return {
+  //       date,
+  //       formattedDate,
+  //       day,
+  //       locations,
+  //     };
+  //   });
+  // };
+
+  const normalizeDayData = (dayData = []) => {
+    // console.log('dayData',dayData);
+    const trips = [];
+    let latestMissing = null;
+
+    dayData.forEach(item => {
+      if (item.kind === "trip") {
+        trips.push(item);
+      }
+
+      if (item.kind === "missing") {
+        if (
+          !latestMissing ||
+          new Date(item.createdAt) > new Date(latestMissing.createdAt)
+        ) {
+          latestMissing = item;
+        }
+      }
     });
+
+    return { trips, latestMissing };
   };
+
+  const getWeekCalendarData = (weekResult = {}) => {
+    return Object.keys(weekResult)
+      .map(date => {
+        const { trips, latestMissing } = normalizeDayData(weekResult[date]);
+  
+        // 🔥 agar na trip hai na missing → skip
+        if (trips.length === 0 && !latestMissing) return null;
+  
+        return {
+          date,
+          formattedDate: new Date(date).toLocaleDateString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+          }),
+          day: new Date(date).toLocaleDateString('en-US', {
+            weekday: 'short',
+          }),
+          trips,
+          missing: latestMissing,
+        };
+      })
+      .filter(Boolean);
+  };
+  
+
 
 
 
@@ -449,30 +543,32 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
   const normalizeYearData = (yearWiseTimeline = {}) => {
     const normalized = {};
-  
+
     Object.entries(yearWiseTimeline).forEach(([date, items]) => {
       normalized[date] = {
         trips: [],
         activity: null,
       };
-  
+
       if (!Array.isArray(items)) return;
-  
+
       items.forEach(item => {
         if (item.kind === "trip") {
           normalized[date].trips.push(item);
         }
-  
+
         if (item.kind === "missing") {
           normalized[date].activity = item;
         }
       });
     });
-  
+
     return normalized;
   };
-  
-  
+
+
+
+
 
 
 
@@ -543,8 +639,6 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   //   () => getYearWeeklyData(normalizedYearData),
   //   [normalizedYearData]
   // );
-
-  console.log('weeklyData>>>>>', weeklyData);
 
   const YearWeekCard = ({ item, index }) => {
     const isOpen = openIndex === index;
@@ -715,7 +809,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                       </View>
 
                       <Text style={{ marginLeft: 22, color: "#666" }}>
-                        {day.activity.state?.name}
+                        {day.activity.state}
                       </Text>
                     </TouchableOpacity>
                   )}
@@ -732,7 +826,6 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
 
   const regulatoryCalendar = getWeekCalendarData(weekWiseTimeline);
-
   const getTimelineData = (dataObj = {}) => {
     const formatDate = (date) =>
       new Date(date).toLocaleDateString('en-IN', {
@@ -828,7 +921,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
         {/* Locations */}
         <View style={{ flex: 1 }}>
-          {section.locations.map((item, idx) => {
+          {/* {section.locations.map((item, idx) => {
             if (item.type === 'separator') {
               return <View key={idx} style={styles.tripSeparator} />;
             }
@@ -860,7 +953,46 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                 </Text>
               </Wrapper>
             );
-          })}
+          })} */}
+          {section.trips.map(trip => (
+            <TouchableOpacity
+              key={trip.id}
+              style={styles.locationRow}
+              onPress={() => navigation.navigate("DayDetail", trip)}
+            >
+              <View style={[styles.dot, { backgroundColor: "#2F80ED" }]} />
+              <Text style={styles.locationText}>
+                {trip.originCity} → {trip.destinationCity}
+              </Text>
+            </TouchableOpacity>
+          ))}
+          {section.missing && (
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#FFF3E0",
+                padding: 10,
+                borderRadius: 8,
+                marginTop: 6,
+              }}
+              onPress={() =>
+                navigation.navigate("DayEntryScreen", {
+                  mode: "MISSING_DAY",
+                  date: section.date,
+                  isEdit: true,
+                  data: section.missing,
+                })
+              }
+            >
+              <Text style={{ fontWeight: "600", color: "#FF9500" }}>
+                Missing Day: {section.missing.typeOfDay?.name}
+              </Text>
+              <Text style={{ color: "#666" }}>
+                State: {section.missing.state}
+              </Text>
+            </TouchableOpacity>
+          )}
+
+
         </View>
       </View>
 
@@ -920,13 +1052,13 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                       month: monthData.month,
                       year: monthData.year,
                     });
-                  
+
                     GET_MONTH_WISE_TIMELINE({
                       month: monthData.month,
                       year: monthData.year,
                     });
                   }}
-                  
+
                   // markedDates={getMarkedDates(monthWiseTimeline)}
                   markedDates={markedDates}
                   onDayPress={handleDayPress}
@@ -1044,7 +1176,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
               )}
 
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 style={{
                   position: 'absolute',
                   bottom: 20,
@@ -1061,7 +1193,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                 <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>
                   View Weekly Detail
                 </Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
           )}
 
@@ -1371,7 +1503,8 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                       mode: "MISSING_DAY",
                       date: selectedDate,
                       isEdit: true,
-                      data: missingDataForDay,
+                      // data: missingDataForDay,
+                      data: selectedMissingDate || null,
                     });
                   } else {
                     navigation.navigate('DayEntryScreen', {
@@ -1380,13 +1513,13 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                       mode: "MISSING_DAY",
                     });
                   }
-                // navigation.navigate("DayEntryScreen", {
-                //   // mode: "MISSING_DAY", // or "TRIP"
-                //   mode: "TRIP", // or "TRIP"
-                //   date: selectedDate,
-                //   isEdit: true,
-                //   data: missingDataForDay
-                // });
+                  // navigation.navigate("DayEntryScreen", {
+                  //   // mode: "MISSING_DAY", // or "TRIP"
+                  //   mode: "TRIP", // or "TRIP"
+                  //   date: selectedDate,
+                  //   isEdit: true,
+                  //   data: missingDataForDay
+                  // });
                 }}
               >
                 <Text style={[styles.actionText, { color: '#fff' }]}>

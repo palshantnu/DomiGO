@@ -115,6 +115,7 @@ console.log(todayDate); // e.g. 2026-01-03
 
 
           {tripList.map((trip) => (
+              trip.kind == "trip" &&
             <TouchableOpacity key={trip.id} style={styles.card}
               onPress={() => navigation.navigate('DayDetail', trip)}>
 
@@ -139,8 +140,13 @@ console.log(todayDate); // e.g. 2026-01-03
                 </View>
               </View>
 
-
+              {
+                trip.kind == "trip" ?
               <Text style={styles.cityText}>{trip.destinationCity},{trip.destinationState}</Text>
+               :
+              <Text style={styles.cityText}>{trip.state}</Text>
+
+              }
               {/* <Text style={styles.dateText}>{new Date(trip.endDate).toDateString()}</Text> */}
               <Text style={styles.dateText}>{new Date(trip.date).toDateString()}</Text>
 

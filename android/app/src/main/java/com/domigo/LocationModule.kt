@@ -65,6 +65,8 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     private var previousCountryCode: String = ""
     private var previousEnterTime: Long = 0L
 
+    private var currentStateName: String = ""
+
 
     companion object {
         private const val TAG = "LocationModule"
@@ -320,6 +322,7 @@ private fun scheduleMidnightMissingDay() {
 
     val calendar = Calendar.getInstance().apply {
         timeInMillis = System.currentTimeMillis()
+        // add(Calendar.MINUTE, 1)
         set(Calendar.HOUR_OF_DAY, 0)
         set(Calendar.MINUTE, 0)
         set(Calendar.SECOND, 5)
@@ -418,6 +421,7 @@ private fun scheduleMidnightMissingDay() {
                                             "administrative_area_level_1" -> {
                                                 state = component.getString("long_name")
                                                 stateCode = component.getString("short_name")
+                                                currentStateName = state
                                             }
                                             "country" -> {
                                                 countryCode = component.getString("short_name") // IN, US, JP
@@ -543,7 +547,7 @@ private fun scheduleMidnightMissingDay() {
             notes = "",
             creationType = "automatic",
             remoteLocation = "",
-            stateId = null,
+            state = null,
     
             originCity = previousCity,
             originState = previousStateName,
@@ -600,7 +604,7 @@ private fun scheduleMidnightMissingDay() {
 //     notes = "",
 //     creationType = "automatic",
 //     remoteLocation = "",
-//     stateId = null,
+//     state = null,
 
 //     originCity = previousCity,
 //     originState = previousStateName,
@@ -836,7 +840,7 @@ private fun sendEntryFormData(
     notes: String?,
     creationType: String?,
     remoteLocation: String?,
-    stateId: String?,
+    state: String?,
 
     // TRIP ONLY
     originCity: String?,
@@ -884,7 +888,7 @@ private fun sendEntryFormData(
 
     // ===== MISSING DAY =====
     if (kind == "missing") {
-        body.addFormDataPart("stateId", s(stateId))
+        body.addFormDataPart("state", s(state))
     }
 
     // ===== TRIP =====
@@ -977,8 +981,8 @@ fun createMissingDay() {
         isRemoteWork = false,
         remoteHours = 0,
         isTravelling = false,
-        tripTypeId = null,
-        tripModeId = null,
+        tripTypeId = 1,
+        tripModeId = 1,
         confirmationNo = "",
         vendor = "",
         hasProof = false,
@@ -986,7 +990,8 @@ fun createMissingDay() {
         notes = "",
         creationType = "automatic",
         remoteLocation = "",
-        stateId = previousStateName,
+        // state = previousStateName,
+        state = currentStateName,
 
         // trip fields empty
         originCity = null,
