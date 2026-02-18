@@ -83,7 +83,7 @@ function DayDetailScreen({
                 {TripSummaryDetails?.tripDay?.kind == 'trip' ?
                   <Text style={styles.creationTypeText}>Trip Type: {TripSummaryDetails?.tripDay?.creationType.toUpperCase()}</Text>
                   :
-                  <Text style={styles.creationTypeText}>Missing Type: {TripSummaryDetails?.tripDay?.creationType.toUpperCase()}</Text>
+                  <Text style={styles.creationTypeText}>Missing Day Type: {TripSummaryDetails?.tripDay?.creationType.toUpperCase()}</Text>
                 }
               </View>
             )}
@@ -159,7 +159,7 @@ function DayDetailScreen({
                   <Ionicons name="stats-chart-outline" size={22} color={colors.primary} />
                   <View style={{ marginLeft: 10 }}>
                     <Text style={styles.summaryLabel}>Comission</Text>
-                    <Text style={styles.summaryValue}>{TripSummaryDetails?.tripDay?.isCommissionDay ? 'Y' : 'N'}</Text>
+                    <Text style={styles.summaryValue}>{TripSummaryDetails?.tripDay?.isCommissionDay ? 'Yes' : 'No'}</Text>
                   </View>
                 </View>
 
@@ -170,7 +170,7 @@ function DayDetailScreen({
                   <Ionicons name="time-outline" size={22} color={colors.primary} />
                   <View style={{ marginLeft: 10 }}>
                     <Text style={styles.summaryLabel}>Remote Work</Text>
-                    <Text style={styles.summaryValue}>{TripSummaryDetails?.tripDay?.isRemoteWork? 'Y' : 'N'}</Text>
+                    <Text style={styles.summaryValue}>{TripSummaryDetails?.tripDay?.isRemoteWork? 'Yes' : 'No'}</Text>
                   </View>
                 </View>
 
@@ -181,7 +181,7 @@ function DayDetailScreen({
                   <View style={{ marginLeft: 10 }}>
                     <Text style={styles.summaryLabel}>Travelling</Text>
                     <Text style={[styles.summaryValue, { color: "#111", textTransform: 'capitalize' }]}>
-                      {TripSummaryDetails?.tripDay?.isTraveling? 'Y' : 'N'}
+                      {TripSummaryDetails?.tripDay?.isTraveling? 'Yes' : 'No'}
                     </Text>
                   </View>
                 </View>
