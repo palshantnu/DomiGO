@@ -97,7 +97,7 @@ const MenuScreen = ({ userPersonalData, getPersonalProfileDataAction, GET_SUPPOR
           <Text style={styles.sectionTitle}>Support</Text>
           <View style={styles.card}>
             {/* <MenuRow onPress={() => { navigation.navigate('ResidencyHistory') }} icon="home-outline" label="Domicile / Residency Settings" /> */}
-            {supportContact.length > 0 && <MenuRow
+            {supportContact?.length > 0 && <MenuRow
               icon="mail-outline"
               label={supportContact[0]?.email}
               isLast

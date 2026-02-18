@@ -118,12 +118,12 @@ const DayEntryScreen = ({
     const [isTravelling, setIsTravelling] = useState(false);
 
     // 7️⃣ Trip Type
-    const [tripType, setTripType] = useState(null);
+    const [tripType, setTripType] = useState(1);
 
     const [creationType, setCreationType] = useState("manual");
 
     // 8️⃣ Mode of travel
-    const [tripMode, setTripMode] = useState(null);
+    const [tripMode, setTripMode] = useState(1);
 
     // 9️⃣ Confirmation no
     const [confirmationNo, setConfirmationNo] = useState("");
@@ -135,7 +135,7 @@ const DayEntryScreen = ({
     const [hasProof, setHasProof] = useState(false);
 
     // 12️⃣ Proof type
-    const [proofType, setProofType] = useState(null);
+    const [proofType, setProofType] = useState("other");
 
     // 13️⃣ Notes
     const [notes, setNotes] = useState("");

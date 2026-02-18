@@ -316,6 +316,10 @@ private fun showTripCreatedNotification(
     manager.notify(System.currentTimeMillis().toInt(), notification)
 }
 
+fun toEnglishSafe(text: String): String {
+    return text.replace(Regex("[^\\p{ASCII}]"), "")
+}
+
 
 
 private fun scheduleMidnightMissingDay() {
@@ -549,13 +553,17 @@ private fun scheduleMidnightMissingDay() {
             remoteLocation = "",
             state = null,
     
-            originCity = previousCity,
-            originState = previousStateName,
+            // originCity = previousCity,
+            originCity =  toEnglishSafe(previousCity),
+            // originState = previousStateName,
+            originState =  toEnglishSafe(previousStateName),
             originLat = previousLat,
             originLng = previousLng,
     
-            destinationCity = city,
-            destinationState = state,
+            // destinationCity = city,
+            destinationCity =  toEnglishSafe(city),
+            // destinationState = state,
+            destinationState =  toEnglishSafe(state),
             destinationLat = lat,
             destinationLng = lng
         )

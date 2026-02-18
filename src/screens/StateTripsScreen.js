@@ -260,9 +260,13 @@ const StateTripsScreen = ({ route, GET_STATE_WISE_TRIPS, navigation, stateWiseTr
                                     />
                                     <View style={styles.card}>
                                         <View style={styles.cardTop}>
-                                            <Text style={styles.route}>
-                                                {item.originCity} → {item.destinationCity}
-                                            </Text>
+                                            {item.kind == 'trip' ?
+                                                <Text style={styles.route}>
+                                                    {item.originCity} → {item.destinationCity}
+                                                </Text> :
+                                                <Text style={styles.route}>
+                                                    {item.state}
+                                                </Text>}
 
                                             <View
                                                 style={[
@@ -298,14 +302,14 @@ const StateTripsScreen = ({ route, GET_STATE_WISE_TRIPS, navigation, stateWiseTr
                                                     color="#4CAF50"
                                                     style={{ marginRight: 5 }}
                                                 />
-                                                <Text style={styles.typeText}>{item.modeName}</Text>
+                                                <Text style={styles.typeText}>{item.creationType}</Text>
                                             </View>
                                         </View>
 
                                         <View style={styles.cardFooter}>
                                             <Text style={styles.meta}>{item.daysSpent} Days</Text>
                                             <Text style={styles.meta}>
-                                                {item.typeName} • {item.modeName}
+                                                {item.typeName} • {item.kind}
                                             </Text>
                                         </View>
                                     </View>
@@ -455,10 +459,10 @@ const styles = StyleSheet.create({
     typeRow: {
         flexDirection: "row",
         alignItems: "center",
-      },
-      typeText: {
+    },
+    typeText: {
         fontSize: 13,
         color: "#444",
         fontWeight: "500",
-      },
+    },
 });
