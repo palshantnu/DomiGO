@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import LinearGradient from "react-native-linear-gradient";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
+import Ionicons from "react-native-vector-icons/Ionicons";
 import { SelectList } from "react-native-dropdown-select-list";
 import { pick } from "@react-native-documents/picker";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -27,6 +28,7 @@ import {
     GET_TYPE_OF_DAY_LIST,
     GET_STATES_LIST,
 } from "../redux/actions/action-creator";
+import DatePicker from "react-native-date-picker";
 
 /* ---------------- HELPERS ---------------- */
 
@@ -153,6 +155,12 @@ const DayEntryScreen = ({
     const [startData, setStartData] = useState(null);
     const [endData, setEndData] = useState(null);
 
+    const [startDate, setStartDate] = useState(new Date());
+    const [endDate, setEndDate] = useState(new Date());
+
+    const [openStartPicker, setOpenStartPicker] = useState(false);
+    const [openEndPicker, setOpenEndPicker] = useState(false);
+
     /* ---------------- MASTER DATA ---------------- */
     const searchPlaces = async (text, setter) => {
         if (!text) return setter([]);
@@ -266,6 +274,13 @@ const DayEntryScreen = ({
                 lat: editData.destinationLat,
                 lng: editData.destinationLng,
             });
+            if (editData.startDate) {
+                setStartDate(new Date(editData.startDate + ""));
+            }
+    
+            if (editData.endDate) {
+                setEndDate(new Date(editData.endDate + ""));
+            }
         }
 
         setTypeOfDay(editData.typeOfDayId || null);
@@ -281,7 +296,8 @@ const DayEntryScreen = ({
         setNotes(editData.notes || "");
         setRemoteLocation(editData.remoteLocation || null);
         setCreationType(editData.creationType || "manual");
-
+        // setStartDate(new Date(editData.startDate));
+        // setEndDate(new Date(editData.endDate));
         if (editData.attachments?.length) {
             setAttachment(editData.attachments[0]);
         }
@@ -334,6 +350,27 @@ const DayEntryScreen = ({
     /* ---------------- SAVE ---------------- */
 
     const handleSave = () => {
+    if (!typeOfDay) {
+        CustomToast.show("Please select Type of Day");
+        return;
+    }
+
+    if (isTrip) {
+        if (!startData || !endData) {
+            CustomToast.show("Please select start and end locations");
+            return;
+        }
+
+        if (!startDate || !endDate) {
+            CustomToast.show("Please select start and end dates");
+            return;
+        }
+
+        if (startDate > endDate) {
+            CustomToast.show("Start date cannot be after End date");
+            return;
+        }
+    }
         const payload = {
             date: date,
             typeOfDayId: Number(typeOfDay),
@@ -368,6 +405,9 @@ const DayEntryScreen = ({
             payload.destinationState = endData.state;
             payload.destinationLat = endData.lat;
             payload.destinationLng = endData.lng;
+
+            payload.startDate = startDate.toISOString();
+            payload.endDate = endDate.toISOString();
         }
 
         if (isEdit) payload.id = editData.id;
@@ -475,8 +515,11 @@ const DayEntryScreen = ({
 
                 <ScrollView showsVerticalScrollIndicator={false}>
                     <View style={styles.card}>
+                        { isTrip && isEdit ?
+                        <Text style={styles.dateTitle}>{new Date(startDate).toDateString()} - {new Date(endDate).toDateString()}</Text>
+                           :
                         <Text style={styles.dateTitle}>{formatDate(date)}</Text>
-
+                        }
                         {!isTrip && (
                             <>
                                 <FieldLabel title="Location (State)" />
@@ -716,6 +759,56 @@ const DayEntryScreen = ({
                             </>
                         )}
 
+                        {isTrip && (
+                            <>
+                                <View style={styles.dateRow}>
+                                    <FieldLabel title="Start Date" />
+                                    <TouchableOpacity
+                                        style={styles.dateBox}
+                                        onPress={() => setOpenStartPicker(true)}
+                                    >
+                                        <Ionicons name="calendar-outline" size={18} color="#777" />
+                                        <Text style={styles.dateText}>
+                                            {startDate.toDateString()}
+                                        </Text>
+                                    </TouchableOpacity>
+                                    <FieldLabel title="End Date" />
+                                    <TouchableOpacity
+                                        style={styles.dateBox}
+                                        onPress={() => setOpenEndPicker(true)}
+                                    >
+                                        <Ionicons name="calendar-outline" size={18} color="#777" />
+                                        <Text style={styles.dateText}>{endDate.toDateString()}</Text>
+                                    </TouchableOpacity>
+                                </View>
+
+                                <DatePicker
+                                    modal
+                                    open={openStartPicker}
+                                    date={startDate}
+                                    mode="date"
+                                    onConfirm={(date) => {
+                                        date.setHours(9, 0, 0, 0);
+                                        setOpenStartPicker(false);
+                                        setStartDate(date);
+                                    }}
+                                    onCancel={() => setOpenStartPicker(false)}
+                                />
+
+                                <DatePicker
+                                    modal
+                                    open={openEndPicker}
+                                    date={endDate}
+                                    mode="date"
+                                    onConfirm={(date) => {
+                                        date.setHours(18, 0, 0, 0);
+                                        setOpenEndPicker(false);
+                                        setEndDate(date);
+                                    }}
+                                    onCancel={() => setOpenEndPicker(false)}
+                                />
+                            </>)}
+
 
                         <FieldLabel title="Type of Day" />
                         <SelectList
@@ -726,13 +819,27 @@ const DayEntryScreen = ({
                             boxStyles={styles.dropdownBox}
                         />
 
+                      { (editData?.typeOfDay?.name == "Working" || typeOfDay == 2 ) && (
+                            <>
+                                <FieldLabel title="Hours Worked" />
+                                <TextInput
+                                    style={styles.input}
+                                    value={hoursWorked}
+                                    onChangeText={setHoursWorked}
+                                    keyboardType="numeric"
+                                    placeholder="Enter hours"
+                                    placeholderTextColor="#777"
+                                />
+                            </>
+                        )}
+
                         <FieldLabel title="Commission Day" />
                         <Toggle value={isCommissionDay} onChange={setIsCommissionDay} />
 
                         <FieldLabel title="Remote Work" />
                         <Toggle value={isRemoteWork} onChange={setIsRemoteWork} />
 
-                        {isRemoteWork && (
+                        {isRemoteWork && !isEdit && (
                             <>
                                 <FieldLabel title="Hours Worked" />
                                 <TextInput
@@ -996,5 +1103,27 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderBottomWidth: 0.5,
         borderColor: "#ddd",
+    },
+    dateRow: {
+        // flexDirection: "row",
+        // justifyContent: "space-between",
+        marginTop: 0,
+        marginBottom: 0,
+    },
+
+    dateBox: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#F2F2F2",
+        height: 55,
+        borderRadius: 30,
+        paddingHorizontal: 15,
+        // width: "48%",
+    },
+
+    dateText: {
+        marginLeft: 10,
+        fontSize: 14,
+        color: "#000",
     },
 });

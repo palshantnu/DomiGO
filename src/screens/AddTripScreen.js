@@ -686,12 +686,12 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginBottom: 15,
   },
-  
+
   creationTypeText: {
     fontSize: 12,
     fontWeight: "600",
     color: "#3C9BF4",
   },
-  
+
 
 });

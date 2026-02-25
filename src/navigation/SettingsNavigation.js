@@ -11,6 +11,7 @@ import ProfileManagementScreen from '../screens/ProfileManagementScreen';
 import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 import CreateResidencyRecordScreen from '../screens/CreateResidencyRecordScreen';
 import ResidencyRecordDetailsScreen from '../screens/ResidencyRecordDetailsScreen';
+import ResidencyDeclarationChecklistScreen from '../screens/ResidencyDeclarationChecklistScreen';
 import ResidencyHistoryScreen from '../screens/ResidencyRecords';
 import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 import HelpSupportScreen from '../screens/HelpSupportScreen';
@@ -49,6 +50,11 @@ export default function SettingsNavigation() {
         <Stack.Screen
           name="ResidencyRecordDetails"
           component={ResidencyRecordDetailsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ResidencyDeclarationChecklistScreen"
+          component={ResidencyDeclarationChecklistScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen

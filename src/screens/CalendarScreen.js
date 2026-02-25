@@ -50,13 +50,6 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     year: today.getFullYear(),
   });
 
-
-
-
-
-
-
-
   console.log('yearWiseTimeline', yearWiseTimeline);
   console.log('weekWiseTimeline', weekWiseTimeline);
   console.log('monthWiseTimeline', monthWiseTimeline);
@@ -136,6 +129,11 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     "Arizona": "#1d3b73",
   };
 
+const TRIP_DOT = { key: "trip", color: "#9E9E9E" };     // Grey
+const ADD_MISSING_DOT = { key: "add-missing", color: "#FF3B30" }; // Red
+const EDIT_MISSING_DOT = { key: "edit-missing", color: "#FFCC00" }; // Yellow
+const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
+
   const MISSING_DOT = {
     key: 'missing',
     color: '#FF3B30',   // red-ish (attention)
@@ -149,63 +147,132 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     const day = new Date(dateStr).getDay();
     return day === 0 || day === 6; // Sunday or Saturday
   };
+  // const getMarkedDates = (monthWiseTimeline, year, month) => {
+  //   const marked = {};
+
+  //   const today = new Date();
+  //   today.setHours(0, 0, 0, 0);
+
+  //   const daysInMonth = new Date(year, month, 0).getDate();
+
+  //   for (let day = 1; day <= daysInMonth; day++) {
+  //     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  //     const trips = monthWiseTimeline?.[dateStr] || [];
+
+  //     const dots = [];
+
+  //     const currentDate = new Date(dateStr);
+  //     currentDate.setHours(0, 0, 0, 0);
+
+  //     // 1️⃣ State dots (agar trips hain)
+  //     if (trips.length > 0) {
+  //       const uniqueStates = [
+  //         ...new Set(trips.map(t => t.destinationState)),
+  //       ];
+
+  //       uniqueStates.forEach(state => {
+  //         dots.push({
+  //           key: state,
+  //           // color: STATE_COLOR_MAP[state] || '#999',
+  //           color: '#999',
+  //         });
+  //       });
+  //     }
+
+  //     // 2️⃣ Manual (red) dot — past + today (ALWAYS)
+  //     if (currentDate <= today) {
+  //       dots.push(MISSING_DOT);
+  //     }
+  //     marked[dateStr] = { dots };
+
+  //     const weekend = isWeekend(dateStr);
+
+  //     marked[dateStr] = {
+  //       dots,
+  //       ...(weekend && {
+  //         customStyles: {
+  //           text: {
+  //             color: '#D32F2F', // weekend text color
+  //             fontWeight: '600',
+  //           },
+  //           container: {
+  //             backgroundColor: '#FFF5F5', // light red / grey
+  //             borderRadius: 8,
+  //           },
+  //         },
+  //       })
+  //     }
+  //   }
+
+
+  //   return marked;
+  // };
+  const isActuallyEdited = (item) => {
+    if (!item.updatedAt || !item.createdAt) return false;
+  
+    const created = new Date(item.createdAt);
+    const updated = new Date(item.updatedAt);
+  
+    const diffInSeconds = (updated - created) / 1000;
+  
+    return diffInSeconds > 12000; // 2 minute se zyada ho toh edited
+  };
+
   const getMarkedDates = (monthWiseTimeline, year, month) => {
     const marked = {};
-
+  
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
+  
     const daysInMonth = new Date(year, month, 0).getDate();
-
+  
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const trips = monthWiseTimeline?.[dateStr] || [];
-
-      const dots = [];
-
+      const dayData = monthWiseTimeline?.[dateStr] || [];
+  
       const currentDate = new Date(dateStr);
       currentDate.setHours(0, 0, 0, 0);
+  
+      const dots = [];
+  
+      // ❌ Future date → skip
+      if (currentDate > today) {
+        marked[dateStr] = { dots: [] };
+        continue;
+      }
+  
+      const trips = dayData.filter(d => d.kind === "trip");
+      const missing = dayData
+        .filter(d => d.kind === "missing")
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
 
-      // 1️⃣ State dots (agar trips hain)
+  
+      // ===============================
+      // 🔵 PRIORITY LOGIC
+      // ===============================
+
+      console.log('missing>>>>',missing);
+  
       if (trips.length > 0) {
-        const uniqueStates = [
-          ...new Set(trips.map(t => t.destinationState)),
-        ];
-
-        uniqueStates.forEach(state => {
-          dots.push({
-            key: state,
-            color: STATE_COLOR_MAP[state] || '#999',
-          });
-        });
+        dots.push(TRIP_DOT);
       }
-
-      // 2️⃣ Manual (red) dot — past + today (ALWAYS)
-      if (currentDate <= today) {
-        dots.push(MISSING_DOT);
+  
+      if (!missing) {
+        // ➕ Missing not added yet
+        dots.push(ADD_MISSING_DOT);
+      } else {
+        if (isActuallyEdited(missing)) {
+          // 🔁 Re-edit
+          dots.push(REEDIT_MISSING_DOT);
+        } else {
+          // ✏️ Edit
+          dots.push(EDIT_MISSING_DOT);
+        }
       }
+  
       marked[dateStr] = { dots };
-
-      const weekend = isWeekend(dateStr);
-
-      marked[dateStr] = {
-        dots,
-        ...(weekend && {
-          customStyles: {
-            text: {
-              color: '#D32F2F', // weekend text color
-              fontWeight: '600',
-            },
-            container: {
-              backgroundColor: '#FFF5F5', // light red / grey
-              borderRadius: 8,
-            },
-          },
-        })
-      }
     }
-
-
+  
     return marked;
   };
 
@@ -856,7 +923,8 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
           location: `${last.destinationCity}, ${last.destinationState}`,
           manual: first.isManual ?? false,
           color:
-            STATE_COLOR_MAP[last.destinationState] || colors.primary,
+            // STATE_COLOR_MAP[last.destinationState] || colors.primary,
+           colors.primary,
         };
       })
       .filter(Boolean);
@@ -1138,7 +1206,8 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                     <View
                       style={[
                         styles.dot,
-                        { backgroundColor: STATE_COLOR_MAP[state] || '#999' }
+                        // { backgroundColor: STATE_COLOR_MAP[state] || '#999' }
+                        { backgroundColor: '#999' }
                       ]}
                     />
                     <Text style={styles.legendText}>{state}</Text>
@@ -1480,7 +1549,8 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
               {/* ✅ Manual option (ALWAYS for past/today) */}
               <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: isMissingAlreadyAdded ? '#FF9500' : '#FF3B30' }]}
+                style={[styles.actionBtn, { backgroundColor: isMissingAlreadyAdded && isActuallyEdited(selectedMissingDate)? '#007AFF': 
+                isMissingAlreadyAdded && !isActuallyEdited(selectedMissingDate)?'#FFCC00' : '#FF3B30' }]}
                 onPress={() => {
                   setDayActionModalVisible(false);
                   // navigation.navigate('AddMissingDayScreen', {
@@ -1523,7 +1593,9 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                 }}
               >
                 <Text style={[styles.actionText, { color: '#fff' }]}>
-                  {isMissingAlreadyAdded ? 'Edit Missing Day' : 'Add Missing Day'}
+                  {/* {isMissingAlreadyAdded ? 'Fill Missing Day' : 'Add Missing Day'} */}
+                {  isMissingAlreadyAdded && isActuallyEdited(selectedMissingDate)? 'Edit Missing Day Info': 
+                isMissingAlreadyAdded && !isActuallyEdited(selectedMissingDate)?'fix Missing Day Info' : 'Add Missing Day Info'}
                 </Text>
               </TouchableOpacity>
 

@@ -516,8 +516,6 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                                                     <Text style={styles.daysIn}>Days in</Text>
 
                                                 </TouchableOpacity>
-
-
                                             </View>
                                         )
                                     })

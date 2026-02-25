@@ -76,8 +76,8 @@ function DayDetailScreen({
                 <Text style={styles.tripTitle}>{TripSummaryDetails?.tripDay?.state} </Text>
               }
             </View>
-            {/* <Text style={styles.tripDate}>{new Date(TripSummaryDetails?.tripDay?.startDate).toDateString()} - {new Date(TripSummaryDetails?.tripDay?.endDate).toDateString()}</Text> */}
-            <Text style={styles.tripDate}>{new Date(TripSummaryDetails?.tripDay?.date).toDateString()}</Text>
+            <Text style={styles.tripDate}>{new Date(TripSummaryDetails?.tripDay?.startDate).toDateString()} - {new Date(TripSummaryDetails?.tripDay?.endDate).toDateString()}</Text>
+            {/* <Text style={styles.tripDate}>{new Date(TripSummaryDetails?.tripDay?.date).toDateString()}</Text> */}
             {TripSummaryDetails?.tripDay?.creationType && (
               <View style={styles.creationTypeBadge}>
                 {TripSummaryDetails?.tripDay?.kind == 'trip' ?

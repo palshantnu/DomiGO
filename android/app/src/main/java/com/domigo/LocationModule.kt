@@ -67,6 +67,10 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
 
     private var currentStateName: String = ""
 
+    private var lastGeocodeTime: Long = 0L
+    // Agar 45 minute chahiye:
+    // private const val GEOCODE_INTERVAL = 45 * 60 * 1000L
+
 
     companion object {
         private const val TAG = "LocationModule"
@@ -74,6 +78,8 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         private const val CHANNEL_ID = "location_service_domigo"
         private const val GOOGLE_GEOCODING_URL = "https://maps.googleapis.com/maps/api/geocode/json"
         private const val FOUR_HOURS_MS = 4 * 60 * 60 * 1000 // 4 hours in milliseconds
+        private const val GEOCODE_INTERVAL = 45 * 60 * 1000L // 1 hour
+
     }
 
     override fun getName(): String {
@@ -372,6 +378,15 @@ private fun scheduleMidnightMissingDay() {
 }
 
     private fun processLocationInBackground(location: Location) {
+        val currentTime = System.currentTimeMillis()
+        val timeDiff = currentTime - lastGeocodeTime
+    
+        if (timeDiff < GEOCODE_INTERVAL) {
+            Log.d(TAG, "⏳ Skipping geocode call. Next allowed in ${(GEOCODE_INTERVAL - timeDiff)/60000} min")
+            return
+        }
+    
+        lastGeocodeTime = currentTime
         // Perform reverse geocoding in background
         reverseGeocodeInBackground(location.latitude, location.longitude)
     }
@@ -530,7 +545,66 @@ private fun scheduleMidnightMissingDay() {
     Log.d(TAG, "STATE CHANGED! Triggering trip API")
     if (stateCode == previousStateCode && countryCode == previousCountryCode) {
         Log.d(TAG, "🏠 Same state ($stateCode), skipping trip")
-    } else {
+    } else 
+    // {
+    //     Log.d(TAG, "🚗 STATE CHANGED: $previousStateCode → $stateCode")
+    
+    //     sendEntryFormData(
+    //         kind = "trip",
+    //         date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
+    
+    //         typeOfDayId = null,
+    //         isCommissionDay = false,
+    //         isRemoteWork = false,
+    //         remoteHours = 0,
+    //         isTravelling = true,
+    //         tripTypeId = 1,
+    //         tripModeId = 1,
+    //         confirmationNo = "",
+    //         vendor = "",
+    //         hasProof = false,
+    //         proofType = "",
+    //         notes = "",
+    //         creationType = "automatic",
+    //         remoteLocation = "",
+    //         state = null,
+    
+    //         // originCity = previousCity,
+    //         originCity =  toEnglishSafe(previousCity),
+    //         // originState = previousStateName,
+    //         originState =  toEnglishSafe(previousStateName),
+    //         originLat = previousLat,
+    //         originLng = previousLng,
+    
+    //         // destinationCity = city,
+    //         destinationCity =  toEnglishSafe(city),
+    //         // destinationState = state,
+    //         destinationState =  toEnglishSafe(state),
+    //         destinationLat = lat,
+    //         destinationLng = lng
+    //         startDate = previousEnterTime,
+    //         endDate = System.currentTimeMillis()
+    //     )
+    
+    //     // UPDATE STATE AFTER TRIP
+    //     previousStateCode = stateCode
+    //     previousCountryCode = countryCode
+    //     previousStateName = state
+    //     previousLat = lat
+    //     previousLng = lng
+    //     previousCity = city
+    //     previousEnterTime = System.currentTimeMillis()
+    // }
+
+    if (previousStateCode.isNotEmpty()) {
+
+        // SAME STATE → DO NOTHING
+        if (stateCode == previousStateCode) {
+            Log.d(TAG, "🏠 Same state ($stateCode) — Trip NOT created")
+            return
+        }
+    
+        // DIFFERENT STATE → CREATE TRIP
         Log.d(TAG, "🚗 STATE CHANGED: $previousStateCode → $stateCode")
     
         sendEntryFormData(
@@ -553,22 +627,21 @@ private fun scheduleMidnightMissingDay() {
             remoteLocation = "",
             state = null,
     
-            // originCity = previousCity,
-            originCity =  toEnglishSafe(previousCity),
-            // originState = previousStateName,
-            originState =  toEnglishSafe(previousStateName),
+            originCity = toEnglishSafe(previousCity),
+            originState = toEnglishSafe(previousStateName),
             originLat = previousLat,
             originLng = previousLng,
     
-            // destinationCity = city,
-            destinationCity =  toEnglishSafe(city),
-            // destinationState = state,
-            destinationState =  toEnglishSafe(state),
+            destinationCity = toEnglishSafe(city),
+            destinationState = toEnglishSafe(state),
             destinationLat = lat,
-            destinationLng = lng
+            destinationLng = lng,
+    
+            startDate = previousEnterTime,
+            endDate = System.currentTimeMillis()
         )
     
-        // UPDATE STATE AFTER TRIP
+        // 🔁 UPDATE STATE AFTER TRIP
         previousStateCode = stateCode
         previousCountryCode = countryCode
         previousStateName = state
@@ -576,6 +649,18 @@ private fun scheduleMidnightMissingDay() {
         previousLng = lng
         previousCity = city
         previousEnterTime = System.currentTimeMillis()
+    
+    } else {
+        // FIRST STATE INIT
+        previousStateCode = stateCode
+        previousCountryCode = countryCode
+        previousStateName = state
+        previousLat = lat
+        previousLng = lng
+        previousCity = city
+        previousEnterTime = System.currentTimeMillis()
+    
+        Log.d(TAG, "📍 Initial state captured: $stateCode")
     }
 
     // sendTripFormData(
@@ -858,7 +943,9 @@ private fun sendEntryFormData(
     destinationCity: String?,
     destinationState: String?,
     destinationLat: Double?,
-    destinationLng: Double?
+    destinationLng: Double?,
+    startDate: Long? = null,
+    endDate: Long? = null
 ) {
 
     fun s(v: String?) = v ?: ""
@@ -911,6 +998,14 @@ private fun sendEntryFormData(
             .addFormDataPart("destinationState", s(destinationState))
             .addFormDataPart("destinationLat", d(destinationLat))
             .addFormDataPart("destinationLng", d(destinationLng))
+            startDate?.let {
+                body.addFormDataPart("startDate", formatDate(it))
+            }
+        
+            endDate?.let {
+                body.addFormDataPart("endDate", formatDate(it))
+            }
+        
     }
 
     val request = Request.Builder()
