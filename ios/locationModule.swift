@@ -44,6 +44,9 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     private let LAST_TRIP_TIME_KEY = "LocationTracker_lastTripTime"  // NEW: Store last trip time
     private let INITIAL_STATE_LOADED_KEY = "LocationTracker_initialStateLoaded"  // NEW: Track initial load
     private let BACKGROUND_LOCATION_KEY = "LatestBackgroundLocation"
+
+    private var lastGeocodeTime: TimeInterval = 0
+    private let GEOCODE_INTERVAL: TimeInterval = 45 * 60  // 45 minutes
 override init() {
     super.init()
     print("📍 LocationTracker initialized")
@@ -226,6 +229,18 @@ override init() {
     }
     
     private func processLocationInBackground(lat: Double, lng: Double) {
+
+        let currentTime = Date().timeIntervalSince1970
+
+        let timeDiff = currentTime - lastGeocodeTime
+
+        if timeDiff < GEOCODE_INTERVAL {
+            print("⏳ Skipping geocode call. Next allowed in \((GEOCODE_INTERVAL - timeDiff)/60) min")
+            return
+        }
+
+        lastGeocodeTime = currentTime
+
         backgroundProcessing = true
         
         let location = CLLocation(latitude: lat, longitude: lng)
@@ -318,6 +333,16 @@ override init() {
         formatter.formatOptions = [.withInternetDateTime]
         return formatter.string(from: date)
     }
+
+    private func formatDate1(_ timestamp: TimeInterval) -> String {
+    let date = Date(timeIntervalSince1970: timestamp / 1000)
+
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+    formatter.timeZone = TimeZone(secondsFromGMT: 0)
+
+    return formatter.string(from: date)
+}
 
     private func setupLocationManager() {
         locationManager = CLLocationManager()
@@ -785,7 +810,11 @@ private func checkAndSendToAPI(
                 destinationCity: city,
                 destinationState: state,
                 destinationLat: lat,
-                destinationLng: lng
+                destinationLng: lng,
+
+
+                startDate: previousEnterTime,
+                endDate: currentTimeMs
             )
         } else if stateChanged && !tripCooldownPassed {
             print("⏳ Skipping trip API - cooldown period active")
@@ -1040,7 +1069,9 @@ private func createMissingDay() {
     destinationCity: String?,
     destinationState: String?,
     destinationLat: Double?,
-    destinationLng: Double?
+    destinationLng: Double?,
+    startDate: TimeInterval? = nil,
+    endDate: TimeInterval? = nil
 ) {
     
     guard let domigoToken = config["domigoToken"] as? String else {
@@ -1122,6 +1153,14 @@ private func createMissingDay() {
         addOptionalField("destinationState", destinationState)
         addOptionalDoubleField("destinationLat", destinationLat)
         addOptionalDoubleField("destinationLng", destinationLng)
+
+        if let start = startDate {
+            addField("startDate", formatDate1(start))
+        }
+
+        if let end = endDate {
+            addField("endDate", formatDate1(end))
+        }
     }
     
     body.append("--\(boundary)--\r\n".data(using: .utf8)!)

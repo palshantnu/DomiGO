@@ -1595,7 +1595,7 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
                 <Text style={[styles.actionText, { color: '#fff' }]}>
                   {/* {isMissingAlreadyAdded ? 'Fill Missing Day' : 'Add Missing Day'} */}
                 {  isMissingAlreadyAdded && isActuallyEdited(selectedMissingDate)? 'Edit Missing Day Info': 
-                isMissingAlreadyAdded && !isActuallyEdited(selectedMissingDate)?'fix Missing Day Info' : 'Add Missing Day Info'}
+                isMissingAlreadyAdded && !isActuallyEdited(selectedMissingDate)?'Fix Missing Day Info' : 'Add Missing Day Info'}
                 </Text>
               </TouchableOpacity>
 
