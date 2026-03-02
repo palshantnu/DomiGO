@@ -185,6 +185,11 @@ override init() {
             }
         }
     }
+
+
+    private func isInternetAvailable() -> Bool {
+    return true // or use NWPathMonitor for proper check
+}
     
     private func checkForPendingBackgroundLocations() {
         // NEW: Check if initial state is already loaded to prevent duplicates
@@ -1474,36 +1479,175 @@ private func createMissingDay() {
         return inside
     }
 
+    // private func processWithLocalGeoJSON(lat: Double, lng: Double) {
+    //     guard let detectedState = detectStateFromGeoJSON(lat: lat, lng: lng) else {
+    //         print("local_native: no state detected for \(lat),\(lng)")
+    //         return
+    //     }
+
+    //     let currentTimeMs = Date().timeIntervalSince1970 * 1000
+
+    //     if previousEnterTime == 0 {
+    //         previousLat = lat
+    //         previousLng = lng
+    //         previousCity = ""
+    //         previousStateName = detectedState
+    //         previousEnterTime = currentTimeMs
+    //         saveState()
+    //         print("local_native: initialized state=\(detectedState)")
+    //     }
+
+    //     sendEvent(withName: "onAddressResolved", body: [
+    //         "latitude": lat, "longitude": lng,
+    //         "city": "", "state": detectedState,
+    //         "stateCode": "", "countryCode": geofencingCountry,
+    //         "fullAddress": "", "timestamp": currentTimeMs,
+    //     ])
+
+    //     checkAndSendToAPI(
+    //         lat: lat, lng: lng, city: "", state: detectedState,
+    //         address: "", isBackground: backgroundProcessing
+    //     )
+    // }
+
     private func processWithLocalGeoJSON(lat: Double, lng: Double) {
-        guard let detectedState = detectStateFromGeoJSON(lat: lat, lng: lng) else {
-            print("local_native: no state detected for \(lat),\(lng)")
-            return
+    guard let detectedState = detectStateFromGeoJSON(lat: lat, lng: lng) else {
+        print("local_native: no state detected")
+        return
+    }
+
+    let currentTimeMs = Date().timeIntervalSince1970 * 1000
+
+    // FIRST INITIALIZATION
+    if previousEnterTime == 0 {
+        previousLat = lat
+        previousLng = lng
+        previousCity = ""
+        previousStateName = detectedState
+        previousEnterTime = currentTimeMs
+        saveState()
+        print("Initialized first state: \(detectedState)")
+        return
+    }
+
+    // SAME STATE → DO NOTHING
+    if detectedState == previousStateName {
+        return
+    }
+
+    // COOLDOWN PROTECTION (5 min like Android)
+    let currentSeconds = Date().timeIntervalSince1970
+    let lastTripSeconds = lastTripProcessedTime / 1000
+    if currentSeconds - lastTripSeconds < TRIP_COOLDOWN_SECONDS {
+        print("Cooldown active, skipping trip")
+        return
+    }
+
+    print("🚗 STATE CHANGED: \(previousStateName) → \(detectedState)")
+
+    let originState = previousStateName
+    let originLat = previousLat
+    let originLng = previousLng
+    let originCity = previousCity
+    let startTime = previousEnterTime
+
+    let isOnline = isInternetAvailable()
+
+    if isOnline {
+        // ONLINE → Reverse geocode for city
+        let location = CLLocation(latitude: lat, longitude: lng)
+
+        geocoder.reverseGeocodeLocation(location) { placemarks, error in
+            let city = placemarks?.first?.locality ?? ""
+            
+            self.createTrip(
+                originCity: originCity,
+                originState: originState,
+                originLat: originLat,
+                originLng: originLng,
+                destinationCity: city,
+                destinationState: detectedState,
+                destinationLat: lat,
+                destinationLng: lng,
+                startDate: startTime,
+                endDate: currentTimeMs
+            )
         }
 
-        let currentTimeMs = Date().timeIntervalSince1970 * 1000
-
-        if previousEnterTime == 0 {
-            previousLat = lat
-            previousLng = lng
-            previousCity = ""
-            previousStateName = detectedState
-            previousEnterTime = currentTimeMs
-            saveState()
-            print("local_native: initialized state=\(detectedState)")
-        }
-
-        sendEvent(withName: "onAddressResolved", body: [
-            "latitude": lat, "longitude": lng,
-            "city": "", "state": detectedState,
-            "stateCode": "", "countryCode": geofencingCountry,
-            "fullAddress": "", "timestamp": currentTimeMs,
-        ])
-
-        checkAndSendToAPI(
-            lat: lat, lng: lng, city: "", state: detectedState,
-            address: "", isBackground: backgroundProcessing
+    } else {
+        // OFFLINE → Direct queue
+        createTrip(
+            originCity: originCity,
+            originState: originState,
+            originLat: originLat,
+            originLng: originLng,
+            destinationCity: "",
+            destinationState: detectedState,
+            destinationLat: lat,
+            destinationLng: lng,
+            startDate: startTime,
+            endDate: currentTimeMs
         )
     }
+
+    // UPDATE STATE AFTER TRIP
+    previousLat = lat
+    previousLng = lng
+    previousCity = ""
+    previousStateName = detectedState
+    previousEnterTime = currentTimeMs
+    lastTripProcessedTime = currentTimeMs
+    saveState()
+}
+
+
+private func createTrip(
+    originCity: String?,
+    originState: String?,
+    originLat: Double?,
+    originLng: Double?,
+    destinationCity: String?,
+    destinationState: String?,
+    destinationLat: Double?,
+    destinationLng: Double?,
+    startDate: TimeInterval?,
+    endDate: TimeInterval?
+) {
+
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd"
+    let today = formatter.string(from: Date())
+
+    sendTripFormData(
+        kind: "trip",
+        date: today,
+        typeOfDayId: 1,
+        isCommissionDay: false,
+        isRemoteWork: false,
+        remoteHours: 0,
+        isTravelling: true,
+        tripTypeId: 1,
+        tripModeId: 1,
+        confirmationNo: "",
+        vendor: "",
+        hasProof: false,
+        proofType: "other",
+        notes: "Auto-tracked trip",
+        creationType: "automatic",
+        remoteLocation: "",
+        stateId: nil,
+        originCity: originCity,
+        originState: originState,
+        originLat: originLat,
+        originLng: originLng,
+        destinationCity: destinationCity,
+        destinationState: destinationState,
+        destinationLat: destinationLat,
+        destinationLng: destinationLng,
+        startDate: startDate,
+        endDate: endDate
+    )
+}
 
     deinit {
         NotificationCenter.default.removeObserver(self)
