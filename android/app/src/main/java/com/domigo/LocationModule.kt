@@ -68,6 +68,11 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     private var currentStateName: String = ""
 
     private var lastGeocodeTime: Long = 0L
+
+    private var lastKnownLat: Double? = null
+    private var lastKnownLng: Double? = null
+
+    private var isMidnightMissingDayPending = false
     // Agar 45 minute chahiye:
     // private const val GEOCODE_INTERVAL = 45 * 60 * 1000L
 
@@ -205,6 +210,8 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
 
                 // Process location in background (reverse geocoding + API call)
                 if (location.accuracy < 100) { // Only process if accuracy is better than 100 meters
+                    lastKnownLat = location.latitude
+                    lastKnownLng = location.longitude
                     processLocationInBackground(location)
                 } else {
                     Log.w(TAG, "Location accuracy too poor: ${location.accuracy}, skipping processing")
@@ -332,7 +339,7 @@ private fun scheduleMidnightMissingDay() {
 
     val calendar = Calendar.getInstance().apply {
         timeInMillis = System.currentTimeMillis()
-        // add(Calendar.MINUTE, 1)
+        // add(Calendar.MINUTE, 5)
         set(Calendar.HOUR_OF_DAY, 0)
         set(Calendar.MINUTE, 0)
         set(Calendar.SECOND, 5)
@@ -377,11 +384,11 @@ private fun scheduleMidnightMissingDay() {
     return sdf.format(Date(timestamp))
 }
 
-    private fun processLocationInBackground(location: Location) {
+    private fun processLocationInBackground(location: Location,force: Boolean = false) {
         val currentTime = System.currentTimeMillis()
         val timeDiff = currentTime - lastGeocodeTime
     
-        if (timeDiff < GEOCODE_INTERVAL) {
+        if (!force && timeDiff < GEOCODE_INTERVAL) {
             Log.d(TAG, "⏳ Skipping geocode call. Next allowed in ${(GEOCODE_INTERVAL - timeDiff)/60000} min")
             return
         }
@@ -451,6 +458,7 @@ private fun scheduleMidnightMissingDay() {
                                 
                                 Log.d(TAG, "Reverse geocode result: City=$city, State=$state")
                                 
+                                
                                 // Send address info back to JS
                                 val addressData = Arguments.createMap().apply {
                                     putDouble("latitude", lat)
@@ -461,6 +469,10 @@ private fun scheduleMidnightMissingDay() {
                                     putString("countryCode", countryCode)
                                     putString("fullAddress", fullAddress)
                                     putDouble("timestamp", System.currentTimeMillis().toDouble())
+                                }
+                                if (isMidnightMissingDayPending) {
+                                    isMidnightMissingDayPending = false
+                                    createMissingDayWithState(state)
                                 }
 
                                                 // If first-time or app started fresh
@@ -1064,6 +1076,19 @@ private fun sendEntryFormData(
 
 fun createMissingDay() {
 
+    if (lastKnownLat != null && lastKnownLng != null) {
+
+        isMidnightMissingDayPending = true
+    
+        val fakeLocation = Location("midnight_force").apply {
+            latitude = lastKnownLat!!
+            longitude = lastKnownLng!!
+            accuracy = 10f
+        }
+    
+        processLocationInBackground(fakeLocation, force = true)
+    }
+
     if (previousStateCode.isNullOrEmpty()) {
         Log.d(TAG, "❌ Missing day skipped: state not available")
         return
@@ -1108,6 +1133,49 @@ fun createMissingDay() {
     )
 
     // 🔁 Next day ke liye alarm dobara lagao
+    scheduleMidnightMissingDay()
+}
+
+
+
+private fun createMissingDayWithState(state: String) {
+
+    val today = SimpleDateFormat(
+        "yyyy-MM-dd",
+        Locale.getDefault()
+    ).format(Date())
+
+    Log.d(TAG, "🌙 Creating missing day (forced) for $today → $state")
+
+    sendEntryFormData(
+        kind = "missing",
+        date = today,
+        typeOfDayId = null,
+        isCommissionDay = false,
+        isRemoteWork = false,
+        remoteHours = 0,
+        isTravelling = false,
+        tripTypeId = 1,
+        tripModeId = 1,
+        confirmationNo = "",
+        vendor = "",
+        hasProof = false,
+        proofType = "other",
+        notes = "",
+        creationType = "automatic",
+        remoteLocation = "",
+        state = state,
+
+        originCity = null,
+        originState = null,
+        originLat = null,
+        originLng = null,
+        destinationCity = null,
+        destinationState = null,
+        destinationLat = null,
+        destinationLng = null
+    )
+
     scheduleMidnightMissingDay()
 }
 
