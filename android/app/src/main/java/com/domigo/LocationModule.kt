@@ -21,11 +21,13 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import android.content.SharedPreferences
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import java.util.Calendar
+import org.json.JSONArray
 
 
 class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
@@ -37,6 +39,11 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
 
     init {
         LocationModuleHolder.module = this
+        // loadStateFromPrefs()
+    }
+    override fun initialize() {
+        super.initialize()
+        loadStateFromPrefs()
     }
 
     // HTTP client for background network calls
@@ -45,18 +52,23 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         .readTimeout(30, TimeUnit.SECONDS)
         .build()
 
+    private val prefs: SharedPreferences =
+        reactContext.getSharedPreferences("domigo_location", Context.MODE_PRIVATE)
+
     // Configuration
     private var locationInterval: Long = 20000L 
     private var locationDistance: Float = 0f
     private var googleApiKey: String = ""
     private var domigoToken: String = ""
     private var apiUrl: String = ""
+    private var geofencingMode: String = ""
+    private var geofencingCountry: String = ""
 
     // Track last values to avoid duplicate API calls
     private var lastState: String = ""
     private var lastApiTime: Long = 0
 
-        // Track previous state info
+    // Track previous state info
     private var previousLat: Double? = null
     private var previousLng: Double? = null
     private var previousCity: String = ""
@@ -66,15 +78,13 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     private var previousEnterTime: Long = 0L
 
     private var currentStateName: String = ""
+    private var isTransitionInProgress = false
+    private var stateChangeDetectedTime: Long = 0L
 
     private var lastGeocodeTime: Long = 0L
 
-    private var lastKnownLat: Double? = null
-    private var lastKnownLng: Double? = null
-
-    private var isMidnightMissingDayPending = false
-    // Agar 45 minute chahiye:
-    // private const val GEOCODE_INTERVAL = 45 * 60 * 1000L
+    // GeoJSON cache for local_native mode
+    private var geoJsonFeatures: JSONArray? = null
 
 
     companion object {
@@ -82,9 +92,19 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         private const val NOTIFICATION_ID = 1
         private const val CHANNEL_ID = "location_service_domigo"
         private const val GOOGLE_GEOCODING_URL = "https://maps.googleapis.com/maps/api/geocode/json"
-        private const val FOUR_HOURS_MS = 4 * 60 * 60 * 1000 // 4 hours in milliseconds
-        private const val GEOCODE_INTERVAL = 45 * 60 * 1000L // 1 hour
-
+        private const val FOUR_HOURS_MS = 4 * 60 * 60 * 1000
+        private const val GEOCODE_INTERVAL = 45 * 60 * 1000L
+        private const val OFFLINE_QUEUE_KEY = "domigo_offline_trip_queue"
+        private const val MAX_OFFLINE_RETRIES = 5
+        private const val PREF_PREV_STATE_CODE = "domigo_prev_state_code"
+        private const val PREF_PREV_STATE_NAME = "domigo_prev_state_name"
+        private const val PREF_PREV_CITY = "domigo_prev_city"
+        private const val PREF_PREV_LAT = "domigo_prev_lat"
+        private const val PREF_PREV_LNG = "domigo_prev_lng"
+        private const val PREF_PREV_COUNTRY = "domigo_prev_country"
+        private const val PREF_PREV_ENTER_TIME = "domigo_prev_enter_time"
+        private const val PREF_LAST_TRACKED_DATE = "domigo_last_tracked_date"
+        private const val PREF_CURRENT_STATE = "domigo_current_state"
     }
 
     override fun getName(): String {
@@ -106,8 +126,16 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
             if (config.hasKey("apiUrl")) {
                 apiUrl = config.getString("apiUrl") ?: ""
             }
+            if (config.hasKey("geofencingMode")) {
+                geofencingMode = config.getString("geofencingMode") ?: ""
+            }
+            if (config.hasKey("geofencingCountry")) {
+                geofencingCountry = config.getString("geofencingCountry") ?: ""
+            }
             
-            Log.d(TAG, "Config updated - Interval: $locationInterval, API Key: ${if (googleApiKey.isNotEmpty()) "SET" else "NOT SET"}")
+            Log.d(TAG, "Config updated - Interval: $locationInterval, Mode: $geofencingMode, Country: $geofencingCountry")
+
+            backfillMissingDays()
         } catch (e: Exception) {
             Log.e(TAG, "Error setting config: ${e.message}")
         }
@@ -137,8 +165,8 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
             return
         }
 
-        // Check if API key is set
-        if (googleApiKey.isEmpty()) {
+        // Only require Google API key when mode is 'google' or not set
+        if (googleApiKey.isEmpty() && (geofencingMode.isEmpty() || geofencingMode == "google")) {
             Log.e(TAG, "Google API key not set")
             sendEvent("onLocationError", Arguments.createMap().apply {
                 putString("error", "Google API key not configured")
@@ -210,8 +238,6 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
 
                 // Process location in background (reverse geocoding + API call)
                 if (location.accuracy < 100) { // Only process if accuracy is better than 100 meters
-                    lastKnownLat = location.latitude
-                    lastKnownLng = location.longitude
                     processLocationInBackground(location)
                 } else {
                     Log.w(TAG, "Location accuracy too poor: ${location.accuracy}, skipping processing")
@@ -286,6 +312,18 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         }
     }
 
+    private fun isInternetAvailable(): Boolean {
+        return try {
+            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE)
+                    as android.net.ConnectivityManager
+            val network = cm.activeNetwork ?: return false
+            val capabilities = cm.getNetworkCapabilities(network) ?: return false
+            capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        } catch (e: Exception) {
+            false
+        }
+    }
+
 
 private fun showTripCreatedNotification(
     title: String,
@@ -339,7 +377,7 @@ private fun scheduleMidnightMissingDay() {
 
     val calendar = Calendar.getInstance().apply {
         timeInMillis = System.currentTimeMillis()
-        // add(Calendar.MINUTE, 5)
+        // add(Calendar.MINUTE, 1)
         set(Calendar.HOUR_OF_DAY, 0)
         set(Calendar.MINUTE, 0)
         set(Calendar.SECOND, 5)
@@ -384,18 +422,28 @@ private fun scheduleMidnightMissingDay() {
     return sdf.format(Date(timestamp))
 }
 
-    private fun processLocationInBackground(location: Location,force: Boolean = false) {
+    private fun processLocationInBackground(location: Location) {
+        flushOfflineQueue()
+
         val currentTime = System.currentTimeMillis()
         val timeDiff = currentTime - lastGeocodeTime
     
-        if (!force && timeDiff < GEOCODE_INTERVAL) {
-            Log.d(TAG, "⏳ Skipping geocode call. Next allowed in ${(GEOCODE_INTERVAL - timeDiff)/60000} min")
-            return
-        }
+
     
         lastGeocodeTime = currentTime
-        // Perform reverse geocoding in background
-        reverseGeocodeInBackground(location.latitude, location.longitude)
+
+        if (geofencingMode == "local_native") {
+            processWithLocalGeoJSON(location.latitude, location.longitude)
+        } else if (geofencingMode == "local_js") {
+            // JS handles detection via onLocationChanged event; native does nothing here
+            Log.d(TAG, "local_js mode — skipping native geocoding")
+        } else {
+            if (timeDiff < GEOCODE_INTERVAL) {
+                Log.d(TAG, "⏳ Skipping geocode call. Next allowed in ${(GEOCODE_INTERVAL - timeDiff)/60000} min")
+                return
+            }
+            reverseGeocodeInBackground(location.latitude, location.longitude)
+        }
     }
 
     private fun reverseGeocodeInBackground(lat: Double, lng: Double) {
@@ -458,7 +506,6 @@ private fun scheduleMidnightMissingDay() {
                                 
                                 Log.d(TAG, "Reverse geocode result: City=$city, State=$state")
                                 
-                                
                                 // Send address info back to JS
                                 val addressData = Arguments.createMap().apply {
                                     putDouble("latitude", lat)
@@ -469,10 +516,6 @@ private fun scheduleMidnightMissingDay() {
                                     putString("countryCode", countryCode)
                                     putString("fullAddress", fullAddress)
                                     putDouble("timestamp", System.currentTimeMillis().toDouble())
-                                }
-                                if (isMidnightMissingDayPending) {
-                                    isMidnightMissingDayPending = false
-                                    createMissingDayWithState(state)
                                 }
 
                                                 // If first-time or app started fresh
@@ -491,7 +534,66 @@ private fun scheduleMidnightMissingDay() {
                                 sendEvent("onAddressResolved", addressData)
                                 
                                 // Send to Domigo API with conditions
-                                sendToDomigoAPI(lat, lng, city, state,stateCode,countryCode, fullAddress)
+                                // sendToDomigoAPI(lat, lng, city, state,stateCode,countryCode, fullAddress)
+                                if (geofencingMode == "local_native") {
+
+                                    if (state.equals(previousStateName, ignoreCase = true)) {
+                                        isTransitionInProgress = false
+                                        return
+                                    }
+                                
+                                    val originStateSafe = previousStateName
+                                    val originLatSafe = previousLat
+                                    val originLngSafe = previousLng
+                                    val originCitySafe = previousCity
+                                    val originEnterTimeSafe = previousEnterTime
+                                
+                                    sendEntryFormData(
+                                        kind = "trip",
+                                        date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
+                                        typeOfDayId = null,
+                                        isCommissionDay = false,
+                                        isRemoteWork = false,
+                                        remoteHours = 0,
+                                        isTravelling = true,
+                                        tripTypeId = 1,
+                                        tripModeId = 1,
+                                        confirmationNo = "",
+                                        vendor = "",
+                                        hasProof = false,
+                                        proofType = "other",
+                                        notes = "",
+                                        creationType = "automatic",
+                                        remoteLocation = "",
+                                        state = null,
+                                
+                                        originCity = originCitySafe,
+                                        originState = originStateSafe,
+                                        originLat = originLatSafe,
+                                        originLng = originLngSafe,
+                                
+                                        destinationCity = city,
+                                        destinationState = state,
+                                        destinationLat = lat,
+                                        destinationLng = lng,
+                                
+                                        startDate = originEnterTimeSafe,
+                                        endDate = System.currentTimeMillis()
+                                    )
+                                
+                                    // 🔥 UPDATE STATE HERE (Online case)
+                                    previousStateName = state
+                                    previousStateCode = stateCode
+                                    previousCountryCode = countryCode
+                                    previousLat = lat
+                                    previousLng = lng
+                                    previousCity = city
+                                    previousEnterTime = System.currentTimeMillis()
+                                    saveStateToPrefs()
+                                
+                                    isTransitionInProgress = false
+                                    return
+                                }
                             }
                         } else {
                             Log.e(TAG, "Google Geocoding API error: $status")
@@ -522,15 +624,19 @@ private fun scheduleMidnightMissingDay() {
         val sameCountry = countryCode == previousCountryCode
         val timePassed = timeDifference >= FOUR_HOURS_MS
 
-        if (previousStateCode.isEmpty()) {
-            previousStateCode = stateCode
-            previousCountryCode = countryCode
-            previousStateName = state
-            previousLat = lat
-            previousLng = lng
-            previousCity = city
-            previousEnterTime = System.currentTimeMillis()
-            Log.d(TAG, "📍 Initial state captured: $stateCode")
+        // if (previousStateCode.isEmpty()) {
+        //     previousStateCode = stateCode
+        //     previousCountryCode = countryCode
+        //     previousStateName = state
+        //     previousLat = lat
+        //     previousLng = lng
+        //     previousCity = city
+        //     previousEnterTime = System.currentTimeMillis()
+        //     saveStateToPrefs()
+        //     Log.d(TAG, "📍 Initial state captured: $stateCode")
+        //     return
+        // }
+        if (geofencingMode == "local_native") {
             return
         }
 
@@ -555,6 +661,7 @@ private fun scheduleMidnightMissingDay() {
 
 
     Log.d(TAG, "STATE CHANGED! Triggering trip API")
+    // if (stateCode == previousStateCode && countryCode == previousCountryCode) {
     if (stateCode == previousStateCode && countryCode == previousCountryCode) {
         Log.d(TAG, "🏠 Same state ($stateCode), skipping trip")
     } else 
@@ -611,10 +718,10 @@ private fun scheduleMidnightMissingDay() {
     if (previousStateCode.isNotEmpty()) {
 
         // SAME STATE → DO NOTHING
-        if (stateCode == previousStateCode) {
-            Log.d(TAG, "🏠 Same state ($stateCode) — Trip NOT created")
-            return
-        }
+        // if (stateCode == previousStateCode) {
+        //     Log.d(TAG, "🏠 Same state ($stateCode) — Trip NOT created")
+        //     return
+        // }
     
         // DIFFERENT STATE → CREATE TRIP
         Log.d(TAG, "🚗 STATE CHANGED: $previousStateCode → $stateCode")
@@ -653,7 +760,6 @@ private fun scheduleMidnightMissingDay() {
             endDate = System.currentTimeMillis()
         )
     
-        // 🔁 UPDATE STATE AFTER TRIP
         previousStateCode = stateCode
         previousCountryCode = countryCode
         previousStateName = state
@@ -661,9 +767,9 @@ private fun scheduleMidnightMissingDay() {
         previousLng = lng
         previousCity = city
         previousEnterTime = System.currentTimeMillis()
+        saveStateToPrefs()
     
     } else {
-        // FIRST STATE INIT
         previousStateCode = stateCode
         previousCountryCode = countryCode
         previousStateName = state
@@ -671,6 +777,7 @@ private fun scheduleMidnightMissingDay() {
         previousLng = lng
         previousCity = city
         previousEnterTime = System.currentTimeMillis()
+        saveStateToPrefs()
     
         Log.d(TAG, "📍 Initial state captured: $stateCode")
     }
@@ -1037,11 +1144,29 @@ private fun sendEntryFormData(
     //         Log.d(TAG, "✅ API success: ${response.code}")
     //     }
     // })
+    val queuePayload = JSONObject().apply {
+        put("kind", kind)
+        put("date", date ?: "")
+        put("originCity", originCity ?: "")
+        put("originState", originState ?: "")
+        put("originLat", originLat ?: 0.0)
+        put("originLng", originLng ?: 0.0)
+        put("destinationCity", destinationCity ?: "")
+        put("destinationState", destinationState ?: "")
+        put("destinationLat", destinationLat ?: 0.0)
+        put("destinationLng", destinationLng ?: 0.0)
+        put("startDate", startDate?.let { formatDate(it) } ?: "")
+        put("endDate", endDate?.let { formatDate(it) } ?: "")
+        put("creationType", creationType ?: "automatic")
+        put("state", state ?: "")
+    }
+
     httpClient.newCall(request).enqueue(object : okhttp3.Callback {
 
         override fun onFailure(call: Call, e: IOException) {
             Log.e(TAG, "❌ Entry API failed: ${e.message}")
-    
+            enqueueToOfflineQueue(queuePayload)
+
             val errorData = Arguments.createMap().apply {
                 putBoolean("success", false)
                 putString("error", e.message)
@@ -1056,8 +1181,13 @@ private fun sendEntryFormData(
         override fun onResponse(call: Call, response: Response) {
             val responseBody = response.body?.string() ?: ""
     
-            Log.d(TAG, "✅ Entry API success: ${response.code}")
-    
+            if (!response.isSuccessful) {
+                Log.e(TAG, "❌ Entry API error: ${response.code}")
+                enqueueToOfflineQueue(queuePayload)
+            } else {
+                Log.d(TAG, "✅ Entry API success: ${response.code}")
+            }
+
             val eventData = Arguments.createMap().apply {
                 putBoolean("success", response.isSuccessful)
                 putInt("statusCode", response.code)
@@ -1075,19 +1205,6 @@ private fun sendEntryFormData(
 
 
 fun createMissingDay() {
-
-    if (lastKnownLat != null && lastKnownLng != null) {
-
-        isMidnightMissingDayPending = true
-    
-        val fakeLocation = Location("midnight_force").apply {
-            latitude = lastKnownLat!!
-            longitude = lastKnownLng!!
-            accuracy = 10f
-        }
-    
-        processLocationInBackground(fakeLocation, force = true)
-    }
 
     if (previousStateCode.isNullOrEmpty()) {
         Log.d(TAG, "❌ Missing day skipped: state not available")
@@ -1136,55 +1253,406 @@ fun createMissingDay() {
     scheduleMidnightMissingDay()
 }
 
+// ==================== State Persistence (Gap 1) ====================
 
-
-private fun createMissingDayWithState(state: String) {
-
-    val today = SimpleDateFormat(
-        "yyyy-MM-dd",
-        Locale.getDefault()
-    ).format(Date())
-
-    Log.d(TAG, "🌙 Creating missing day (forced) for $today → $state")
-
-    sendEntryFormData(
-        kind = "missing",
-        date = today,
-        typeOfDayId = null,
-        isCommissionDay = false,
-        isRemoteWork = false,
-        remoteHours = 0,
-        isTravelling = false,
-        tripTypeId = 1,
-        tripModeId = 1,
-        confirmationNo = "",
-        vendor = "",
-        hasProof = false,
-        proofType = "other",
-        notes = "",
-        creationType = "automatic",
-        remoteLocation = "",
-        state = state,
-
-        originCity = null,
-        originState = null,
-        originLat = null,
-        originLng = null,
-        destinationCity = null,
-        destinationState = null,
-        destinationLat = null,
-        destinationLng = null
-    )
-
-    scheduleMidnightMissingDay()
+private fun saveStateToPrefs() {
+    prefs.edit().apply {
+        putString(PREF_PREV_STATE_CODE, previousStateCode)
+        putString(PREF_PREV_STATE_NAME, previousStateName)
+        putString(PREF_PREV_CITY, previousCity)
+        putString(PREF_PREV_COUNTRY, previousCountryCode)
+        putFloat(PREF_PREV_LAT, (previousLat ?: 0.0).toFloat())
+        putFloat(PREF_PREV_LNG, (previousLng ?: 0.0).toFloat())
+        putLong(PREF_PREV_ENTER_TIME, previousEnterTime)
+        putString(PREF_CURRENT_STATE, currentStateName)
+        putString(PREF_LAST_TRACKED_DATE,
+            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()))
+        apply()
+    }
 }
 
+private fun loadStateFromPrefs() {
+    previousStateCode = prefs.getString(PREF_PREV_STATE_CODE, "") ?: ""
+    previousStateName = prefs.getString(PREF_PREV_STATE_NAME, "") ?: ""
+    previousCity = prefs.getString(PREF_PREV_CITY, "") ?: ""
+    previousCountryCode = prefs.getString(PREF_PREV_COUNTRY, "") ?: ""
+    val lat = prefs.getFloat(PREF_PREV_LAT, 0f).toDouble()
+    val lng = prefs.getFloat(PREF_PREV_LNG, 0f).toDouble()
+    previousLat = if (lat != 0.0) lat else null
+    previousLng = if (lng != 0.0) lng else null
+    previousEnterTime = prefs.getLong(PREF_PREV_ENTER_TIME, 0L)
+    currentStateName = prefs.getString(PREF_CURRENT_STATE, "") ?: ""
+    Log.d(TAG, "Loaded persisted state: code=$previousStateCode name=$previousStateName")
+}
 
+// ==================== Native Offline Queue (Gap 2) ====================
 
+private fun enqueueToOfflineQueue(payload: JSONObject) {
+    try {
+        val raw = prefs.getString(OFFLINE_QUEUE_KEY, "[]") ?: "[]"
+        val queue = JSONArray(raw)
+        val entry = JSONObject().apply {
+            put("payload", payload)
+            put("retryCount", 0)
+            put("timestamp", System.currentTimeMillis())
+        }
+        queue.put(entry)
+        prefs.edit().putString(OFFLINE_QUEUE_KEY, queue.toString()).apply()
+        Log.d(TAG, "Offline queue: enqueued event, queue size=${queue.length()}")
+    } catch (e: Exception) {
+        Log.w(TAG, "Offline queue: enqueue failed", e)
+    }
+}
+
+private fun flushOfflineQueue() {
+    try {
+        val raw = prefs.getString(OFFLINE_QUEUE_KEY, "[]") ?: "[]"
+        val queue = JSONArray(raw)
+        if (queue.length() == 0) return
+        Log.d(TAG, "Offline queue: flushing ${queue.length()} events")
+        val remaining = JSONArray()
+        for (i in 0 until queue.length()) {
+            val entry = queue.getJSONObject(i)
+            val payload = entry.getJSONObject("payload")
+            val retryCount = entry.getInt("retryCount")
+            if (retryCount >= MAX_OFFLINE_RETRIES) {
+                Log.w(TAG, "Offline queue: dropping event after $MAX_OFFLINE_RETRIES retries")
+                continue
+            }
+            val success = sendQueuedEntry(payload)
+            if (!success) {
+                entry.put("retryCount", retryCount + 1)
+                remaining.put(entry)
+            }
+        }
+        prefs.edit().putString(OFFLINE_QUEUE_KEY, remaining.toString()).apply()
+    } catch (e: Exception) {
+        Log.w(TAG, "Offline queue: flush failed", e)
+    }
+}
+
+private fun sendQueuedEntry(payload: JSONObject): Boolean {
+    if (domigoToken.isEmpty()) return false
+    // City enrichment before retry
+        if (isInternetAvailable()) {
+            val lat = payload.optDouble("destinationLat", 0.0)
+            val lng = payload.optDouble("destinationLng", 0.0)
+
+            if (lat != 0.0 && lng != 0.0) {
+                try {
+                    val url = "$GOOGLE_GEOCODING_URL?latlng=$lat,$lng&language=en&key=$googleApiKey"
+                    val request = Request.Builder().url(url).build()
+                    val response = httpClient.newCall(request).execute()
+
+                    if (response.isSuccessful) {
+                        val body = response.body?.string()
+                        if (body != null) {
+                            val json = JSONObject(body)
+                            val results = json.getJSONArray("results")
+                            if (results.length() > 0) {
+                                val components = results.getJSONObject(0)
+                                    .getJSONArray("address_components")
+
+                                for (i in 0 until components.length()) {
+                                    val comp = components.getJSONObject(i)
+                                    val types = comp.getJSONArray("types")
+                                    for (j in 0 until types.length()) {
+                                        if (types.getString(j) == "locality") {
+                                            payload.put("destinationCity",
+                                                comp.getString("long_name"))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "City enrichment failed")
+                }
+            }
+        }
+    val kind = payload.optString("kind", "trip")
+    val builder = MultipartBody.Builder().setType(MultipartBody.FORM)
+        .addFormDataPart("kind", kind)
+        .addFormDataPart("date", payload.optString("date", ""))
+        .addFormDataPart("typeOfDayId", "1")
+        .addFormDataPart("isCommissionDay", "false")
+        .addFormDataPart("isRemoteWork", "false")
+        .addFormDataPart("remoteHours", "0")
+        .addFormDataPart("isTravelling", if (kind == "trip") "true" else "false")
+        .addFormDataPart("tripTypeId", "1")
+        .addFormDataPart("tripModeId", "1")
+        .addFormDataPart("confirmationNo", "")
+        .addFormDataPart("vendor", "")
+        .addFormDataPart("hasProof", "false")
+        .addFormDataPart("proofType", "other")
+        .addFormDataPart("notes", "")
+        .addFormDataPart("creationType", payload.optString("creationType", "automatic"))
+        .addFormDataPart("remoteLocation", "")
+        .addFormDataPart("attachments", "[]")
+    if (kind == "missing") {
+        builder.addFormDataPart("state", payload.optString("state", ""))
+    }
+    if (kind == "trip") {
+        builder.addFormDataPart("originCity", payload.optString("originCity", ""))
+        builder.addFormDataPart("originState", payload.optString("originState", ""))
+        builder.addFormDataPart("originLat", payload.optString("originLat", ""))
+        builder.addFormDataPart("originLng", payload.optString("originLng", ""))
+        builder.addFormDataPart("destinationCity", payload.optString("destinationCity", ""))
+        builder.addFormDataPart("destinationState", payload.optString("destinationState", ""))
+        builder.addFormDataPart("destinationLat", payload.optString("destinationLat", ""))
+        builder.addFormDataPart("destinationLng", payload.optString("destinationLng", ""))
+        val sd = payload.optString("startDate", "")
+        if (sd.isNotEmpty()) builder.addFormDataPart("startDate", sd)
+        val ed = payload.optString("endDate", "")
+        if (ed.isNotEmpty()) builder.addFormDataPart("endDate", ed)
+    }
+    val request = Request.Builder()
+        .url("http://3.91.116.18:4001/api/trip-days")
+        .post(builder.build())
+        .addHeader("Authorization", "Bearer $domigoToken")
+        .build()
+    return try {
+        val response = httpClient.newCall(request).execute()
+        response.isSuccessful
+    } catch (e: Exception) {
+        false
+    }
+}
+
+// ==================== Missing Day Backfill (Gap 5) ====================
+
+private fun backfillMissingDays() {
+    val lastDate = prefs.getString(PREF_LAST_TRACKED_DATE, null) ?: return
+    val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val stateForBackfill = currentStateName.ifEmpty { previousStateName }
+    if (stateForBackfill.isEmpty()) return
+    try {
+        val last = sdf.parse(lastDate) ?: return
+        val cal = Calendar.getInstance().apply { time = last }
+        cal.add(Calendar.DAY_OF_MONTH, 1)
+        val today = sdf.format(Date())
+        while (sdf.format(cal.time) < today) {
+            val gapDate = sdf.format(cal.time)
+            Log.d(TAG, "Backfilling missing day: $gapDate")
+            sendEntryFormData(
+                kind = "missing", date = gapDate, typeOfDayId = null,
+                isCommissionDay = false, isRemoteWork = false, remoteHours = 0,
+                isTravelling = false, tripTypeId = 1, tripModeId = 1,
+                confirmationNo = "", vendor = "", hasProof = false, proofType = "other",
+                notes = "", creationType = "automatic", remoteLocation = "",
+                state = stateForBackfill,
+                originCity = null, originState = null, originLat = null, originLng = null,
+                destinationCity = null, destinationState = null, destinationLat = null, destinationLng = null
+            )
+            cal.add(Calendar.DAY_OF_MONTH, 1)
+        }
+        prefs.edit().putString(PREF_LAST_TRACKED_DATE, today).apply()
+    } catch (e: Exception) {
+        Log.w(TAG, "Backfill failed", e)
+    }
+}
+
+// ==================== Local GeoJSON Detection (Option B) ====================
+
+private fun loadGeoJsonFeatures(): JSONArray {
+    geoJsonFeatures?.let { return it }
+    val fileName = when (geofencingCountry) {
+        "IN" -> "india-states.geojson"
+        else -> "us-states.json"
+    }
+    try {
+        val json = context.assets.open(fileName).bufferedReader().use { it.readText() }
+        val root = JSONObject(json)
+        val features = root.getJSONArray("features")
+        geoJsonFeatures = features
+        Log.d(TAG, "GeoJSON loaded: ${features.length()} features from $fileName")
+        return features
+    } catch (e: Exception) {
+        Log.w(TAG, "Failed to load GeoJSON $fileName", e)
+        return JSONArray()
+    }
+}
+
+private fun detectStateFromGeoJSON(lat: Double, lng: Double): String? {
+    val features = loadGeoJsonFeatures()
+    val nameKey = if (geofencingCountry == "IN") "ST_NM" else "name"
+    for (i in 0 until features.length()) {
+        val feature = features.getJSONObject(i)
+        val geometry = feature.getJSONObject("geometry")
+        val type = geometry.getString("type")
+        val coords = geometry.getJSONArray("coordinates")
+        val inside = when (type) {
+            "Polygon" -> pointInPolygonRings(lat, lng, coords)
+            "MultiPolygon" -> {
+                var found = false
+                for (p in 0 until coords.length()) {
+                    if (pointInPolygonRings(lat, lng, coords.getJSONArray(p))) { found = true; break }
+                }
+                found
+            }
+            else -> false
+        }
+        if (inside) return feature.getJSONObject("properties").optString(nameKey, null)
+    }
+    return null
+}
+
+private fun pointInPolygonRings(lat: Double, lng: Double, rings: JSONArray): Boolean {
+    if (rings.length() == 0) return false
+    val outer = rings.getJSONArray(0)
+    if (!pointInRing(lat, lng, outer)) return false
+    for (h in 1 until rings.length()) {
+        if (pointInRing(lat, lng, rings.getJSONArray(h))) return false
+    }
+    return true
+}
+
+private fun pointInRing(lat: Double, lng: Double, ring: JSONArray): Boolean {
+    var inside = false
+    val n = ring.length()
+    var j = n - 1
+    for (i in 0 until n) {
+        val xi = ring.getJSONArray(i).getDouble(0); val yi = ring.getJSONArray(i).getDouble(1)
+        val xj = ring.getJSONArray(j).getDouble(0); val yj = ring.getJSONArray(j).getDouble(1)
+        if (((yi > lat) != (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) inside = !inside
+        j = i
+    }
+    return inside
+}
+
+private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
+    val detectedState = detectStateFromGeoJSON(lat, lng)
+
+    if (detectedState == null) {
+        Log.w(TAG, "local_native: no state detected for $lat,$lng")
+        return
+    }
+    currentStateName = detectedState
+    // val detectedState = detectStateFromGeoJSON(lat, lng)
+    // if (detectedState == null) { Log.w(TAG, "local_native: no state detected for $lat,$lng"); return }
+    // currentStateName = detectedState
+    val addressData = Arguments.createMap().apply {
+        putDouble("latitude", lat); putDouble("longitude", lng)
+        putString("city", ""); putString("state", detectedState)
+        putString("stateCode", ""); putString("countryCode", geofencingCountry)
+        putString("fullAddress", ""); putDouble("timestamp", System.currentTimeMillis().toDouble())
+    }
+    // if (previousEnterTime == 0L) {
+    //     previousLat = lat; previousLng = lng
+    //     previousStateName = detectedState; previousStateCode = detectedState
+    //     previousCountryCode = geofencingCountry; previousEnterTime = System.currentTimeMillis()
+    //     saveStateToPrefs()
+    //     Log.d(TAG, "local_native: initialized state=$detectedState")
+    // }
+    sendEvent("onAddressResolved", addressData)
+        // First time initialize
+        if (previousStateName.isEmpty()) {
+            previousStateName = detectedState
+            previousStateCode = detectedState
+            previousCountryCode = geofencingCountry
+            previousLat = lat
+            previousLng = lng
+            previousEnterTime = System.currentTimeMillis()
+            saveStateToPrefs()
+    
+            Log.d(TAG, "📍 Initial state set: $detectedState")
+            return
+        }
+    
+        // Strong comparison
+        if (detectedState.trim().equals(previousStateName.trim(), ignoreCase = true)) {
+            Log.d(TAG, "🏠 Same state ($detectedState) — skipping")
+            return
+        }
+
+        if (stateChangeDetectedTime == 0L) {
+            stateChangeDetectedTime = System.currentTimeMillis()
+            isTransitionInProgress = false
+            return
+        }
+        
+        val diff = System.currentTimeMillis() - stateChangeDetectedTime
+        if (diff < 5000) {
+            return
+        }
+        
+        stateChangeDetectedTime = 0L
+
+        if (isTransitionInProgress) {
+            Log.d(TAG, "⛔ Transition already in progress — skipping")
+            return
+        }
+
+        isTransitionInProgress = true
+
+        Log.d(TAG, "🚗 STATE CHANGED: $previousStateName → $detectedState")
 
 
 
     
+        // reverseGeocodeInBackground(lat, lng)
+        if (isInternetAvailable()) {
+            reverseGeocodeInBackground(lat, lng)
+            return  // ❗ Important
+        } 
+            Log.d(TAG, "Offline — creating trip with basic state only")
+
+            // SAFE COPY of origin
+            // -------- OFFLINE CASE --------
+            val originStateSafe = previousStateName
+            val originLatSafe = previousLat
+            val originLngSafe = previousLng
+            val originCitySafe = previousCity
+            val originEnterTimeSafe = previousEnterTime
+        
+            sendEntryFormData(
+                kind = "trip",
+                date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
+                typeOfDayId = null,
+                isCommissionDay = false,
+                isRemoteWork = false,
+                remoteHours = 0,
+                isTravelling = true,
+                tripTypeId = 1,
+                tripModeId = 1,
+                confirmationNo = "",
+                vendor = "",
+                hasProof = false,
+                proofType = "other",
+                notes = "",
+                creationType = "automatic",
+                remoteLocation = "",
+                state = null,
+        
+                originCity = previousCity,
+                originState = previousStateName,
+                originLat = previousLat,
+                originLng = previousLng,
+        
+                destinationCity = "",
+                destinationState = detectedState,
+                destinationLat = lat,
+                destinationLng = lng,
+        
+                startDate = previousEnterTime,
+                endDate = System.currentTimeMillis()
+            )
+        
+            // IMPORTANT: Update previous state AFTER trip creation
+            previousStateName = detectedState
+            previousStateCode = detectedState
+            previousCountryCode = geofencingCountry
+            previousLat = lat
+            previousLng = lng
+            previousEnterTime = System.currentTimeMillis()
+            saveStateToPrefs()
+
+            isTransitionInProgress = false
+
+    // sendToDomigoAPI(lat, lng, "", detectedState, detectedState, geofencingCountry, "")
+}
+
 }
 
 class LocationForegroundService : Service() {

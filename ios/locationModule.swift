@@ -47,6 +47,16 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
 
     private var lastGeocodeTime: TimeInterval = 0
     private let GEOCODE_INTERVAL: TimeInterval = 45 * 60  // 45 minutes
+
+    // Geofencing config
+    private var geofencingMode: String = ""
+    private var geofencingCountry: String = ""
+    private var geoJsonFeatures: [[String: Any]]? = nil
+
+    // Offline queue
+    private let OFFLINE_QUEUE_KEY = "LocationTracker_offlineTripQueue"
+    private let MAX_OFFLINE_RETRIES = 5
+    private let LAST_TRACKED_DATE_KEY = "LocationTracker_lastTrackedDate"
 override init() {
     super.init()
     print("📍 LocationTracker initialized")
@@ -241,6 +251,17 @@ override init() {
 
         lastGeocodeTime = currentTime
 
+        flushOfflineQueue()
+
+        if geofencingMode == "local_native" {
+            processWithLocalGeoJSON(lat: lat, lng: lng)
+            return
+        }
+        if geofencingMode == "local_js" {
+            print("local_js mode — skipping native geocoding")
+            return
+        }
+
         backgroundProcessing = true
         
         let location = CLLocation(latitude: lat, longitude: lng)
@@ -367,7 +388,10 @@ override init() {
             self.defaults.set(self.previousCity, forKey: self.PREVIOUS_CITY_KEY)
             self.defaults.set(self.previousStateName, forKey: self.PREVIOUS_STATE_KEY)
             self.defaults.set(self.previousEnterTime, forKey: self.PREVIOUS_ENTER_TIME_KEY)
-            self.defaults.set(self.lastTripProcessedTime, forKey: self.LAST_TRIP_TIME_KEY)  // NEW: Save trip time
+            self.defaults.set(self.lastTripProcessedTime, forKey: self.LAST_TRIP_TIME_KEY)
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd"
+            self.defaults.set(dateFormatter.string(from: Date()), forKey: self.LAST_TRACKED_DATE_KEY)
             self.defaults.synchronize()
             
             // Also save to shared defaults for background access
@@ -447,7 +471,15 @@ override init() {
         print("📍 setConfig called with: \(config)")
         self.config = config
 
-        // ✅ Fetch last state when config is set
+        if let mode = config["geofencingMode"] as? String {
+            self.geofencingMode = mode
+        }
+        if let country = config["geofencingCountry"] as? String {
+            self.geofencingCountry = country
+        }
+
+        backfillMissingDays()
+
         DispatchQueue.main.async {
             self.fetchLastStateFromAPI()
         }
@@ -1166,11 +1198,29 @@ private func createMissingDay() {
     body.append("--\(boundary)--\r\n".data(using: .utf8)!)
     request.httpBody = body
     
+    let queuePayload: [String: Any] = [
+        "kind": kind,
+        "date": date ?? "",
+        "originCity": originCity ?? "",
+        "originState": originState ?? "",
+        "originLat": originLat ?? 0.0,
+        "originLng": originLng ?? 0.0,
+        "destinationCity": destinationCity ?? "",
+        "destinationState": destinationState ?? "",
+        "destinationLat": destinationLat ?? 0.0,
+        "destinationLng": destinationLng ?? 0.0,
+        "startDate": startDate.map { formatDate1($0) } ?? "",
+        "endDate": endDate.map { formatDate1($0) } ?? "",
+        "creationType": creationType ?? "automatic",
+        "state": stateId ?? "",
+    ]
+
     let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
         guard let self = self else { return }
         
         if let error = error {
             print("❌ Trip API error: \(error.localizedDescription)")
+            self.enqueueToOfflineQueue(queuePayload)
             self.sendEvent(
                 withName: "onTripApiError",
                 body: [
@@ -1185,6 +1235,10 @@ private func createMissingDay() {
         
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         let resText = String(data: data ?? Data(), encoding: .utf8) ?? ""
+        
+        if status < 200 || status >= 300 {
+            self.enqueueToOfflineQueue(queuePayload)
+        }
         
         print("📡 Trip API Response - Status: \(status), Kind: \(kind), Response: \(resText)")
         
@@ -1203,6 +1257,254 @@ private func createMissingDay() {
     task.resume()
 }
     
+    // MARK: - Offline Queue (Gap 2)
+
+    private func enqueueToOfflineQueue(_ payload: [String: Any]) {
+        var queue = defaults.array(forKey: OFFLINE_QUEUE_KEY) as? [[String: Any]] ?? []
+        let entry: [String: Any] = [
+            "payload": payload,
+            "retryCount": 0,
+            "timestamp": Date().timeIntervalSince1970 * 1000
+        ]
+        queue.append(entry)
+        defaults.set(queue, forKey: OFFLINE_QUEUE_KEY)
+        defaults.synchronize()
+        print("Offline queue: enqueued event, queue size=\(queue.count)")
+    }
+
+    private func flushOfflineQueue() {
+        guard var queue = defaults.array(forKey: OFFLINE_QUEUE_KEY) as? [[String: Any]], !queue.isEmpty else { return }
+        guard let domigoToken = config["domigoToken"] as? String, !domigoToken.isEmpty else { return }
+
+        print("Offline queue: flushing \(queue.count) events")
+        var remaining: [[String: Any]] = []
+
+        let group = DispatchGroup()
+        for var entry in queue {
+            let retryCount = entry["retryCount"] as? Int ?? 0
+            if retryCount >= MAX_OFFLINE_RETRIES {
+                print("Offline queue: dropping event after \(MAX_OFFLINE_RETRIES) retries")
+                continue
+            }
+            guard let payload = entry["payload"] as? [String: Any] else { continue }
+
+            group.enter()
+            sendQueuedEntry(payload, token: domigoToken) { success in
+                if !success {
+                    entry["retryCount"] = retryCount + 1
+                    remaining.append(entry)
+                }
+                group.leave()
+            }
+        }
+
+        group.notify(queue: .main) {
+            self.defaults.set(remaining, forKey: self.OFFLINE_QUEUE_KEY)
+            self.defaults.synchronize()
+        }
+    }
+
+    private func sendQueuedEntry(_ payload: [String: Any], token: String, completion: @escaping (Bool) -> Void) {
+        let kind = payload["kind"] as? String ?? "trip"
+        let boundary = UUID().uuidString
+        guard let url = URL(string: "http://3.91.116.18:4001/api/trip-days") else {
+            completion(false); return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+        var body = Data()
+        func addField(_ name: String, _ value: String) {
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n".data(using: .utf8)!)
+            body.append("\(value)\r\n".data(using: .utf8)!)
+        }
+
+        addField("kind", kind)
+        addField("date", payload["date"] as? String ?? "")
+        addField("typeOfDayId", "1")
+        addField("isCommissionDay", "false")
+        addField("isRemoteWork", "false")
+        addField("remoteHours", "0")
+        addField("isTravelling", kind == "trip" ? "true" : "false")
+        addField("tripTypeId", "1")
+        addField("tripModeId", "1")
+        addField("confirmationNo", "")
+        addField("vendor", "")
+        addField("hasProof", "false")
+        addField("proofType", "other")
+        addField("notes", "")
+        addField("creationType", payload["creationType"] as? String ?? "automatic")
+        addField("remoteLocation", "")
+        addField("attachments", "[]")
+
+        if kind == "missing" {
+            addField("state", payload["state"] as? String ?? "")
+        }
+        if kind == "trip" {
+            addField("originCity", payload["originCity"] as? String ?? "")
+            addField("originState", payload["originState"] as? String ?? "")
+            if let v = payload["originLat"] { addField("originLat", "\(v)") }
+            if let v = payload["originLng"] { addField("originLng", "\(v)") }
+            addField("destinationCity", payload["destinationCity"] as? String ?? "")
+            addField("destinationState", payload["destinationState"] as? String ?? "")
+            if let v = payload["destinationLat"] { addField("destinationLat", "\(v)") }
+            if let v = payload["destinationLng"] { addField("destinationLng", "\(v)") }
+            let sd = payload["startDate"] as? String ?? ""
+            if !sd.isEmpty { addField("startDate", sd) }
+            let ed = payload["endDate"] as? String ?? ""
+            if !ed.isEmpty { addField("endDate", ed) }
+        }
+
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        request.httpBody = body
+
+        URLSession.shared.dataTask(with: request) { _, response, error in
+            if error != nil { completion(false); return }
+            let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+            completion(status >= 200 && status < 300)
+        }.resume()
+    }
+
+    // MARK: - Missing Day Backfill (Gap 5)
+
+    private func backfillMissingDays() {
+        guard let lastDate = defaults.string(forKey: LAST_TRACKED_DATE_KEY) else { return }
+        let stateForBackfill = previousStateName.isEmpty ? lastState : previousStateName
+        guard !stateForBackfill.isEmpty else { return }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        guard let last = formatter.date(from: lastDate) else { return }
+
+        let calendar = Calendar.current
+        var current = calendar.date(byAdding: .day, value: 1, to: last)!
+        let today = formatter.string(from: Date())
+
+        while formatter.string(from: current) < today {
+            let gapDate = formatter.string(from: current)
+            print("Backfilling missing day: \(gapDate)")
+            sendTripFormData(
+                kind: "missing", date: gapDate, typeOfDayId: nil,
+                isCommissionDay: false, isRemoteWork: false, remoteHours: 0,
+                isTravelling: false, tripTypeId: nil, tripModeId: nil,
+                confirmationNo: "", vendor: "", hasProof: false, proofType: "other",
+                notes: "", creationType: "automatic", remoteLocation: "",
+                stateId: stateForBackfill,
+                originCity: nil, originState: nil, originLat: nil, originLng: nil,
+                destinationCity: nil, destinationState: nil, destinationLat: nil, destinationLng: nil
+            )
+            current = calendar.date(byAdding: .day, value: 1, to: current)!
+        }
+
+        defaults.set(today, forKey: LAST_TRACKED_DATE_KEY)
+        defaults.synchronize()
+    }
+
+    // MARK: - Local GeoJSON Detection (Option B)
+
+    private func loadGeoJsonFeatures() -> [[String: Any]] {
+        if let cached = geoJsonFeatures { return cached }
+
+        let fileName = geofencingCountry == "IN" ? "india-states" : "us-states"
+        let ext = geofencingCountry == "IN" ? "geojson" : "json"
+
+        guard let url = Bundle.main.url(forResource: fileName, withExtension: ext),
+              let data = try? Data(contentsOf: url),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let features = json["features"] as? [[String: Any]] else {
+            print("Failed to load GeoJSON \(fileName).\(ext)")
+            return []
+        }
+
+        geoJsonFeatures = features
+        print("GeoJSON loaded: \(features.count) features from \(fileName).\(ext)")
+        return features
+    }
+
+    private func detectStateFromGeoJSON(lat: Double, lng: Double) -> String? {
+        let features = loadGeoJsonFeatures()
+        let nameKey = geofencingCountry == "IN" ? "ST_NM" : "name"
+
+        for feature in features {
+            guard let geometry = feature["geometry"] as? [String: Any],
+                  let type = geometry["type"] as? String,
+                  let properties = feature["properties"] as? [String: Any] else { continue }
+
+            var inside = false
+            if type == "Polygon", let coords = geometry["coordinates"] as? [[[Double]]] {
+                inside = pointInPolygonRings(lat: lat, lng: lng, rings: coords)
+            } else if type == "MultiPolygon", let polys = geometry["coordinates"] as? [[[[Double]]]] {
+                for poly in polys {
+                    if pointInPolygonRings(lat: lat, lng: lng, rings: poly) { inside = true; break }
+                }
+            }
+
+            if inside {
+                return properties[nameKey] as? String
+            }
+        }
+        return nil
+    }
+
+    private func pointInPolygonRings(lat: Double, lng: Double, rings: [[[Double]]]) -> Bool {
+        guard !rings.isEmpty else { return false }
+        if !pointInRing(lat: lat, lng: lng, ring: rings[0]) { return false }
+        for h in 1..<rings.count {
+            if pointInRing(lat: lat, lng: lng, ring: rings[h]) { return false }
+        }
+        return true
+    }
+
+    private func pointInRing(lat: Double, lng: Double, ring: [[Double]]) -> Bool {
+        var inside = false
+        let n = ring.count
+        var j = n - 1
+        for i in 0..<n {
+            let xi = ring[i][0], yi = ring[i][1]
+            let xj = ring[j][0], yj = ring[j][1]
+            if ((yi > lat) != (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi) {
+                inside = !inside
+            }
+            j = i
+        }
+        return inside
+    }
+
+    private func processWithLocalGeoJSON(lat: Double, lng: Double) {
+        guard let detectedState = detectStateFromGeoJSON(lat: lat, lng: lng) else {
+            print("local_native: no state detected for \(lat),\(lng)")
+            return
+        }
+
+        let currentTimeMs = Date().timeIntervalSince1970 * 1000
+
+        if previousEnterTime == 0 {
+            previousLat = lat
+            previousLng = lng
+            previousCity = ""
+            previousStateName = detectedState
+            previousEnterTime = currentTimeMs
+            saveState()
+            print("local_native: initialized state=\(detectedState)")
+        }
+
+        sendEvent(withName: "onAddressResolved", body: [
+            "latitude": lat, "longitude": lng,
+            "city": "", "state": detectedState,
+            "stateCode": "", "countryCode": geofencingCountry,
+            "fullAddress": "", "timestamp": currentTimeMs,
+        ])
+
+        checkAndSendToAPI(
+            lat: lat, lng: lng, city: "", state: detectedState,
+            address: "", isBackground: backgroundProcessing
+        )
+    }
+
     deinit {
         NotificationCenter.default.removeObserver(self)
     }

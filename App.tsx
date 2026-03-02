@@ -25,8 +25,44 @@ import { navigationRef } from './src/helpers/NavigationService';
 // import { checkLocationPermission, handleLocationAccess } from './src/helpers/locationPermission';
 // import { ensureLocationReady } from './src/helpers/locationHandler';
 import { checkAndRequestLocation } from './src/helpers/locationPermission2';
+import OfflineQueueService from './src/services/OfflineQueueService';
+import axiosinstance from './src/axios/axiosinstance';
+import { GEOFENCING_MODE } from './src/config/featureFlags';
 
 import { PermissionsAndroid, Platform } from 'react-native';
+
+const offlineSendFn = async (event) => {
+  const payload = new FormData();
+  const p = event.payload || {};
+  payload.append('kind', p.kind || 'trip');
+  payload.append('date', p.date || new Date().toISOString().split('T')[0]);
+  payload.append('typeOfDayId', '1');
+  payload.append('isCommissionDay', 'false');
+  payload.append('isRemoteWork', 'false');
+  payload.append('remoteHours', '0');
+  payload.append('isTravelling', 'true');
+  payload.append('tripTypeId', '1');
+  payload.append('tripModeId', '1');
+  payload.append('confirmationNo', '');
+  payload.append('vendor', '');
+  payload.append('hasProof', 'false');
+  payload.append('proofType', 'other');
+  payload.append('notes', '');
+  payload.append('creationType', p.creationType || 'automatic');
+  payload.append('remoteLocation', '');
+  payload.append('attachments', '[]');
+  payload.append('originState', p.originState || event.from || '');
+  payload.append('originLat', String(p.originLat || ''));
+  payload.append('originLng', String(p.originLng || ''));
+  payload.append('destinationState', p.destinationState || event.to || '');
+  payload.append('destinationLat', String(p.destinationLat || ''));
+  payload.append('destinationLng', String(p.destinationLng || ''));
+  payload.append('startDate', p.startDate || '');
+  payload.append('endDate', p.endDate || '');
+  await axiosinstance.post('trip-days', payload, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
 
 export async function requestNotificationPermission() {
   if (Platform.OS === 'android' && Platform.Version >= 33) {
@@ -114,6 +150,14 @@ function App() {
     };
 
     autoStartTracking();
+  }, []);
+
+  useEffect(() => {
+    if (GEOFENCING_MODE === 'local_js') {
+      OfflineQueueService.flush(offlineSendFn);
+      OfflineQueueService.startListening(offlineSendFn);
+      return () => OfflineQueueService.stopListening();
+    }
   }, []);
 
   return (
