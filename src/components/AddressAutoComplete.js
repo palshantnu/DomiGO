@@ -21,6 +21,7 @@ const AddressAutoComplete = ({
 
   const fetchAddresses = async (text) => {
     setQuery(text);
+console.log('text',text);
 
     if (text.length < 2) {
       setResults([]);
@@ -33,8 +34,9 @@ const AddressAutoComplete = ({
       )}&key=${apiKey}&types=geocode&components=country:${countryCode}`;
 
       const res = await fetch(url);
+      
       const json = await res.json();
-
+console.log('json',json);
       if (json.status === "OK") {
         setResults(json.predictions);
       } else {

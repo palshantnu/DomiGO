@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		1807FBF92F55ACA600349A1B /* india-states.geojson in Resources */ = {isa = PBXBuildFile; fileRef = 1807FBF72F55ACA600349A1B /* india-states.geojson */; };
+		1807FBFA2F55ACA600349A1B /* us-states.json in Resources */ = {isa = PBXBuildFile; fileRef = 1807FBF82F55ACA600349A1B /* us-states.json */; };
 		1811AC982ED0375D00585ACD /* SLCEventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1811AC972ED0375D00585ACD /* SLCEventEmitter.swift */; };
 		1811AC9A2ED038D500585ACD /* SLCEventEmitter 2.m in Sources */ = {isa = PBXBuildFile; fileRef = 1811AC992ED038D500585ACD /* SLCEventEmitter 2.m */; };
 		18819CA42F31DDA1003E204A /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 18819CA32F31DDA1003E204A /* GoogleService-Info.plist */; };
@@ -24,6 +26,8 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = domiGo/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = domiGo/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = domiGo/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		1807FBF72F55ACA600349A1B /* india-states.geojson */ = {isa = PBXFileReference; lastKnownFileType = text; path = "india-states.geojson"; sourceTree = "<group>"; };
+		1807FBF82F55ACA600349A1B /* us-states.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "us-states.json"; sourceTree = "<group>"; };
 		1811AC962ED0374D00585ACD /* domiGo-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "domiGo-Bridging-Header.h"; sourceTree = "<group>"; };
 		1811AC972ED0375D00585ACD /* SLCEventEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SLCEventEmitter.swift; sourceTree = "<group>"; };
 		1811AC992ED038D500585ACD /* SLCEventEmitter 2.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "SLCEventEmitter 2.m"; sourceTree = "<group>"; };
@@ -54,6 +58,8 @@
 		13B07FAE1A68108700A75B9A /* domiGo */ = {
 			isa = PBXGroup;
 			children = (
+				1807FBF72F55ACA600349A1B /* india-states.geojson */,
+				1807FBF82F55ACA600349A1B /* us-states.json */,
 				18819CA32F31DDA1003E204A /* GoogleService-Info.plist */,
 				186B82672EF51DFE00A62AFF /* domiGo.entitlements */,
 				18CD2AD92ED5B52400A6C3BC /* LocationTrackerBridge.m */,
@@ -178,6 +184,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1807FBF92F55ACA600349A1B /* india-states.geojson in Resources */,
+				1807FBFA2F55ACA600349A1B /* us-states.json in Resources */,
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				18819CA42F31DDA1003E204A /* GoogleService-Info.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
@@ -310,7 +318,7 @@
 				CODE_SIGN_ENTITLEMENTS = domiGo/domiGo.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = NZK3F2XNQQ;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = domiGo/Info.plist;
@@ -320,7 +328,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.11;
+				MARKETING_VERSION = 1.0.14;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -345,7 +353,7 @@
 				CODE_SIGN_ENTITLEMENTS = domiGo/domiGo.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = NZK3F2XNQQ;
 				INFOPLIST_FILE = domiGo/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DomiGo;
@@ -354,7 +362,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.11;
+				MARKETING_VERSION = 1.0.14;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",

@@ -86,12 +86,13 @@ const SignupScreen = ({ navigation, signUp }) => {
       return true;
     };
     requestLocationPermission();
+    getLocation()
   }, [])
 
 
-  
-  console.log('country',country);
-  console.log('countryCode',countryCode);
+
+  console.log('country', country);
+  console.log('countryCode', countryCode);
 
 
   const extractCityStateFromAddress = async (fullAddress) => {
