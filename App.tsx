@@ -64,6 +64,20 @@ const offlineSendFn = async (event) => {
   });
 };
 
+function scheduleMidnight() {
+  const now = new Date();
+  const midnight = new Date();
+
+  midnight.setHours(24, 0, 5, 0); // next day 00:00:05
+
+  const delay = midnight - now;
+
+  setTimeout(() => {
+    DomigoTracker.createMissingDay();
+    scheduleMidnight(); // next day again schedule
+  }, delay);
+}
+
 export async function requestNotificationPermission() {
   if (Platform.OS === 'android' && Platform.Version >= 33) {
     await PermissionsAndroid.request(
@@ -89,21 +103,6 @@ function App() {
     requestNotificationPermission();
   }, []);
 
-  //   useEffect(() => {
-  //   handleLocationAccess().then((enabled) => {
-  //     console.log('Location Ready:', enabled);
-  //   });
-  // }, []);
-  //   useEffect(() => {
-  //   setTimeout(() => {
-  //     handleLocationAccess();
-  //   }, 1000);
-  // }, []);
-  useEffect(() => {
-    setTimeout(() => {
-      // ensureLocationReady();
-    }, 1500);
-  }, []);
   useEffect(() => {
     setTimeout(() => {
       checkAndRequestLocation();
@@ -152,8 +151,19 @@ function App() {
     autoStartTracking();
   }, []);
 
+  // useEffect(() => {
+
+  //   setTimeout(() => {
+  
+  //     DomigoTracker.createMissingDay()
+  
+  //   },50000)
+  
+  // },[])
+
   useEffect(() => {
     if (GEOFENCING_MODE === 'local_js') {
+      scheduleMidnight(); 
       OfflineQueueService.flush(offlineSendFn);
       OfflineQueueService.startListening(offlineSendFn);
       return () => OfflineQueueService.stopListening();

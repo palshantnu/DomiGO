@@ -27,7 +27,8 @@
  */
 
 // Geofencing mode — change this single value to switch all detection behavior
-export const GEOFENCING_MODE = 'local_native';
+// export const GEOFENCING_MODE = 'local_native';
+export const GEOFENCING_MODE = 'local_js';
 
 // Country whose state boundaries are used — 'US' or 'IN'
 export const GEOFENCING_COUNTRY = 'IN';

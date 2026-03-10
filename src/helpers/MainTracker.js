@@ -5,6 +5,7 @@ import { GEOFENCING_MODE, GEOFENCING_COUNTRY } from '../config/featureFlags';
 import LocalStateDetectionService from '../services/LocalStateDetectionService';
 import OfflineQueueService from '../services/OfflineQueueService';
 import axiosinstance from '../axios/axiosinstance';
+import NetInfo from "@react-native-community/netinfo"
 
 // Check if native module is available
 const isNativeModuleAvailable = () => {
@@ -25,7 +26,10 @@ class DomigoTracker {
     this.subscriptions = [];
     this.isTracking = false;
     this.nativeAvailable = isNativeModuleAvailable();
-
+    this.previousCity = null;
+    this.previousState = null
+    this.lastTripTime = 0
+    this._setupNetworkListener()
     console.log(`📍 DomigoTracker - Platform: ${Platform.OS}, Native available: ${this.nativeAvailable}`);
 
     if (!this.nativeAvailable) {
@@ -69,6 +73,25 @@ class DomigoTracker {
     //   })
     // );
   }
+
+  _setupNetworkListener() {
+
+    NetInfo.addEventListener(state => {
+
+      if (state.isConnected) {
+
+        console.log("🌐 Internet restored → flushing queue")
+
+        // this.processOfflineQueue()
+        OfflineQueueService.flush()
+
+
+      }
+
+    })
+
+  }
+
   async startDomigoTracking(token) {
     const { loginToken, userData } = store.getState().auth || '';
     console.log('🔥 JS startDomigoTracking CALLED');
@@ -105,7 +128,7 @@ class DomigoTracker {
         }
       } else if (GEOFENCING_MODE === 'local_js') {
         if (Platform.OS === 'android') {
-          config.googleApiKey = '';
+          config.googleApiKey = GOOGLE_KEY;
         }
       }
       console.log('📍 Setting config for native module...', config);
@@ -166,6 +189,208 @@ class DomigoTracker {
     }
   }
 
+  async _reverseGeocode(lat, lng) {
+    try {
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&language=en&key=${GOOGLE_KEY}`;
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (data.status === 'OK') {
+        const components = data.results[0].address_components;
+
+        let city = '';
+
+        for (let c of components) {
+
+          if (c.types.includes('locality')) {
+            city = c.long_name;
+            break;
+          }
+
+          // if (!city && c.types.includes('postal_town')) {
+          //   city = c.long_name;
+          // }
+
+          if (!city && c.types.includes('administrative_area_level_3')) {
+            city = c.long_name;
+          }
+
+          if (!city && c.types.includes('administrative_area_level_2')) {
+            city = c.long_name;
+          }
+
+        }
+
+        return city;
+      }
+
+      return '';
+
+    } catch (e) {
+      console.log('Reverse geocode failed', e);
+      return '';
+    }
+  }
+
+  async processOfflineQueue() {
+
+    const queue = await OfflineQueueService.getAll();
+
+    for (let item of queue) {
+
+      const destinationCity =
+        item.destinationCity ||
+        await this._reverseGeocode(item.lat, item.lng);
+
+      const originCity =
+        item.originCity || destinationCity;
+
+      await this._sendTripFromJS(
+        {
+          from: item.from,
+          to: item.to,
+          timestamp: item.timestamp
+        },
+        {
+          latitude: item.lat,
+          longitude: item.lng
+        },
+        destinationCity,
+        originCity
+      );
+
+      await OfflineQueueService.remove(item.id);
+    }
+  }
+
+  async createMissingDay() {
+
+    // if(!this.previousState) return
+
+    const payload = new FormData()
+
+    payload.append("kind", "missing")
+    payload.append("date", new Date().toISOString().split("T")[0])
+    payload.append("state", this.previousState)
+
+    try {
+
+      await axiosinstance.post(
+        "trip-days",
+        payload,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      )
+
+      console.log("🌙 Missing day created")
+
+    }
+    catch (e) {
+
+      console.log("Missing day failed")
+
+    }
+
+  }
+
+  async _handleLocalJSDetection(location) {
+
+    LocalStateDetectionService.handleLocationUpdate(
+      location.latitude,
+      location.longitude,
+      async (change) => {
+
+        console.log(`📍 Local JS state change: ${change.from} → ${change.to}`);
+
+        // this.previousState = change.to; // 👈 important line
+
+        let destinationCity = await this._reverseGeocode(
+          location.latitude,
+          location.longitude
+        );
+
+        const originCity = this.previousCity || destinationCity;
+
+        this._sendTripFromJS(change, location, destinationCity, originCity);
+
+        // update previous city
+        this.previousCity = destinationCity;
+      }
+    );
+  }
+  async _sendTripFromJS(change, location, destinationCity, originCity) {
+    if (Date.now() - this.lastTripTime < 5000) {
+      console.log("⚠️ duplicate trip prevented")
+      return
+    }
+
+    this.lastTripTime = Date.now()
+
+
+    const payload = new FormData();
+
+    payload.append('kind', 'trip');
+    payload.append('date', new Date().toISOString().split('T')[0]);
+    payload.append('typeOfDayId', '1');
+    payload.append('isCommissionDay', 'false');
+    payload.append('isRemoteWork', 'false');
+    payload.append('remoteHours', '0');
+    payload.append('isTravelling', 'true');
+    payload.append('tripTypeId', '1');
+    payload.append('tripModeId', '1');
+    payload.append('confirmationNo', '');
+    payload.append('vendor', '');
+    payload.append('hasProof', 'false');
+    payload.append('proofType', 'other');
+    payload.append('notes', '');
+    payload.append('creationType', 'automatic');
+    payload.append('remoteLocation', '');
+    payload.append('attachments', '[]');
+
+    payload.append('originState', change.from);
+    payload.append('originCity', originCity);
+
+    payload.append('originLat', String(location.latitude));
+    payload.append('originLng', String(location.longitude));
+
+    payload.append('destinationState', change.to);
+    payload.append('destinationCity', destinationCity);
+
+    payload.append('destinationLat', String(location.latitude));
+    payload.append('destinationLng', String(location.longitude));
+
+    payload.append('startDate', new Date(change.timestamp).toISOString());
+    payload.append('endDate', new Date().toISOString());
+
+    try {
+
+      await axiosinstance.post('trip-days', payload, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      // console.log("🚗 Trip created with city:", city)
+      console.log("🚗 Trip created", originCity, "→", destinationCity)
+
+    }
+    catch {
+
+      await OfflineQueueService.enqueue({
+        from: change.from,
+        to: change.to,
+        timestamp: change.timestamp,
+
+        originCity: originCity,
+        destinationCity: destinationCity,
+
+        lat: location.latitude,
+        lng: location.longitude
+      });
+
+    }
+  }
+
+
+
   setupEventListeners() {
     if (!this.nativeAvailable || !locationEventEmitter) {
       console.warn('📍 Cannot setup event listeners - native module not available');
@@ -194,6 +419,12 @@ class DomigoTracker {
 
         if (GEOFENCING_MODE === 'local_js' && location.accuracy < 100) {
           this._handleLocalJSDetection(location);
+          const state = LocalStateDetectionService.getCurrentState();
+
+          if (state) {
+            this.previousState = state;
+          }
+
         }
       })
     );
@@ -254,70 +485,91 @@ class DomigoTracker {
     console.log('📍 Event listeners setup completed');
   }
 
-  _handleLocalJSDetection(location) {
-    LocalStateDetectionService.handleLocationUpdate(
-      location.latitude,
-      location.longitude,
-      (change) => {
-        console.log(`📍 Local JS state change: ${change.from} → ${change.to}`);
-        this._sendTripFromJS(change, location);
-      },
-    );
-  }
+  // _handleLocalJSDetection(location) {
+  //   LocalStateDetectionService.handleLocationUpdate(
+  //     location.latitude,
+  //     location.longitude,
+  //     (change) => {
+  //       console.log(`📍 Local JS state change: ${change.from} → ${change.to}`);
+  //       this._sendTripFromJS(change, location);
+  //     },
+  //   );
+  // }
+  // async _handleLocalJSDetection(location) {
+  //   LocalStateDetectionService.handleLocationUpdate(
+  //     location.latitude,
+  //     location.longitude,
+  //     async (change) => {
 
-  async _sendTripFromJS(change, location) {
-    const payload = new FormData();
-    payload.append('kind', 'trip');
-    payload.append('date', new Date().toISOString().split('T')[0]);
-    payload.append('typeOfDayId', '1');
-    payload.append('isCommissionDay', 'false');
-    payload.append('isRemoteWork', 'false');
-    payload.append('remoteHours', '0');
-    payload.append('isTravelling', 'true');
-    payload.append('tripTypeId', '1');
-    payload.append('tripModeId', '1');
-    payload.append('confirmationNo', '');
-    payload.append('vendor', '');
-    payload.append('hasProof', 'false');
-    payload.append('proofType', 'other');
-    payload.append('notes', '');
-    payload.append('creationType', 'automatic');
-    payload.append('remoteLocation', '');
-    payload.append('attachments', '[]');
-    payload.append('originState', change.from);
-    payload.append('originLat', String(location.latitude));
-    payload.append('originLng', String(location.longitude));
-    payload.append('destinationState', change.to);
-    payload.append('destinationLat', String(location.latitude));
-    payload.append('destinationLng', String(location.longitude));
-    payload.append('startDate', new Date(change.timestamp).toISOString());
-    payload.append('endDate', new Date().toISOString());
+  //       console.log(`📍 Local JS state change: ${change.from} → ${change.to}`);
 
-    try {
-      await axiosinstance.post('trip-days', payload, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-    } catch {
-      await OfflineQueueService.enqueue({
-        from: change.from,
-        to: change.to,
-        timestamp: change.timestamp,
-        payload: {
-          kind: 'trip',
-          date: new Date().toISOString().split('T')[0],
-          originState: change.from,
-          destinationState: change.to,
-          originLat: location.latitude,
-          originLng: location.longitude,
-          destinationLat: location.latitude,
-          destinationLng: location.longitude,
-          startDate: new Date(change.timestamp).toISOString(),
-          endDate: new Date().toISOString(),
-          creationType: 'automatic',
-        },
-      });
-    }
-  }
+  //       let city = '';
+
+  //       try {
+  //         city = await this._reverseGeocode(
+  //           location.latitude,
+  //           location.longitude
+  //         );
+  //       } catch {}
+
+  //       this._sendTripFromJS(change, location, city);
+  //     },
+  //   );
+  // }
+
+  // async _sendTripFromJS(change, location) {
+  //   const payload = new FormData();
+  //   payload.append('kind', 'trip');
+  //   payload.append('date', new Date().toISOString().split('T')[0]);
+  //   payload.append('typeOfDayId', '1');
+  //   payload.append('isCommissionDay', 'false');
+  //   payload.append('isRemoteWork', 'false');
+  //   payload.append('remoteHours', '0');
+  //   payload.append('isTravelling', 'true');
+  //   payload.append('tripTypeId', '1');
+  //   payload.append('tripModeId', '1');
+  //   payload.append('confirmationNo', '');
+  //   payload.append('vendor', '');
+  //   payload.append('hasProof', 'false');
+  //   payload.append('proofType', 'other');
+  //   payload.append('notes', '');
+  //   payload.append('creationType', 'automatic');
+  //   payload.append('remoteLocation', '');
+  //   payload.append('attachments', '[]');
+  //   payload.append('originState', change.from);
+  //   payload.append('originLat', String(location.latitude));
+  //   payload.append('originLng', String(location.longitude));
+  //   payload.append('destinationState', change.to);
+  //   payload.append('destinationLat', String(location.latitude));
+  //   payload.append('destinationLng', String(location.longitude));
+  //   payload.append('startDate', new Date(change.timestamp).toISOString());
+  //   payload.append('endDate', new Date().toISOString());
+
+  //   try {
+  //     await axiosinstance.post('trip-days', payload, {
+  //       headers: { 'Content-Type': 'multipart/form-data' },
+  //     });
+  //   } catch {
+  //     await OfflineQueueService.enqueue({
+  //       from: change.from,
+  //       to: change.to,
+  //       timestamp: change.timestamp,
+  //       payload: {
+  //         kind: 'trip',
+  //         date: new Date().toISOString().split('T')[0],
+  //         originState: change.from,
+  //         destinationState: change.to,
+  //         originLat: location.latitude,
+  //         originLng: location.longitude,
+  //         destinationLat: location.latitude,
+  //         destinationLng: location.longitude,
+  //         startDate: new Date(change.timestamp).toISOString(),
+  //         endDate: new Date().toISOString(),
+  //         creationType: 'automatic',
+  //       },
+  //     });
+  //   }
+  // }
 
   getTrackingState() {
     return this.isTracking;

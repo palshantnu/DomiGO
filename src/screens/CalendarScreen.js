@@ -45,6 +45,11 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   }, []);
   const today = new Date();
 
+  const parseLocalDate = (dateStr) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  };
+
   const [visibleMonth, setVisibleMonth] = useState({
     month: today.getMonth() + 1,
     year: today.getFullYear(),
@@ -143,9 +148,14 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
     key: 'missing-today',
     color: '#FF9500', // orange
   };
+  // const isWeekend = (dateStr) => {
+  //   const day = new Date(dateStr).getDay();
+  //   return day === 0 || day === 6; // Sunday or Saturday
+  // };
   const isWeekend = (dateStr) => {
-    const day = new Date(dateStr).getDay();
-    return day === 0 || day === 6; // Sunday or Saturday
+    const date = parseLocalDate(dateStr);
+    const day = date.getDay();
+    return day === 0 || day === 6;
   };
   // const getMarkedDates = (monthWiseTimeline, year, month) => {
   //   const marked = {};
@@ -230,7 +240,8 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
       const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const dayData = monthWiseTimeline?.[dateStr] || [];
   
-      const currentDate = new Date(dateStr);
+      // const currentDate = new Date(dateStr);
+      const currentDate = parseLocalDate(dateStr);
       currentDate.setHours(0, 0, 0, 0);
   
       const dots = [];
