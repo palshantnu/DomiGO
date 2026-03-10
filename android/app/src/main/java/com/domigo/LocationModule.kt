@@ -566,6 +566,7 @@ private fun scheduleMidnightMissingDay() {
                                         creationType = "automatic",
                                         remoteLocation = "",
                                         state = null,
+                                        isUpdated=false,
                                 
                                         originCity = originCitySafe,
                                         originState = originStateSafe,
@@ -745,6 +746,7 @@ private fun scheduleMidnightMissingDay() {
             creationType = "automatic",
             remoteLocation = "",
             state = null,
+            isUpdated = false,
     
             originCity = toEnglishSafe(previousCity),
             originState = toEnglishSafe(previousStateName),
@@ -1053,6 +1055,7 @@ private fun sendEntryFormData(
     creationType: String?,
     remoteLocation: String?,
     state: String?,
+    isUpdated: Boolean?,
 
     // TRIP ONLY
     originCity: String?,
@@ -1235,6 +1238,7 @@ fun createMissingDay() {
         notes = "",
         creationType = "automatic",
         remoteLocation = "",
+        isUpdated=false,
         // state = previousStateName,
         state = currentStateName,
 
@@ -1441,6 +1445,7 @@ private fun backfillMissingDays() {
                 isTravelling = false, tripTypeId = 1, tripModeId = 1,
                 confirmationNo = "", vendor = "", hasProof = false, proofType = "other",
                 notes = "", creationType = "automatic", remoteLocation = "",
+                isUpdated = false,
                 state = stateForBackfill,
                 originCity = null, originState = null, originLat = null, originLng = null,
                 destinationCity = null, destinationState = null, destinationLat = null, destinationLng = null
@@ -1624,6 +1629,7 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
                 creationType = "automatic",
                 remoteLocation = "",
                 state = null,
+                isUpdated = false,
         
                 originCity = previousCity,
                 originState = previousStateName,
