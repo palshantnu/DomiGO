@@ -20,9 +20,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     // Background task identifiers
     private let locationRefreshIdentifier = "com.domigo.location.refresh"
     private let locationProcessingIdentifier = "com.domigo.location.processing"
+    private let missingDayIdentifier = "com.domigo.app.missingday" // ✅ Add this
     
     // Track app state
     private var isAppInForeground = true
+    private var backgroundTaskTimer: Timer? // ✅ For better background task management
     
     func application(
         _ application: UIApplication,
@@ -31,10 +33,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
         
         AppDelegate.shared = self
         
-        // Setup notification center
+        // ✅ 1. REGISTER BACKGROUND TASKS FIRST - CRITICAL!
+        registerBackgroundTasks()
+        
+        // 2. Setup notification center
         setupNotificationCenter()
-      FirebaseApp.configure()
-        // Initialize location manager
+        
+        // 3. Configure Firebase
+        FirebaseApp.configure()
+        
+        // 4. Initialize location manager
         setupLocationManager()
         
         // Check if app was launched by location update
@@ -64,9 +72,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
             print("📱 App launched by notification")
             handleNotificationLaunch(userInfo: notificationOption as? [String: Any])
         }
-        
-        // Register background tasks
-        registerBackgroundTasks()
         
         // Initialize React Native
         let delegate = ReactNativeDelegate()
@@ -190,29 +195,77 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.distanceFilter = 50
         
-        // Request permission
-        locationManager.requestAlwaysAuthorization()
+        // Check current authorization status without blocking
+        let status = locationManager.authorizationStatus
+        print("📍 Current authorization status: \(status.rawValue)")
+        
+        // Request permission if needed
+        if status == .notDetermined {
+            locationManager.requestAlwaysAuthorization()
+        }
         
         // Start monitoring significant location changes for kill mode
         locationManager.startMonitoringSignificantLocationChanges()
     }
     
     private func registerBackgroundTasks() {
+        // ✅ Cancel any existing tasks first
+        BGTaskScheduler.shared.cancelAllTaskRequests()
+        
         // Register background refresh task
-        BGTaskScheduler.shared.register(forTaskWithIdentifier: locationRefreshIdentifier, using: nil) { task in
+        let refreshRegistered = BGTaskScheduler.shared.register(
+            forTaskWithIdentifier: locationRefreshIdentifier, 
+            using: nil
+        ) { task in
             self.handleAppRefresh(task: task as! BGAppRefreshTask)
         }
+        print("✅ Background refresh task registered: \(refreshRegistered)")
         
         // Register background processing task
-        BGTaskScheduler.shared.register(forTaskWithIdentifier: locationProcessingIdentifier, using: nil) { task in
+        let processingRegistered = BGTaskScheduler.shared.register(
+            forTaskWithIdentifier: locationProcessingIdentifier, 
+            using: nil
+        ) { task in
             self.handleLocationProcessing(task: task as! BGProcessingTask)
         }
+        print("✅ Background processing task registered: \(processingRegistered)")
         
-        print("✅ Background tasks registered")
+        // ✅ Register missing day task (for LocationTracker)
+        let missingDayRegistered = BGTaskScheduler.shared.register(
+            forTaskWithIdentifier: missingDayIdentifier,
+            using: nil
+        ) { task in
+            self.handleMissingDayTask(task: task as! BGProcessingTask)
+        }
+        print("✅ Missing day task registered: \(missingDayRegistered)")
         
         // Schedule initial background tasks
         scheduleAppRefresh()
         scheduleLocationProcessing()
+        scheduleMissingDayCheck()
+    }
+    
+    // ✅ Add handler for missing day task
+    private func handleMissingDayTask(task: BGProcessingTask) {
+        print("🌙 Background missing day task triggered")
+        
+        // Schedule next check
+        scheduleMissingDayCheck()
+        
+        // Post notification for LocationTracker to handle
+        NotificationCenter.default.post(
+            name: NSNotification.Name("PerformMissingDayCheck"),
+            object: nil
+        )
+        
+        task.expirationHandler = {
+            print("⏰ Missing day task expired")
+        }
+        
+        // Give time for processing
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+            task.setTaskCompleted(success: true)
+        }
     }
     
     private func handleAppRefresh(task: BGAppRefreshTask) {
@@ -307,7 +360,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     private func scheduleLocationProcessing() {
         let request = BGProcessingTaskRequest(identifier: locationProcessingIdentifier)
         request.requiresNetworkConnectivity = true
-        request.requiresExternalPower = false // Don't require charging
+        request.requiresExternalPower = false
         request.earliestBeginDate = Date(timeIntervalSinceNow: 30 * 60) // 30 minutes minimum
         
         do {
@@ -315,6 +368,33 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
             print("✅ Background processing task scheduled for 30 minutes")
         } catch {
             print("❌ Could not schedule processing task: \(error.localizedDescription)")
+        }
+    }
+    
+    // ✅ Add missing day scheduling
+    private func scheduleMissingDayCheck() {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        // Schedule for 12:35 PM
+        var components = calendar.dateComponents([.year, .month, .day], from: now)
+        components.hour = 12
+        components.minute = 35
+        components.second = 0
+        
+        guard let scheduledTime = calendar.date(from: components) else { return }
+        
+        let nextRunTime = now < scheduledTime ? scheduledTime : calendar.date(byAdding: .day, value: 1, to: scheduledTime)!
+        
+        let request = BGProcessingTaskRequest(identifier: missingDayIdentifier)
+        request.earliestBeginDate = nextRunTime
+        request.requiresNetworkConnectivity = true
+        
+        do {
+            try BGTaskScheduler.shared.submit(request)
+            print("✅ Missing day check scheduled for \(nextRunTime)")
+        } catch {
+            print("❌ Could not schedule missing day check: \(error)")
         }
     }
     
@@ -346,37 +426,57 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
         
         // Clear delivered notifications
         UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+        
+        // Cancel background task timer
+        backgroundTaskTimer?.invalidate()
+        backgroundTaskTimer = nil
     }
     
     func applicationDidEnterBackground(_ application: UIApplication) {
         print("📱 App entered background")
         isAppInForeground = false
         
-        // Start background task
+        // End any existing background task
+        if backgroundTask != .invalid {
+            application.endBackgroundTask(backgroundTask)
+            backgroundTask = .invalid
+        }
+        
+        // Start new background task
         backgroundTask = application.beginBackgroundTask(withName: "LocationTracking") {
+            [weak self] in
             // Clean up if task expires
-            application.endBackgroundTask(self.backgroundTask)
-            self.backgroundTask = .invalid
+            self?.backgroundTaskTimer?.invalidate()
+            self?.backgroundTaskTimer = nil
+            if let task = self?.backgroundTask {
+                application.endBackgroundTask(task)
+                self?.backgroundTask = .invalid
+            }
             print("⚠️ Background task expired")
         }
         
-        // Schedule background tasks
+        // ✅ Use timer instead of while loop for better performance
+        backgroundTaskTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            
+            // Check if we still have background time
+            if application.backgroundTimeRemaining < 10 {
+                print("⚠️ Background time running out: \(application.backgroundTimeRemaining) seconds")
+            }
+            
+            // Your background work here
+        }
+        
+        // Schedule background tasks (only if not already scheduled)
         scheduleAppRefresh()
         scheduleLocationProcessing()
+        scheduleMissingDayCheck()
         
         // Continue location updates in background
         locationManager.startUpdatingLocation()
         locationManager.startMonitoringSignificantLocationChanges()
         
         print("⏳ Background time remaining: \(application.backgroundTimeRemaining) seconds")
-        
-        // Run background task
-        DispatchQueue.global().async {
-            // Keep app alive for location updates
-            while self.backgroundTask != .invalid {
-                Thread.sleep(forTimeInterval: 1)
-            }
-        }
     }
     
     func applicationWillEnterForeground(_ application: UIApplication) {
@@ -387,11 +487,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
         if backgroundTask != .invalid {
             application.endBackgroundTask(backgroundTask)
             backgroundTask = .invalid
-            print("✅ Background task ended")
         }
         
-        // Cancel any pending background tasks
-        BGTaskScheduler.shared.cancelAllTaskRequests()
+        // Cancel background task timer
+        backgroundTaskTimer?.invalidate()
+        backgroundTaskTimer = nil
+        
+        // Don't cancel all background tasks - they should continue
+        // BGTaskScheduler.shared.cancelAllTaskRequests() // ❌ Remove this line
         
         // Restart location updates if we have permission
         let status = locationManager.authorizationStatus

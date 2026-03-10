@@ -35,7 +35,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
 
   // MARK: - Deduplication Properties
   private var lastTripProcessedTime: TimeInterval = 0
-  private let TRIP_COOLDOWN_SECONDS: TimeInterval = 0  // 5 minutes cooldown for trips
+  private let TRIP_COOLDOWN_SECONDS: TimeInterval = 0
   private var isInitialStateLoaded = false
   private var isProcessingTrip = false
   private var pendingLocations: [CLLocation] = []
@@ -69,21 +69,23 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   private let MAX_OFFLINE_RETRIES = 5
   private let LAST_TRACKED_DATE_KEY = "LocationTracker_lastTrackedDate"
 
-  // MARK: - Real-time Check Properties (1-2 minute intervals)
+  // MARK: - Real-time Check Properties
   private var lastRealTimeCheck: TimeInterval = 0
-  private let REAL_TIME_CHECK_INTERVAL: TimeInterval = 60 // 1 minute in seconds
+  private let REAL_TIME_CHECK_INTERVAL: TimeInterval = 60
   private var realTimeTimer: Timer?
   
   // MARK: - Event Listener Properties
   private var hasListeners = false
+  
+  // MARK: - Timer Management
+  private var midnightCheckTimer: DispatchSourceTimer?
+  private let midnightCheckQueue = DispatchQueue(label: "com.domigo.midnight.check", qos: .background)
 
   override init() {
     super.init()
     print("📍 LocationTracker initialized")
 
-    // Setup network monitoring first
     setupNetworkMonitoring()
-
     setupLocationManager()
     loadPersistedState()
     
@@ -96,6 +98,14 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
       self.checkForPendingBackgroundLocations()
     }
+    
+    // Listen for background task notifications from AppDelegate
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(handleMissingDayBackgroundNotification),
+      name: NSNotification.Name("PerformMissingDayCheck"),
+      object: nil
+    )
   }
 
   // MARK: - RCTEventEmitter Overrides
@@ -118,12 +128,10 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       "onLocationStatus",
       "onTripApiResponse",
       "onTripApiError",
-      "onBackgroundLocationProcessed",
-      "onRealTimeCheck",
+      "onBackgroundLocationProcessed"
     ]
   }
 
-  // Safe method to send events only when listeners are present
   private func safeSendEvent(withName name: String, body: Any!) {
     if hasListeners {
       sendEvent(withName: name, body: body)
@@ -132,11 +140,10 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     }
   }
 
-  // MARK: - Real-time Checking (1-2 minute intervals)
+  // MARK: - Real-time Checking
   private func startRealTimeChecking() {
-    stopRealTimeChecking() // Stop any existing timer
+    stopRealTimeChecking()
     
-    // Create a timer that fires every 60 seconds (1 minute)
     realTimeTimer = Timer.scheduledTimer(
       timeInterval: REAL_TIME_CHECK_INTERVAL,
       target: self,
@@ -145,12 +152,9 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       repeats: true
     )
     
-    // Allow timer to run in background modes
     RunLoop.current.add(realTimeTimer!, forMode: .common)
-    
     print("⏱️ Real-time checking started - will check every \(REAL_TIME_CHECK_INTERVAL) seconds")
     
-    // Perform initial check
     performRealTimeCheck()
   }
   
@@ -164,18 +168,12 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     let timeSinceLastCheck = currentTime - lastRealTimeCheck
     
     print("""
-    \n🔄 ===== REAL-TIME CHECK (Interval: \(Int(timeSinceLastCheck))s) =====
+    \n🔄 ===== REAL-TIME CHECK =====
     📱 Time: \(Date())
     🏛️ Current State: \(previousStateName)
-    📍 Last Location: (\(previousLat ?? 0), \(previousLng ?? 0))
-    📅 Last Tracked Date: \(defaults.string(forKey: LAST_TRACKED_DATE_KEY) ?? "None")
-    🌙 Missing Day Status: \(shouldCreateMissingDay() ? "NEEDS CREATION" : "OK")
     📡 Network: \(isConnected ? "Connected" : "Disconnected")
     ====================================
     """)
-    
-    // Check for missing days
-    checkAndCreateMissingDay()
     
     // Check for pending offline queue
     if isConnected {
@@ -184,16 +182,9 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     
     lastRealTimeCheck = currentTime
   }
-  
-  private func shouldCreateMissingDay() -> Bool {
-    let lastTrackedDate = getLastTrackedDate()
-    let today = getTodayString()
-    return lastTrackedDate != today
-  }
 
   // MARK: - Missing Day Tracking Setup
   private func initializeMissingDayTracking() {
-    // Register for app launch notifications
     NotificationCenter.default.addObserver(
       self,
       selector: #selector(handleAppDidBecomeActive),
@@ -201,7 +192,6 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       object: nil
     )
     
-    // Register for background notifications
     NotificationCenter.default.addObserver(
       self,
       selector: #selector(handleAppDidEnterBackground),
@@ -209,24 +199,21 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       object: nil
     )
     
-    // Schedule midnight check
     scheduleMidnightMissingDay()
-    
-    // Check for missing days on launch (in case app was killed)
-    DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) { [weak self] in
-      self?.checkAndCreateMissingDay()
-    }
+  }
+  
+  @objc private func handleMissingDayBackgroundNotification() {
+    print("📱 Received missing day background notification from AppDelegate")
+    createTodaysMissingDay()
   }
 
   @objc private func handleAppDidBecomeActive() {
-    print("📱 App became active - checking for missing days")
-    checkAndCreateMissingDay()
+    print("📱 App became active")
     startRealTimeChecking()
   }
   
   @objc private func handleAppDidEnterBackground() {
-    print("📱 App entered background - continuing real-time checks")
-    // Timer continues in background due to RunLoop mode
+    print("📱 App entered background")
   }
 
   // MARK: - Network Monitoring Setup
@@ -237,7 +224,6 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
 
       print("📡 Network status: \(path.status == .satisfied ? "Connected" : "Disconnected")")
 
-      // When internet comes back, flush offline queue
       if !wasConnected && path.status == .satisfied {
         print("📡 Internet connected - flushing offline queue")
         DispatchQueue.main.async {
@@ -248,63 +234,149 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     monitor.start(queue: monitorQueue)
   }
 
-  @objc private func handleAppLaunchedByLocation() {
-    print("🔄 App was launched by location update - checking for pending locations")
+  // MARK: - Location Manager Setup
+  private func setupLocationManager() {
+    locationManager = CLLocationManager()
+    locationManager.delegate = self
+    locationManager.desiredAccuracy = kCLLocationAccuracyBest
+    locationManager.distanceFilter = 50
+    locationManager.allowsBackgroundLocationUpdates = true
+    locationManager.pausesLocationUpdatesAutomatically = false
+    locationManager.startMonitoringSignificantLocationChanges()
 
-    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-      self.checkForPendingBackgroundLocations()
-
-      if !self.isTracking {
-        self.requestLocationPermission()
-      }
+    if !CLLocationManager.locationServicesEnabled() {
+      print("⚠️ Location services are disabled")
+      safeSendEvent(withName: "onLocationError", body: ["error": "Location services are disabled"])
     }
   }
 
-  private func addToPendingLocations(_ location: CLLocation) {
-    locationQueue.async { [weak self] in
-      guard let self = self else { return }
+  // MARK: - State Persistence
 
-      self.pendingLocations.append(location)
+  private func saveState() {
+    DispatchQueue.main.async {
+      self.defaults.set(self.lastState, forKey: self.LAST_STATE_KEY)
+      self.defaults.set(self.lastApiTime, forKey: self.LAST_API_TIME_KEY)
+      self.defaults.set(self.previousLat ?? 0.0, forKey: self.PREVIOUS_LAT_KEY)
+      self.defaults.set(self.previousLng ?? 0.0, forKey: self.PREVIOUS_LNG_KEY)
+      self.defaults.set(self.previousCity, forKey: self.PREVIOUS_CITY_KEY)
+      self.defaults.set(self.previousStateName, forKey: self.PREVIOUS_STATE_KEY)
+      self.defaults.set(self.previousEnterTime, forKey: self.PREVIOUS_ENTER_TIME_KEY)
+      self.defaults.set(self.lastTripProcessedTime, forKey: self.LAST_TRIP_TIME_KEY)
 
-      if self.pendingLocations.count > 10 {
-        self.pendingLocations.removeFirst()
-      }
+      let dateFormatter = DateFormatter()
+      dateFormatter.dateFormat = "yyyy-MM-dd"
+      self.defaults.set(dateFormatter.string(from: Date()), forKey: self.LAST_TRACKED_DATE_KEY)
+      self.defaults.synchronize()
 
-      if !self.isProcessingPending {
-        self.processNextPendingLocation()
-      }
+      self.sharedDefaults?.set(self.lastState, forKey: self.LAST_STATE_KEY)
+      self.sharedDefaults?.set(self.lastApiTime, forKey: self.LAST_API_TIME_KEY)
+      self.sharedDefaults?.set(self.lastTripProcessedTime, forKey: self.LAST_TRIP_TIME_KEY)
+      self.sharedDefaults?.synchronize()
     }
   }
 
-  private func processNextPendingLocation() {
-    locationQueue.async { [weak self] in
-      guard let self = self, !self.pendingLocations.isEmpty else {
-        self?.isProcessingPending = false
-        return
-      }
+  private func loadPersistedState() {
+    isInitialStateLoaded = defaults.bool(forKey: INITIAL_STATE_LOADED_KEY)
 
-      self.isProcessingPending = true
+    if let sharedState = sharedDefaults?.string(forKey: LAST_STATE_KEY) {
+      lastState = sharedState
+    } else {
+      lastState = defaults.string(forKey: LAST_STATE_KEY) ?? ""
+    }
 
-      guard let location = self.pendingLocations.last else {
-        self.isProcessingPending = false
-        return
-      }
+    if let sharedApiTime = sharedDefaults?.double(forKey: LAST_API_TIME_KEY) as? TimeInterval,
+      sharedApiTime > 0
+    {
+      lastApiTime = sharedApiTime
+    } else {
+      lastApiTime = defaults.double(forKey: LAST_API_TIME_KEY)
+    }
 
-      self.pendingLocations.removeAll()
+    if let sharedTripTime = sharedDefaults?.double(forKey: LAST_TRIP_TIME_KEY) as? TimeInterval {
+      lastTripProcessedTime = sharedTripTime
+    } else {
+      lastTripProcessedTime = defaults.double(forKey: LAST_TRIP_TIME_KEY)
+    }
 
-      self.processLocationInBackground(
-        lat: location.coordinate.latitude, lng: location.coordinate.longitude)
+    let savedLat = defaults.double(forKey: PREVIOUS_LAT_KEY)
+    let savedLng = defaults.double(forKey: PREVIOUS_LNG_KEY)
+    previousLat = savedLat != 0.0 ? savedLat : nil
+    previousLng = savedLng != 0.0 ? savedLng : nil
 
-      DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-        self.isProcessingPending = false
-        self.processNextPendingLocation()
-      }
+    previousCity = defaults.string(forKey: PREVIOUS_CITY_KEY) ?? ""
+    previousStateName = defaults.string(forKey: PREVIOUS_STATE_KEY) ?? ""
+    previousEnterTime = defaults.double(forKey: PREVIOUS_ENTER_TIME_KEY)
+
+    print("📦 Loaded persisted state:")
+    print("   Initial State Loaded: \(isInitialStateLoaded)")
+    print("   Last State: \(lastState)")
+    print("   Last API Time: \(lastApiTime)")
+    print("   Last Trip Time: \(lastTripProcessedTime)")
+    print("   Previous City: \(previousCity)")
+    print("   Previous State: \(previousStateName)")
+  }
+
+  override static func requiresMainQueueSetup() -> Bool {
+    return true
+  }
+
+  // MARK: - React Native Methods
+
+  @objc
+  func setConfig(_ config: [String: Any]) {
+    print("📍 setConfig called with: \(config)")
+    self.config = config
+
+    if let mode = config["geofencingMode"] as? String {
+      self.geofencingMode = mode
+    }
+    if let country = config["geofencingCountry"] as? String {
+      self.geofencingCountry = country
+    }
+
+    DispatchQueue.main.async {
+      self.fetchLastStateFromAPI()
     }
   }
 
-  private func isInternetAvailable() -> Bool {
-    return isConnected
+  @objc
+  func startLocationTracking() {
+    print("📍 startLocationTracking called")
+    DispatchQueue.main.async {
+      self.requestLocationPermission()
+    }
   }
+
+  @objc
+  func stopLocationTracking() {
+    print("📍 stopLocationTracking called")
+    DispatchQueue.main.async {
+      self.locationManager.stopUpdatingLocation()
+      self.isTracking = false
+      self.safeSendEvent(withName: "onLocationStatus", body: ["status": "stopped"])
+    }
+  }
+
+  @objc
+  func isTracking(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) {
+    resolve(isTracking)
+  }
+
+  @objc
+  func forceProcessPendingLocations() {
+    print("🔧 Manually processing pending locations")
+    checkForPendingBackgroundLocations()
+  }
+
+  @objc
+  func resetInitialStateFlag() {
+    print("🔄 Resetting initial state flag")
+    isInitialStateLoaded = false
+    defaults.set(false, forKey: INITIAL_STATE_LOADED_KEY)
+    defaults.synchronize()
+  }
+
+  // MARK: - Background Location Processing
 
   private func checkForPendingBackgroundLocations() {
     if isInitialStateLoaded {
@@ -356,6 +428,52 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     }
   }
 
+  private func addToPendingLocations(_ location: CLLocation) {
+    locationQueue.async { [weak self] in
+      guard let self = self else { return }
+
+      self.pendingLocations.append(location)
+
+      if self.pendingLocations.count > 10 {
+        self.pendingLocations.removeFirst()
+      }
+
+      if !self.isProcessingPending {
+        self.processNextPendingLocation()
+      }
+    }
+  }
+
+  private func processNextPendingLocation() {
+    locationQueue.async { [weak self] in
+      guard let self = self, !self.pendingLocations.isEmpty else {
+        self?.isProcessingPending = false
+        return
+      }
+
+      self.isProcessingPending = true
+
+      guard let location = self.pendingLocations.last else {
+        self.isProcessingPending = false
+        return
+      }
+
+      self.pendingLocations.removeAll()
+
+      self.processLocationInBackground(
+        lat: location.coordinate.latitude, lng: location.coordinate.longitude)
+
+      DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+        self.isProcessingPending = false
+        self.processNextPendingLocation()
+      }
+    }
+  }
+
+  private func isInternetAvailable() -> Bool {
+    return isConnected
+  }
+
   private func processLocationInBackground(lat: Double, lng: Double) {
     flushOfflineQueue()
 
@@ -370,9 +488,6 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     }
 
     let currentTime = Date().timeIntervalSince1970
-    let timeDiff = currentTime - lastGeocodeTime
-
-    
     lastGeocodeTime = currentTime
     backgroundProcessing = true
 
@@ -454,13 +569,6 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     }
   }
 
-  private func formatDate(_ timestamp: TimeInterval) -> String {
-    let date = Date(timeIntervalSince1970: timestamp / 1000)
-    let formatter = ISO8601DateFormatter()
-    formatter.formatOptions = [.withInternetDateTime]
-    return formatter.string(from: date)
-  }
-
   private func formatDate1(_ timestamp: TimeInterval) -> String {
     let date = Date(timeIntervalSince1970: timestamp / 1000)
     let formatter = DateFormatter()
@@ -469,258 +577,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     return formatter.string(from: date)
   }
 
-  private func setupLocationManager() {
-    locationManager = CLLocationManager()
-    locationManager.delegate = self
-    locationManager.desiredAccuracy = kCLLocationAccuracyBest
-    locationManager.distanceFilter = 50
-    locationManager.allowsBackgroundLocationUpdates = true
-    locationManager.pausesLocationUpdatesAutomatically = false
-    locationManager.startMonitoringSignificantLocationChanges()
-
-    // Check if location services are enabled
-    if !CLLocationManager.locationServicesEnabled() {
-      print("⚠️ Location services are disabled")
-      safeSendEvent(withName: "onLocationError", body: ["error": "Location services are disabled"])
-    }
-  }
-
-  // MARK: - State Persistence
-
-  private func saveState() {
-    DispatchQueue.main.async {
-      self.defaults.set(self.lastState, forKey: self.LAST_STATE_KEY)
-      self.defaults.set(self.lastApiTime, forKey: self.LAST_API_TIME_KEY)
-      self.defaults.set(self.previousLat ?? 0.0, forKey: self.PREVIOUS_LAT_KEY)
-      self.defaults.set(self.previousLng ?? 0.0, forKey: self.PREVIOUS_LNG_KEY)
-      self.defaults.set(self.previousCity, forKey: self.PREVIOUS_CITY_KEY)
-      self.defaults.set(self.previousStateName, forKey: self.PREVIOUS_STATE_KEY)
-      self.defaults.set(self.previousEnterTime, forKey: self.PREVIOUS_ENTER_TIME_KEY)
-      self.defaults.set(self.lastTripProcessedTime, forKey: self.LAST_TRIP_TIME_KEY)
-
-      let dateFormatter = DateFormatter()
-      dateFormatter.dateFormat = "yyyy-MM-dd"
-      self.defaults.set(dateFormatter.string(from: Date()), forKey: self.LAST_TRACKED_DATE_KEY)
-      self.defaults.synchronize()
-
-      self.sharedDefaults?.set(self.lastState, forKey: self.LAST_STATE_KEY)
-      self.sharedDefaults?.set(self.lastApiTime, forKey: self.LAST_API_TIME_KEY)
-      self.sharedDefaults?.set(self.lastTripProcessedTime, forKey: self.LAST_TRIP_TIME_KEY)
-      self.sharedDefaults?.synchronize()
-    }
-  }
-
-  private func loadPersistedState() {
-    isInitialStateLoaded = defaults.bool(forKey: INITIAL_STATE_LOADED_KEY)
-
-    if let sharedState = sharedDefaults?.string(forKey: LAST_STATE_KEY) {
-      lastState = sharedState
-    } else {
-      lastState = defaults.string(forKey: LAST_STATE_KEY) ?? ""
-    }
-
-    if let sharedApiTime = sharedDefaults?.double(forKey: LAST_API_TIME_KEY) as? TimeInterval,
-      sharedApiTime > 0
-    {
-      lastApiTime = sharedApiTime
-    } else {
-      lastApiTime = defaults.double(forKey: LAST_API_TIME_KEY)
-    }
-
-    if let sharedTripTime = sharedDefaults?.double(forKey: LAST_TRIP_TIME_KEY) as? TimeInterval {
-      lastTripProcessedTime = sharedTripTime
-    } else {
-      lastTripProcessedTime = defaults.double(forKey: LAST_TRIP_TIME_KEY)
-    }
-
-    let savedLat = defaults.double(forKey: PREVIOUS_LAT_KEY)
-    let savedLng = defaults.double(forKey: PREVIOUS_LNG_KEY)
-    previousLat = savedLat != 0.0 ? savedLat : nil
-    previousLng = savedLng != 0.0 ? savedLng : nil
-
-    previousCity = defaults.string(forKey: PREVIOUS_CITY_KEY) ?? ""
-    previousStateName = defaults.string(forKey: PREVIOUS_STATE_KEY) ?? ""
-    previousEnterTime = defaults.double(forKey: PREVIOUS_ENTER_TIME_KEY)
-
-    print("📦 Loaded persisted state:")
-    print("   Initial State Loaded: \(isInitialStateLoaded)")
-    print("   Last State: \(lastState)")
-    print("   Last API Time: \(lastApiTime)")
-    print("   Last Trip Time: \(lastTripProcessedTime)")
-    print("   Previous City: \(previousCity)")
-    print("   Previous State: \(previousStateName)")
-  }
-
-  // Required by RCTEventEmitter
-  override static func requiresMainQueueSetup() -> Bool {
-    return true
-  }
-
-  // MARK: - React Native Methods
-
-  @objc
-  func setConfig(_ config: [String: Any]) {
-    print("📍 setConfig called with: \(config)")
-    self.config = config
-
-    if let mode = config["geofencingMode"] as? String {
-      self.geofencingMode = mode
-    }
-    if let country = config["geofencingCountry"] as? String {
-      self.geofencingCountry = country
-    }
-
-    backfillMissingDays()
-
-    DispatchQueue.main.async {
-      self.fetchLastStateFromAPI()
-    }
-  }
-
-  @objc
-  func startLocationTracking() {
-    print("📍 startLocationTracking called")
-    DispatchQueue.main.async {
-      self.requestLocationPermission()
-    }
-  }
-
-  @objc
-  func stopLocationTracking() {
-    print("📍 stopLocationTracking called")
-    DispatchQueue.main.async {
-      self.locationManager.stopUpdatingLocation()
-      self.isTracking = false
-      self.safeSendEvent(withName: "onLocationStatus", body: ["status": "stopped"])
-    }
-  }
-
-  @objc
-  func isTracking(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) {
-    resolve(isTracking)
-  }
-
-  @objc
-  func forceProcessPendingLocations() {
-    print("🔧 Manually processing pending locations")
-    checkForPendingBackgroundLocations()
-  }
-
-  @objc
-  func resetInitialStateFlag() {
-    print("🔄 Resetting initial state flag")
-    isInitialStateLoaded = false
-    defaults.set(false, forKey: INITIAL_STATE_LOADED_KEY)
-    defaults.synchronize()
-  }
-  
-  @objc
-  func forceCheckMissingDay() {
-    print("🔧 Manually checking for missing days")
-    checkAndCreateMissingDay()
-  }
-  
-  @objc
-  func getRealTimeStatus(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) {
-    let status: [String: Any] = [
-      "lastCheckTime": lastRealTimeCheck,
-      "currentState": previousStateName,
-      "lastTrackedDate": getLastTrackedDate(),
-      "today": getTodayString(),
-      "needsMissingDay": shouldCreateMissingDay(),
-      "isConnected": isConnected,
-      "pendingLocations": pendingLocations.count,
-      "offlineQueueSize": (defaults.array(forKey: OFFLINE_QUEUE_KEY) as? [[String: Any]])?.count ?? 0
-    ]
-    resolve(status)
-  }
-
-  private func fetchLastStateFromAPI() {
-    guard let domigoToken = config["domigoToken"] as? String else {
-      print("❌ Domigo token not configured for last state fetch")
-      return
-    }
-
-    let apiUrl = "http://3.91.116.18:4001/api/locations/current"
-
-    guard let url = URL(string: apiUrl) else {
-      print("❌ Invalid last state API URL")
-      return
-    }
-
-    var request = URLRequest(url: url)
-    request.httpMethod = "GET"
-    request.setValue("application/json", forHTTPHeaderField: "accept")
-    request.setValue("Bearer \(domigoToken)", forHTTPHeaderField: "Authorization")
-
-    print("🔄 Fetching last state from API...")
-
-    let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-      guard let self = self else { return }
-
-      if let error = error {
-        print("❌ Failed to fetch last state: \(error.localizedDescription)")
-        self.safeSendEvent(
-          withName: "onLocationError",
-          body: ["error": "Failed to fetch last state: \(error.localizedDescription)"])
-        return
-      }
-
-      guard let data = data else {
-        print("❌ No data received for last state")
-        self.safeSendEvent(
-          withName: "onLocationError", body: ["error": "No data received for last state"])
-        return
-      }
-
-      do {
-        if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
-
-          if let success = json["success"] as? Bool, success == true {
-            if let result = json["result"] as? [String: Any] {
-
-              if let state = result["state"] as? String {
-                self.lastState = state
-                print("✅ Last state fetched from API: \(state)")
-
-                if let recordedAt = result["recordedAt"] as? String {
-                  let dateFormatter = ISO8601DateFormatter()
-                  if let date = dateFormatter.date(from: recordedAt) {
-                    self.lastApiTime = date.timeIntervalSince1970 * 1000
-                    print("⏰ Last API time updated: \(recordedAt)")
-                  }
-                }
-
-                self.saveState()
-
-                self.safeSendEvent(
-                  withName: "onLocationStatus",
-                  body: [
-                    "status": "last_state_loaded",
-                    "lastState": state,
-                    "lastApiTime": self.lastApiTime,
-                  ])
-              }
-            }
-          } else {
-            let errorMessage = json["message"] as? String ?? "Unknown API error"
-            print("❌ API returned unsuccessful response: \(errorMessage)")
-            self.safeSendEvent(
-              withName: "onLocationError", body: ["error": "Last state API error: \(errorMessage)"])
-          }
-        }
-      } catch {
-        print("❌ Error parsing last state response: \(error.localizedDescription)")
-        self.safeSendEvent(
-          withName: "onLocationError",
-          body: ["error": "Error parsing last state: \(error.localizedDescription)"])
-      }
-    }
-
-    task.resume()
-  }
-
-  // MARK: - Location Management
+  // MARK: - Location Permission and Updates
 
   private func requestLocationPermission() {
     let status = locationManager.authorizationStatus
@@ -875,6 +732,68 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     return addressComponents.joined(separator: ", ")
   }
 
+  private func fetchLastStateFromAPI() {
+    guard let domigoToken = config["domigoToken"] as? String else {
+      print("❌ Domigo token not configured for last state fetch")
+      return
+    }
+
+    let apiUrl = "http://3.91.116.18:4001/api/locations/current"
+
+    guard let url = URL(string: apiUrl) else {
+      print("❌ Invalid last state API URL")
+      return
+    }
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "GET"
+    request.setValue("application/json", forHTTPHeaderField: "accept")
+    request.setValue("Bearer \(domigoToken)", forHTTPHeaderField: "Authorization")
+
+    print("🔄 Fetching last state from API...")
+
+    let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+      guard let self = self else { return }
+
+      if let error = error {
+        print("❌ Failed to fetch last state: \(error.localizedDescription)")
+        return
+      }
+
+      guard let data = data else {
+        print("❌ No data received for last state")
+        return
+      }
+
+      do {
+        if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+          if let success = json["success"] as? Bool, success == true {
+            if let result = json["result"] as? [String: Any] {
+              if let state = result["state"] as? String {
+                self.lastState = state
+                print("✅ Last state fetched from API: \(state)")
+
+                if let recordedAt = result["recordedAt"] as? String {
+                  let dateFormatter = ISO8601DateFormatter()
+                  if let date = dateFormatter.date(from: recordedAt) {
+                    self.lastApiTime = date.timeIntervalSince1970 * 1000
+                    print("⏰ Last API time updated: \(recordedAt)")
+                  }
+                }
+
+                self.saveState()
+              }
+            }
+          }
+        }
+      } catch {
+        print("❌ Error parsing last state response: \(error.localizedDescription)")
+      }
+    }
+
+    task.resume()
+  }
+
   private func checkAndSendToAPI(
     lat: Double, lng: Double, city: String, state: String, address: String,
     isBackground: Bool = false, geocodeFailed: Bool = false
@@ -891,8 +810,6 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     print("⏰ Time difference: \(timeDifferenceSeconds / 60) minutes")
     print("🏛️ State changed: \(stateChanged) (last: '\(lastState)', current: '\(state)')")
     print("🕒 4 hours passed: \(timePassed)")
-    print("📱 Processing mode: \(isBackground ? "Background" : "Foreground")")
-    print("🗺️ Geocode status: \(geocodeFailed ? "Failed" : "Success")")
 
     if stateChanged || timePassed {
       print("✅ Conditions met - Sending to API")
@@ -934,7 +851,6 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
           creationType: "automatic",
           remoteLocation: "",
           stateId: nil,
-
           originCity: previousCity,
           originState: previousStateName,
           originLat: previousLat,
@@ -943,12 +859,9 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
           destinationState: state,
           destinationLat: lat,
           destinationLng: lng,
-
           startDate: previousEnterTime,
           endDate: currentTimeMs
         )
-      } else if stateChanged && !tripCooldownPassed {
-        print("⏳ Skipping trip API - cooldown period active")
       }
 
       sendToDomigoAPI(
@@ -973,23 +886,6 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
 
       saveState()
 
-      if isBackground {
-        safeSendEvent(
-          withName: "onBackgroundLocationProcessed",
-          body: [
-            "latitude": lat,
-            "longitude": lng,
-            "city": city,
-            "state": state,
-            "timestamp": currentTimeMs,
-            "stateChanged": stateChanged,
-            "timePassed": timePassed,
-            "geocodeFailed": geocodeFailed,
-            "tripSent": stateChanged && previousStateName != "" && !geocodeFailed
-              && tripCooldownPassed,
-          ])
-      }
-
       if isProcessingTrip {
         DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
           self.isProcessingTrip = false
@@ -997,22 +893,6 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       }
     } else {
       print("⏳ No API update required (No state change & 4hr not passed)")
-
-      if isBackground {
-        safeSendEvent(
-          withName: "onBackgroundLocationProcessed",
-          body: [
-            "latitude": lat,
-            "longitude": lng,
-            "city": city,
-            "state": state,
-            "timestamp": currentTimeMs,
-            "stateChanged": stateChanged,
-            "timePassed": timePassed,
-            "apiCalled": false,
-            "geocodeFailed": geocodeFailed,
-          ])
-      }
     }
   }
 
@@ -1064,9 +944,6 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
 
       if let error = error {
         print("❌ API call failed: \(error.localizedDescription)")
-        self.safeSendEvent(
-          withName: "onLocationError",
-          body: ["error": "API call failed: \(error.localizedDescription)"])
         return
       }
 
@@ -1086,7 +963,6 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         } else {
           let errorMessage = "API error \(httpResponse.statusCode)"
           print("❌ \(errorMessage)")
-          self.safeSendEvent(withName: "onLocationError", body: ["error": errorMessage])
         }
       }
     }
@@ -1094,150 +970,87 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     task.resume()
   }
 
-  // MARK: - Fixed Missing Day Functions
+  // MARK: - SIMPLIFIED Missing Day Functions
   
   private func scheduleMidnightMissingDay() {
-    // Register background task first
-    registerBackgroundTask()
-    
-    // Schedule the next midnight check
     scheduleNextMidnightCheck()
-  }
-
-  private func registerBackgroundTask() {
-    BGTaskScheduler.shared.register(forTaskWithIdentifier: "com.domigo.app.missingday", using: nil) { task in
-      self.handleMissingDayBackgroundTask(task: task as! BGProcessingTask)
-    }
-    print("✅ Background task registered for missing day")
   }
 
   private func scheduleNextMidnightCheck() {
     let calendar = Calendar.current
-    var components = calendar.dateComponents([.year, .month, .day], from: Date())
-    components.day! += 1
+    let now = Date()
+    
+    // Get today's 1:22 PM (ya jo bhi time chahiye)
+    var components = calendar.dateComponents([.year, .month, .day], from: now)
     components.hour = 0
-    components.minute = 5  // 12:05 AM
+    components.minute = 5
     components.second = 0
     
-    let nextMidnight = calendar.date(from: components)!
-    let interval = nextMidnight.timeIntervalSinceNow
-    
-    print("⏰ Next missing day check scheduled in \(Int(interval/3600)) hours \(Int((interval.truncatingRemainder(dividingBy: 3600))/60)) minutes")
-    
-    // Schedule foreground check
-    DispatchQueue.main.asyncAfter(deadline: .now() + max(interval, 1)) { [weak self] in
-      self?.checkAndCreateMissingDay()
-      self?.scheduleNextMidnightCheck()
+    guard let scheduledTime = calendar.date(from: components) else {
+        print("❌ Failed to create date")
+        return
     }
     
-    // Schedule background task
-    let request = BGProcessingTaskRequest(identifier: "com.domigo.app.missingday")
-    request.earliestBeginDate = nextMidnight
-    request.requiresNetworkConnectivity = true
-    request.requiresExternalPower = false
-    
-    do {
-      try BGTaskScheduler.shared.submit(request)
-      print("✅ Background missing day task scheduled for \(nextMidnight)")
-    } catch {
-      print("❌ Failed to schedule background missing day task: \(error)")
+    // Determine next run time
+    let nextRunTime: Date
+    if now < scheduledTime {
+        nextRunTime = scheduledTime
+        print("📅 Scheduling for TODAY at 12:05 AM")
+    } else {
+        nextRunTime = calendar.date(byAdding: .day, value: 1, to: scheduledTime)!
+        print("📅 Scheduling for TOMORROW at 12:05 AM")
     }
+    
+    print("⏰ Next missing day check at: \(nextRunTime)")
+    
+    // Cancel previous timer
+    midnightCheckTimer?.cancel()
+    
+    // Create new timer
+    let timer = DispatchSource.makeTimerSource(queue: midnightCheckQueue)
+    timer.schedule(wallDeadline: .now() + nextRunTime.timeIntervalSinceNow, repeating: .never)
+    timer.setEventHandler { [weak self] in
+        print("🕒 Running scheduled missing day check at \(Date())")
+        DispatchQueue.main.async {
+            // SIMPLE - bas missing day banao, koi check nahi
+            self?.createTodaysMissingDay()
+            self?.scheduleNextMidnightCheck()
+        }
+    }
+    timer.resume()
+    midnightCheckTimer = timer
   }
 
-  private func handleMissingDayBackgroundTask(task: BGProcessingTask) {
-    print("🌙 Background missing day task started")
+  // SIMPLE - Bas aaj ka missing day banao
+  private func createTodaysMissingDay() {
+    let today = getTodayString()
+    let stateToUse = getStateForMissingDay()
     
-    // Schedule next task
-    scheduleNextMidnightCheck()
+    print("📝 Creating missing day for TODAY: \(today) in state: \(stateToUse)")
     
-    // Create expiration handler
-    task.expirationHandler = {
-      print("⏰ Background missing day task expired")
+    if stateToUse.isEmpty {
+      print("❌ Cannot create missing day - no state available")
+      // Try to get state from somewhere
+      if !previousStateName.isEmpty {
+        createWithState(previousStateName)
+      } else if !lastState.isEmpty {
+        createWithState(lastState)
+      }
+      return
     }
     
-    // Perform the missing day check
-    checkAndCreateMissingDay()
-    
-    task.setTaskCompleted(success: true)
+    createWithState(stateToUse)
   }
-
-  private func checkAndCreateMissingDay() {
-    print("🌙 Checking for missing days...")
-    
-    // Load current state
-    loadPersistedState()
-    
-    // Get last tracked date
-    let lastTrackedDate = getLastTrackedDate()
+  
+  private func createWithState(_ state: String) {
     let today = getTodayString()
     
-    // If last tracked date is today, no missing day needed
-    if lastTrackedDate == today {
-      print("📅 Last tracked date is today (\(today)) - no missing day needed")
-      updateLastTrackedDate()
-      
-      // Send real-time event safely
-      safeSendEvent(withName: "onRealTimeCheck", body: [
-        "type": "missing_day_check",
-        "status": "up_to_date",
-        "lastTrackedDate": lastTrackedDate,
-        "today": today,
-        "timestamp": Date().timeIntervalSince1970 * 1000
-      ])
-      return
-    }
-    
-    // Get state for missing days
-    let stateToUse = getStateForMissingDay()
-    guard !stateToUse.isEmpty else {
-      print("❌ Cannot create missing day - no state available")
-      
-      safeSendEvent(withName: "onRealTimeCheck", body: [
-        "type": "missing_day_check",
-        "status": "no_state",
-        "error": "No state available",
-        "timestamp": Date().timeIntervalSince1970 * 1000
-      ])
-      return
-    }
-    
-    // Calculate missing dates between last tracked date and yesterday
-    let missingDates = getMissingDates(from: lastTrackedDate, to: today)
-    
-    if missingDates.isEmpty {
-      print("📅 No missing dates found")
-      updateLastTrackedDate()
-      
-      safeSendEvent(withName: "onRealTimeCheck", body: [
-        "type": "missing_day_check",
-        "status": "no_missing_dates",
-        "lastTrackedDate": lastTrackedDate,
-        "today": today,
-        "timestamp": Date().timeIntervalSince1970 * 1000
-      ])
-      return
-    }
-    
-    print("📅 Found \(missingDates.count) missing day(s) to create")
-    
-    // Send real-time event for missing days found
-    safeSendEvent(withName: "onRealTimeCheck", body: [
-      "type": "missing_day_check",
-      "status": "creating_missing_days",
-      "count": missingDates.count,
-      "dates": missingDates,
-      "state": stateToUse,
-      "timestamp": Date().timeIntervalSince1970 * 1000
-    ])
-    
-    // Create missing days for each date
-    for date in missingDates {
-      print("📝 Creating missing day for \(date) in state: \(stateToUse)")
-      
+    if isInternetAvailable() {
+      // Online mode - send immediately
       sendTripFormData(
         kind: "missing",
-        date: date,
-        typeOfDayId: nil,
+        date: today,
+        typeOfDayId: 1,
         isCommissionDay: false,
         isRemoteWork: false,
         remoteHours: 0,
@@ -1251,7 +1064,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         notes: "Auto-tracked missing day",
         creationType: "automatic",
         remoteLocation: "",
-        stateId: stateToUse,
+        stateId: state,
         originCity: nil,
         originState: nil,
         originLat: nil,
@@ -1261,19 +1074,19 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         destinationLat: nil,
         destinationLng: nil
       )
+    } else {
+      // Offline mode - queue for later
+      print("📱 Offline mode - queuing missing day for today")
+      let payload: [String: Any] = [
+        "kind": "missing",
+        "date": today,
+        "state": state,
+        "creationType": "automatic"
+      ]
+      enqueueToOfflineQueue(payload)
     }
     
-    // Update last tracked date to today
     updateLastTrackedDate()
-  }
-
-  private func getLastTrackedDate() -> String {
-    // Try to get from shared defaults first
-    if let sharedDate = sharedDefaults?.string(forKey: LAST_TRACKED_DATE_KEY) {
-      return sharedDate
-    }
-    // Fall back to standard defaults
-    return defaults.string(forKey: LAST_TRACKED_DATE_KEY) ?? getTodayString()
   }
 
   private func getTodayString() -> String {
@@ -1284,7 +1097,6 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   }
 
   private func getStateForMissingDay() -> String {
-    // Priority: previousStateName > lastState > empty
     if !previousStateName.isEmpty {
       return previousStateName
     }
@@ -1292,29 +1104,6 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       return lastState
     }
     return ""
-  }
-
-  private func getMissingDates(from lastDateString: String, to todayString: String) -> [String] {
-    let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy-MM-dd"
-    formatter.timeZone = TimeZone.current
-    
-    guard let lastDate = formatter.date(from: lastDateString),
-          let today = formatter.date(from: todayString) else {
-      return []
-    }
-    
-    var missingDates: [String] = []
-    var currentDate = Calendar.current.date(byAdding: .day, value: 1, to: lastDate)!
-    
-    // Add dates from day after last tracked date up to yesterday
-    while currentDate < today {
-      let dateString = formatter.string(from: currentDate)
-      missingDates.append(dateString)
-      currentDate = Calendar.current.date(byAdding: .day, value: 1, to: currentDate)!
-    }
-    
-    return missingDates
   }
 
   private func updateLastTrackedDate() {
@@ -1344,7 +1133,6 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     creationType: String?,
     remoteLocation: String?,
     stateId: String?,
-
     originCity: String?,
     originState: String?,
     originLat: Double?,
@@ -1445,60 +1233,43 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     body.append("--\(boundary)--\r\n".data(using: .utf8)!)
     request.httpBody = body
 
-    let queuePayload: [String: Any] = [
-      "kind": kind,
-      "date": date ?? "",
-      "originCity": originCity ?? "",
-      "originState": originState ?? "",
-      "originLat": originLat ?? 0.0,
-      "originLng": originLng ?? 0.0,
-      "destinationCity": destinationCity ?? "",
-      "destinationState": destinationState ?? "",
-      "destinationLat": destinationLat ?? 0.0,
-      "destinationLng": destinationLng ?? 0.0,
-      "startDate": startDate.map { formatDate1($0) } ?? "",
-      "endDate": endDate.map { formatDate1($0) } ?? "",
-      "creationType": creationType ?? "automatic",
-      "state": stateId ?? "",
-    ]
-
     let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
       guard let self = self else { return }
 
       if let error = error {
         print("❌ Trip API error: \(error.localizedDescription)")
+        let queuePayload: [String: Any] = [
+          "kind": kind,
+          "date": date ?? "",
+          "state": stateId ?? "",
+          "creationType": creationType ?? "automatic"
+        ]
         self.enqueueToOfflineQueue(queuePayload)
-        self.safeSendEvent(
-          withName: "onTripApiError",
-          body: [
-            "success": false,
-            "error": error.localizedDescription,
-            "kind": kind,
-            "date": date ?? "",
-            "timestamp": Date().timeIntervalSince1970 * 1000,
-          ])
         return
       }
 
       let status = (response as? HTTPURLResponse)?.statusCode ?? 0
-      let resText = String(data: data ?? Data(), encoding: .utf8) ?? ""
-
+      
       if status < 200 || status >= 300 {
-        self.enqueueToOfflineQueue(queuePayload)
-      }
-
-      print("📡 Trip API Response - Status: \(status), Kind: \(kind), Response: \(resText)")
-
-      self.safeSendEvent(
-        withName: "onTripApiResponse",
-        body: [
-          "success": status == 200 || status == 201,
-          "statusCode": status,
-          "response": resText,
+        print("❌ Trip API failed with status: \(status)")
+        let queuePayload: [String: Any] = [
           "kind": kind,
           "date": date ?? "",
-          "timestamp": Date().timeIntervalSince1970 * 1000,
-        ])
+          "state": stateId ?? "",
+          "creationType": creationType ?? "automatic"
+        ]
+        self.enqueueToOfflineQueue(queuePayload)
+      } else {
+        print("✅ Trip API successful for \(kind) on date: \(date ?? "")")
+        self.safeSendEvent(
+          withName: "onTripApiResponse",
+          body: [
+            "success": true,
+            "kind": kind,
+            "date": date ?? "",
+            "timestamp": Date().timeIntervalSince1970 * 1000,
+          ])
+      }
     }
 
     task.resume()
@@ -1516,7 +1287,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     queue.append(entry)
     defaults.set(queue, forKey: OFFLINE_QUEUE_KEY)
     defaults.synchronize()
-    print("Offline queue: enqueued event, queue size=\(queue.count)")
+    print("📦 Offline queue: enqueued event, queue size=\(queue.count)")
   }
 
   private func flushOfflineQueue() {
@@ -1524,14 +1295,14 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     else { return }
     guard let domigoToken = config["domigoToken"] as? String, !domigoToken.isEmpty else { return }
 
-    print("Offline queue: flushing \(queue.count) events")
+    print("📦 Offline queue: flushing \(queue.count) events")
     var remaining: [[String: Any]] = []
 
     let group = DispatchGroup()
     for var entry in queue {
       let retryCount = entry["retryCount"] as? Int ?? 0
       if retryCount >= MAX_OFFLINE_RETRIES {
-        print("Offline queue: dropping event after \(MAX_OFFLINE_RETRIES) retries")
+        print("📦 Offline queue: dropping event after \(MAX_OFFLINE_RETRIES) retries")
         continue
       }
       guard let payload = entry["payload"] as? [String: Any] else { continue }
@@ -1549,13 +1320,14 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     group.notify(queue: .main) {
       self.defaults.set(remaining, forKey: self.OFFLINE_QUEUE_KEY)
       self.defaults.synchronize()
+      print("📦 Offline queue flush complete. Remaining: \(remaining.count)")
     }
   }
 
   private func sendQueuedEntry(
     _ payload: [String: Any], token: String, completion: @escaping (Bool) -> Void
   ) {
-    let kind = payload["kind"] as? String ?? "trip"
+    let kind = payload["kind"] as? String ?? "missing"
     let boundary = UUID().uuidString
     guard let url = URL(string: "http://3.91.116.18:4001/api/trip-days") else {
       completion(false)
@@ -1577,38 +1349,19 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
 
     addField("kind", kind)
     addField("date", payload["date"] as? String ?? "")
-    addField("typeOfDayId", "1")
-    addField("isCommissionDay", "false")
-    addField("isRemoteWork", "false")
-    addField("remoteHours", "0")
-    addField("isTravelling", kind == "trip" ? "true" : "false")
-    addField("tripTypeId", "1")
-    addField("tripModeId", "1")
-    addField("confirmationNo", "")
-    addField("vendor", "")
-    addField("hasProof", "false")
-    addField("proofType", "other")
-    addField("notes", "")
-    addField("creationType", payload["creationType"] as? String ?? "automatic")
-    addField("remoteLocation", "")
-    addField("attachments", "[]")
-
+    
     if kind == "missing" {
       addField("state", payload["state"] as? String ?? "")
-    }
-    if kind == "trip" {
-      addField("originCity", payload["originCity"] as? String ?? "")
-      addField("originState", payload["originState"] as? String ?? "")
-      if let v = payload["originLat"] { addField("originLat", "\(v)") }
-      if let v = payload["originLng"] { addField("originLng", "\(v)") }
-      addField("destinationCity", payload["destinationCity"] as? String ?? "")
-      addField("destinationState", payload["destinationState"] as? String ?? "")
-      if let v = payload["destinationLat"] { addField("destinationLat", "\(v)") }
-      if let v = payload["destinationLng"] { addField("destinationLng", "\(v)") }
-      let sd = payload["startDate"] as? String ?? ""
-      if !sd.isEmpty { addField("startDate", sd) }
-      let ed = payload["endDate"] as? String ?? ""
-      if !ed.isEmpty { addField("endDate", ed) }
+      addField("typeOfDayId", "1")
+      addField("isCommissionDay", "false")
+      addField("isRemoteWork", "false")
+      addField("remoteHours", "0")
+      addField("isTravelling", "false")
+      addField("hasProof", "false")
+      addField("proofType", "other")
+      addField("notes", "Auto-tracked missing day (offline recovery)")
+      addField("creationType", payload["creationType"] as? String ?? "automatic")
+      addField("attachments", "[]")
     }
 
     body.append("--\(boundary)--\r\n".data(using: .utf8)!)
@@ -1620,43 +1373,12 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         return
       }
       let status = (response as? HTTPURLResponse)?.statusCode ?? 0
-      completion(status >= 200 && status < 300)
+      let success = status >= 200 && status < 300
+      if success {
+        print("✅ Offline queue entry sent successfully for date: \(payload["date"] as? String ?? "")")
+      }
+      completion(success)
     }.resume()
-  }
-
-  // MARK: - Missing Day Backfill
-
-  private func backfillMissingDays() {
-    guard let lastDate = defaults.string(forKey: LAST_TRACKED_DATE_KEY) else { return }
-    let stateForBackfill = previousStateName.isEmpty ? lastState : previousStateName
-    guard !stateForBackfill.isEmpty else { return }
-
-    let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy-MM-dd"
-    guard let last = formatter.date(from: lastDate) else { return }
-
-    let calendar = Calendar.current
-    var current = calendar.date(byAdding: .day, value: 1, to: last)!
-    let today = formatter.string(from: Date())
-
-    while formatter.string(from: current) < today {
-      let gapDate = formatter.string(from: current)
-      print("Backfilling missing day: \(gapDate)")
-      sendTripFormData(
-        kind: "missing", date: gapDate, typeOfDayId: nil,
-        isCommissionDay: false, isRemoteWork: false, remoteHours: 0,
-        isTravelling: false, tripTypeId: nil, tripModeId: nil,
-        confirmationNo: "", vendor: "", hasProof: false, proofType: "other",
-        notes: "", creationType: "automatic", remoteLocation: "",
-        stateId: stateForBackfill,
-        originCity: nil, originState: nil, originLat: nil, originLng: nil,
-        destinationCity: nil, destinationState: nil, destinationLat: nil, destinationLng: nil
-      )
-      current = calendar.date(byAdding: .day, value: 1, to: current)!
-    }
-
-    defaults.set(today, forKey: LAST_TRACKED_DATE_KEY)
-    defaults.synchronize()
   }
 
   // MARK: - Local GeoJSON Detection
@@ -1744,7 +1466,6 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
 
     let currentTimeMs = Date().timeIntervalSince1970 * 1000
 
-    // FIRST INITIALIZATION
     if previousEnterTime == 0 {
       previousLat = lat
       previousLng = lng
@@ -1759,7 +1480,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     if detectedState == previousStateName {
       return
     }
-    // Check if transition is already in progress
+
     if isTransitionInProgress {
       print("⛔ Transition already in progress — skipping")
       return
@@ -1779,7 +1500,6 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     let isOnline = isInternetAvailable()
 
     if isOnline {
-      // ONLINE → Reverse geocode for city
       let location = CLLocation(latitude: lat, longitude: lng)
 
       geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
@@ -1799,7 +1519,6 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
           endDate: currentTimeMs
         )
 
-        // Update state after trip creation
         self.previousLat = lat
         self.previousLng = lng
         self.previousCity = city
@@ -1810,7 +1529,6 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         self.saveState()
       }
     } else {
-      // OFFLINE → Create trip with empty city
       createTrip(
         originCity: originCity,
         originState: originState,
@@ -1824,7 +1542,6 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         endDate: currentTimeMs
       )
 
-      // Update state after trip creation
       previousLat = lat
       previousLng = lng
       previousCity = ""
@@ -1886,6 +1603,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   deinit {
     monitor.cancel()
     realTimeTimer?.invalidate()
+    midnightCheckTimer?.cancel()
     NotificationCenter.default.removeObserver(self)
   }
 }

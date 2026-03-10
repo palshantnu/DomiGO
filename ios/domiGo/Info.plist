@@ -7,6 +7,7 @@
 		<string>com.domigo.location.refresh</string>
 		<string>com.domigo.location.processing</string>
 		<string>com.domigo.app.refresh</string>
+		<string>com.domigo.app.missingday</string>
 	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
