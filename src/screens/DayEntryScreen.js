@@ -389,6 +389,7 @@ const DayEntryScreen = ({
             attachments: attachment ? [attachment] : [],
             creationType,
             remoteLocation,
+            isUpdated: true,
         };
 
         if (!isTrip) {

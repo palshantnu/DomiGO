@@ -272,7 +272,8 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
         // ➕ Missing not added yet
         dots.push(ADD_MISSING_DOT);
       } else {
-        if (isActuallyEdited(missing)) {
+        // if (isActuallyEdited(missing)) {
+        if (missing.isUpdated) {
           // 🔁 Re-edit
           dots.push(REEDIT_MISSING_DOT);
         } else {
@@ -1560,8 +1561,8 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
 
               {/* ✅ Manual option (ALWAYS for past/today) */}
               <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: isMissingAlreadyAdded && isActuallyEdited(selectedMissingDate)? '#007AFF': 
-                isMissingAlreadyAdded && !isActuallyEdited(selectedMissingDate)?'#FFCC00' : '#FF3B30' }]}
+                style={[styles.actionBtn, { backgroundColor: isMissingAlreadyAdded && selectedMissingDate.isUpdated? '#007AFF': 
+                isMissingAlreadyAdded && !selectedMissingDate.isUpdated?'#FFCC00' : '#FF3B30' }]}
                 onPress={() => {
                   setDayActionModalVisible(false);
                   // navigation.navigate('AddMissingDayScreen', {
@@ -1605,8 +1606,8 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
               >
                 <Text style={[styles.actionText, { color: '#fff' }]}>
                   {/* {isMissingAlreadyAdded ? 'Fill Missing Day' : 'Add Missing Day'} */}
-                {  isMissingAlreadyAdded && isActuallyEdited(selectedMissingDate)? 'Edit Missing Day Info': 
-                isMissingAlreadyAdded && !isActuallyEdited(selectedMissingDate)?'Fix Missing Day Info' : 'Add Missing Day Info'}
+                {  isMissingAlreadyAdded && selectedMissingDate.isUpdated? 'Edit Missing Day Info': 
+                isMissingAlreadyAdded && !selectedMissingDate.isUpdated ?'Fix Missing Day Info' : 'Add Missing Day Info'}
                 </Text>
               </TouchableOpacity>
 
