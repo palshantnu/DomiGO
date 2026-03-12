@@ -1484,7 +1484,331 @@
 
 
 // screens/ResidencyHistoryScreen.js
-import React, { useState, useEffect, useCallback } from "react";
+// import React, { useState, useEffect, useCallback } from "react";
+// import {
+//     View,
+//     Text,
+//     StyleSheet,
+//     ScrollView,
+//     TouchableOpacity,
+//     Alert,
+// } from "react-native";
+// import Ionicons from "react-native-vector-icons/Ionicons";
+// import { SafeAreaView } from "react-native-safe-area-context";
+// import LinearGradient from "react-native-linear-gradient";
+// import { connect, useDispatch } from "react-redux";
+// import { useNavigation, useFocusEffect } from "@react-navigation/native";
+// import Header from '../components/Header';
+// import ResidencySection from '../components/ResidencySection';
+// import {
+//     GET_RESIDENCY_RECORD_LIST,
+//     DELETE_RESIDENCY_RECORD,
+//     UPDATE_RESIDENCY_RECORD,
+//     ADD_DOCUMENT_RECORD,
+//     GET_Document_Category_LIST,
+// } from "../redux/actions/action-creator";
+// import colors from "../theme/colors";
+// import { CustomToast } from "../helpers/CommonHelpers";
+
+// const ResidencyHistoryScreen = ({ 
+//     ResidencydocumentList,
+//     GET_RESIDENCY_RECORD_LIST,
+//     UPDATE_RESIDENCY_RECORD,
+//     DELETE_RESIDENCY_RECORD ,
+//     documentCategoryList,
+//     ADD_DOCUMENT_RECORD,
+//     GET_Document_Category_LIST,
+// }) => {
+//     const navigation = useNavigation();
+//     const dispatch = useDispatch();
+
+
+//     console.log('documentCategoryList',documentCategoryList);
+//     // Load data when screen focuses
+//     useFocusEffect(
+//         useCallback(() => {
+//             loadData();
+//         }, [])
+//     );
+
+//     const loadData = async () => {
+//         await GET_RESIDENCY_RECORD_LIST();
+//         await GET_Document_Category_LIST();
+//     };
+
+//     // Get the residency data (assuming first item or handle accordingly)
+//     const residencyData = ResidencydocumentList?.[0] || {};
+
+//     const handleSectionToggle = async (section, value) => {
+//         // Update local state or API
+//         const updatedData = {
+//             ...residencyData,
+//             [section]: {
+//                 ...residencyData[section],
+//                 enabled: value
+//             }
+//         };
+        
+//         try {
+//             await UPDATE_RESIDENCY_RECORD(residencyData.id, updatedData);
+//             await loadData();
+//         } catch (error) {
+//             CustomToast.show("Failed to update");
+//         }
+//     };
+
+//     const handleSectionPress = (section, sectionData) => {
+//         if (sectionData?.enabled) {
+//             // If enabled, navigate to details
+//             navigation.navigate("ResidencyRecordDetails", { 
+//                 section,
+//                 data: sectionData 
+//             });
+//         } else {
+//             // If disabled, navigate to add form for this section
+//             navigation.navigate("CreateResidencyRecord", {
+//                 section,
+//                 mode: 'add'
+//             });
+//         }
+//     };
+
+//     const handleAddMultiple = (section) => {
+//         navigation.navigate("CreateResidencyRecord", {
+//             section,
+//             mode: 'add_multiple'
+//         });
+//     };
+
+//     const handleDelete = (id) => {
+//         Alert.alert(
+//             "Delete Record",
+//             "Are you sure you want to delete this record?",
+//             [
+//                 { text: "Cancel", style: "cancel" },
+//                 {
+//                     text: "Delete",
+//                     style: "destructive",
+//                     onPress: async () => {
+//                         try {
+//                             await DELETE_RESIDENCY_RECORD(id);
+//                             CustomToast.show("Record deleted successfully");
+//                             await loadData();
+//                         } catch (error) {
+//                             CustomToast.show("Failed to delete record");
+//                         }
+//                     },
+//                 },
+//             ]
+//         );
+//     };
+
+//     return (
+//         <LinearGradient
+//             colors={["#9ab1fa", "#ffffff"]}
+//             start={{ x: 1, y: 0 }}
+//             end={{ x: 0.8, y: 0.4 }}
+//             locations={[0.05, 0.55]}
+//             style={styles.container}
+//         >
+//             <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
+//                 <Header title={'Residency Records'} />
+
+//                 <ScrollView showsVerticalScrollIndicator={false}>
+                    
+//                     {/* Declaration of Residency */}
+//                     <ResidencySection
+//                         title="Declaration of Residency / Domicile"
+//                         isEnabled={residencyData.declaration?.enabled}
+//                         onToggle={(val) => handleSectionToggle('declaration', val)}
+//                         onPress={() => handleSectionPress('declaration', residencyData.declaration)}
+//                         values={residencyData.declaration}
+//                     />
+
+//                     {/* Address of Record */}
+//                     <ResidencySection
+//                         title="Address of Record"
+//                         isEnabled={residencyData.addressOfRecord?.enabled}
+//                         onToggle={(val) => handleSectionToggle('addressOfRecord', val)}
+//                         onPress={() => handleSectionPress('addressOfRecord', residencyData.addressOfRecord)}
+//                         values={residencyData.addressOfRecord}
+//                     />
+
+//                     {/* Property Ownership */}
+//                     <ResidencySection
+//                         title="Property Ownership"
+//                         isEnabled={residencyData.propertyOwnership?.enabled}
+//                         onToggle={(val) => handleSectionToggle('propertyOwnership', val)}
+//                         onPress={() => handleSectionPress('propertyOwnership', residencyData.propertyOwnership)}
+//                         values={residencyData.propertyOwnership}
+//                     />
+
+//                     {/* Property Exemptions */}
+//                     <ResidencySection
+//                         title="Property Exemptions"
+//                         isEnabled={residencyData.propertyExemptions?.enabled}
+//                         onToggle={(val) => handleSectionToggle('propertyExemptions', val)}
+//                         onPress={() => handleSectionPress('propertyExemptions', residencyData.propertyExemptions)}
+//                         values={residencyData.propertyExemptions}
+//                     />
+
+//                     {/* Driver's License */}
+//                     <ResidencySection
+//                         title="Driver's License"
+//                         isEnabled={residencyData.driversLicense?.enabled}
+//                         onToggle={(val) => handleSectionToggle('driversLicense', val)}
+//                         onPress={() => handleSectionPress('driversLicense', residencyData.driversLicense)}
+//                         values={residencyData.driversLicense}
+//                     />
+
+//                     {/* Voting Registration */}
+//                     <ResidencySection
+//                         title="Voting Registration"
+//                         isEnabled={residencyData.votingRegistration?.enabled}
+//                         onToggle={(val) => handleSectionToggle('votingRegistration', val)}
+//                         onPress={() => handleSectionPress('votingRegistration', residencyData.votingRegistration)}
+//                         values={residencyData.votingRegistration}
+//                     />
+
+//                     {/* Work Location */}
+//                     <ResidencySection
+//                         title="Work Location"
+//                         isEnabled={residencyData.workLocation?.enabled}
+//                         onToggle={(val) => handleSectionToggle('workLocation', val)}
+//                         onPress={() => handleSectionPress('workLocation', residencyData.workLocation)}
+//                         values={residencyData.workLocation}
+//                     />
+
+//                     {/* Primary Doctor */}
+//                     <ResidencySection
+//                         title="Primary Doctor"
+//                         isEnabled={residencyData.primaryDoctor?.enabled}
+//                         onToggle={(val) => handleSectionToggle('primaryDoctor', val)}
+//                         onPress={() => handleSectionPress('primaryDoctor', residencyData.primaryDoctor)}
+//                         values={residencyData.primaryDoctor}
+//                     />
+
+//                     {/* Tax Filing */}
+//                     <ResidencySection
+//                         title="Tax Filing"
+//                         isEnabled={residencyData.taxFiling?.enabled}
+//                         onToggle={(val) => handleSectionToggle('taxFiling', val)}
+//                         onPress={() => handleSectionPress('taxFiling', residencyData.taxFiling)}
+//                         values={residencyData.taxFiling}
+//                     />
+
+//                     {/* Business Records */}
+//                     <ResidencySection
+//                         title="Business Records"
+//                         isEnabled={residencyData.businessRecords?.enabled}
+//                         onToggle={(val) => handleSectionToggle('businessRecords', val)}
+//                         onPress={() => handleSectionPress('businessRecords', residencyData.businessRecords)}
+//                         values={residencyData.businessRecords}
+//                         showAddMultiple={residencyData.businessRecords?.enabled}
+//                         onAddMultiple={() => handleAddMultiple('businessRecords')}
+//                     />
+
+//                     {/* Others Section with Multiple Entries */}
+//                     <View style={styles.multipleSection}>
+//                         <Text style={styles.multipleSectionTitle}>Others</Text>
+                        
+//                         {residencyData.others?.map((item, index) => (
+//                             <ResidencySection
+//                                 key={item.id || index}
+//                                 title={
+//                                     item.type === 'lease' ? 'Property Lease' :
+//                                     item.type === 'title' ? 'Vehicle Title' : 'Vehicle Insurance'
+//                                 }
+//                                 isEnabled={true}
+//                                 showToggle={false}
+//                                 onPress={() => navigation.navigate("ResidencyRecordDetails", { 
+//                                     section: 'others',
+//                                     data: item 
+//                                 })}
+//                                 values={item}
+//                             />
+//                         ))}
+
+//                         <TouchableOpacity 
+//                             style={styles.addOtherButton}
+//                             onPress={() => navigation.navigate("CreateResidencyRecord", {
+//                                 section: 'others',
+//                                 mode: 'add'
+//                             })}
+//                         >
+//                             <Ionicons name="add-circle" size={24} color={colors.primary} />
+//                             <Text style={styles.addOtherText}>Add Other Record</Text>
+//                         </TouchableOpacity>
+//                     </View>
+
+//                     {/* Second Home */}
+//                     <ResidencySection
+//                         title="Second Home"
+//                         isEnabled={residencyData.secondHome?.enabled}
+//                         onToggle={(val) => handleSectionToggle('secondHome', val)}
+//                         onPress={() => handleSectionPress('secondHome', residencyData.secondHome)}
+//                         values={residencyData.secondHome}
+//                     />
+
+//                     <View style={{ height: 60 }} />
+//                 </ScrollView>
+//             </SafeAreaView>
+//         </LinearGradient>
+//     );
+// };
+
+// const styles = StyleSheet.create({
+//     container: {
+//         flex: 1,
+//     },
+//     multipleSection: {
+//         marginTop: 16,
+//         marginBottom: 8,
+//     },
+//     multipleSectionTitle: {
+//         fontSize: 18,
+//         fontWeight: "700",
+//         marginLeft: 16,
+//         marginBottom: 12,
+//         color: "#000",
+//     },
+//     addOtherButton: {
+//         flexDirection: 'row',
+//         alignItems: 'center',
+//         backgroundColor: '#F5F5F5',
+//         padding: 16,
+//         borderRadius: 16,
+//         marginHorizontal: 16,
+//         marginTop: 8,
+//         borderWidth: 1,
+//         borderColor: colors.primary,
+//         borderStyle: 'dashed',
+//     },
+//     addOtherText: {
+//         fontSize: 15,
+//         color: colors.primary,
+//         fontWeight: '600',
+//         marginLeft: 12,
+//     },
+// });
+
+// function mapStateToProps(state) {
+//     return {
+//         ResidencydocumentList: state.common.ResidencydocumentList,
+//         documentCategoryList: state.common.documentCategoryList,
+//     };
+// }
+
+// export default connect(mapStateToProps, {
+//     GET_RESIDENCY_RECORD_LIST,
+//     UPDATE_RESIDENCY_RECORD,
+//     DELETE_RESIDENCY_RECORD,
+//     ADD_DOCUMENT_RECORD,
+//     GET_Document_Category_LIST,
+// })(ResidencyHistoryScreen);
+
+// screens/ResidencyHistoryScreen.js
+import React, { useState, useCallback } from "react";
 import {
     View,
     Text,
@@ -1504,6 +1828,8 @@ import {
     GET_RESIDENCY_RECORD_LIST,
     DELETE_RESIDENCY_RECORD,
     UPDATE_RESIDENCY_RECORD,
+    ADD_DOCUMENT_RECORD,
+    GET_Document_Category_LIST,
 } from "../redux/actions/action-creator";
 import colors from "../theme/colors";
 import { CustomToast } from "../helpers/CommonHelpers";
@@ -1512,11 +1838,17 @@ const ResidencyHistoryScreen = ({
     ResidencydocumentList,
     GET_RESIDENCY_RECORD_LIST,
     UPDATE_RESIDENCY_RECORD,
-    DELETE_RESIDENCY_RECORD 
+    DELETE_RESIDENCY_RECORD,
+    documentCategoryList,
+    ADD_DOCUMENT_RECORD,
+    GET_Document_Category_LIST,
 }) => {
     const navigation = useNavigation();
     const dispatch = useDispatch();
 
+    console.log('documentCategoryList', documentCategoryList);
+    console.log('ResidencydocumentList', ResidencydocumentList);
+    
     // Load data when screen focuses
     useFocusEffect(
         useCallback(() => {
@@ -1526,74 +1858,256 @@ const ResidencyHistoryScreen = ({
 
     const loadData = async () => {
         await GET_RESIDENCY_RECORD_LIST();
+        await GET_Document_Category_LIST();
     };
 
     // Get the residency data (assuming first item or handle accordingly)
     const residencyData = ResidencydocumentList?.[0] || {};
 
-    const handleSectionToggle = async (section, value) => {
-        // Update local state or API
-        const updatedData = {
-            ...residencyData,
-            [section]: {
-                ...residencyData[section],
-                enabled: value
-            }
+    // ========== Category to Section Mapping ==========
+    const getSectionKeyFromCategory = (categoryName) => {
+        const mapping = {
+            'Declaration of Residency': 'declaration',
+            'Property Exemptions': 'propertyExemptions',
+            'Drivers License': 'driversLicense',
+            'Voting Registration': 'votingRegistration',
+            'Work location': 'workLocation',
+            'Primary Doctor': 'primaryDoctor',
+            'Tax Filing': 'taxFiling',
+            'Business Records': 'businessRecords',
+            'Other - Property Lease': 'others_lease',
+            'Other - Vehicle Title': 'others_title',
+            'Other - Vehicle Insurance': 'others_insurance',
+            'Other - Second home': 'secondHome',
+            'Other - Business Records': 'businessRecordsMulti'
         };
+        return mapping[categoryName] || categoryName.toLowerCase().replace(/\s+/g, '');
+    };
+
+    // // ========== Get Section Data ==========
+    // const getSectionData = (category) => {
+    //     const sectionKey = getSectionKeyFromCategory(category.name);
+        
+    //     // Handle different section types
+    //     if (sectionKey.startsWith('others_')) {
+    //         const type = sectionKey.split('_')[1];
+    //         return {
+    //             data: residencyData.others?.find(item => item.type === type) || null,
+    //             type: 'other',
+    //             categoryId: category.id
+    //         };
+    //     } else if (sectionKey === 'businessRecordsMulti') {
+    //         return {
+    //             data: residencyData.businessRecordsMulti || [],
+    //             type: 'multi',
+    //             categoryId: category.id
+    //         };
+    //     } else if (sectionKey === 'secondHome') {
+    //         return {
+    //             data: residencyData.secondHome || null,
+    //             type: 'single',
+    //             categoryId: category.id
+    //         };
+    //     } else {
+    //         return {
+    //             data: residencyData[sectionKey] || null,
+    //             type: 'single',
+    //             categoryId: category.id
+    //         };
+    //     }
+    // };
+    // ========== Get Section Data ==========
+const getSectionData = (category) => {
+    const sectionKey = getSectionKeyFromCategory(category.name);
+    
+    // Find all records for this category
+    const categoryRecords = ResidencydocumentList?.filter(
+        record => record.categoryId === category.id
+    ) || [];
+    
+    console.log(`Category ${category.name} records:`, categoryRecords);
+    
+    // Handle different section types
+    if (sectionKey.startsWith('others_')) {
+        const type = sectionKey.split('_')[1];
+        // Find record with matching type in metadata
+        const record = categoryRecords.find(item => {
+            const metadata = typeof item.metadata === 'string' 
+                ? JSON.parse(item.metadata) 
+                : item.metadata;
+            return metadata?.type === type;
+        });
+        return {
+            data: record || null,
+            type: 'other',
+            categoryId: category.id,
+            records: categoryRecords // All records for this category
+        };
+    } else if (sectionKey === 'businessRecordsMulti') {
+        return {
+            data: categoryRecords, // All business records
+            type: 'multi',
+            categoryId: category.id,
+            records: categoryRecords
+        };
+    } else {
+        // For single-record categories, get the first/latest record
+        return {
+            data: categoryRecords[0] || null,
+            type: 'single',
+            categoryId: category.id,
+            records: categoryRecords
+        };
+    }
+};
+
+    // ========== Get Section Title ==========
+    const getSectionTitle = (categoryName) => {
+        const titleMap = {
+            'Declaration of Residency': 'Declaration of Residency / Domicile',
+            'Property Exemptions': 'Property Exemptions',
+            'Drivers License': "Driver's License",
+            'Voting Registration': 'Voting Registration',
+            'Work location': 'Work Location',
+            'Primary Doctor': 'Primary Doctor',
+            'Tax Filing': 'Tax Filing',
+            'Business Records': 'Business Records',
+            'Other - Property Lease': 'Property Lease',
+            'Other - Vehicle Title': 'Vehicle Title',
+            'Other - Vehicle Insurance': 'Vehicle Insurance',
+            'Other - Second home': 'Second Home',
+            'Other - Business Records': 'Business Records (Multiple States)'
+        };
+        return titleMap[categoryName] || categoryName;
+    };
+
+    // ========== Handle Section Toggle ==========
+    const handleSectionToggle = async (category, value) => {
+        const sectionKey = getSectionKeyFromCategory(category.name);
+        
+        let updatedData = { ...residencyData };
+        
+        if (sectionKey.startsWith('others_')) {
+            const type = sectionKey.split('_')[1];
+            if (!updatedData.others) updatedData.others = [];
+            
+            if (value) {
+                // Enable - create new entry if doesn't exist
+                const existingIndex = updatedData.others.findIndex(item => item.type === type);
+                if (existingIndex === -1) {
+                    updatedData.others.push({
+                        id: Date.now().toString(),
+                        type,
+                        enabled: true,
+                        categoryId: category.id
+                    });
+                } else {
+                    updatedData.others[existingIndex].enabled = true;
+                }
+            } else {
+                // Disable - mark as disabled
+                updatedData.others = updatedData.others.map(item => 
+                    item.type === type ? { ...item, enabled: false } : item
+                );
+            }
+        } else if (sectionKey === 'businessRecordsMulti') {
+            if (!updatedData.businessRecordsMulti) updatedData.businessRecordsMulti = [];
+            // For multi, toggle is handled by adding/removing entries
+        } else if (sectionKey === 'secondHome') {
+            updatedData.secondHome = {
+                ...updatedData.secondHome,
+                enabled: value,
+                categoryId: category.id
+            };
+        } else {
+            updatedData[sectionKey] = {
+                ...updatedData[sectionKey],
+                enabled: value,
+                categoryId: category.id
+            };
+        }
         
         try {
             await UPDATE_RESIDENCY_RECORD(residencyData.id, updatedData);
             await loadData();
+            CustomToast.show(`${category.name} ${value ? 'enabled' : 'disabled'}`);
         } catch (error) {
             CustomToast.show("Failed to update");
         }
     };
 
-    const handleSectionPress = (section, sectionData) => {
-        if (sectionData?.enabled) {
-            // If enabled, navigate to details
+    // // ========== Handle Section Press ==========
+    // const handleSectionPress = (category, sectionInfo) => {
+    //     const sectionKey = getSectionKeyFromCategory(category.name);
+        
+    //     if (sectionInfo.data?.enabled || (Array.isArray(sectionInfo.data) && sectionInfo.data.length > 0)) {
+    //         // If enabled/has data, navigate to details
+    //         navigation.navigate("ResidencyRecordDetails", { 
+    //             category,
+    //             sectionKey,
+    //             data: sectionInfo.data
+    //         });
+    //     } else {
+    //         // If disabled, navigate to add form
+    //         navigation.navigate("CreateResidencyRecord", {
+    //             category,
+    //             sectionKey,
+    //             mode: 'add'
+    //         });
+    //     }
+    // };
+
+    // // ========== Handle Add Multiple ==========
+    // const handleAddMultiple = (category) => {
+    //     navigation.navigate("CreateResidencyRecord", {
+    //         category,
+    //         sectionKey: getSectionKeyFromCategory(category.name),
+    //         mode: 'add_multiple'
+    //     });
+    // };
+
+
+    const handleSectionPress = (category, sectionInfo) => {
+        const sectionKey = getSectionKeyFromCategory(category.name);
+        
+        if (sectionInfo.data?.enabled || (Array.isArray(sectionInfo.data) && sectionInfo.data.length > 0)) {
+            // If enabled/has data, navigate to details
             navigation.navigate("ResidencyRecordDetails", { 
-                section,
-                data: sectionData 
+                category,
+                sectionKey,
+                data: sectionInfo.data
             });
         } else {
             // If disabled, navigate to add form for this section
             navigation.navigate("CreateResidencyRecord", {
-                section,
+                category, // Pass the full category object
+                sectionKey,
                 mode: 'add'
             });
         }
     };
-
-    const handleAddMultiple = (section) => {
+    
+    // Update handleAddMultiple function
+    const handleAddMultiple = (category) => {
         navigation.navigate("CreateResidencyRecord", {
-            section,
+            category, // Pass the full category object
+            sectionKey: getSectionKeyFromCategory(category.name),
             mode: 'add_multiple'
         });
     };
 
-    const handleDelete = (id) => {
-        Alert.alert(
-            "Delete Record",
-            "Are you sure you want to delete this record?",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: async () => {
-                        try {
-                            await DELETE_RESIDENCY_RECORD(id);
-                            CustomToast.show("Record deleted successfully");
-                            await loadData();
-                        } catch (error) {
-                            CustomToast.show("Failed to delete record");
-                        }
-                    },
-                },
-            ]
-        );
-    };
+    // ========== Categorize Sections ==========
+    const mainSections = documentCategoryList?.filter(cat => 
+        !cat.name.startsWith('Other -') && cat.name !== 'Other - Business Records'
+    ) || [];
+    
+    const otherSections = documentCategoryList?.filter(cat => 
+        cat.name.startsWith('Other -') && cat.name !== 'Other - Business Records'
+    ) || [];
+    
+    const multiBusinessSection = documentCategoryList?.find(cat => 
+        cat.name === 'Other - Business Records'
+    );
 
     return (
         <LinearGradient
@@ -1608,139 +2122,93 @@ const ResidencyHistoryScreen = ({
 
                 <ScrollView showsVerticalScrollIndicator={false}>
                     
-                    {/* Declaration of Residency */}
-                    <ResidencySection
-                        title="Declaration of Residency / Domicile"
-                        isEnabled={residencyData.declaration?.enabled}
-                        onToggle={(val) => handleSectionToggle('declaration', val)}
-                        onPress={() => handleSectionPress('declaration', residencyData.declaration)}
-                        values={residencyData.declaration}
-                    />
-
-                    {/* Address of Record */}
-                    <ResidencySection
-                        title="Address of Record"
-                        isEnabled={residencyData.addressOfRecord?.enabled}
-                        onToggle={(val) => handleSectionToggle('addressOfRecord', val)}
-                        onPress={() => handleSectionPress('addressOfRecord', residencyData.addressOfRecord)}
-                        values={residencyData.addressOfRecord}
-                    />
-
-                    {/* Property Ownership */}
-                    <ResidencySection
-                        title="Property Ownership"
-                        isEnabled={residencyData.propertyOwnership?.enabled}
-                        onToggle={(val) => handleSectionToggle('propertyOwnership', val)}
-                        onPress={() => handleSectionPress('propertyOwnership', residencyData.propertyOwnership)}
-                        values={residencyData.propertyOwnership}
-                    />
-
-                    {/* Property Exemptions */}
-                    <ResidencySection
-                        title="Property Exemptions"
-                        isEnabled={residencyData.propertyExemptions?.enabled}
-                        onToggle={(val) => handleSectionToggle('propertyExemptions', val)}
-                        onPress={() => handleSectionPress('propertyExemptions', residencyData.propertyExemptions)}
-                        values={residencyData.propertyExemptions}
-                    />
-
-                    {/* Driver's License */}
-                    <ResidencySection
-                        title="Driver's License"
-                        isEnabled={residencyData.driversLicense?.enabled}
-                        onToggle={(val) => handleSectionToggle('driversLicense', val)}
-                        onPress={() => handleSectionPress('driversLicense', residencyData.driversLicense)}
-                        values={residencyData.driversLicense}
-                    />
-
-                    {/* Voting Registration */}
-                    <ResidencySection
-                        title="Voting Registration"
-                        isEnabled={residencyData.votingRegistration?.enabled}
-                        onToggle={(val) => handleSectionToggle('votingRegistration', val)}
-                        onPress={() => handleSectionPress('votingRegistration', residencyData.votingRegistration)}
-                        values={residencyData.votingRegistration}
-                    />
-
-                    {/* Work Location */}
-                    <ResidencySection
-                        title="Work Location"
-                        isEnabled={residencyData.workLocation?.enabled}
-                        onToggle={(val) => handleSectionToggle('workLocation', val)}
-                        onPress={() => handleSectionPress('workLocation', residencyData.workLocation)}
-                        values={residencyData.workLocation}
-                    />
-
-                    {/* Primary Doctor */}
-                    <ResidencySection
-                        title="Primary Doctor"
-                        isEnabled={residencyData.primaryDoctor?.enabled}
-                        onToggle={(val) => handleSectionToggle('primaryDoctor', val)}
-                        onPress={() => handleSectionPress('primaryDoctor', residencyData.primaryDoctor)}
-                        values={residencyData.primaryDoctor}
-                    />
-
-                    {/* Tax Filing */}
-                    <ResidencySection
-                        title="Tax Filing"
-                        isEnabled={residencyData.taxFiling?.enabled}
-                        onToggle={(val) => handleSectionToggle('taxFiling', val)}
-                        onPress={() => handleSectionPress('taxFiling', residencyData.taxFiling)}
-                        values={residencyData.taxFiling}
-                    />
-
-                    {/* Business Records */}
-                    <ResidencySection
-                        title="Business Records"
-                        isEnabled={residencyData.businessRecords?.enabled}
-                        onToggle={(val) => handleSectionToggle('businessRecords', val)}
-                        onPress={() => handleSectionPress('businessRecords', residencyData.businessRecords)}
-                        values={residencyData.businessRecords}
-                        showAddMultiple={residencyData.businessRecords?.enabled}
-                        onAddMultiple={() => handleAddMultiple('businessRecords')}
-                    />
-
-                    {/* Others Section with Multiple Entries */}
-                    <View style={styles.multipleSection}>
-                        <Text style={styles.multipleSectionTitle}>Others</Text>
-                        
-                        {residencyData.others?.map((item, index) => (
+                    {/* Main Sections */}
+                    {mainSections.map((category) => {
+                        const sectionInfo = getSectionData(category);
+                        return (
                             <ResidencySection
-                                key={item.id || index}
-                                title={
-                                    item.type === 'lease' ? 'Property Lease' :
-                                    item.type === 'title' ? 'Vehicle Title' : 'Vehicle Insurance'
-                                }
-                                isEnabled={true}
-                                showToggle={false}
-                                onPress={() => navigation.navigate("ResidencyRecordDetails", { 
-                                    section: 'others',
-                                    data: item 
-                                })}
-                                values={item}
+                                key={category.id}
+                                title={getSectionTitle(category.name)}
+                                // isEnabled={sectionInfo.data?.enabled}
+                                isEnabled={sectionInfo.data !== null}
+                                onToggle={(val) => handleSectionToggle(category, val)}
+                                onPress={() => handleSectionPress(category, sectionInfo)}
+                                values={sectionInfo.data}
+                                showAddMultiple={category.name === 'Business Records' && sectionInfo.data?.enabled}
+                                onAddMultiple={() => handleAddMultiple(category)}
                             />
-                        ))}
+                        );
+                    })}
 
-                        <TouchableOpacity 
-                            style={styles.addOtherButton}
-                            onPress={() => navigation.navigate("CreateResidencyRecord", {
-                                section: 'others',
-                                mode: 'add'
+                    {/* Others Section (Grouped) */}
+                    {otherSections.length > 0 && (
+                        <View style={styles.multipleSection}>
+                            <Text style={styles.multipleSectionTitle}>Others</Text>
+                            
+                            {otherSections.map((category) => {
+                                const sectionInfo = getSectionData(category);
+                                const type = getSectionKeyFromCategory(category.name).split('_')[1];
+                                
+                                return (
+                                    <ResidencySection
+                                        key={category.id}
+                                        title={getSectionTitle(category.name)}
+                                        // isEnabled={sectionInfo.data?.enabled}
+                                        isEnabled={sectionInfo.data !== null}
+                                        onToggle={(val) => handleSectionToggle(category, val)}
+                                        onPress={() => handleSectionPress(category, sectionInfo)}
+                                        values={sectionInfo.data}
+                                        showToggle={true}
+                                    />
+                                );
                             })}
-                        >
-                            <Ionicons name="add-circle" size={24} color={colors.primary} />
-                            <Text style={styles.addOtherText}>Add Other Record</Text>
-                        </TouchableOpacity>
-                    </View>
 
-                    {/* Second Home */}
-                    <ResidencySection
-                        title="Second Home"
-                        isEnabled={residencyData.secondHome?.enabled}
-                        onToggle={(val) => handleSectionToggle('secondHome', val)}
-                        onPress={() => handleSectionPress('secondHome', residencyData.secondHome)}
-                        values={residencyData.secondHome}
-                    />
+                            <TouchableOpacity 
+                                style={styles.addOtherButton}
+                                onPress={() => navigation.navigate("CreateResidencyRecord", {
+                                    section: 'others',
+                                    mode: 'add',
+                                    categories: otherSections
+                                })}
+                            >
+                                <Ionicons name="add-circle" size={24} color={colors.primary} />
+                                <Text style={styles.addOtherText}>Add Other Record</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
+                    {/* Multiple Business Records Section */}
+                    {multiBusinessSection && (
+                        <View style={styles.multipleSection}>
+                            <Text style={styles.multipleSectionTitle}>
+                                {getSectionTitle(multiBusinessSection.name)}
+                            </Text>
+                            
+                            {residencyData.businessRecordsMulti?.map((item, index) => (
+                                <ResidencySection
+                                    key={item.id || index}
+                                    title={`Business Record ${index + 1}`}
+                                    isEnabled={true}
+                                    showToggle={false}
+                                    onPress={() => navigation.navigate("ResidencyRecordDetails", { 
+                                        category: multiBusinessSection,
+                                        sectionKey: 'businessRecordsMulti',
+                                        data: item,
+                                        index
+                                    })}
+                                    values={item}
+                                />
+                            ))}
+
+                            <TouchableOpacity 
+                                style={styles.addOtherButton}
+                                onPress={() => handleAddMultiple(multiBusinessSection)}
+                            >
+                                <Ionicons name="add-circle" size={24} color={colors.primary} />
+                                <Text style={styles.addOtherText}>Add Business Record</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
 
                     <View style={{ height: 60 }} />
                 </ScrollView>
@@ -1787,6 +2255,7 @@ const styles = StyleSheet.create({
 function mapStateToProps(state) {
     return {
         ResidencydocumentList: state.common.ResidencydocumentList,
+        documentCategoryList: state.common.documentCategoryList,
     };
 }
 
@@ -1794,4 +2263,6 @@ export default connect(mapStateToProps, {
     GET_RESIDENCY_RECORD_LIST,
     UPDATE_RESIDENCY_RECORD,
     DELETE_RESIDENCY_RECORD,
+    ADD_DOCUMENT_RECORD,
+    GET_Document_Category_LIST,
 })(ResidencyHistoryScreen);

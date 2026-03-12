@@ -532,6 +532,233 @@
 
 
 // screens/CreateResidencyRecordScreen.js (Partial - Main changes)
+// import React, { useState, useEffect } from "react";
+// import {
+//     View,
+//     Text,
+//     StyleSheet,
+//     ScrollView,
+//     TouchableOpacity,
+//     ActivityIndicator,
+//     KeyboardAvoidingView,
+//     Platform,
+// } from "react-native";
+// import { SafeAreaView } from "react-native-safe-area-context";
+// import LinearGradient from "react-native-linear-gradient";
+// import { useNavigation, useRoute } from "@react-navigation/native";
+// import { connect, useDispatch } from "react-redux";
+// import Header from '../components/Header';
+// import { ADD_DOCUMENT_RECORD, UPDATE_RESIDENCY_RECORD } from "../redux/actions/action-creator";
+// import { CustomToast, GOOGLE_KEY } from "../helpers/CommonHelpers";
+// import colors from "../theme/colors";
+
+// // Import section-specific form components
+// import DeclarationForm from '../components/forms/DeclarationForm';
+// import AddressOfRecordForm from '../components/forms/AddressOfRecordForm';
+// import PropertyOwnershipForm from '../components/forms/PropertyOwnershipForm';
+// import PropertyExemptionsForm from '../components/forms/PropertyExemptionsForm';
+// import DriversLicenseForm from '../components/forms/DriversLicenseForm';
+// import VotingRegistrationForm from '../components/forms/VotingRegistrationForm';
+// import WorkLocationForm from '../components/forms/WorkLocationForm';
+// import PrimaryDoctorForm from '../components/forms/PrimaryDoctorForm';
+// import TaxFilingForm from '../components/forms/TaxFilingForm';
+// import BusinessRecordsForm from '../components/forms/BusinessRecordsForm';
+// import OthersForm from '../components/forms/OthersForm';
+// import SecondHomeForm from '../components/forms/SecondHomeForm';
+
+// const CreateResidencyRecordScreen = ({ 
+//     ADD_DOCUMENT_RECORD,
+//     UPDATE_RESIDENCY_RECORD,
+// }) => {
+//     const navigation = useNavigation();
+//     const route = useRoute();
+//     const dispatch = useDispatch();
+
+//     const { section, mode, editData } = route.params || {};
+//     const [isLoading, setIsLoading] = useState(false);
+//     const [formData, setFormData] = useState({});
+
+//     // Get section title
+//     const getSectionTitle = () => {
+//         const titles = {
+//             declaration: "Declaration of Residency / Domicile",
+//             addressOfRecord: "Address of Record",
+//             propertyOwnership: "Property Ownership",
+//             propertyExemptions: "Property Exemptions",
+//             driversLicense: "Driver's License",
+//             votingRegistration: "Voting Registration",
+//             workLocation: "Work Location",
+//             primaryDoctor: "Primary Doctor",
+//             taxFiling: "Tax Filing",
+//             businessRecords: "Business Records",
+//             others: "Others",
+//             secondHome: "Second Home",
+//         };
+//         return titles[section] || "Add Record";
+//     };
+
+//     // Load edit data if available
+//     useEffect(() => {
+//         if (editData) {
+//             setFormData(editData);
+//         }
+//     }, [editData]);
+
+//     // Render appropriate form based on section
+//     const renderForm = () => {
+//         const formProps = {
+//             data: formData,
+//             onChange: setFormData,
+//             mode: mode,
+//             onSave: handleSave,
+//         };
+
+//         switch(section) {
+//             case 'declaration':
+//                 return <DeclarationForm {...formProps} />;
+//             case 'addressOfRecord':
+//                 return <AddressOfRecordForm {...formProps} />;
+//             case 'propertyOwnership':
+//                 return <PropertyOwnershipForm {...formProps} />;
+//             case 'propertyExemptions':
+//                 return <PropertyExemptionsForm {...formProps} />;
+//             case 'driversLicense':
+//                 return <DriversLicenseForm {...formProps} />;
+//             case 'votingRegistration':
+//                 return <VotingRegistrationForm {...formProps} />;
+//             case 'workLocation':
+//                 return <WorkLocationForm {...formProps} />;
+//             case 'primaryDoctor':
+//                 return <PrimaryDoctorForm {...formProps} />;
+//             case 'taxFiling':
+//                 return <TaxFilingForm {...formProps} />;
+//             case 'businessRecords':
+//                 return <BusinessRecordsForm {...formProps} />;
+//             case 'others':
+//                 return <OthersForm {...formProps} />;
+//             case 'secondHome':
+//                 return <SecondHomeForm {...formProps} />;
+//             default:
+//                 return null;
+//         }
+//     };
+
+//     const handleSave = async (data) => {
+//         setIsLoading(true);
+        
+//         try {
+//             if (mode === 'edit') {
+//                 await UPDATE_RESIDENCY_RECORD(data.id, {
+//                     [section]: data
+//                 });
+//                 CustomToast.show("Updated successfully");
+//             } else {
+//                 await ADD_DOCUMENT_RECORD({
+//                     section,
+//                     data,
+//                     mode
+//                 });
+//                 CustomToast.show("Added successfully");
+//             }
+            
+//             // Navigate back to history screen
+//             navigation.goBack();
+//         } catch (error) {
+//             console.log("Save error:", error);
+//             CustomToast.show("Failed to save");
+//         } finally {
+//             setIsLoading(false);
+//         }
+//     };
+
+//     return (
+//         <LinearGradient
+//             colors={["#9ab1fa", "#ffffff"]}
+//             start={{ x: 1, y: 0 }}
+//             end={{ x: 0.8, y: 0.4 }}
+//             locations={[0.05, 0.55]}
+//             style={{ flex: 1 }}
+//         >
+//             <View style={{ flex: 1, paddingTop: 50 }}>
+//                 <Header title={getSectionTitle()} showBack={true} />
+                
+//                 <KeyboardAvoidingView
+//                     behavior={Platform.OS === "ios" ? "padding" : undefined}
+//                     style={{ flex: 1 }}
+//                 >
+//                     <ScrollView 
+//                         contentContainerStyle={styles.container}
+//                         keyboardShouldPersistTaps="handled"
+//                     >
+//                         <View style={styles.formCard}>
+//                             {renderForm()}
+                            
+//                             <TouchableOpacity
+//                                 style={styles.saveButton}
+//                                 onPress={() => handleSave(formData)}
+//                                 disabled={isLoading}
+//                             >
+//                                 {isLoading ? (
+//                                     <ActivityIndicator color="#fff" />
+//                                 ) : (
+//                                     <Text style={styles.saveText}>
+//                                         {mode === 'edit' ? 'Update' : 'Save'} Record
+//                                     </Text>
+//                                 )}
+//                             </TouchableOpacity>
+//                         </View>
+//                     </ScrollView>
+//                 </KeyboardAvoidingView>
+//             </View>
+//         </LinearGradient>
+//     );
+// };
+
+// const styles = StyleSheet.create({
+//     container: {
+//         padding: 16,
+//     },
+//     formCard: {
+//         backgroundColor: '#fff',
+//         borderRadius: 20,
+//         padding: 20,
+//         shadowColor: "#000",
+//         shadowOpacity: 0.08,
+//         shadowRadius: 15,
+//         elevation: 3,
+//     },
+//     saveButton: {
+//         backgroundColor: colors.primary,
+//         paddingVertical: 16,
+//         borderRadius: 30,
+//         alignItems: "center",
+//         marginTop: 20,
+//     },
+//     saveText: {
+//         color: "#fff",
+//         fontWeight: "700",
+//         fontSize: 16,
+//     },
+// });
+
+// function mapStateToProps(state) {
+//     return {
+//         // Add any required state
+//     };
+// }
+
+// export default connect(mapStateToProps, {
+//     ADD_DOCUMENT_RECORD,
+//     UPDATE_RESIDENCY_RECORD,
+// })(CreateResidencyRecordScreen);
+
+
+
+
+
+
+
+// screens/CreateResidencyRecordScreen.js
 import React, { useState, useEffect } from "react";
 import {
     View,
@@ -549,13 +776,11 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { connect, useDispatch } from "react-redux";
 import Header from '../components/Header';
 import { ADD_DOCUMENT_RECORD, UPDATE_RESIDENCY_RECORD } from "../redux/actions/action-creator";
-import { CustomToast, GOOGLE_KEY } from "../helpers/CommonHelpers";
+import { CustomToast } from "../helpers/CommonHelpers";
 import colors from "../theme/colors";
 
-// Import section-specific form components
+// Import all form components
 import DeclarationForm from '../components/forms/DeclarationForm';
-import AddressOfRecordForm from '../components/forms/AddressOfRecordForm';
-import PropertyOwnershipForm from '../components/forms/PropertyOwnershipForm';
 import PropertyExemptionsForm from '../components/forms/PropertyExemptionsForm';
 import DriversLicenseForm from '../components/forms/DriversLicenseForm';
 import VotingRegistrationForm from '../components/forms/VotingRegistrationForm';
@@ -565,6 +790,8 @@ import TaxFilingForm from '../components/forms/TaxFilingForm';
 import BusinessRecordsForm from '../components/forms/BusinessRecordsForm';
 import OthersForm from '../components/forms/OthersForm';
 import SecondHomeForm from '../components/forms/SecondHomeForm';
+import AddressOfRecordForm from '../components/forms/AddressOfRecordForm';
+import PropertyOwnershipForm from '../components/forms/PropertyOwnershipForm';
 
 const CreateResidencyRecordScreen = ({ 
     ADD_DOCUMENT_RECORD,
@@ -574,102 +801,377 @@ const CreateResidencyRecordScreen = ({
     const route = useRoute();
     const dispatch = useDispatch();
 
-    const { section, mode, editData } = route.params || {};
+    const { category, mode, editData, sectionKey } = route.params || {};
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({});
 
-    // Get section title
-    const getSectionTitle = () => {
-        const titles = {
-            declaration: "Declaration of Residency / Domicile",
-            addressOfRecord: "Address of Record",
-            propertyOwnership: "Property Ownership",
-            propertyExemptions: "Property Exemptions",
-            driversLicense: "Driver's License",
-            votingRegistration: "Voting Registration",
-            workLocation: "Work Location",
-            primaryDoctor: "Primary Doctor",
-            taxFiling: "Tax Filing",
-            businessRecords: "Business Records",
-            others: "Others",
-            secondHome: "Second Home",
-        };
-        return titles[section] || "Add Record";
-    };
+    console.log('========== DEBUG ==========');
+    console.log('Route Params:', route.params);
+    console.log('Category:', category);
+    console.log('Category Name:', category?.name);
+    console.log('Mode:', mode);
+    console.log('Edit Data:', editData);
+    console.log('===========================');
 
-    // Load edit data if available
+    // Initialize form data based on editData or category
     useEffect(() => {
         if (editData) {
-            setFormData(editData);
+            // If editing existing data, map API response to form structure
+            mapApiDataToForm(editData);
+        } else {
+            // Initialize empty form based on category
+            initializeEmptyForm();
         }
-    }, [editData]);
+    }, [editData, category]);
 
-    // Render appropriate form based on section
+    // Map API response to form structure
+    const mapApiDataToForm = (apiData) => {
+        console.log('Mapping API Data:', apiData);
+        
+        const mappedData = {
+            id: apiData.id,
+            categoryId: apiData.categoryId,
+            enabled: true,
+            ...(apiData.metadata || {}), // Spread metadata fields
+        };
+
+        // Add any additional fields from main response
+        if (apiData.attachmentUrl) {
+            mappedData.document = { uri: apiData.attachmentUrl, name: 'Attachment' };
+        }
+
+        console.log('Mapped Form Data:', mappedData);
+        setFormData(mappedData);
+    };
+
+    // Initialize empty form based on category
+    const initializeEmptyForm = () => {
+        console.log('Initializing empty form for category:', category?.name);
+        
+        const emptyForm = {
+            categoryId: category?.id,
+            enabled: true,
+        };
+
+        // Add category-specific empty fields
+        switch(category?.name) {
+            case 'Declaration of Residency':
+                emptyForm.date = null;
+                break;
+            case 'Property Exemptions':
+                emptyForm.startDate = null;
+                emptyForm.address = '';
+                emptyForm.type = '';
+                break;
+            case 'Drivers License':
+                emptyForm.issueDate = null;
+                emptyForm.state = '';
+                emptyForm.number = '';
+                emptyForm.document = null;
+                break;
+            case 'Voting Registration':
+                emptyForm.registrationDate = null;
+                emptyForm.state = '';
+                emptyForm.county = '';
+                emptyForm.city = '';
+                emptyForm.document = null;
+                break;
+            case 'Work location':
+                emptyForm.startDate = null;
+                emptyForm.address = '';
+                emptyForm.document = null;
+                break;
+            case 'Primary Doctor':
+                emptyForm.startDate = null;
+                emptyForm.address = '';
+                break;
+            case 'Tax Filing':
+                emptyForm.lastFileDate = null;
+                emptyForm.state = '';
+                emptyForm.yearsFiled = '';
+                break;
+            case 'Business Records':
+                emptyForm.isActive = false;
+                emptyForm.name = '';
+                emptyForm.startDate = null;
+                emptyForm.regNumber = '';
+                emptyForm.dissolutionDate = null;
+                emptyForm.document = null;
+                break;
+            case 'Other - Property Lease':
+                emptyForm.type = 'lease';
+                emptyForm.startDate = null;
+                emptyForm.details = '';
+                emptyForm.document = null;
+                break;
+            case 'Other - Vehicle Title':
+                emptyForm.type = 'title';
+                emptyForm.startDate = null;
+                emptyForm.details = '';
+                emptyForm.document = null;
+                break;
+            case 'Other - Vehicle Insurance':
+                emptyForm.type = 'insurance';
+                emptyForm.startDate = null;
+                emptyForm.details = '';
+                emptyForm.document = null;
+                break;
+            case 'Other - Second home':
+                emptyForm.dateEstablished = null;
+                emptyForm.address = '';
+                emptyForm.owns = false;
+                emptyForm.exemptions = false;
+                emptyForm.dissolutionDate = null;
+                break;
+            case 'Address of Record':
+                emptyForm.dateEstablished = null;
+                emptyForm.address = '';
+                break;
+            case 'Property Ownership':
+                emptyForm.owns = false;
+                break;
+            default:
+                console.log('Unknown category:', category?.name);
+        }
+
+        console.log('Initialized Empty Form:', emptyForm);
+        setFormData(emptyForm);
+    };
+
+    // Get form title
+    const getFormTitle = () => {
+        if (mode === 'edit') return `Edit ${category?.name || 'Record'}`;
+        return `Add ${category?.name || 'Record'}`;
+    };
+
+    // Render appropriate form based on category
     const renderForm = () => {
+        console.log('Rendering form for category:', category?.name);
+        
         const formProps = {
             data: formData,
             onChange: setFormData,
             mode: mode,
-            onSave: handleSave,
         };
 
-        switch(section) {
-            case 'declaration':
+        // Log available form components
+        console.log('Available Forms:', {
+            'Declaration of Residency': !!DeclarationForm,
+            'Property Exemptions': !!PropertyExemptionsForm,
+            'Drivers License': !!DriversLicenseForm,
+            'Voting Registration': !!VotingRegistrationForm,
+            'Work location': !!WorkLocationForm,
+            'Primary Doctor': !!PrimaryDoctorForm,
+            'Tax Filing': !!TaxFilingForm,
+            'Business Records': !!BusinessRecordsForm,
+            'Other - Property Lease': !!OthersForm,
+            'Other - Vehicle Title': !!OthersForm,
+            'Other - Vehicle Insurance': !!OthersForm,
+            'Other - Second home': !!SecondHomeForm,
+            'Address of Record': !!AddressOfRecordForm,
+            'Property Ownership': !!PropertyOwnershipForm,
+        });
+
+        switch(category?.name) {
+            case 'Declaration of Residency':
                 return <DeclarationForm {...formProps} />;
-            case 'addressOfRecord':
+            case 'Address of Record':
                 return <AddressOfRecordForm {...formProps} />;
-            case 'propertyOwnership':
+            case 'Property Ownership':
                 return <PropertyOwnershipForm {...formProps} />;
-            case 'propertyExemptions':
+            case 'Property Exemptions':
                 return <PropertyExemptionsForm {...formProps} />;
-            case 'driversLicense':
+            case 'Drivers License':
                 return <DriversLicenseForm {...formProps} />;
-            case 'votingRegistration':
+            case 'Voting Registration':
                 return <VotingRegistrationForm {...formProps} />;
-            case 'workLocation':
+            case 'Work location':
                 return <WorkLocationForm {...formProps} />;
-            case 'primaryDoctor':
+            case 'Primary Doctor':
                 return <PrimaryDoctorForm {...formProps} />;
-            case 'taxFiling':
+            case 'Tax Filing':
                 return <TaxFilingForm {...formProps} />;
-            case 'businessRecords':
+            case 'Business Records':
                 return <BusinessRecordsForm {...formProps} />;
-            case 'others':
+            case 'Other - Property Lease':
+            case 'Other - Vehicle Title':
+            case 'Other - Vehicle Insurance':
                 return <OthersForm {...formProps} />;
-            case 'secondHome':
+            case 'Other - Second home':
                 return <SecondHomeForm {...formProps} />;
             default:
-                return null;
+                console.log('No form found for category:', category?.name);
+                return (
+                    <View style={styles.errorContainer}>
+                        <Text style={styles.errorText}>Form not found for "{category?.name}"</Text>
+                        <Text style={styles.debugText}>Category ID: {category?.id}</Text>
+                        <Text style={styles.debugText}>Available Categories: </Text>
+                        {['Declaration of Residency', 'Property Exemptions', 'Drivers License', 
+                          'Voting Registration', 'Work location', 'Primary Doctor', 'Tax Filing', 
+                          'Business Records', 'Other - Property Lease', 'Other - Vehicle Title', 
+                          'Other - Vehicle Insurance', 'Other - Second home', 'Address of Record', 
+                          'Property Ownership'].map(cat => (
+                            <Text key={cat} style={styles.debugItem}>• {cat}</Text>
+                        ))}
+                    </View>
+                );
         }
     };
 
-    const handleSave = async (data) => {
-        setIsLoading(true);
-        
-        try {
-            if (mode === 'edit') {
-                await UPDATE_RESIDENCY_RECORD(data.id, {
-                    [section]: data
-                });
-                CustomToast.show("Updated successfully");
-            } else {
-                await ADD_DOCUMENT_RECORD({
-                    section,
-                    data,
-                    mode
-                });
-                CustomToast.show("Added successfully");
-            }
+    // Prepare data for API
+// screens/CreateResidencyRecordScreen.js - Updated prepareApiData function
+
+// Prepare data for API
+const prepareApiData = () => {
+    const { document, ...rest } = formData;
+    
+    // Required fields check
+    if (!category?.id) {
+        CustomToast.show("Category ID is missing");
+        return null;
+    }
+
+    // Prepare metadata as JSON string
+    const metadataObj = {};
+    
+    // Collect all relevant fields into metadata object
+    Object.keys(rest).forEach(key => {
+        if (['issueDate', 'issuingState', 'licenseNumber', 'date', 'startDate', 
+             'registrationDate', 'lastFileDate', 'dateEstablished', 'yearsFiled',
+             'isActive', 'dissolutionDate', 'type', 'details', 'owns', 'exemptions',
+             'state', 'county', 'city', 'address', 'name', 'regNumber', 
+             'issuingState', 'licenseNumber', 'number', 'type'].includes(key)) {
             
-            // Navigate back to history screen
-            navigation.goBack();
-        } catch (error) {
-            console.log("Save error:", error);
-            CustomToast.show("Failed to save");
-        } finally {
-            setIsLoading(false);
+            // Only add if value exists
+            if (rest[key] !== null && rest[key] !== undefined && rest[key] !== '') {
+                metadataObj[key] = rest[key];
+            }
         }
+    });
+
+    // Convert metadata to JSON string (as API expects)
+    const metadataString = JSON.stringify(metadataObj);
+    
+    console.log('Metadata Object:', metadataObj);
+    console.log('Metadata String:', metadataString);
+
+    // Prepare dates
+    const today = new Date().toISOString();
+    const nextYear = new Date(Date.now() + 365*24*60*60*1000).toISOString();
+
+    // Get issue date from metadata
+    let issueDate = metadataObj.issueDate || metadataObj.startDate || metadataObj.date || 
+                    metadataObj.registrationDate || metadataObj.lastFileDate || today;
+    
+    // Get renew date (if dissolution date exists, use it, otherwise use next year)
+    let renewDate = metadataObj.dissolutionDate || nextYear;
+
+    // Ensure dates are in correct format
+    if (issueDate && !issueDate.includes('T')) {
+        issueDate = new Date(issueDate).toISOString();
+    }
+    if (renewDate && !renewDate.includes('T')) {
+        renewDate = new Date(renewDate).toISOString();
+    }
+
+    // Get state and city from appropriate fields
+    const state = metadataObj.state || metadataObj.issuingState || '';
+    const city = metadataObj.city || '';
+
+    // Prepare final API data
+    const apiData = {
+        categoryId: category.id,
+        title: `${category.name} - Record`,
+        state: state,
+        city: city,
+        issueDate: issueDate,
+        renewDate: renewDate,
+        notes: metadataObj.details || metadataObj.notes || '',
+        metadata: metadataString,  // ✅ Send as string, not object
     };
+
+    // Add document if exists (as FormData for file upload)
+    if (document) {
+        // If you need to handle file upload, you might need FormData
+        // For now, we'll just log it
+        console.log('Document to upload:', document);
+        apiData.attachment = document;
+    }
+
+    console.log('Final API Data:', apiData);
+    
+    return apiData;
+};
+
+    // Handle form submission
+    // const handleSubmit = async () => {
+    //     setIsLoading(true);
+
+    //     try {
+    //         const apiData = prepareApiData();
+    //         console.log('Submitting API Data:', apiData);
+            
+    //         if (mode === 'edit' && editData?.id) {
+    //             await dispatch(UPDATE_RESIDENCY_RECORD(editData.id, apiData));
+    //             CustomToast.show("Updated successfully");
+    //         } else {
+    //             await ADD_DOCUMENT_RECORD(apiData);
+    //             CustomToast.show("Added successfully");
+    //         }
+            
+    //         navigation.goBack();
+    //     } catch (error) {
+    //         console.log("Save error:", error);
+    //         CustomToast.show("Failed to save");
+    //     } finally {
+    //         setIsLoading(false);
+    //     }
+    // };
+    // Handle form submission
+const handleSubmit = async () => {
+    // Basic validation
+    if (!category?.id) {
+        CustomToast.show("Category is required");
+        return;
+    }
+
+    setIsLoading(true);
+
+    try {
+        const apiData = prepareApiData();
+        
+        if (!apiData) {
+            setIsLoading(false);
+            return;
+        }
+
+        console.log('Submitting API Data:', JSON.stringify(apiData, null, 2));
+        
+        let response;
+        
+        if (mode === 'edit' && editData?.id) {
+            response = await dispatch(UPDATE_RESIDENCY_RECORD(editData.id, apiData));
+        } else {
+            response = await ADD_DOCUMENT_RECORD(apiData);
+        }
+        
+        console.log('API Response:', response);
+        
+        if (response?.success || response?.message === "Success") {
+            CustomToast.show(mode === 'edit' ? "Updated successfully" : "Added successfully");
+            navigation.goBack();
+        } else {
+            CustomToast.show(response?.message || "Failed to save");
+            navigation.goBack();
+        }
+    } catch (error) {
+        console.log("Save error:", error);
+        console.log("Error response:", error?.response?.data);
+        CustomToast.show(error?.response?.data?.message || "Failed to save");
+    } finally {
+        setIsLoading(false);
+    }
+};
 
     return (
         <LinearGradient
@@ -680,7 +1182,7 @@ const CreateResidencyRecordScreen = ({
             style={{ flex: 1 }}
         >
             <View style={{ flex: 1, paddingTop: 50 }}>
-                <Header title={getSectionTitle()} showBack={true} />
+                <Header title={getFormTitle()} showBack={true} />
                 
                 <KeyboardAvoidingView
                     behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -691,11 +1193,16 @@ const CreateResidencyRecordScreen = ({
                         keyboardShouldPersistTaps="handled"
                     >
                         <View style={styles.formCard}>
+                            {/* Show category name for debugging
+                            <Text style={styles.debugCategory}>
+                                Category: {category?.name || 'Unknown'}
+                            </Text> */}
+                            
                             {renderForm()}
                             
                             <TouchableOpacity
                                 style={styles.saveButton}
-                                onPress={() => handleSave(formData)}
+                                onPress={handleSubmit}
                                 disabled={isLoading}
                             >
                                 {isLoading ? (
@@ -738,6 +1245,36 @@ const styles = StyleSheet.create({
         color: "#fff",
         fontWeight: "700",
         fontSize: 16,
+    },
+    errorContainer: {
+        padding: 20,
+        alignItems: 'center',
+    },
+    errorText: {
+        color: 'red',
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 10,
+    },
+    debugText: {
+        fontSize: 12,
+        color: '#666',
+        marginTop: 5,
+    },
+    debugItem: {
+        fontSize: 11,
+        color: '#999',
+        marginLeft: 10,
+    },
+    debugCategory: {
+        fontSize: 14,
+        color: colors.primary,
+        fontWeight: '600',
+        marginBottom: 10,
+        textAlign: 'center',
+        padding: 8,
+        backgroundColor: '#F0F0F0',
+        borderRadius: 8,
     },
 });
 

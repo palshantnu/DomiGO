@@ -420,7 +420,7 @@ export const ADD_DOCUMENT_RECORD = (formData) => {
     try {
       const response = await axiosinstance.post(EndPoints.addDocumentRecords, formData)
       const responseJson = response.data;
-      // console.log('responseJson=--------=>', responseJson);
+      console.log('responseJson=--------=>', responseJson);
 
       if (response.message == 'Success') {
         dispatch({
@@ -436,6 +436,18 @@ export const ADD_DOCUMENT_RECORD = (formData) => {
       return ({ response: responseJson })
     }
     catch (e) {
+      if (e.response) {
+        // Server ne response diya (400, 500 etc)
+        console.log('Status:', e.response.status);
+        console.log('Data:', e.response.data);
+        console.log('Headers:', e.response.headers);
+      } else if (e.request) {
+        // Request gayi but response nahi aaya
+        console.log('No response:', e.request);
+      } else {
+        // Request set karte time e
+        console.log('e message:', e.message);
+      }
       dispatch({
         type: ADD_DOCUMENT_RECORD_FAILURE,
         payload: 'ADD_DOCUMENT_RECORD_FAILURE',
