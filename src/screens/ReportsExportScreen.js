@@ -13,6 +13,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import LinearGradient from "react-native-linear-gradient";
 import { connect } from "react-redux";
 import { GET_REPORTS, GET_WEEK_WISE_TIMELINE} from '../redux/actions/action-creator';
+import FeatureGateWrapper from '../components/FeatureGateWrapper';
+import { FEATURES } from '../config/featureAccess';
 
 
  function ReportsExportScreen({GET_WEEK_WISE_TIMELINE, weekWiseTimeline,GET_REPORTS,resportsList}) {
@@ -157,20 +159,22 @@ import { GET_REPORTS, GET_WEEK_WISE_TIMELINE} from '../redux/actions/action-crea
                             </View>
                         </View>
 
-                        <View style={styles.summaryBox}>
-                            <View style={{ flexDirection: 'row', width: '100%', }}>
-                                <Ionicons name="stats-chart-outline" size={20} style={{ marginTop: 10 }} color={colors.primary} />
-                                <View style={{ marginLeft: 5 }}>
-                                    <Text style={{ ...styles.summaryValue, fontSize: 15, flex: 1, marginRight: 8 }}>
-                                        Compliance
-                                        Score</Text>
-                                    <Text style={styles.summaryValue}>{resportsList?.summary?.complianceScore}</Text>
-                                    <Text style={styles.summaryLabel}>
-                                        Your current estimated tax compliance.
-                                    </Text>
+                        <FeatureGateWrapper feature={FEATURES.COMPLIANCE_SCORE} featureName="Compliance Score">
+                            <View style={styles.summaryBox}>
+                                <View style={{ flexDirection: 'row', width: '100%', }}>
+                                    <Ionicons name="stats-chart-outline" size={20} style={{ marginTop: 10 }} color={colors.primary} />
+                                    <View style={{ marginLeft: 5 }}>
+                                        <Text style={{ ...styles.summaryValue, fontSize: 15, flex: 1, marginRight: 8 }}>
+                                            Compliance
+                                            Score</Text>
+                                        <Text style={styles.summaryValue}>{resportsList?.summary?.complianceScore}</Text>
+                                        <Text style={styles.summaryLabel}>
+                                            Your current estimated tax compliance.
+                                        </Text>
+                                    </View>
                                 </View>
                             </View>
-                        </View>
+                        </FeatureGateWrapper>
                     </View>
                     {/* Table */}
                     <Text style={styles.sectionTitle}>State-Wise Residency Breakdown</Text>
@@ -195,22 +199,24 @@ import { GET_REPORTS, GET_WEEK_WISE_TIMELINE} from '../redux/actions/action-crea
                     </View>
 
                     {/* Export */}
-                    <View style={styles.exportCard}>
-                        <View style={{ flexDirection: 'row', width: '100%', }}>
-                            <Ionicons name="document-text-outline" style={{ marginTop: 15, width: '25%' }} size={56} color={'#65C466'} />
-                            <View style={{ paddingRight: 10 , width: '75%'}}>
-                                <Text style={styles.exportTitle}>Generate Full Report</Text>
-                                <Text style={styles.exportDesc}>
-                                    Download a comprehensive report of your tax residency history and compliance status.
-                                </Text>
+                    <FeatureGateWrapper feature={FEATURES.EXPORT_REPORTS} featureName="Export Reports">
+                        <View style={styles.exportCard}>
+                            <View style={{ flexDirection: 'row', width: '100%', }}>
+                                <Ionicons name="document-text-outline" style={{ marginTop: 15, width: '25%' }} size={56} color={'#65C466'} />
+                                <View style={{ paddingRight: 10 , width: '75%'}}>
+                                    <Text style={styles.exportTitle}>Generate Full Report</Text>
+                                    <Text style={styles.exportDesc}>
+                                        Download a comprehensive report of your tax residency history and compliance status.
+                                    </Text>
 
-                                <TouchableOpacity style={styles.exportBtn}>
-                                    <Ionicons name="download-outline" size={18} color="#fff" />
-                                    <Text style={styles.exportBtnText}>Export Now</Text>
-                                </TouchableOpacity>
+                                    <TouchableOpacity style={styles.exportBtn}>
+                                        <Ionicons name="download-outline" size={18} color="#fff" />
+                                        <Text style={styles.exportBtnText}>Export Now</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         </View>
-                    </View>
+                    </FeatureGateWrapper>
 
                 </ScrollView>
             </SafeAreaView>

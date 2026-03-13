@@ -420,7 +420,7 @@ export const ADD_DOCUMENT_RECORD = (formData) => {
     try {
       const response = await axiosinstance.post(EndPoints.addDocumentRecords, formData)
       const responseJson = response.data;
-      console.log('responseJson=--------=>', responseJson);
+      // console.log('responseJson=--------=>', responseJson);
 
       if (response.message == 'Success') {
         dispatch({
@@ -436,18 +436,6 @@ export const ADD_DOCUMENT_RECORD = (formData) => {
       return ({ response: responseJson })
     }
     catch (e) {
-      if (e.response) {
-        // Server ne response diya (400, 500 etc)
-        console.log('Status:', e.response.status);
-        console.log('Data:', e.response.data);
-        console.log('Headers:', e.response.headers);
-      } else if (e.request) {
-        // Request gayi but response nahi aaya
-        console.log('No response:', e.request);
-      } else {
-        // Request set karte time e
-        console.log('e message:', e.message);
-      }
       dispatch({
         type: ADD_DOCUMENT_RECORD_FAILURE,
         payload: 'ADD_DOCUMENT_RECORD_FAILURE',
@@ -1366,3 +1354,96 @@ export const changeAppLanguageAction = (language) => (dispatch) => {
     payload: language,
   })
 }
+
+// ==================== SUBSCRIPTION ====================
+
+import {
+  SET_SUBSCRIPTION_PLAN,
+  SET_SUBSCRIPTION_LOADING,
+  SET_SUBSCRIPTION_ERROR,
+  CLEAR_SUBSCRIPTION,
+  SET_SUBSCRIPTION_PRODUCTS,
+  SET_TRIAL_START,
+} from './action-types';
+import * as SubscriptionService from '../../services/subscriptionService';
+
+export const FETCH_SUBSCRIPTION_PRODUCTS = () => async (dispatch) => {
+  dispatch({ type: SET_SUBSCRIPTION_LOADING, payload: true });
+  try {
+    const products = await SubscriptionService.fetchProducts();
+    dispatch({ type: SET_SUBSCRIPTION_PRODUCTS, payload: products });
+  } catch (error) {
+    dispatch({ type: SET_SUBSCRIPTION_ERROR, payload: error.message });
+  }
+};
+
+export const PURCHASE_SUBSCRIPTION = (sku) => async (dispatch) => {
+  dispatch({ type: SET_SUBSCRIPTION_LOADING, payload: true });
+  try {
+    await SubscriptionService.buySubscription(sku);
+    // Actual completion handled by purchaseUpdatedListener in App.tsx
+  } catch (error) {
+    dispatch({ type: SET_SUBSCRIPTION_ERROR, payload: error.message });
+  }
+};
+
+export const RESTORE_SUBSCRIPTION = () => async (dispatch) => {
+  dispatch({ type: SET_SUBSCRIPTION_LOADING, payload: true });
+  try {
+    const purchases = await SubscriptionService.restorePurchases();
+    if (purchases.length > 0) {
+      const sorted = [...purchases].sort(
+        (a, b) => b.transactionDate - a.transactionDate
+      );
+      const latest = sorted[0];
+      const plan = SubscriptionService.productIdToPlan(latest.productId);
+      const expiryDate = SubscriptionService.calculateExpiry(latest.transactionDate);
+
+      if (new Date(expiryDate) > new Date()) {
+        dispatch({
+          type: SET_SUBSCRIPTION_PLAN,
+          payload: {
+            plan,
+            productId: latest.productId,
+            purchaseDate: new Date(latest.transactionDate).toISOString(),
+            expiryDate,
+            receipt: latest.transactionReceipt,
+          },
+        });
+        return { restored: true, plan };
+      }
+    }
+    dispatch({ type: CLEAR_SUBSCRIPTION });
+    return { restored: false };
+  } catch (error) {
+    dispatch({ type: SET_SUBSCRIPTION_ERROR, payload: error.message });
+    return { restored: false, error: error.message };
+  }
+};
+
+export const SET_PLAN_FROM_PURCHASE = (purchase) => (dispatch) => {
+  const plan = SubscriptionService.productIdToPlan(purchase.productId);
+  const expiryDate = SubscriptionService.calculateExpiry(purchase.transactionDate);
+
+  dispatch({
+    type: SET_SUBSCRIPTION_PLAN,
+    payload: {
+      plan,
+      productId: purchase.productId,
+      purchaseDate: new Date(purchase.transactionDate).toISOString(),
+      expiryDate,
+      receipt: purchase.transactionReceipt,
+    },
+  });
+};
+
+export const INIT_TRIAL = () => (dispatch, getState) => {
+  const { subscription } = getState();
+  if (!subscription.trialStartDate) {
+    dispatch({ type: SET_TRIAL_START, payload: new Date().toISOString() });
+  }
+};
+
+export const CLEAR_USER_SUBSCRIPTION = () => (dispatch) => {
+  dispatch({ type: CLEAR_SUBSCRIPTION });
+};

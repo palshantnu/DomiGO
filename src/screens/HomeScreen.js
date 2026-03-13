@@ -30,6 +30,9 @@ import { useGPSListener } from '../hooks/useGPSListener';
 import { openLocationSettings } from '../helpers/locationRedirect';
 import { getStateShortCode } from '../utils/getStateShortCode';
 import { CustomToast } from '../helpers/CommonHelpers';
+import FeatureGateWrapper from '../components/FeatureGateWrapper';
+import TrialBanner from '../components/TrialBanner';
+import { FEATURES } from '../config/featureAccess';
 
 
 
@@ -239,6 +242,8 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                         </View>
                     </View> */}
 
+                    <TrialBanner />
+
                     <View style={styles.metricsContainer}>
 
                         {/* DAYS IN */}
@@ -263,19 +268,21 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                             </Text> */}
                         </View>
 
-                        <TouchableOpacity
-                            style={styles.metricBox}
-                            onPress={() => navigation.navigate('ReportsExport')}
-                        >
-                            <Text style={styles.metricValue}>
-                                {complianceScore?.complianceScore ?? 0}%
-                            </Text>
-                            <Text style={styles.metricLabel}>Readiness</Text>
-                            <Text style={[styles.metricLabel, { marginTop: 0 }]}> Score</Text>
-                            <Text style={styles.metricSub}>
-                                {finalYearProgress?.missingDays ?? 0} missing days
-                            </Text>
-                        </TouchableOpacity>
+                        <FeatureGateWrapper feature={FEATURES.READINESS_SCORE} featureName="Readiness Score">
+                            <TouchableOpacity
+                                style={styles.metricBox}
+                                onPress={() => navigation.navigate('ReportsExport')}
+                            >
+                                <Text style={styles.metricValue}>
+                                    {complianceScore?.complianceScore ?? 0}%
+                                </Text>
+                                <Text style={styles.metricLabel}>Readiness</Text>
+                                <Text style={[styles.metricLabel, { marginTop: 0 }]}> Score</Text>
+                                <Text style={styles.metricSub}>
+                                    {finalYearProgress?.missingDays ?? 0} missing days
+                                </Text>
+                            </TouchableOpacity>
+                        </FeatureGateWrapper>
 
                     </View>
 

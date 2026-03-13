@@ -15,6 +15,8 @@ import DateInput from "../components/DateInput";
 import DocumentUpload from "../components/DocumentUpload";
 import MultiEntryBlock from "../components/MultiEntryBlock";
 import colors from "../theme/colors";
+import FeatureGateWrapper from "../components/FeatureGateWrapper";
+import { FEATURES } from "../config/featureAccess";
 
 const initialState = {
     declaration: { enabled: false, date: "" },

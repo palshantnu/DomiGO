@@ -16,6 +16,7 @@ import ResidencyHistoryScreen from '../screens/ResidencyRecords';
 import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 import HelpSupportScreen from '../screens/HelpSupportScreen';
 import AboutUsScreen from '../screens/AboutUsScreen';
+import SubscriptionScreen from '../screens/SubscriptionScreen';
 
 
 export default function SettingsNavigation() {
@@ -87,10 +88,11 @@ export default function SettingsNavigation() {
           component={AboutUsScreen}
           options={{ headerShown: false }}
         />
-
-     
-       
-
+        <Stack.Screen
+          name="SubscriptionScreen"
+          component={SubscriptionScreen}
+          options={{ headerShown: false }}
+        />
       </Stack.Navigator>
     );
   }

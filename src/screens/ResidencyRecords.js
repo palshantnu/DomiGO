@@ -637,7 +637,7 @@
 //                         showsVerticalScrollIndicator={false}
 //                     >
 //                         <View style={styles.whiteCard}>
-                            
+
 //                             {/* ========== DECLARATION OF RESIDENCY ========== */}
 //                             <ToggleSection
 //                                 title="Declaration of Residency / Domicile"
@@ -938,7 +938,7 @@
 //                             {/* ========== OTHERS (Multiple Entries) ========== */}
 //                             <View style={styles.section}>
 //                                 <Text style={styles.sectionTitle}>Others</Text>
-                                
+
 //                                 {/* Add Buttons for different types */}
 //                                 <View style={styles.addButtonsRow}>
 //                                     <TouchableOpacity
@@ -948,7 +948,7 @@
 //                                         <Ionicons name="add-circle" size={20} color={colors.primary} />
 //                                         <Text style={styles.addButtonText}>Property Lease</Text>
 //                                     </TouchableOpacity>
-                                    
+
 //                                     <TouchableOpacity
 //                                         style={styles.addButton}
 //                                         onPress={() => addOtherEntry('title')}
@@ -956,7 +956,7 @@
 //                                         <Ionicons name="add-circle" size={20} color={colors.primary} />
 //                                         <Text style={styles.addButtonText}>Vehicle Title</Text>
 //                                     </TouchableOpacity>
-                                    
+
 //                                     <TouchableOpacity
 //                                         style={styles.addButton}
 //                                         onPress={() => addOtherEntry('insurance')}
@@ -980,7 +980,7 @@
 //                                                 <Ionicons name="close-circle" size={24} color="#E53935" />
 //                                             </TouchableOpacity>
 //                                         </View>
-                                        
+
 //                                         <DateField
 //                                             icon="calendar-outline"
 //                                             label="Start Date"
@@ -990,14 +990,14 @@
 //                                                 visible: true
 //                                             })}
 //                                         />
-                                        
+
 //                                         <InputField
 //                                             icon="document-text-outline"
 //                                             placeholder="Details"
 //                                             value={item.details}
 //                                             onChangeText={(val) => updateOtherEntry(item.id, 'details', val)}
 //                                         />
-                                        
+
 //                                         <DocumentPickerField
 //                                             fileName={item.document?.name}
 //                                             onPick={() => pickOtherDocument(item.id)}
@@ -1017,7 +1017,7 @@
 //                                         value={secondHome.enabled}
 //                                     />
 //                                 </View>
-                                
+
 //                                 {secondHome.enabled && (
 //                                     <View style={styles.sectionContent}>
 //                                         <DateField
@@ -1029,7 +1029,7 @@
 //                                                 visible: true
 //                                             })}
 //                                         />
-                                        
+
 //                                         <GoogleAutoComplete
 //                                             placeholder="Address"
 //                                             apiKey={GOOGLE_KEY}
@@ -1037,7 +1037,7 @@
 //                                             value={secondHome.address}
 //                                             onSelect={(value) => setSecondHome(prev => ({ ...prev, address: value }))}
 //                                         />
-                                        
+
 //                                         <View style={styles.yesNoRow}>
 //                                             <Text style={styles.label}>Do you own this property?</Text>
 //                                             <View style={styles.yesNoButtons}>
@@ -1067,7 +1067,7 @@
 //                                                 </TouchableOpacity>
 //                                             </View>
 //                                         </View>
-                                        
+
 //                                         <View style={styles.yesNoRow}>
 //                                             <Text style={styles.label}>Property Exemptions?</Text>
 //                                             <View style={styles.yesNoButtons}>
@@ -1097,7 +1097,7 @@
 //                                                 </TouchableOpacity>
 //                                             </View>
 //                                         </View>
-                                        
+
 //                                         {!secondHome.exemptions && (
 //                                             <DateField
 //                                                 icon="calendar-outline"
@@ -1116,7 +1116,7 @@
 //                             {/* ========== MULTIPLE BUSINESS RECORDS ========== */}
 //                             <View style={styles.section}>
 //                                 <Text style={styles.sectionTitle}>Business Records (Multiple States)</Text>
-                                
+
 //                                 <TouchableOpacity
 //                                     style={styles.addBusinessButton}
 //                                     onPress={addBusinessRecord}
@@ -1135,7 +1135,7 @@
 //                                                 <Ionicons name="close-circle" size={24} color="#E53935" />
 //                                             </TouchableOpacity>
 //                                         </View>
-                                        
+
 //                                         <View style={styles.yesNoRow}>
 //                                             <Text style={styles.label}>Registered active business?</Text>
 //                                             <View style={styles.yesNoButtons}>
@@ -1165,7 +1165,7 @@
 //                                                 </TouchableOpacity>
 //                                             </View>
 //                                         </View>
-                                        
+
 //                                         {business.isActive && (
 //                                             <>
 //                                                 <InputField
@@ -1174,7 +1174,7 @@
 //                                                     value={business.name}
 //                                                     onChangeText={(val) => updateBusinessRecord(business.id, 'name', val)}
 //                                                 />
-                                                
+
 //                                                 <DateField
 //                                                     icon="calendar-outline"
 //                                                     label="Start Date"
@@ -1184,20 +1184,18 @@
 //                                                         visible: true
 //                                                     })}
 //                                                 />
-                                                
+
 //                                                 <InputField
 //                                                     icon="document-text-outline"
 //                                                     placeholder="Registration / File Number"
 //                                                     value={business.regNumber}
 //                                                     onChangeText={(val) => updateBusinessRecord(business.id, 'regNumber', val)}
 //                                                 />
-                                                
+
 //                                                 <DocumentPickerField
 //                                                     fileName={business.document?.name}
 //                                                     onPick={() => pickBusinessDocument(business.id)}
-//                                                 />
-                                                
-//                                                 <DateField
+//                                                 />//                                                 <DateField
 //                                                     icon="calendar-outline"
 //                                                     label="Dissolution Date (Optional)"
 //                                                     value={business.dissolutionDate}
@@ -1548,7 +1546,7 @@
 //                 enabled: value
 //             }
 //         };
-        
+
 //         try {
 //             await UPDATE_RESIDENCY_RECORD(residencyData.id, updatedData);
 //             await loadData();
@@ -1615,7 +1613,7 @@
 //                 <Header title={'Residency Records'} />
 
 //                 <ScrollView showsVerticalScrollIndicator={false}>
-                    
+
 //                     {/* Declaration of Residency */}
 //                     <ResidencySection
 //                         title="Declaration of Residency / Domicile"
@@ -1711,7 +1709,7 @@
 //                     {/* Others Section with Multiple Entries */}
 //                     <View style={styles.multipleSection}>
 //                         <Text style={styles.multipleSectionTitle}>Others</Text>
-                        
+
 //                         {residencyData.others?.map((item, index) => (
 //                             <ResidencySection
 //                                 key={item.id || index}
@@ -1834,7 +1832,7 @@ import {
 import colors from "../theme/colors";
 import { CustomToast } from "../helpers/CommonHelpers";
 
-const ResidencyHistoryScreen = ({ 
+const ResidencyHistoryScreen = ({
     ResidencydocumentList,
     GET_RESIDENCY_RECORD_LIST,
     UPDATE_RESIDENCY_RECORD,
@@ -1848,7 +1846,7 @@ const ResidencyHistoryScreen = ({
 
     console.log('documentCategoryList', documentCategoryList);
     console.log('ResidencydocumentList', ResidencydocumentList);
-    
+
     // Load data when screen focuses
     useFocusEffect(
         useCallback(() => {
@@ -1887,7 +1885,7 @@ const ResidencyHistoryScreen = ({
     // // ========== Get Section Data ==========
     // const getSectionData = (category) => {
     //     const sectionKey = getSectionKeyFromCategory(category.name);
-        
+
     //     // Handle different section types
     //     if (sectionKey.startsWith('others_')) {
     //         const type = sectionKey.split('_')[1];
@@ -1917,49 +1915,49 @@ const ResidencyHistoryScreen = ({
     //     }
     // };
     // ========== Get Section Data ==========
-const getSectionData = (category) => {
-    const sectionKey = getSectionKeyFromCategory(category.name);
-    
-    // Find all records for this category
-    const categoryRecords = ResidencydocumentList?.filter(
-        record => record.categoryId === category.id
-    ) || [];
-    
-    console.log(`Category ${category.name} records:`, categoryRecords);
-    
-    // Handle different section types
-    if (sectionKey.startsWith('others_')) {
-        const type = sectionKey.split('_')[1];
-        // Find record with matching type in metadata
-        const record = categoryRecords.find(item => {
-            const metadata = typeof item.metadata === 'string' 
-                ? JSON.parse(item.metadata) 
-                : item.metadata;
-            return metadata?.type === type;
-        });
-        return {
-            data: record || null,
-            type: 'other',
-            categoryId: category.id,
-            records: categoryRecords // All records for this category
-        };
-    } else if (sectionKey === 'businessRecordsMulti') {
-        return {
-            data: categoryRecords, // All business records
-            type: 'multi',
-            categoryId: category.id,
-            records: categoryRecords
-        };
-    } else {
-        // For single-record categories, get the first/latest record
-        return {
-            data: categoryRecords[0] || null,
-            type: 'single',
-            categoryId: category.id,
-            records: categoryRecords
-        };
-    }
-};
+    const getSectionData = (category) => {
+        const sectionKey = getSectionKeyFromCategory(category.name);
+
+        // Find all records for this category
+        const categoryRecords = ResidencydocumentList?.filter(
+            record => record.categoryId === category.id
+        ) || [];
+
+        console.log(`Category ${category.name} records:`, categoryRecords);
+
+        // Handle different section types
+        if (sectionKey.startsWith('others_')) {
+            const type = sectionKey.split('_')[1];
+            // Find record with matching type in metadata
+            const record = categoryRecords.find(item => {
+                const metadata = typeof item.metadata === 'string'
+                    ? JSON.parse(item.metadata)
+                    : item.metadata;
+                return metadata?.type === type;
+            });
+            return {
+                data: record || null,
+                type: 'other',
+                categoryId: category.id,
+                records: categoryRecords // All records for this category
+            };
+        } else if (sectionKey === 'businessRecordsMulti') {
+            return {
+                data: categoryRecords, // All business records
+                type: 'multi',
+                categoryId: category.id,
+                records: categoryRecords
+            };
+        } else {
+            // For single-record categories, get the first/latest record
+            return {
+                data: categoryRecords[0] || null,
+                type: 'single',
+                categoryId: category.id,
+                records: categoryRecords
+            };
+        }
+    };
 
     // ========== Get Section Title ==========
     const getSectionTitle = (categoryName) => {
@@ -1984,13 +1982,13 @@ const getSectionData = (category) => {
     // ========== Handle Section Toggle ==========
     const handleSectionToggle = async (category, value) => {
         const sectionKey = getSectionKeyFromCategory(category.name);
-        
+
         let updatedData = { ...residencyData };
-        
+
         if (sectionKey.startsWith('others_')) {
             const type = sectionKey.split('_')[1];
             if (!updatedData.others) updatedData.others = [];
-            
+
             if (value) {
                 // Enable - create new entry if doesn't exist
                 const existingIndex = updatedData.others.findIndex(item => item.type === type);
@@ -2006,7 +2004,7 @@ const getSectionData = (category) => {
                 }
             } else {
                 // Disable - mark as disabled
-                updatedData.others = updatedData.others.map(item => 
+                updatedData.others = updatedData.others.map(item =>
                     item.type === type ? { ...item, enabled: false } : item
                 );
             }
@@ -2026,7 +2024,7 @@ const getSectionData = (category) => {
                 categoryId: category.id
             };
         }
-        
+
         try {
             await UPDATE_RESIDENCY_RECORD(residencyData.id, updatedData);
             await loadData();
@@ -2039,7 +2037,7 @@ const getSectionData = (category) => {
     // // ========== Handle Section Press ==========
     // const handleSectionPress = (category, sectionInfo) => {
     //     const sectionKey = getSectionKeyFromCategory(category.name);
-        
+
     //     if (sectionInfo.data?.enabled || (Array.isArray(sectionInfo.data) && sectionInfo.data.length > 0)) {
     //         // If enabled/has data, navigate to details
     //         navigation.navigate("ResidencyRecordDetails", { 
@@ -2069,10 +2067,10 @@ const getSectionData = (category) => {
 
     const handleSectionPress = (category, sectionInfo) => {
         const sectionKey = getSectionKeyFromCategory(category.name);
-        
+
         if (sectionInfo.data?.enabled || (Array.isArray(sectionInfo.data) && sectionInfo.data.length > 0)) {
             // If enabled/has data, navigate to details
-            navigation.navigate("ResidencyRecordDetails", { 
+            navigation.navigate("ResidencyRecordDetails", {
                 category,
                 sectionKey,
                 data: sectionInfo.data
@@ -2086,7 +2084,7 @@ const getSectionData = (category) => {
             });
         }
     };
-    
+
     // Update handleAddMultiple function
     const handleAddMultiple = (category) => {
         navigation.navigate("CreateResidencyRecord", {
@@ -2097,15 +2095,15 @@ const getSectionData = (category) => {
     };
 
     // ========== Categorize Sections ==========
-    const mainSections = documentCategoryList?.filter(cat => 
+    const mainSections = documentCategoryList?.filter(cat =>
         !cat.name.startsWith('Other -') && cat.name !== 'Other - Business Records'
     ) || [];
-    
-    const otherSections = documentCategoryList?.filter(cat => 
+
+    const otherSections = documentCategoryList?.filter(cat =>
         cat.name.startsWith('Other -') && cat.name !== 'Other - Business Records'
     ) || [];
-    
-    const multiBusinessSection = documentCategoryList?.find(cat => 
+
+    const multiBusinessSection = documentCategoryList?.find(cat =>
         cat.name === 'Other - Business Records'
     );
 
@@ -2121,7 +2119,7 @@ const getSectionData = (category) => {
                 <Header title={'Residency Records'} />
 
                 <ScrollView showsVerticalScrollIndicator={false}>
-                    
+
                     {/* Main Sections */}
                     {mainSections.map((category) => {
                         const sectionInfo = getSectionData(category);
@@ -2144,11 +2142,11 @@ const getSectionData = (category) => {
                     {otherSections.length > 0 && (
                         <View style={styles.multipleSection}>
                             <Text style={styles.multipleSectionTitle}>Others</Text>
-                            
+
                             {otherSections.map((category) => {
                                 const sectionInfo = getSectionData(category);
                                 const type = getSectionKeyFromCategory(category.name).split('_')[1];
-                                
+
                                 return (
                                     <ResidencySection
                                         key={category.id}
@@ -2163,7 +2161,7 @@ const getSectionData = (category) => {
                                 );
                             })}
 
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 style={styles.addOtherButton}
                                 onPress={() => navigation.navigate("CreateResidencyRecord", {
                                     section: 'others',
@@ -2183,14 +2181,14 @@ const getSectionData = (category) => {
                             <Text style={styles.multipleSectionTitle}>
                                 {getSectionTitle(multiBusinessSection.name)}
                             </Text>
-                            
+
                             {residencyData.businessRecordsMulti?.map((item, index) => (
                                 <ResidencySection
                                     key={item.id || index}
                                     title={`Business Record ${index + 1}`}
                                     isEnabled={true}
                                     showToggle={false}
-                                    onPress={() => navigation.navigate("ResidencyRecordDetails", { 
+                                    onPress={() => navigation.navigate("ResidencyRecordDetails", {
                                         category: multiBusinessSection,
                                         sectionKey: 'businessRecordsMulti',
                                         data: item,
@@ -2200,7 +2198,7 @@ const getSectionData = (category) => {
                                 />
                             ))}
 
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 style={styles.addOtherButton}
                                 onPress={() => handleAddMultiple(multiBusinessSection)}
                             >

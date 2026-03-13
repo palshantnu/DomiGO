@@ -23,6 +23,8 @@ import {
 } from "../redux/actions/action-creator";
 import { CustomToast } from "../helpers/CommonHelpers";
 import colors from "../theme/colors";
+import FeatureGateWrapper from '../components/FeatureGateWrapper';
+import { FEATURES } from '../config/featureAccess';
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 
@@ -162,27 +164,29 @@ const ResidencyRecordDetailsScreen = ({
 
                         <View style={styles.divider} />
 
-                        <Text style={styles.sectionLabel}>Attachment</Text>
+                        <FeatureGateWrapper feature={FEATURES.DOCUMENT_MANAGEMENT} featureName="Document Management">
+                            <Text style={styles.sectionLabel}>Attachment</Text>
 
-                        {data.attachmentUrl ? (
-                            data.attachmentUrl.endsWith(".pdf") ? (
-                                <TouchableOpacity
-                                    style={styles.pdfButton}
-                                    onPress={() => Linking.openURL(data.attachmentUrl)}
-                                >
-                                    <Ionicons name="document-outline" size={22} color="#fff" />
-                                    <Text style={styles.pdfText}>Open PDF</Text>
-                                </TouchableOpacity>
+                            {data.attachmentUrl ? (
+                                data.attachmentUrl.endsWith(".pdf") ? (
+                                    <TouchableOpacity
+                                        style={styles.pdfButton}
+                                        onPress={() => Linking.openURL(data.attachmentUrl)}
+                                    >
+                                        <Ionicons name="document-outline" size={22} color="#fff" />
+                                        <Text style={styles.pdfText}>Open PDF</Text>
+                                    </TouchableOpacity>
+                                ) : (
+                                    <Image
+                                        source={{ uri: data.attachmentUrl }}
+                                        style={styles.attachmentImage}
+                                        resizeMode="contain"
+                                    />
+                                )
                             ) : (
-                                <Image
-                                    source={{ uri: data.attachmentUrl }}
-                                    style={styles.attachmentImage}
-                                    resizeMode="contain"
-                                />
-                            )
-                        ) : (
-                            <Text style={{ color: "#777", marginTop: 8 }}>No Attachment</Text>
-                        )}
+                                <Text style={{ color: "#777", marginTop: 8 }}>No Attachment</Text>
+                            )}
+                        </FeatureGateWrapper>
 
                         <View style={styles.actionRow}>
                             <TouchableOpacity

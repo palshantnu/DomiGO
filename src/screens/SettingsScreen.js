@@ -18,11 +18,12 @@ import LinearGradient from "react-native-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ICON_AppTheme, ICON_bell, ICON_bell_off, ICON_File_dock, ICON_Language, ICON_Lock, ICON_Menu, ICON_syncdata } from "../assets/svgicon";
 import { useDispatch } from "react-redux";
-import { LOGOUT } from "../redux/actions/action-creator";
+import { LOGOUT, CLEAR_USER_SUBSCRIPTION } from "../redux/actions/action-creator";
 import { CustomToast } from "../helpers/CommonHelpers";
 import { stopDomigoTracking } from "../helpers/MainTracker";
 import DomigoTracker from "../helpers/MainTracker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFeatureAccess } from "../hooks/useFeatureAccess";
 
 export default function SettingsScreen() {
   const dispatch = useDispatch();
@@ -30,7 +31,14 @@ export default function SettingsScreen() {
   const [stateAlerts, setStateAlerts] = useState(true);
   const [syncData, setSyncData] = useState(true);
   const navigation = useNavigation();
-  // navigation.navigate('TaxResidencyIntro')
+  const { plan, isTrial, trialDaysLeft } = useFeatureAccess();
+
+  const getSubscriptionSubtitle = () => {
+    if (isTrial) return `Free Trial - ${trialDaysLeft} day${trialDaysLeft !== 1 ? 's' : ''} left`;
+    if (plan === 'lite') return 'Lite Plan (Active)';
+    if (plan === 'full') return 'Full Plan (Active)';
+    return 'Choose a plan';
+  };
   return (
     <LinearGradient
       colors={["#9ab1fa", "#ffffff"]}
@@ -85,10 +93,21 @@ export default function SettingsScreen() {
               </TouchableOpacity>
               <Ionicons name="chevron-forward" size={18} color="#999" />
             </TouchableOpacity>
+            <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('SubscriptionScreen')}>
+              <View style={styles.rowLeft}>
+                <Ionicons name="card-outline" size={24} color={colors.primary} />
+                <View style={{ width: '100%' }}>
+                  <Text style={styles.title}>Subscription</Text>
+                  <Text style={styles.subtitle}>{getSubscriptionSubtitle()}</Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#999" />
+            </TouchableOpacity>
             <TouchableOpacity
               style={styles.row}
               onPress={async () => {
                 dispatch(LOGOUT());
+                dispatch(CLEAR_USER_SUBSCRIPTION());
                 await AsyncStorage.removeItem('DOMIGO_TRACKING_ENABLED');
                 CustomToast.show('LogOut User Successfully');
                 DomigoTracker.stopDomigoTracking();

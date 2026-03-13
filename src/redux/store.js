@@ -3,17 +3,19 @@ import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authReducer } from './reducers/auth';
 import { common } from './reducers/common/common';
+import { subscriptionReducer } from './reducers/subscription';
 
 const rootReducer = combineReducers({
   auth: authReducer,
   common,
+  subscription: subscriptionReducer,
 });
 
 
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
-  whitelist: ['auth', 'common'], 
+  whitelist: ['auth', 'common', 'subscription'],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
