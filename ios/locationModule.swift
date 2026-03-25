@@ -608,6 +608,8 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
     guard let location = locations.last else { return }
 
+    
+processWithLocalGeoJSON(lat: location.coordinate.latitude, lng: location.coordinate.longitude)
     let locationData: [String: Any] = [
       "latitude": location.coordinate.latitude,
       "longitude": location.coordinate.longitude,
@@ -695,6 +697,9 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
           "timestamp": Date().timeIntervalSince1970 * 1000,
           "isBackground": self.backgroundProcessing,
         ])
+
+        print("❌ Reverse geocoding result:", city,state,fullAddress)
+
 
       self.checkAndSendToAPI(
         lat: location.coordinate.latitude,
@@ -1467,6 +1472,16 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       return
     }
 
+      print("local_native: no state detected",detectedState)
+
+          self.sendToDomigoAPI(
+              lat: lat,
+              lng: lng,
+              city: detectedState,
+              state: detectedState,
+              address: detectedState,
+              isBackground: false
+            )
     let currentTimeMs = Date().timeIntervalSince1970 * 1000
 
     if previousEnterTime == 0 {
