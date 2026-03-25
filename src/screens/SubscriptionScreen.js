@@ -56,6 +56,7 @@ function SubscriptionScreen({
   }, []);
 
   const handlePurchase = async (sku) => {
+    console.log('subscriptionplan',sku);
     await PURCHASE_SUBSCRIPTION(sku);
   };
 

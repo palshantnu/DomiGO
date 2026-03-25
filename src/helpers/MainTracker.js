@@ -271,7 +271,7 @@ class DomigoTracker {
     const payload = new FormData()
 
     payload.append("kind", "missing")
-    payload.append("date", new Date().toISOString().split("T")[0])
+    payload.append("date", new Date().toLocaleDateString("en-CA").split("T")[0])
     payload.append("state", this.previousState)
 
     try {
@@ -330,7 +330,7 @@ class DomigoTracker {
     const payload = new FormData();
 
     payload.append('kind', 'trip');
-    payload.append('date', new Date().toISOString().split('T')[0]);
+    payload.append('date', new Date().toLocaleDateString("en-CA").split('T')[0]);
     payload.append('typeOfDayId', '1');
     payload.append('isCommissionDay', 'false');
     payload.append('isRemoteWork', 'false');
@@ -359,8 +359,8 @@ class DomigoTracker {
     payload.append('destinationLat', String(location.latitude));
     payload.append('destinationLng', String(location.longitude));
 
-    payload.append('startDate', new Date(change.timestamp).toISOString());
-    payload.append('endDate', new Date().toISOString());
+    payload.append('startDate', new Date(change.timestamp).toLocaleDateString("en-CA"));
+    payload.append('endDate', new Date().toLocaleDateString("en-CA"));
 
     try {
 
@@ -520,7 +520,7 @@ class DomigoTracker {
   // async _sendTripFromJS(change, location) {
   //   const payload = new FormData();
   //   payload.append('kind', 'trip');
-  //   payload.append('date', new Date().toISOString().split('T')[0]);
+  //   payload.append('date', new Date().toLocaleDateString("en-CA").split('T')[0]);
   //   payload.append('typeOfDayId', '1');
   //   payload.append('isCommissionDay', 'false');
   //   payload.append('isRemoteWork', 'false');
@@ -542,8 +542,8 @@ class DomigoTracker {
   //   payload.append('destinationState', change.to);
   //   payload.append('destinationLat', String(location.latitude));
   //   payload.append('destinationLng', String(location.longitude));
-  //   payload.append('startDate', new Date(change.timestamp).toISOString());
-  //   payload.append('endDate', new Date().toISOString());
+  //   payload.append('startDate', new Date(change.timestamp).toLocaleDateString("en-CA"));
+  //   payload.append('endDate', new Date().toLocaleDateString("en-CA"));
 
   //   try {
   //     await axiosinstance.post('trip-days', payload, {
@@ -556,15 +556,15 @@ class DomigoTracker {
   //       timestamp: change.timestamp,
   //       payload: {
   //         kind: 'trip',
-  //         date: new Date().toISOString().split('T')[0],
+  //         date: new Date().toLocaleDateString("en-CA").split('T')[0],
   //         originState: change.from,
   //         destinationState: change.to,
   //         originLat: location.latitude,
   //         originLng: location.longitude,
   //         destinationLat: location.latitude,
   //         destinationLng: location.longitude,
-  //         startDate: new Date(change.timestamp).toISOString(),
-  //         endDate: new Date().toISOString(),
+  //         startDate: new Date(change.timestamp).toLocaleDateString("en-CA"),
+  //         endDate: new Date().toLocaleDateString("en-CA"),
   //         creationType: 'automatic',
   //       },
   //     });

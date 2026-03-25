@@ -120,7 +120,7 @@ const SecondHomeForm = ({ data, onChange }) => {
                 open={openDatePicker}
                 date={data.dateEstablished ? new Date(data.dateEstablished) : new Date()}
                 onConfirm={(date) => {
-                    updateField('dateEstablished', date.toISOString().slice(0, 10));
+                    updateField('dateEstablished', date.toLocaleDateString("en-CA").slice(0, 10));
                     setOpenDatePicker(false);
                 }}
                 onCancel={() => setOpenDatePicker(false)}
@@ -132,7 +132,7 @@ const SecondHomeForm = ({ data, onChange }) => {
                 open={openDissolutionPicker}
                 date={data.dissolutionDate ? new Date(data.dissolutionDate) : new Date()}
                 onConfirm={(date) => {
-                    updateField('dissolutionDate', date.toISOString().slice(0, 10));
+                    updateField('dissolutionDate', date.toLocaleDateString("en-CA").slice(0, 10));
                     setOpenDissolutionPicker(false);
                 }}
                 onCancel={() => setOpenDissolutionPicker(false)}

@@ -595,7 +595,7 @@
 //             sections,
 //             secondHome,
 //             businessRecordsMulti,
-//             createdAt: new Date().toISOString()
+//             createdAt: new Date().toLocaleDateString("en-CA")
 //         };
 
 //         try {
@@ -1237,14 +1237,14 @@
 //                     onConfirm={(date) => {
 //                         const [section, field] = openDatePicker.field.split('.');
 //                         if (section === 'other') {
-//                             updateOtherEntry(field, 'startDate', date.toISOString().slice(0, 10));
+//                             updateOtherEntry(field, 'startDate', date.toLocaleDateString("en-CA").slice(0, 10));
 //                         } else if (section === 'business') {
 //                             const [id, businessField] = field.split('.');
-//                             updateBusinessRecord(id, businessField, date.toISOString().slice(0, 10));
+//                             updateBusinessRecord(id, businessField, date.toLocaleDateString("en-CA").slice(0, 10));
 //                         } else if (section === 'secondHome') {
-//                             setSecondHome(prev => ({ ...prev, [field]: date.toISOString().slice(0, 10) }));
+//                             setSecondHome(prev => ({ ...prev, [field]: date.toLocaleDateString("en-CA").slice(0, 10) }));
 //                         } else {
-//                             updateSection(section, field, date.toISOString().slice(0, 10));
+//                             updateSection(section, field, date.toLocaleDateString("en-CA").slice(0, 10));
 //                         }
 //                         setOpenDatePicker({ field: null, visible: false });
 //                     }}

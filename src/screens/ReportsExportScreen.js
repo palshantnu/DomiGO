@@ -12,12 +12,12 @@ import colors from "../theme/colors";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LinearGradient from "react-native-linear-gradient";
 import { connect } from "react-redux";
-import { GET_REPORTS, GET_WEEK_WISE_TIMELINE} from '../redux/actions/action-creator';
+import { GET_REPORTS, GET_WEEK_WISE_TIMELINE } from '../redux/actions/action-creator';
 import FeatureGateWrapper from '../components/FeatureGateWrapper';
 import { FEATURES } from '../config/featureAccess';
 
 
- function ReportsExportScreen({GET_WEEK_WISE_TIMELINE, weekWiseTimeline,GET_REPORTS,resportsList}) {
+function ReportsExportScreen({ GET_WEEK_WISE_TIMELINE, weekWiseTimeline, GET_REPORTS, resportsList }) {
     const [selectedFilter, setSelectedFilter] = useState("Weekly");
 
     const filters = ["Weekly", "Monthly", "Quarterly", "Yearly"];
@@ -27,7 +27,7 @@ import { FEATURES } from '../config/featureAccess';
         Monthly: 'monthly',
         Quarterly: 'quarterly',
         Yearly: 'yearly',
-      };
+    };
 
     const states = [
         { name: "Florida", days: "170 / 183", status: "Over Threshold", color: "#FF4D4D" },
@@ -39,46 +39,46 @@ import { FEATURES } from '../config/featureAccess';
 
 
     const getTodayDate = () => {
-        return new Date().toISOString().split('T')[0]; 
-      };
+        return new Date().toLocaleDateString("en-CA").split('T')[0];
+    };
 
     const onFilterChange = (item) => {
         setSelectedFilter(item);
-      
+
         GET_REPORTS({
-          type: filterToTypeMap[item],
-          date: getTodayDate(),
+            type: filterToTypeMap[item],
+            date: getTodayDate(),
         });
-      };
+    };
 
     const getCurrentWeekDates = () => {
         const today = new Date();
-    
+
         // Clone date to avoid mutation
         const current = new Date(today);
-    
+
         // Get day (0 = Sunday, 1 = Monday ...)
         const day = current.getDay();
-    
+
         // Monday as start of week
         const diffToMonday = day === 0 ? -6 : 1 - day;
-    
+
         const startOfWeek = new Date(current);
         startOfWeek.setDate(current.getDate() + diffToMonday);
-    
+
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 6);
-    
-        const formatDate = (date) =>
-          date.toISOString().split('T')[0]; // YYYY-MM-DD
-    
-        return {
-          start: formatDate(startOfWeek),
-          end: formatDate(endOfWeek),
-        };
-      };
 
-      const getColorByStatus = (status) => {
+        const formatDate = (date) =>
+            date.toLocaleDateString("en-CA").split('T')[0]; // YYYY-MM-DD
+
+        return {
+            start: formatDate(startOfWeek),
+            end: formatDate(endOfWeek),
+        };
+    };
+
+    const getColorByStatus = (status) => {
         // const percentage = (days / threshold) * 100;
 
         if (status === "WELL_BELOW") {
@@ -93,16 +93,16 @@ import { FEATURES } from '../config/featureAccess';
     useEffect(() => {
         const today = new Date();
         const { start, end } = getCurrentWeekDates();
-    
+
         GET_WEEK_WISE_TIMELINE({ start, end });;
         GET_REPORTS({
             type: 'weekly',
             date: getTodayDate(),
-          });
-      }, []);
+        });
+    }, []);
 
-      console.log('weekWiseTimelineeeeeeeeeee',weekWiseTimeline);
-      console.log('resportsList>>>>>>>>>>>>',resportsList);
+    console.log('weekWiseTimelineeeeeeeeeee', weekWiseTimeline);
+    console.log('resportsList>>>>>>>>>>>>', resportsList);
 
     return (
         <LinearGradient
@@ -159,8 +159,8 @@ import { FEATURES } from '../config/featureAccess';
                             </View>
                         </View>
 
-                        <FeatureGateWrapper feature={FEATURES.COMPLIANCE_SCORE} featureName="Compliance Score">
-                            <View style={styles.summaryBox}>
+                        <View style={styles.summaryBox}>
+                            {/* <FeatureGateWrapper feature={FEATURES.COMPLIANCE_SCORE} featureName="Compliance Score"> */}
                                 <View style={{ flexDirection: 'row', width: '100%', }}>
                                     <Ionicons name="stats-chart-outline" size={20} style={{ marginTop: 10 }} color={colors.primary} />
                                     <View style={{ marginLeft: 5 }}>
@@ -173,8 +173,8 @@ import { FEATURES } from '../config/featureAccess';
                                         </Text>
                                     </View>
                                 </View>
-                            </View>
-                        </FeatureGateWrapper>
+                            {/* </FeatureGateWrapper> */}
+                        </View>
                     </View>
                     {/* Table */}
                     <Text style={styles.sectionTitle}>State-Wise Residency Breakdown</Text>
@@ -191,7 +191,7 @@ import { FEATURES } from '../config/featureAccess';
                             <View key={index} style={styles.tableRow}>
                                 <Text style={[styles.tableText, { flex: 1.2 }]}>{item.state}</Text>
                                 <Text style={[styles.tableText, { flex: 1 }]}>{item.days} / {item.threshold}</Text>
-                                <View style={[styles.statusBadge, { backgroundColor: getColorByStatus(item.status)}]}>
+                                <View style={[styles.statusBadge, { backgroundColor: getColorByStatus(item.status) }]}>
                                     <Text style={styles.statusText}>{item.status}</Text>
                                 </View>
                             </View>
@@ -199,11 +199,11 @@ import { FEATURES } from '../config/featureAccess';
                     </View>
 
                     {/* Export */}
-                    <FeatureGateWrapper feature={FEATURES.EXPORT_REPORTS} featureName="Export Reports">
+                    {/* <FeatureGateWrapper feature={FEATURES.EXPORT_REPORTS} featureName="Export Reports"> */}
                         <View style={styles.exportCard}>
                             <View style={{ flexDirection: 'row', width: '100%', }}>
                                 <Ionicons name="document-text-outline" style={{ marginTop: 15, width: '25%' }} size={56} color={'#65C466'} />
-                                <View style={{ paddingRight: 10 , width: '75%'}}>
+                                <View style={{ paddingRight: 10, width: '75%' }}>
                                     <Text style={styles.exportTitle}>Generate Full Report</Text>
                                     <Text style={styles.exportDesc}>
                                         Download a comprehensive report of your tax residency history and compliance status.
@@ -216,7 +216,7 @@ import { FEATURES } from '../config/featureAccess';
                                 </View>
                             </View>
                         </View>
-                    </FeatureGateWrapper>
+                    {/* </FeatureGateWrapper> */}
 
                 </ScrollView>
             </SafeAreaView>
@@ -226,20 +226,20 @@ import { FEATURES } from '../config/featureAccess';
 
 function mapStateToProps(state) {
     return {
-      userData: state.auth.userData,
-      loginToken: state.auth.loginToken,
-      weekWiseTimeline: state.common.weekWiseTimeline,
-      resportsList:state.common.resportsList,
+        userData: state.auth.userData,
+        loginToken: state.auth.loginToken,
+        weekWiseTimeline: state.common.weekWiseTimeline,
+        resportsList: state.common.resportsList,
     };
-  }
-  
-  
-  const mapDispatchToProps = {
+}
+
+
+const mapDispatchToProps = {
     GET_WEEK_WISE_TIMELINE,
     GET_REPORTS,
-  };
-  
-  export default connect(mapStateToProps, mapDispatchToProps)(ReportsExportScreen);
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(ReportsExportScreen);
 
 const styles = StyleSheet.create({
     container: { flex: 1 },
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
         marginHorizontal: 16,
         marginTop: 20,
         borderWidth: 0.5,
-        borderColor:'#E0E0E0'
+        borderColor: '#E0E0E0'
     },
     exportTitle: { fontSize: 14, fontWeight: "600", color: "#000", marginTop: 10 },
     exportDesc: { fontSize: 13, color: "#666", marginTop: 6, marginBottom: 14 },

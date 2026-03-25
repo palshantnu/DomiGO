@@ -79,7 +79,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     endOfWeek.setDate(startOfWeek.getDate() + 6);
 
     const formatDate = (date) =>
-      date.toISOString().split('T')[0]; // YYYY-MM-DD
+      date.toLocaleDateString("en-CA").split('T')[0]; // YYYY-MM-DD
 
     return {
       start: formatDate(startOfWeek),
@@ -573,7 +573,7 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
   //   Object.entries(yearWiseTimeline).forEach(([date, value]) => {
   //     console.log(
   //       "API KEY:", date,
-  //       "Parsed:", new Date(date).toISOString().split("T")[0]
+  //       "Parsed:", new Date(date).toLocaleDateString("en-CA").split("T")[0]
   //     );
   //     if (!normalized[date]) {
   //       normalized[date] = {

@@ -230,8 +230,8 @@ const AddTripScreen = ({
       destinationState: destinationData?.state || "",
       destinationCity: destinationData?.city || "",
 
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
+      startDate: startDate.toLocaleDateString("en-CA"),
+      endDate: endDate.toLocaleDateString("en-CA"),
 
       attachments: attachment ? [attachment] : []
     };

@@ -88,7 +88,7 @@
 //                 open={openDatePicker}
 //                 date={data.issueDate ? new Date(data.issueDate) : new Date()}
 //                 onConfirm={(date) => {
-//                     updateField('issueDate', date.toISOString().slice(0, 10));
+//                     updateField('issueDate', date.toLocaleDateString("en-CA").slice(0, 10));
 //                     setOpenDatePicker(false);
 //                 }}
 //                 onCancel={() => setOpenDatePicker(false)}
@@ -191,7 +191,7 @@ const DriversLicenseForm = ({ data = {}, onChange }) => {
                 open={openDatePicker}
                 date={data.issueDate ? new Date(data.issueDate) : new Date()}
                 onConfirm={(date) => {
-                    updateField('issueDate', date.toISOString().slice(0, 10));
+                    updateField('issueDate', date.toLocaleDateString("en-CA").slice(0, 10));
                     setOpenDatePicker(false);
                 }}
                 onCancel={() => setOpenDatePicker(false)}

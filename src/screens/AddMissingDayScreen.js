@@ -200,7 +200,7 @@ const AddMissingDayScreen = ({
     };
 
     if (!isEdit) {
-      payload.date = new Date(date).toISOString().split("T")[0]
+      payload.date = new Date(date).toLocaleDateString("en-CA").split("T")[0]
     }
   
     return payload;

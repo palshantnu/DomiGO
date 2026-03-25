@@ -22,7 +22,7 @@
           }
         },
         {
-          "client_id": "354808270826-p6lj8o8etds9qn98knsvfpbp920bu0oa.apps.googleusercontent.com",
+          "client_id": "354808270826-gns6qrt56geta1g46vv26j9l3n3jk415.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -35,8 +35,15 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "354808270826-p6lj8o8etds9qn98knsvfpbp920bu0oa.apps.googleusercontent.com",
+              "client_id": "354808270826-gns6qrt56geta1g46vv26j9l3n3jk415.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "354808270826-arm0t0rd7meembsnc3fvrc2c9j2iout6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.gohome.domigo"
+              }
             }
           ]
         }

@@ -96,7 +96,7 @@ const VotingRegistrationForm = ({ data, onChange }) => {
                 open={openDatePicker}
                 date={data.registrationDate ? new Date(data.registrationDate) : new Date()}
                 onConfirm={(date) => {
-                    updateField('registrationDate', date.toISOString().slice(0, 10));
+                    updateField('registrationDate', date.toLocaleDateString("en-CA").slice(0, 10));
                     setOpenDatePicker(false);
                 }}
                 onCancel={() => setOpenDatePicker(false)}

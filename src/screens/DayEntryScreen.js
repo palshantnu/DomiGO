@@ -287,8 +287,8 @@ const DayEntryScreen = ({
         setIsCommissionDay(!!editData.isCommissionDay);
         setIsRemoteWork(!!editData.isRemoteWork);
         setHoursWorked(editData.remoteHours ? String(editData.remoteHours) : "");
-        setTripType(editData.tripTypeId || null);
-        setTripMode(editData.tripModeId || null);
+        setTripType(editData.tripTypeId || 1);
+        setTripMode(editData.tripModeId || 1);
         setConfirmationNo(editData.confirmationNo || "");
         setVendor(editData.vendor || "");
         setHasProof(!!editData.hasProof);
@@ -372,7 +372,7 @@ const DayEntryScreen = ({
         }
     }
         const payload = {
-            date: date,
+            date: editData.date || new Date().toLocaleDateString("en-CA"),
             typeOfDayId: Number(typeOfDay),
             isCommissionDay,
             kind: isTrip ? "trip" : "missing",
@@ -394,7 +394,8 @@ const DayEntryScreen = ({
 
         if (!isTrip) {
             payload.state = stateId;
-            payload.date = new Date(date).toISOString().split("T")[0];
+            // payload.date = new Date(date).toLocaleDateString("en-CA");
+            // payload.date = new Date(date).toLocaleDateString("en-CA").split("T")[0];
         }
         if (isTrip) {
             payload.originCity = startData.city;
@@ -407,8 +408,8 @@ const DayEntryScreen = ({
             payload.destinationLat = endData.lat;
             payload.destinationLng = endData.lng;
 
-            payload.startDate = startDate.toISOString();
-            payload.endDate = endDate.toISOString();
+            payload.startDate = startDate.toLocaleDateString("en-CA");
+            payload.endDate = endDate.toLocaleDateString("en-CA");
         }
 
         if (isEdit) payload.id = editData.id;
@@ -461,7 +462,7 @@ const DayEntryScreen = ({
     //         formData.append("stateId", stateId);
     //         formData.append(
     //             "date",
-    //             new Date(date).toISOString().split("T")[0]
+    //             new Date(date).toLocaleDateString("en-CA").split("T")[0]
     //         );
     //     }
 
@@ -519,7 +520,7 @@ const DayEntryScreen = ({
                         { isTrip && isEdit ?
                         <Text style={styles.dateTitle}>{new Date(startDate).toDateString()} - {new Date(endDate).toDateString()}</Text>
                            :
-                        <Text style={styles.dateTitle}>{formatDate(date)}</Text>
+                        <Text style={styles.dateTitle}>{formatDate(editData.date || new Date().toLocaleDateString("en-CA"))}</Text>
                         }
                         {!isTrip && (
                             <>

@@ -93,6 +93,7 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         private const val CHANNEL_ID = "location_service_domigo"
         private const val GOOGLE_GEOCODING_URL = "https://maps.googleapis.com/maps/api/geocode/json"
         private const val FOUR_HOURS_MS = 4 * 60 * 60 * 1000
+        // private const val FOUR_HOURS_MS = 1 * 60 * 1000
         private const val GEOCODE_INTERVAL = 45 * 60 * 1000L
         private const val OFFLINE_QUEUE_KEY = "domigo_offline_trip_queue"
         private const val MAX_OFFLINE_RETRIES = 5
@@ -637,9 +638,9 @@ private fun scheduleMidnightMissingDay() {
         //     Log.d(TAG, "📍 Initial state captured: $stateCode")
         //     return
         // }
-        if (geofencingMode == "local_native") {
-            return
-        }
+    // if (geofencingMode == "local_native") {
+    //     return
+    // }
 
         // Only send to API if state changed or 4 hours passed
    
@@ -1551,6 +1552,8 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
     //     Log.d(TAG, "local_native: initialized state=$detectedState")
     // }
     sendEvent("onAddressResolved", addressData)
+    sendToDomigoAPI(lat, lng, detectedState, detectedState, detectedState, geofencingCountry, detectedState)
+
         // First time initialize
         if (previousStateName.isEmpty()) {
             previousStateName = detectedState

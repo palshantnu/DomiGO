@@ -45,7 +45,7 @@ const AddressOfRecordForm = ({ data, onChange }) => {
                 open={openDatePicker}
                 date={data.dateEstablished ? new Date(data.dateEstablished) : new Date()}
                 onConfirm={(date) => {
-                    updateField('dateEstablished', date.toISOString().slice(0, 10));
+                    updateField('dateEstablished', date.toLocaleDateString("en-CA").slice(0, 10));
                     setOpenDatePicker(false);
                 }}
                 onCancel={() => setOpenDatePicker(false)}

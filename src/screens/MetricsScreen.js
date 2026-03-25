@@ -205,7 +205,8 @@ const MetricsScreen = ({ GET_STATE_WISE_METRICS, loginToken, stateWiseMetrics })
                             { label: 'Days Worked', value: item.daysWorked },
                             { label: 'Hours Worked', value: item.hoursWorked },
                             { label: 'Est Taxable Days', value: item.taxDays },
-                            { label: 'Est Taxable Liability', value: canAccess(FEATURES.TAXABLE_LIABILITY) ? item.wages : '***' },
+                            // { label: 'Est Taxable Liability', value: canAccess(FEATURES.TAXABLE_LIABILITY) ? item.wages : '***' },
+                            { label: 'Est Taxable Liability', value: item.wages },
                         ];
 
                         return (

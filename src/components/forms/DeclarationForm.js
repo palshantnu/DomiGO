@@ -34,7 +34,7 @@
 //                 open={openDatePicker}
 //                 date={data.date ? new Date(data.date) : new Date()}
 //                 onConfirm={(date) => {
-//                     updateField('date', date.toISOString().slice(0, 10));
+//                     updateField('date', date.toLocaleDateString("en-CA").slice(0, 10));
 //                     setOpenDatePicker(false);
 //                 }}
 //                 onCancel={() => setOpenDatePicker(false)}
@@ -196,7 +196,7 @@ const DeclarationForm = ({ data, onChange }) => {
                         onConfirm={(date) => {
                             updateField(
                                 "declarationDate",
-                                date.toISOString().slice(0, 10)
+                                date.toLocaleDateString("en-CA").slice(0, 10)
                             );
                             setOpenDeclarationDate(false);
                         }}
@@ -248,7 +248,7 @@ const DeclarationForm = ({ data, onChange }) => {
                         onConfirm={(date) => {
                             updateField(
                                 "establishedDate",
-                                date.toISOString().slice(0, 10)
+                                date.toLocaleDateString("en-CA").slice(0, 10)
                             );
                             setOpenEstablishedDate(false);
                         }}

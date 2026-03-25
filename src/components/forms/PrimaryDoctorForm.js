@@ -45,7 +45,7 @@ const PrimaryDoctorForm = ({ data, onChange }) => {
                 open={openDatePicker}
                 date={data.startDate ? new Date(data.startDate) : new Date()}
                 onConfirm={(date) => {
-                    updateField('startDate', date.toISOString().slice(0, 10));
+                    updateField('startDate', date.toLocaleDateString("en-CA").slice(0, 10));
                     setOpenDatePicker(false);
                 }}
                 onCancel={() => setOpenDatePicker(false)}

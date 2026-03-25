@@ -28,6 +28,7 @@ import { checkAndRequestLocation } from './src/helpers/locationPermission2';
 import OfflineQueueService from './src/services/OfflineQueueService';
 import axiosinstance from './src/axios/axiosinstance';
 import { GEOFENCING_MODE } from './src/config/featureFlags';
+import messaging from '@react-native-firebase/messaging';
 
 import { PermissionsAndroid, Platform } from 'react-native';
 
@@ -35,7 +36,7 @@ const offlineSendFn = async (event) => {
   const payload = new FormData();
   const p = event.payload || {};
   payload.append('kind', p.kind || 'trip');
-  payload.append('date', p.date || new Date().toISOString().split('T')[0]);
+  payload.append('date', p.date || new Date().toLocaleDateString("en-CA").split('T')[0]);
   payload.append('typeOfDayId', '1');
   payload.append('isCommissionDay', 'false');
   payload.append('isRemoteWork', 'false');
@@ -116,6 +117,35 @@ function App() {
 
     return () => subscription.remove();
   }, []);
+
+
+  useEffect(() => {
+    requestPermission();
+    getToken();
+  }, []);
+
+  async function requestPermission() {
+    const authStatus = await messaging().requestPermission();
+    console.log('Permission status:', authStatus);
+  }
+
+  async function getToken() {
+    const token = await messaging().getToken();
+    console.log('FCM Token:', token);
+  }
+
+  useEffect(() => {
+    const unsubscribe = messaging().onMessage(async remoteMessage => {
+      console.log('Foreground message:', remoteMessage);
+    });
+  
+    return unsubscribe;
+  }, []);
+
+  messaging().setBackgroundMessageHandler(async remoteMessage => {
+    console.log('Background message:', remoteMessage);
+  });
+
 
   //   useEffect(() => {
   //   const emitter = new NativeEventEmitter(NativeModules.LocationTracker);

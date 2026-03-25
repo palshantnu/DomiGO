@@ -71,7 +71,7 @@ const TaxFilingForm = ({ data, onChange }) => {
                 open={openDatePicker}
                 date={data.lastFileDate ? new Date(data.lastFileDate) : new Date()}
                 onConfirm={(date) => {
-                    updateField('lastFileDate', date.toISOString().slice(0, 10));
+                    updateField('lastFileDate', date.toLocaleDateString("en-CA").slice(0, 10));
                     setOpenDatePicker(false);
                 }}
                 onCancel={() => setOpenDatePicker(false)}

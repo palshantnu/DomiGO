@@ -410,7 +410,7 @@ export function GET_Document_Category_LIST() {
   }
 }
 export const ADD_DOCUMENT_RECORD = (formData) => {
-  // console.log('formData', formData);
+  console.log('formData', formData);
 
   return async (dispatch) => {
     dispatch({
@@ -418,7 +418,12 @@ export const ADD_DOCUMENT_RECORD = (formData) => {
       payload: 'ADD_DOCUMENT_RECORD_REQUEST',
     })
     try {
-      const response = await axiosinstance.post(EndPoints.addDocumentRecords, formData)
+      const response = await axiosinstance.post(EndPoints.addDocumentRecords, formData,{
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Accept: 'application/json',
+        },
+      })
       const responseJson = response.data;
       // console.log('responseJson=--------=>', responseJson);
 
@@ -436,6 +441,18 @@ export const ADD_DOCUMENT_RECORD = (formData) => {
       return ({ response: responseJson })
     }
     catch (e) {
+      if (e.response) {
+        // Server ne response diya (400, 500 etc)
+        console.log('Status:', e.response.status);
+        console.log('Data:', e.response.data);
+        console.log('Headers:', e.response.headers);
+      } else if (e.request) {
+        // Request gayi but response nahi aaya
+        console.log('No response:', e.request);
+      } else {
+        // Request set karte time e
+        console.log('e message:', e.message);
+      }
       dispatch({
         type: ADD_DOCUMENT_RECORD_FAILURE,
         payload: 'ADD_DOCUMENT_RECORD_FAILURE',
@@ -1378,6 +1395,7 @@ export const FETCH_SUBSCRIPTION_PRODUCTS = () => async (dispatch) => {
 };
 
 export const PURCHASE_SUBSCRIPTION = (sku) => async (dispatch) => {
+  console.log('internal',sku);
   dispatch({ type: SET_SUBSCRIPTION_LOADING, payload: true });
   try {
     await SubscriptionService.buySubscription(sku);
@@ -1405,7 +1423,7 @@ export const RESTORE_SUBSCRIPTION = () => async (dispatch) => {
           payload: {
             plan,
             productId: latest.productId,
-            purchaseDate: new Date(latest.transactionDate).toISOString(),
+            purchaseDate: new Date(latest.transactionDate).toLocaleDateString("en-CA"),
             expiryDate,
             receipt: latest.transactionReceipt,
           },
@@ -1430,7 +1448,7 @@ export const SET_PLAN_FROM_PURCHASE = (purchase) => (dispatch) => {
     payload: {
       plan,
       productId: purchase.productId,
-      purchaseDate: new Date(purchase.transactionDate).toISOString(),
+      purchaseDate: new Date(purchase.transactionDate).toLocaleDateString("en-CA"),
       expiryDate,
       receipt: purchase.transactionReceipt,
     },
@@ -1440,7 +1458,7 @@ export const SET_PLAN_FROM_PURCHASE = (purchase) => (dispatch) => {
 export const INIT_TRIAL = () => (dispatch, getState) => {
   const { subscription } = getState();
   if (!subscription.trialStartDate) {
-    dispatch({ type: SET_TRIAL_START, payload: new Date().toISOString() });
+    dispatch({ type: SET_TRIAL_START, payload: new Date().toLocaleDateString("en-CA") });
   }
 };
 

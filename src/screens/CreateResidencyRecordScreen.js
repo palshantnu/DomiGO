@@ -377,7 +377,7 @@
 //                                 date={new Date()}
 //                                 onConfirm={(d) => {
 //                                     setOpenIssuePicker(false);
-//                                     setValue("issueDate", d.toISOString().slice(0, 10));
+//                                     setValue("issueDate", d.toLocaleDateString("en-CA").slice(0, 10));
 //                                 }}
 //                                 onCancel={() => setOpenIssuePicker(false)}
 //                             />
@@ -406,7 +406,7 @@
 //                                 date={new Date()}
 //                                 onConfirm={(d) => {
 //                                     setOpenRenewPicker(false);
-//                                     setValue("renewDate", d.toISOString().slice(0, 10));
+//                                     setValue("renewDate", d.toLocaleDateString("en-CA").slice(0, 10));
 //                                 }}
 //                                 onCancel={() => setOpenRenewPicker(false)}
 //                             />
@@ -1056,8 +1056,8 @@ const prepareApiData = () => {
     console.log('Metadata String:', metadataString);
 
     // Prepare dates
-    const today = new Date().toISOString();
-    const nextYear = new Date(Date.now() + 365*24*60*60*1000).toISOString();
+    const today = new Date().toLocaleDateString("en-CA");
+    const nextYear = new Date(Date.now() + 365*24*60*60*1000).toLocaleDateString("en-CA");
 
     // Get issue date from metadata
     let issueDate = metadataObj.issueDate || metadataObj.startDate || metadataObj.date || 
@@ -1068,10 +1068,10 @@ const prepareApiData = () => {
 
     // Ensure dates are in correct format
     if (issueDate && !issueDate.includes('T')) {
-        issueDate = new Date(issueDate).toISOString();
+        issueDate = new Date(issueDate).toLocaleDateString("en-CA");
     }
     if (renewDate && !renewDate.includes('T')) {
-        renewDate = new Date(renewDate).toISOString();
+        renewDate = new Date(renewDate).toLocaleDateString("en-CA");
     }
 
     // Get state and city from appropriate fields

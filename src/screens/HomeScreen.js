@@ -268,11 +268,12 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                             </Text> */}
                         </View>
 
-                        <FeatureGateWrapper feature={FEATURES.READINESS_SCORE} featureName="Readiness Score">
                             <TouchableOpacity
                                 style={styles.metricBox}
                                 onPress={() => navigation.navigate('ReportsExport')}
                             >
+                        <FeatureGateWrapper feature={FEATURES.READINESS_SCORE} featureName="Readiness Score">
+
                                 <Text style={styles.metricValue}>
                                     {complianceScore?.complianceScore ?? 0}%
                                 </Text>
@@ -281,8 +282,9 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                                 <Text style={styles.metricSub}>
                                     {finalYearProgress?.missingDays ?? 0} missing days
                                 </Text>
-                            </TouchableOpacity>
                         </FeatureGateWrapper>
+
+                            </TouchableOpacity>
 
                     </View>
 

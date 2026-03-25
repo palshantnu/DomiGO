@@ -32,7 +32,7 @@ export const productIdToPlan = (productId) => {
 export const calculateExpiry = (purchaseDateMs) => {
   const d = new Date(purchaseDateMs);
   d.setFullYear(d.getFullYear() + 1);
-  return d.toISOString();
+  return d.toLocaleDateString("en-CA");
 };
 
 export const initIAP = async () => {

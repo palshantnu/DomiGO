@@ -20,7 +20,7 @@ const DateInput = ({ value, onChange }) => {
         date={new Date()}
         onConfirm={(d) => {
           setOpen(false);
-          onChange(d.toISOString().slice(0, 10));
+          onChange(d.toLocaleDateString("en-CA").slice(0, 10));
         }}
         onCancel={() => setOpen(false)}
       />
