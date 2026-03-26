@@ -1249,6 +1249,16 @@ processWithLocalGeoJSON(lat: location.coordinate.latitude, lng: location.coordin
         let queuePayload: [String: Any] = [
           "kind": kind,
           "date": date ?? "",
+          "originCity": originCity ?? "",
+          "originState": originState ?? "",
+          "originLat": originLat ?? 0,
+          "originLng": originLng ?? 0,
+          "destinationCity": destinationCity ?? "",
+          "destinationState": destinationState ?? "",
+          "destinationLat": destinationLat ?? 0,
+          "destinationLng": destinationLng ?? 0,
+          "startDate": startDate ?? 0,
+          "endDate": endDate ?? 0,
           "state": stateId ?? "",
           "creationType": creationType ?? "automatic"
         ]
@@ -1263,6 +1273,16 @@ processWithLocalGeoJSON(lat: location.coordinate.latitude, lng: location.coordin
         let queuePayload: [String: Any] = [
           "kind": kind,
           "date": date ?? "",
+          "originCity": originCity ?? "",
+          "originState": originState ?? "",
+          "originLat": originLat ?? 0,
+          "originLng": originLng ?? 0,
+          "destinationCity": destinationCity ?? "",
+          "destinationState": destinationState ?? "",
+          "destinationLat": destinationLat ?? 0,
+          "destinationLng": destinationLng ?? 0,
+          "startDate": startDate ?? 0,
+          "endDate": endDate ?? 0,
           "state": stateId ?? "",
           "creationType": creationType ?? "automatic"
         ]
@@ -1368,6 +1388,35 @@ processWithLocalGeoJSON(lat: location.coordinate.latitude, lng: location.coordin
       addField("hasProof", "false")
       addField("proofType", "other")
       addField("notes", "Auto-tracked missing day (offline recovery)")
+      addField("creationType", payload["creationType"] as? String ?? "automatic")
+      addField("attachments", "[]")
+    }
+
+    if kind == "trip" {
+      addField("originCity", payload["originCity"] as? String ?? "")
+      addField("originState", payload["originState"] as? String ?? "")
+      addField("destinationCity", payload["destinationCity"] as? String ?? "")
+      addField("destinationState", payload["destinationState"] as? String ?? "")
+      addField("originLat", "\(payload["originLat"] ?? 0)")
+      addField("originLng", "\(payload["originLng"] ?? 0)")
+      addField("destinationLat", "\(payload["destinationLat"] ?? 0)")
+      addField("destinationLng", "\(payload["destinationLng"] ?? 0)")
+
+      if let start = payload["startDate"] as? Double {
+        addField("startDate", formatDate1(start))
+      }
+
+      if let end = payload["endDate"] as? Double {
+        addField("endDate", formatDate1(end))
+      }
+
+      addField("typeOfDayId", "1")
+      addField("isTravelling", "true")
+      addField("tripTypeId", "1")
+      addField("tripModeId", "1")
+      addField("hasProof", "false")
+      addField("proofType", "other")
+      addField("notes", "Offline trip sync")
       addField("creationType", payload["creationType"] as? String ?? "automatic")
       addField("attachments", "[]")
     }
@@ -1548,11 +1597,11 @@ processWithLocalGeoJSON(lat: location.coordinate.latitude, lng: location.coordin
       }
     } else {
       createTrip(
-        originCity: originCity,
+        originCity: originCity ?? originState,
         originState: originState,
         originLat: originLat,
         originLng: originLng,
-        destinationCity: "",
+        destinationCity: detectedState, // ✅ FIX
         destinationState: detectedState,
         destinationLat: lat,
         destinationLng: lng,
@@ -1562,7 +1611,7 @@ processWithLocalGeoJSON(lat: location.coordinate.latitude, lng: location.coordin
 
       previousLat = lat
       previousLng = lng
-      previousCity = ""
+      previousCity = detectedState ?? " ",
       previousStateName = detectedState
       previousEnterTime = currentTimeMs
       lastTripProcessedTime = currentTimeMs

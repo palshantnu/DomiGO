@@ -86,6 +86,9 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     // GeoJSON cache for local_native mode
     private var geoJsonFeatures: JSONArray? = null
 
+    private var lastTripKey: String = ""
+    private val MIN_STAY_TIME = 2 * 60 * 1000 // 2 min
+
 
     companion object {
         private const val TAG = "LocationModule"
@@ -518,6 +521,11 @@ private fun scheduleMidnightMissingDay() {
                                     putString("fullAddress", fullAddress)
                                     putDouble("timestamp", System.currentTimeMillis().toDouble())
                                 }
+                                // 🚫 DUPLICATE BLOCK
+                                if (state.equals(previousStateName, ignoreCase = true)) {
+                                    Log.d(TAG, "🚫 Reverse geocode duplicate blocked")
+                                    return
+                                }
 
                                                 // If first-time or app started fresh
                 if (previousEnterTime == 0L) {
@@ -549,39 +557,39 @@ private fun scheduleMidnightMissingDay() {
                                     val originCitySafe = previousCity
                                     val originEnterTimeSafe = previousEnterTime
                                 
-                                    sendEntryFormData(
-                                        kind = "trip",
-                                        date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
-                                        typeOfDayId = null,
-                                        isCommissionDay = false,
-                                        isRemoteWork = false,
-                                        remoteHours = 0,
-                                        isTravelling = true,
-                                        tripTypeId = 1,
-                                        tripModeId = 1,
-                                        confirmationNo = "",
-                                        vendor = "",
-                                        hasProof = false,
-                                        proofType = "other",
-                                        notes = "",
-                                        creationType = "automatic",
-                                        remoteLocation = "",
-                                        state = null,
-                                        isUpdated=false,
+                                    // sendEntryFormData(
+                                    //     kind = "trip",
+                                    //     date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
+                                    //     typeOfDayId = null,
+                                    //     isCommissionDay = false,
+                                    //     isRemoteWork = false,
+                                    //     remoteHours = 0,
+                                    //     isTravelling = true,
+                                    //     tripTypeId = 1,
+                                    //     tripModeId = 1,
+                                    //     confirmationNo = "",
+                                    //     vendor = "",
+                                    //     hasProof = false,
+                                    //     proofType = "other",
+                                    //     notes = "",
+                                    //     creationType = "automatic",
+                                    //     remoteLocation = "",
+                                    //     state = null,
+                                    //     isUpdated=false,
                                 
-                                        originCity = originCitySafe,
-                                        originState = originStateSafe,
-                                        originLat = originLatSafe,
-                                        originLng = originLngSafe,
+                                    //     originCity = originCitySafe,
+                                    //     originState = originStateSafe,
+                                    //     originLat = originLatSafe,
+                                    //     originLng = originLngSafe,
                                 
-                                        destinationCity = city,
-                                        destinationState = state,
-                                        destinationLat = lat,
-                                        destinationLng = lng,
+                                    //     destinationCity = city,
+                                    //     destinationState = state,
+                                    //     destinationLat = lat,
+                                    //     destinationLng = lng,
                                 
-                                        startDate = originEnterTimeSafe,
-                                        endDate = System.currentTimeMillis()
-                                    )
+                                    //     startDate = originEnterTimeSafe,
+                                    //     endDate = System.currentTimeMillis()
+                                    // )
                                 
                                     // 🔥 UPDATE STATE HERE (Online case)
                                     previousStateName = state
@@ -1296,6 +1304,18 @@ private fun enqueueToOfflineQueue(payload: JSONObject) {
     try {
         val raw = prefs.getString(OFFLINE_QUEUE_KEY, "[]") ?: "[]"
         val queue = JSONArray(raw)
+        // 🚫 DUPLICATE QUEUE CHECK
+        val newKey = payload.optString("originState") + "_" + payload.optString("destinationState")
+
+        for (i in 0 until queue.length()) {
+            val existing = queue.getJSONObject(i).getJSONObject("payload")
+            val existingKey = existing.optString("originState") + "_" + existing.optString("destinationState")
+
+            if (existingKey == newKey) {
+                Log.d(TAG, "🚫 Duplicate queue skipped")
+                return
+            }
+        }
         val entry = JSONObject().apply {
             put("payload", payload)
             put("retryCount", 0)
@@ -1534,7 +1554,12 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
         Log.w(TAG, "local_native: no state detected for $lat,$lng")
         return
     }
-    currentStateName = detectedState
+
+    val newState = detectedState.trim()
+    val oldState = previousStateName.trim()
+
+    Log.d(TAG, "DEBUG → OLD=$oldState NEW=$newState")
+    // currentStateName = detectedState
     // val detectedState = detectStateFromGeoJSON(lat, lng)
     // if (detectedState == null) { Log.w(TAG, "local_native: no state detected for $lat,$lng"); return }
     // currentStateName = detectedState
@@ -1552,7 +1577,7 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
     //     Log.d(TAG, "local_native: initialized state=$detectedState")
     // }
     sendEvent("onAddressResolved", addressData)
-    sendToDomigoAPI(lat, lng, detectedState, detectedState, detectedState, geofencingCountry, detectedState)
+    // sendToDomigoAPI(lat, lng, detectedState, detectedState, detectedState, geofencingCountry, detectedState)
 
         // First time initialize
         if (previousStateName.isEmpty()) {
@@ -1569,32 +1594,19 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
         }
     
         // Strong comparison
-        if (detectedState.trim().equals(previousStateName.trim(), ignoreCase = true)) {
-            Log.d(TAG, "🏠 Same state ($detectedState) — skipping")
-            return
-        }
+        // if (detectedState.trim().equals(previousStateName.trim(), ignoreCase = true)) {
+        //     Log.d(TAG, "🏠 Same state ($detectedState) — skipping")
+        //     return
+        // }
 
-        if (stateChangeDetectedTime == 0L) {
-            stateChangeDetectedTime = System.currentTimeMillis()
-            isTransitionInProgress = false
-            return
-        }
-        
-        val diff = System.currentTimeMillis() - stateChangeDetectedTime
-        if (diff < 5000) {
-            return
-        }
-        
-        stateChangeDetectedTime = 0L
+        // if (isTransitionInProgress) {
+        //     Log.d(TAG, "⛔ Transition already in progress — skipping")
+        //     return
+        // }
 
-        if (isTransitionInProgress) {
-            Log.d(TAG, "⛔ Transition already in progress — skipping")
-            return
-        }
+        // isTransitionInProgress = true
 
-        isTransitionInProgress = true
-
-        Log.d(TAG, "🚗 STATE CHANGED: $previousStateName → $detectedState")
+        // Log.d(TAG, "🚗 STATE CHANGED: $previousStateName → $detectedState")
 
 
 
@@ -1608,12 +1620,80 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
 
             // SAFE COPY of origin
             // -------- OFFLINE CASE --------
+            // ================= DUPLICATE SAFE LOGIC =================
+
+            // val newState = detectedState.trim()
+            // val oldState = previousStateName.trim()
+
+            // SAME STATE → skip
+            if (newState.equals(oldState, ignoreCase = true)) {
+                Log.d(TAG, "🏠 Same state — skipping")
+                return
+            }
+
+            // Debounce start
+            if (stateChangeDetectedTime == 0L) {
+                stateChangeDetectedTime = System.currentTimeMillis()
+                return
+            }
+
+            val diff = System.currentTimeMillis() - stateChangeDetectedTime
+            if (diff < 10000) {   // 🔥 10 sec
+                return
+            }
+
+            stateChangeDetectedTime = 0L
+
+            // ⏱️ Minimum stay check
+            val stayDuration = System.currentTimeMillis() - previousEnterTime
+            if (stayDuration < MIN_STAY_TIME) {
+                Log.d(TAG, "⏱️ Ignoring short stay")
+                return
+            }
+
+            // 🔐 Unique trip key
+            val tripKey = "${oldState}_${newState}_${previousEnterTime}"
+
+            if (tripKey == lastTripKey) {
+                Log.d(TAG, "🚫 Duplicate trip blocked")
+                return
+            }
+
+            // Transition lock
+            if (isTransitionInProgress) {
+                Log.d(TAG, "⛔ Transition already in progress")
+                return
+            }
+            isTransitionInProgress = true
+
+            Log.d(TAG, "🚗 STATE CHANGED: $oldState → $newState")
+
+            // SAFE COPY
             val originStateSafe = previousStateName
             val originLatSafe = previousLat
             val originLngSafe = previousLng
             val originCitySafe = previousCity
             val originEnterTimeSafe = previousEnterTime
-        
+
+            // 🔥 IMPORTANT: UPDATE STATE BEFORE API
+            previousStateName = newState
+            previousStateCode = newState
+            previousCountryCode = geofencingCountry
+            previousLat = lat
+            previousLng = lng
+            previousEnterTime = System.currentTimeMillis()
+
+            saveStateToPrefs()
+
+            // SAVE KEY
+            lastTripKey = tripKey
+
+            // CITY FETCH (optional)
+            if (isInternetAvailable()) {
+                reverseGeocodeInBackground(lat, lng)
+            }
+
+            // CREATE TRIP
             sendEntryFormData(
                 kind = "trip",
                 date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
@@ -1633,33 +1713,24 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
                 remoteLocation = "",
                 state = null,
                 isUpdated = false,
-        
-                originCity = previousCity,
-                originState = previousStateName,
-                originLat = previousLat,
-                originLng = previousLng,
-        
+
+                originCity = originCitySafe,
+                originState = originStateSafe,
+                originLat = originLatSafe,
+                originLng = originLngSafe,
+
                 destinationCity = "",
-                destinationState = detectedState,
+                destinationState = newState,
                 destinationLat = lat,
                 destinationLng = lng,
-        
-                startDate = previousEnterTime,
+
+                startDate = originEnterTimeSafe,
                 endDate = System.currentTimeMillis()
             )
-        
-            // IMPORTANT: Update previous state AFTER trip creation
-            previousStateName = detectedState
-            previousStateCode = detectedState
-            previousCountryCode = geofencingCountry
-            previousLat = lat
-            previousLng = lng
-            previousEnterTime = System.currentTimeMillis()
-            saveStateToPrefs()
 
             isTransitionInProgress = false
 
-    // sendToDomigoAPI(lat, lng, "", detectedState, detectedState, geofencingCountry, "")
+    sendToDomigoAPI(lat, lng, detectedState, detectedState, detectedState, geofencingCountry, detectedState)
 }
 
 }
