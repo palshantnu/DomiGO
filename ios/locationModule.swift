@@ -24,6 +24,10 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   private var backgroundProcessing = false
   private let locationQueue = DispatchQueue(label: "com.domigo.location.processing", qos: .utility)
 
+  private var lastTripKey: String = ""
+  private let LAST_TRIP_KEY = "LocationTracker_lastTripKey"
+  
+  
   // MARK: - Network Monitoring
   private let monitor = NWPathMonitor()
   private let monitorQueue = DispatchQueue(label: "com.domigo.network.monitor")
@@ -35,7 +39,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
 
   // MARK: - Deduplication Properties
   private var lastTripProcessedTime: TimeInterval = 0
-  private let TRIP_COOLDOWN_SECONDS: TimeInterval = 0
+  private let TRIP_COOLDOWN_SECONDS: TimeInterval = 60
   private var isInitialStateLoaded = false
   private var isProcessingTrip = false
   private var pendingLocations: [CLLocation] = []
@@ -176,9 +180,9 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     """)
     
     // Check for pending offline queue
-    if isConnected {
-      flushOfflineQueue()
-    }
+//    if isConnected {
+//      flushOfflineQueue()
+//    }
     
     lastRealTimeCheck = currentTime
   }
@@ -272,7 +276,9 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       self.sharedDefaults?.set(self.lastApiTime, forKey: self.LAST_API_TIME_KEY)
       self.sharedDefaults?.set(self.lastTripProcessedTime, forKey: self.LAST_TRIP_TIME_KEY)
       self.sharedDefaults?.synchronize()
+      self.defaults.set(self.lastTripKey, forKey: self.LAST_TRIP_KEY)
     }
+    
   }
 
   private func loadPersistedState() {
@@ -314,6 +320,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     print("   Last Trip Time: \(lastTripProcessedTime)")
     print("   Previous City: \(previousCity)")
     print("   Previous State: \(previousStateName)")
+    lastTripKey = defaults.string(forKey: LAST_TRIP_KEY) ?? ""
   }
 
   override static func requiresMainQueueSetup() -> Bool {
@@ -475,7 +482,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   }
 
   private func processLocationInBackground(lat: Double, lng: Double) {
-    flushOfflineQueue()
+//    flushOfflineQueue()
 
     if geofencingMode == "local_native" {
       processWithLocalGeoJSON(lat: lat, lng: lng)
@@ -609,22 +616,22 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     guard let location = locations.last else { return }
 
     
-processWithLocalGeoJSON(lat: location.coordinate.latitude, lng: location.coordinate.longitude)
-    let locationData: [String: Any] = [
-      "latitude": location.coordinate.latitude,
-      "longitude": location.coordinate.longitude,
-      "accuracy": location.horizontalAccuracy,
-      "speed": location.speed,
-      "altitude": location.altitude,
-      "timestamp": Date().timeIntervalSince1970 * 1000,
-      "provider": "ios",
-      "isBackground": backgroundProcessing,
-    ]
+//processWithLocalGeoJSON(lat: location.coordinate.latitude, lng: location.coordinate.longitude)
+//    let locationData: [String: Any] = [
+//      "latitude": location.coordinate.latitude,
+//      "longitude": location.coordinate.longitude,
+//      "accuracy": location.horizontalAccuracy,
+//      "speed": location.speed,
+//      "altitude": location.altitude,
+//      "timestamp": Date().timeIntervalSince1970 * 1000,
+//      "provider": "ios",
+//      "isBackground": backgroundProcessing,
+//    ]
 
-    print(
-      "📍 Location update: \(location.coordinate.latitude), \(location.coordinate.longitude), accuracy: \(location.horizontalAccuracy)"
-    )
-    safeSendEvent(withName: "onLocationChanged", body: locationData)
+//    print(
+//      "📍 Location update: \(location.coordinate.latitude), \(location.coordinate.longitude), accuracy: \(location.horizontalAccuracy)"
+//    )
+//    safeSendEvent(withName: "onLocationChanged", body: locationData)
 
     if location.horizontalAccuracy < 100 {
       processLocation(location)
@@ -803,13 +810,14 @@ processWithLocalGeoJSON(lat: location.coordinate.latitude, lng: location.coordin
     lat: Double, lng: Double, city: String, state: String, address: String,
     isBackground: Bool = false, geocodeFailed: Bool = false
   ) {
+    
     let currentTimeMs = Date().timeIntervalSince1970 * 1000
     let currentTimeSeconds = Date().timeIntervalSince1970
 
     let lastApiTimeSeconds = lastApiTime / 1000
     let timeDifferenceSeconds = currentTimeSeconds - lastApiTimeSeconds
 
-    let stateChanged = state != lastState
+    let stateChanged = !state.isEmpty && !lastState.isEmpty && state != lastState
     let timePassed = timeDifferenceSeconds >= FOUR_HOURS_IN_SECONDS
 
     print("⏰ Time difference: \(timeDifferenceSeconds / 60) minutes")
@@ -826,13 +834,26 @@ processWithLocalGeoJSON(lat: location.coordinate.latitude, lng: location.coordin
         previousStateName = state
         previousEnterTime = currentTimeMs
       }
+      let tripKey = "\(previousStateName)-\(state)-\(Int(previousEnterTime))"
 
+      if tripKey == lastTripKey {
+          print("⚠️ Duplicate trip blocked with key: \(tripKey)")
+          return
+      }
       let tripCooldownPassed =
         currentTimeSeconds - (lastTripProcessedTime / 1000) >= TRIP_COOLDOWN_SECONDS
+      
+      let timeDiff = currentTimeSeconds - (lastTripProcessedTime / 1000)
+
+      if timeDiff < 30 {
+          print("⚠️ Skipping trip - too soon")
+          return
+      }
 
       if stateChanged && previousStateName != "" && !isProcessingTrip {
         isProcessingTrip = true
         lastTripProcessedTime = currentTimeMs
+        lastTripKey = tripKey
 
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
@@ -1516,14 +1537,15 @@ processWithLocalGeoJSON(lat: location.coordinate.latitude, lng: location.coordin
   }
 
   private func processWithLocalGeoJSON(lat: Double, lng: Double) {
-    guard let detectedState = detectStateFromGeoJSON(lat: lat, lng: lng) else {
-      print("local_native: no state detected")
+    guard let detectedState = detectStateFromGeoJSON(lat: lat, lng: lng) 
+    else {
+      print("local_native: no state detected",lat,lng)
       return
     }
 
       print("local_native: no state detected",detectedState)
 
-          self.sendToDomigoAPI(
+          self.checkAndSendToAPI(
               lat: lat,
               lng: lng,
               city: detectedState,
@@ -1611,7 +1633,7 @@ processWithLocalGeoJSON(lat: location.coordinate.latitude, lng: location.coordin
 
       previousLat = lat
       previousLng = lng
-      previousCity = detectedState ?? " ",
+      previousCity = detectedState ?? ""
       previousStateName = detectedState
       previousEnterTime = currentTimeMs
       lastTripProcessedTime = currentTimeMs
