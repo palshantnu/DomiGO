@@ -1305,7 +1305,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   _reactNative.AppRegistry.registerComponent(_$$_REQUIRE(_dependencyMap[4], "./app.json").name, function () {
     return _App.default;
   });
-},0,[1,2,17,613,2089],"index.js");
+},0,[1,2,17,613,2095],"index.js");
 __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports, _dependencyMap) {
   function _interopRequireDefault(e) {
     return e && e.__esModule ? e : {
@@ -99425,7 +99425,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   var _MainTracker = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[7], "./src/helpers/MainTracker"));
   var _OfflineQueueService = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[8], "./src/services/OfflineQueueService"));
   var _axiosinstance = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[9], "./src/axios/axiosinstance"));
-  var _jsxRuntime = _$$_REQUIRE(_dependencyMap[10], "react/jsx-runtime");
+  var _messaging = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[10], "@react-native-firebase/messaging"));
+  var _jsxRuntime = _$$_REQUIRE(_dependencyMap[11], "react/jsx-runtime");
   var _jsxFileName = "D:\\Reactnativeprojects\\DomiGO\\App.tsx"; // import SplashScreen from 'react-native-splash-screen';
   // import { checkLocationPermission, handleLocationAccess } from './src/helpers/locationPermission';
   // import { ensureLocationReady } from './src/helpers/locationHandler';
@@ -99435,7 +99436,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       var payload = new FormData();
       var p = event.payload || {};
       payload.append('kind', p.kind || 'trip');
-      payload.append('date', p.date || new Date().toISOString().split('T')[0]);
+      payload.append('date', p.date || new Date().toLocaleDateString("en-CA").split('T')[0]);
       payload.append('typeOfDayId', '1');
       payload.append('isCommissionDay', 'false');
       payload.append('isRemoteWork', 'false');
@@ -99509,17 +99510,60 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     }, []);
     (0, _react.useEffect)(function () {
       setTimeout(function () {
-        (0, _$$_REQUIRE(_dependencyMap[11], "./src/helpers/locationPermission2").checkAndRequestLocation)();
+        (0, _$$_REQUIRE(_dependencyMap[12], "./src/helpers/locationPermission2").checkAndRequestLocation)();
       }, 1200);
       var subscription = _reactNative.AppState.addEventListener('change', function (state) {
         if (state === 'active') {
-          (0, _$$_REQUIRE(_dependencyMap[11], "./src/helpers/locationPermission2").checkAndRequestLocation)();
+          (0, _$$_REQUIRE(_dependencyMap[12], "./src/helpers/locationPermission2").checkAndRequestLocation)();
         }
       });
       return function () {
         return subscription.remove();
       };
     }, []);
+    (0, _react.useEffect)(function () {
+      requestPermission();
+      getToken();
+    }, []);
+    function requestPermission() {
+      return _requestPermission.apply(this, arguments);
+    }
+    function _requestPermission() {
+      _requestPermission = (0, _asyncToGenerator2.default)(function* () {
+        var authStatus = yield (0, _messaging.default)().requestPermission();
+        console.log('Permission status:', authStatus);
+      });
+      return _requestPermission.apply(this, arguments);
+    }
+    function getToken() {
+      return _getToken.apply(this, arguments);
+    }
+    function _getToken() {
+      _getToken = (0, _asyncToGenerator2.default)(function* () {
+        var token = yield (0, _messaging.default)().getToken();
+        console.log('FCM Token:', token);
+      });
+      return _getToken.apply(this, arguments);
+    }
+    (0, _react.useEffect)(function () {
+      var unsubscribe = (0, _messaging.default)().onMessage(/*#__PURE__*/function () {
+        var _ref2 = (0, _asyncToGenerator2.default)(function* (remoteMessage) {
+          console.log('Foreground message:', remoteMessage);
+        });
+        return function (_x2) {
+          return _ref2.apply(this, arguments);
+        };
+      }());
+      return unsubscribe;
+    }, []);
+    (0, _messaging.default)().setBackgroundMessageHandler(/*#__PURE__*/function () {
+      var _ref3 = (0, _asyncToGenerator2.default)(function* (remoteMessage) {
+        console.log('Background message:', remoteMessage);
+      });
+      return function (_x3) {
+        return _ref3.apply(this, arguments);
+      };
+    }());
 
     //   useEffect(() => {
     //   const emitter = new NativeEventEmitter(NativeModules.LocationTracker);
@@ -99540,10 +99584,10 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
 
     (0, _react.useEffect)(function () {
       var autoStartTracking = /*#__PURE__*/function () {
-        var _ref2 = (0, _asyncToGenerator2.default)(function* () {
+        var _ref4 = (0, _asyncToGenerator2.default)(function* () {
           var _store$getState$auth;
           var enabled = yield _asyncStorage.default.getItem('DOMIGO_TRACKING_ENABLED');
-          var token = (_store$getState$auth = _$$_REQUIRE(_dependencyMap[12], "./src/redux/store").store.getState().auth) == null ? void 0 : _store$getState$auth.loginToken;
+          var token = (_store$getState$auth = _$$_REQUIRE(_dependencyMap[13], "./src/redux/store").store.getState().auth) == null ? void 0 : _store$getState$auth.loginToken;
           if (enabled === '1' && token) {
             setTimeout(function () {
               console.log('🔁 Auto-starting Domigo tracking');
@@ -99552,7 +99596,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           }
         });
         return function autoStartTracking() {
-          return _ref2.apply(this, arguments);
+          return _ref4.apply(this, arguments);
         };
       }();
       autoStartTracking();
@@ -99569,7 +99613,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     // },[])
 
     (0, _react.useEffect)(function () {
-      if (_$$_REQUIRE(_dependencyMap[13], "./src/config/featureFlags").GEOFENCING_MODE === 'local_js') {
+      if (_$$_REQUIRE(_dependencyMap[14], "./src/config/featureFlags").GEOFENCING_MODE === 'local_js') {
         scheduleMidnight();
         _OfflineQueueService.default.flush(offlineSendFn);
         _OfflineQueueService.default.startListening(offlineSendFn);
@@ -99578,14 +99622,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         };
       }
     }, []);
-    return /*#__PURE__*/(0, _jsxRuntime.jsx)(_$$_REQUIRE(_dependencyMap[14], "react-redux").Provider, {
-      store: _$$_REQUIRE(_dependencyMap[12], "./src/redux/store").store,
-      children: /*#__PURE__*/(0, _jsxRuntime.jsx)(_$$_REQUIRE(_dependencyMap[15], "redux-persist/integration/react").PersistGate, {
+    return /*#__PURE__*/(0, _jsxRuntime.jsx)(_$$_REQUIRE(_dependencyMap[15], "react-redux").Provider, {
+      store: _$$_REQUIRE(_dependencyMap[13], "./src/redux/store").store,
+      children: /*#__PURE__*/(0, _jsxRuntime.jsx)(_$$_REQUIRE(_dependencyMap[16], "redux-persist/integration/react").PersistGate, {
         loading: null,
-        persistor: _$$_REQUIRE(_dependencyMap[12], "./src/redux/store").persistor,
-        children: /*#__PURE__*/(0, _jsxRuntime.jsx)(_$$_REQUIRE(_dependencyMap[16], "react-native-safe-area-context").SafeAreaProvider, {
-          children: /*#__PURE__*/(0, _jsxRuntime.jsx)(_$$_REQUIRE(_dependencyMap[17], "@react-navigation/native").NavigationContainer, {
-            ref: _$$_REQUIRE(_dependencyMap[18], "./src/helpers/NavigationService").navigationRef,
+        persistor: _$$_REQUIRE(_dependencyMap[13], "./src/redux/store").persistor,
+        children: /*#__PURE__*/(0, _jsxRuntime.jsx)(_$$_REQUIRE(_dependencyMap[17], "react-native-safe-area-context").SafeAreaProvider, {
+          children: /*#__PURE__*/(0, _jsxRuntime.jsx)(_$$_REQUIRE(_dependencyMap[18], "@react-navigation/native").NavigationContainer, {
+            ref: _$$_REQUIRE(_dependencyMap[19], "./src/helpers/NavigationService").navigationRef,
             children: /*#__PURE__*/(0, _jsxRuntime.jsx)(AppContent, {})
           })
         })
@@ -99593,8 +99637,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     });
   }
   function AppContent() {
-    var safeAreaInsets = (0, _$$_REQUIRE(_dependencyMap[16], "react-native-safe-area-context").useSafeAreaInsets)();
-    return /*#__PURE__*/(0, _jsxRuntime.jsx)(_$$_REQUIRE(_dependencyMap[16], "react-native-safe-area-context").SafeAreaView, {
+    var safeAreaInsets = (0, _$$_REQUIRE(_dependencyMap[17], "react-native-safe-area-context").useSafeAreaInsets)();
+    return /*#__PURE__*/(0, _jsxRuntime.jsx)(_$$_REQUIRE(_dependencyMap[17], "react-native-safe-area-context").SafeAreaView, {
       edges: ['bottom', 'left', 'right'],
       style: [styles.container
       // { paddingTop: safeAreaInsets.top }
@@ -99609,7 +99653,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     }
   });
   var _default = exports.default = App;
-},613,[1,178,79,17,614,949,650,648,692,693,182,2084,649,691,783,2087,772,951,2088],"App.tsx");
+},613,[1,178,79,17,614,949,650,648,692,693,2084,182,2090,649,691,783,2093,772,951,2094],"App.tsx");
 __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports, _dependencyMap) {
   var _interopRequireDefault = _$$_REQUIRE(_dependencyMap[0], "@babel/runtime/helpers/interopRequireDefault");
   Object.defineProperty(exports, "__esModule", {
@@ -104410,7 +104454,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       // async _sendTripFromJS(change, location) {
       //   const payload = new FormData();
       //   payload.append('kind', 'trip');
-      //   payload.append('date', new Date().toISOString().split('T')[0]);
+      //   payload.append('date', new Date().toLocaleDateString("en-CA").split('T')[0]);
       //   payload.append('typeOfDayId', '1');
       //   payload.append('isCommissionDay', 'false');
       //   payload.append('isRemoteWork', 'false');
@@ -104432,8 +104476,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       //   payload.append('destinationState', change.to);
       //   payload.append('destinationLat', String(location.latitude));
       //   payload.append('destinationLng', String(location.longitude));
-      //   payload.append('startDate', new Date(change.timestamp).toISOString());
-      //   payload.append('endDate', new Date().toISOString());
+      //   payload.append('startDate', new Date(change.timestamp).toLocaleDateString("en-CA"));
+      //   payload.append('endDate', new Date().toLocaleDateString("en-CA"));
 
       //   try {
       //     await axiosinstance.post('trip-days', payload, {
@@ -104446,15 +104490,15 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       //       timestamp: change.timestamp,
       //       payload: {
       //         kind: 'trip',
-      //         date: new Date().toISOString().split('T')[0],
+      //         date: new Date().toLocaleDateString("en-CA").split('T')[0],
       //         originState: change.from,
       //         destinationState: change.to,
       //         originLat: location.latitude,
       //         originLng: location.longitude,
       //         destinationLat: location.latitude,
       //         destinationLng: location.longitude,
-      //         startDate: new Date(change.timestamp).toISOString(),
-      //         endDate: new Date().toISOString(),
+      //         startDate: new Date(change.timestamp).toLocaleDateString("en-CA"),
+      //         endDate: new Date().toLocaleDateString("en-CA"),
       //         creationType: 'automatic',
       //       },
       //     });
@@ -104667,7 +104711,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
 
           var payload = new FormData();
           payload.append("kind", "missing");
-          payload.append("date", new Date().toISOString().split("T")[0]);
+          payload.append("date", new Date().toLocaleDateString("en-CA").split("T")[0]);
           payload.append("state", this.previousState);
           try {
             yield _axiosinstance.default.post("trip-days", payload, {
@@ -104724,7 +104768,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           this.lastTripTime = Date.now();
           var payload = new FormData();
           payload.append('kind', 'trip');
-          payload.append('date', new Date().toISOString().split('T')[0]);
+          payload.append('date', new Date().toLocaleDateString("en-CA").split('T')[0]);
           payload.append('typeOfDayId', '1');
           payload.append('isCommissionDay', 'false');
           payload.append('isRemoteWork', 'false');
@@ -104748,8 +104792,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           payload.append('destinationCity', destinationCity);
           payload.append('destinationLat', String(location.latitude));
           payload.append('destinationLng', String(location.longitude));
-          payload.append('startDate', new Date(change.timestamp).toISOString());
-          payload.append('endDate', new Date().toISOString());
+          payload.append('startDate', new Date(change.timestamp).toLocaleDateString("en-CA"));
+          payload.append('endDate', new Date().toLocaleDateString("en-CA"));
           try {
             yield _axiosinstance.default.post('trip-days', payload, {
               headers: {
@@ -123493,7 +123537,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     value: true
   });
   exports.version = void 0;
-  var version = exports.version = '23.8.5';
+  var version = exports.version = '23.8.8';
 },720,[],"node_modules/@react-native-firebase/app/dist/module/version.js");
 __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports, _dependencyMap) {
   "use strict";
@@ -131048,6 +131092,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   var PURCHASE_SUBSCRIPTION = exports.PURCHASE_SUBSCRIPTION = function PURCHASE_SUBSCRIPTION(sku) {
     return /*#__PURE__*/function () {
       var _ref39 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+        console.log('internal', sku);
         dispatch({
           type: _$$_REQUIRE(_dependencyMap[6], "./action-types").SET_SUBSCRIPTION_LOADING,
           payload: true
@@ -131089,7 +131134,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 payload: {
                   plan: plan,
                   productId: latest.productId,
-                  purchaseDate: new Date(latest.transactionDate).toISOString(),
+                  purchaseDate: new Date(latest.transactionDate).toLocaleDateString("en-CA"),
                   expiryDate: expiryDate,
                   receipt: latest.transactionReceipt
                 }
@@ -131131,7 +131176,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         payload: {
           plan: plan,
           productId: purchase.productId,
-          purchaseDate: new Date(purchase.transactionDate).toISOString(),
+          purchaseDate: new Date(purchase.transactionDate).toLocaleDateString("en-CA"),
           expiryDate: expiryDate,
           receipt: purchase.transactionReceipt
         }
@@ -131145,7 +131190,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       if (!subscription.trialStartDate) {
         dispatch({
           type: _$$_REQUIRE(_dependencyMap[6], "./action-types").SET_TRIAL_START,
-          payload: new Date().toISOString()
+          payload: new Date().toLocaleDateString("en-CA")
         });
       }
     };
@@ -131223,7 +131268,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   var calculateExpiry = exports.calculateExpiry = function calculateExpiry(purchaseDateMs) {
     var d = new Date(purchaseDateMs);
     d.setFullYear(d.getFullYear() + 1);
-    return d.toISOString();
+    return d.toLocaleDateString("en-CA");
   };
   var initIAP = exports.initIAP = /*#__PURE__*/function () {
     var _ref = (0, _asyncToGenerator2.default)(function* () {
@@ -132118,6 +132163,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
               throw new Error('sku is required for Amazon subscriptions');
             }
             var sku = request.sku;
+            // console.log('internal',sku);
+
             var prorationModeAmazon = '';
             if ('prorationModeAmazon' in request) {
               prorationModeAmazon = request.prorationModeAmazon || '';
@@ -135385,30 +135432,34 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 style: styles.metricLabel,
                 children: "Days Left"
               })]
-            }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
+            }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.TouchableOpacity, {
               style: styles.metricBox,
               onPress: function onPress() {
                 return navigation.navigate('ReportsExport');
               },
-              children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
-                style: styles.metricValue,
-                children: [(_complianceScore$comp = complianceScore == null ? void 0 : complianceScore.complianceScore) != null ? _complianceScore$comp : 0, "%"]
-              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
-                style: styles.metricLabel,
-                children: "Readiness"
-              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
-                style: [styles.metricLabel, {
-                  marginTop: 0
-                }],
-                children: " Score"
-              }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
-                style: styles.metricSub,
-                children: [(_finalYearProgress$mi = finalYearProgress == null ? void 0 : finalYearProgress.missingDays) != null ? _finalYearProgress$mi : 0, " missing days"]
-              })]
+              children: /*#__PURE__*/(0, _jsxRuntime.jsxs)(_FeatureGateWrapper.default, {
+                feature: _$$_REQUIRE(_dependencyMap[22], "../config/featureAccess").FEATURES.READINESS_SCORE,
+                featureName: "Readiness Score",
+                children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
+                  style: styles.metricValue,
+                  children: [(_complianceScore$comp = complianceScore == null ? void 0 : complianceScore.complianceScore) != null ? _complianceScore$comp : 0, "%"]
+                }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+                  style: styles.metricLabel,
+                  children: "Readiness"
+                }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+                  style: [styles.metricLabel, {
+                    marginTop: 0
+                  }],
+                  children: " Score"
+                }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
+                  style: styles.metricSub,
+                  children: [(_finalYearProgress$mi = finalYearProgress == null ? void 0 : finalYearProgress.missingDays) != null ? _finalYearProgress$mi : 0, " missing days"]
+                })]
+              })
             })]
           }), !isGPSOn && /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
             activeOpacity: 0.8,
-            onPress: _$$_REQUIRE(_dependencyMap[22], "../helpers/locationRedirect").openLocationSettings,
+            onPress: _$$_REQUIRE(_dependencyMap[23], "../helpers/locationRedirect").openLocationSettings,
             style: styles.locationBanner,
             children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
               style: styles.locationIcon,
@@ -135699,10 +135750,10 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     };
   }
   var mapDispatchToProps = {
-    GET_FINAL_YEAR_PROGRESS: _$$_REQUIRE(_dependencyMap[23], "../redux/actions/action-creator").GET_FINAL_YEAR_PROGRESS,
-    GET_STATE_WISE_RESIDENCY: _$$_REQUIRE(_dependencyMap[23], "../redux/actions/action-creator").GET_STATE_WISE_RESIDENCY,
-    GET_COMPLIANCE_SCORE: _$$_REQUIRE(_dependencyMap[23], "../redux/actions/action-creator").GET_COMPLIANCE_SCORE,
-    UPDATE_STATE_THRESHOLD: _$$_REQUIRE(_dependencyMap[23], "../redux/actions/action-creator").UPDATE_STATE_THRESHOLD
+    GET_FINAL_YEAR_PROGRESS: _$$_REQUIRE(_dependencyMap[24], "../redux/actions/action-creator").GET_FINAL_YEAR_PROGRESS,
+    GET_STATE_WISE_RESIDENCY: _$$_REQUIRE(_dependencyMap[24], "../redux/actions/action-creator").GET_STATE_WISE_RESIDENCY,
+    GET_COMPLIANCE_SCORE: _$$_REQUIRE(_dependencyMap[24], "../redux/actions/action-creator").GET_COMPLIANCE_SCORE,
+    UPDATE_STATE_THRESHOLD: _$$_REQUIRE(_dependencyMap[24], "../redux/actions/action-creator").UPDATE_STATE_THRESHOLD
   };
   var _default = exports.default = (0, _$$_REQUIRE(_dependencyMap[16], "react-redux").connect)(mapStateToProps, mapDispatchToProps)(HomeScreen);
   var styles = _reactNative.StyleSheet.create({
@@ -136254,7 +136305,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       left: 10
     }
   });
-},824,[1,47,178,39,79,17,615,825,949,950,634,1071,648,1072,1076,182,783,951,698,1077,1086,772,1088,791],"src/screens/HomeScreen.js");
+},824,[1,47,178,39,79,17,615,825,949,950,634,1071,648,1072,1076,182,783,951,698,1077,1086,772,1075,1088,791],"src/screens/HomeScreen.js");
 __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports, _dependencyMap) {
   var _interopRequireDefault = _$$_REQUIRE(_dependencyMap[0], "@babel/runtime/helpers/interopRequireDefault");
   Object.defineProperty(exports, "__esModule", {
@@ -161107,7 +161158,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       var endOfWeek = new Date(startOfWeek);
       endOfWeek.setDate(startOfWeek.getDate() + 6);
       var formatDate = function formatDate(date) {
-        return date.toISOString().split('T')[0];
+        return date.toLocaleDateString("en-CA").split('T')[0];
       }; // YYYY-MM-DD
 
       return {
@@ -161581,7 +161632,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     //   Object.entries(yearWiseTimeline).forEach(([date, value]) => {
     //     console.log(
     //       "API KEY:", date,
-    //       "Parsed:", new Date(date).toISOString().split("T")[0]
+    //       "Parsed:", new Date(date).toLocaleDateString("en-CA").split("T")[0]
     //     );
     //     if (!normalized[date]) {
     //       normalized[date] = {
@@ -203045,8 +203096,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         destinationLng: (destinationData == null ? void 0 : destinationData.lng) || null,
         destinationState: (destinationData == null ? void 0 : destinationData.state) || "",
         destinationCity: (destinationData == null ? void 0 : destinationData.city) || "",
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
+        startDate: startDate.toLocaleDateString("en-CA"),
+        endDate: endDate.toLocaleDateString("en-CA"),
         attachments: attachment ? [attachment] : []
       };
     };
@@ -210662,7 +210713,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         notes: notes
       };
       if (!isEdit) {
-        payload.date = new Date(date).toISOString().split("T")[0];
+        payload.date = new Date(date).toLocaleDateString("en-CA").split("T")[0];
       }
       return payload;
     };
@@ -211274,7 +211325,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       color: "#28C76F"
     }];
     var getTodayDate = function getTodayDate() {
-      return new Date().toISOString().split('T')[0];
+      return new Date().toLocaleDateString("en-CA").split('T')[0];
     };
     var onFilterChange = function onFilterChange(item) {
       setSelectedFilter(item);
@@ -211299,7 +211350,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       var endOfWeek = new Date(startOfWeek);
       endOfWeek.setDate(startOfWeek.getDate() + 6);
       var formatDate = function formatDate(date) {
-        return date.toISOString().split('T')[0];
+        return date.toLocaleDateString("en-CA").split('T')[0];
       }; // YYYY-MM-DD
 
       return {
@@ -214345,7 +214396,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   //                                 date={new Date()}
   //                                 onConfirm={(d) => {
   //                                     setOpenIssuePicker(false);
-  //                                     setValue("issueDate", d.toISOString().slice(0, 10));
+  //                                     setValue("issueDate", d.toLocaleDateString("en-CA").slice(0, 10));
   //                                 }}
   //                                 onCancel={() => setOpenIssuePicker(false)}
   //                             />
@@ -214372,7 +214423,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   //                                 date={new Date()}
   //                                 onConfirm={(d) => {
   //                                     setOpenRenewPicker(false);
-  //                                     setValue("renewDate", d.toISOString().slice(0, 10));
+  //                                     setValue("renewDate", d.toLocaleDateString("en-CA").slice(0, 10));
   //                                 }}
   //                                 onCancel={() => setOpenRenewPicker(false)}
   //                             />
@@ -214959,8 +215010,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       console.log('Metadata String:', metadataString);
 
       // Prepare dates
-      var today = new Date().toISOString();
-      var nextYear = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+      var today = new Date().toLocaleDateString("en-CA");
+      var nextYear = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString("en-CA");
 
       // Get issue date from metadata
       var issueDate = metadataObj.issueDate || metadataObj.startDate || metadataObj.date || metadataObj.registrationDate || metadataObj.lastFileDate || today;
@@ -214970,10 +215021,10 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
 
       // Ensure dates are in correct format
       if (issueDate && !issueDate.includes('T')) {
-        issueDate = new Date(issueDate).toISOString();
+        issueDate = new Date(issueDate).toLocaleDateString("en-CA");
       }
       if (renewDate && !renewDate.includes('T')) {
-        renewDate = new Date(renewDate).toISOString();
+        renewDate = new Date(renewDate).toLocaleDateString("en-CA");
       }
 
       // Get state and city from appropriate fields
@@ -215235,7 +215286,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   //                 open={openDatePicker}
   //                 date={data.date ? new Date(data.date) : new Date()}
   //                 onConfirm={(date) => {
-  //                     updateField('date', date.toISOString().slice(0, 10));
+  //                     updateField('date', date.toLocaleDateString("en-CA").slice(0, 10));
   //                     setOpenDatePicker(false);
   //                 }}
   //                 onCancel={() => setOpenDatePicker(false)}
@@ -215379,7 +215430,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           mode: "date",
           date: data.declarationDate ? new Date(data.declarationDate) : new Date(),
           onConfirm: function onConfirm(date) {
-            updateField("declarationDate", date.toISOString().slice(0, 10));
+            updateField("declarationDate", date.toLocaleDateString("en-CA").slice(0, 10));
             setOpenDeclarationDate(false);
           },
           onCancel: function onCancel() {
@@ -215420,7 +215471,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           mode: "date",
           date: data.establishedDate ? new Date(data.establishedDate) : new Date(),
           onConfirm: function onConfirm(date) {
-            updateField("establishedDate", date.toISOString().slice(0, 10));
+            updateField("establishedDate", date.toLocaleDateString("en-CA").slice(0, 10));
             setOpenEstablishedDate(false);
           },
           onCancel: function onCancel() {
@@ -215611,7 +215662,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         open: openDatePicker,
         date: data.startDate ? new Date(data.startDate) : new Date(),
         onConfirm: function onConfirm(date) {
-          updateField('startDate', date.toISOString().slice(0, 10));
+          updateField('startDate', date.toLocaleDateString("en-CA").slice(0, 10));
           setOpenDatePicker(false);
         },
         onCancel: function onCancel() {
@@ -215748,7 +215799,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   //                 open={openDatePicker}
   //                 date={data.issueDate ? new Date(data.issueDate) : new Date()}
   //                 onConfirm={(date) => {
-  //                     updateField('issueDate', date.toISOString().slice(0, 10));
+  //                     updateField('issueDate', date.toLocaleDateString("en-CA").slice(0, 10));
   //                     setOpenDatePicker(false);
   //                 }}
   //                 onCancel={() => setOpenDatePicker(false)}
@@ -215865,7 +215916,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         open: openDatePicker,
         date: data.issueDate ? new Date(data.issueDate) : new Date(),
         onConfirm: function onConfirm(date) {
-          updateField('issueDate', date.toISOString().slice(0, 10));
+          updateField('issueDate', date.toLocaleDateString("en-CA").slice(0, 10));
           setOpenDatePicker(false);
         },
         onCancel: function onCancel() {
@@ -216053,7 +216104,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         open: openDatePicker,
         date: data.registrationDate ? new Date(data.registrationDate) : new Date(),
         onConfirm: function onConfirm(date) {
-          updateField('registrationDate', date.toISOString().slice(0, 10));
+          updateField('registrationDate', date.toLocaleDateString("en-CA").slice(0, 10));
           setOpenDatePicker(false);
         },
         onCancel: function onCancel() {
@@ -216197,7 +216248,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         open: openDatePicker,
         date: data.startDate ? new Date(data.startDate) : new Date(),
         onConfirm: function onConfirm(date) {
-          updateField('startDate', date.toISOString().slice(0, 10));
+          updateField('startDate', date.toLocaleDateString("en-CA").slice(0, 10));
           setOpenDatePicker(false);
         },
         onCancel: function onCancel() {
@@ -216305,7 +216356,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         open: openDatePicker,
         date: data.startDate ? new Date(data.startDate) : new Date(),
         onConfirm: function onConfirm(date) {
-          updateField('startDate', date.toISOString().slice(0, 10));
+          updateField('startDate', date.toLocaleDateString("en-CA").slice(0, 10));
           setOpenDatePicker(false);
         },
         onCancel: function onCancel() {
@@ -216431,7 +216482,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         open: openDatePicker,
         date: data.lastFileDate ? new Date(data.lastFileDate) : new Date(),
         onConfirm: function onConfirm(date) {
-          updateField('lastFileDate', date.toISOString().slice(0, 10));
+          updateField('lastFileDate', date.toLocaleDateString("en-CA").slice(0, 10));
           setOpenDatePicker(false);
         },
         onCancel: function onCancel() {
@@ -216663,7 +216714,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         open: openDatePicker,
         date: data.startDate ? new Date(data.startDate) : new Date(),
         onConfirm: function onConfirm(date) {
-          updateField('startDate', date.toISOString().slice(0, 10));
+          updateField('startDate', date.toLocaleDateString("en-CA").slice(0, 10));
           setOpenDatePicker(false);
         },
         onCancel: function onCancel() {
@@ -216675,7 +216726,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         open: openDissolutionPicker,
         date: data.dissolutionDate ? new Date(data.dissolutionDate) : new Date(),
         onConfirm: function onConfirm(date) {
-          updateField('dissolutionDate', date.toISOString().slice(0, 10));
+          updateField('dissolutionDate', date.toLocaleDateString("en-CA").slice(0, 10));
           setOpenDissolutionPicker(false);
         },
         onCancel: function onCancel() {
@@ -216875,7 +216926,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         open: openDatePicker,
         date: data.startDate ? new Date(data.startDate) : new Date(),
         onConfirm: function onConfirm(date) {
-          updateField('startDate', date.toISOString().slice(0, 10));
+          updateField('startDate', date.toLocaleDateString("en-CA").slice(0, 10));
           setOpenDatePicker(false);
         },
         onCancel: function onCancel() {
@@ -219010,7 +219061,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         open: openDatePicker,
         date: data.dateEstablished ? new Date(data.dateEstablished) : new Date(),
         onConfirm: function onConfirm(date) {
-          updateField('dateEstablished', date.toISOString().slice(0, 10));
+          updateField('dateEstablished', date.toLocaleDateString("en-CA").slice(0, 10));
           setOpenDatePicker(false);
         },
         onCancel: function onCancel() {
@@ -219022,7 +219073,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         open: openDissolutionPicker,
         date: data.dissolutionDate ? new Date(data.dissolutionDate) : new Date(),
         onConfirm: function onConfirm(date) {
-          updateField('dissolutionDate', date.toISOString().slice(0, 10));
+          updateField('dissolutionDate', date.toLocaleDateString("en-CA").slice(0, 10));
           setOpenDissolutionPicker(false);
         },
         onCancel: function onCancel() {
@@ -219149,7 +219200,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         open: openDatePicker,
         date: data.dateEstablished ? new Date(data.dateEstablished) : new Date(),
         onConfirm: function onConfirm(date) {
-          updateField('dateEstablished', date.toISOString().slice(0, 10));
+          updateField('dateEstablished', date.toLocaleDateString("en-CA").slice(0, 10));
           setOpenDatePicker(false);
         },
         onCancel: function onCancel() {
@@ -226717,7 +226768,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         date: new Date(),
         onConfirm: function onConfirm(d) {
           setOpen(false);
-          onChange(d.toISOString().slice(0, 10));
+          onChange(d.toLocaleDateString("en-CA").slice(0, 10));
         },
         onCancel: function onCancel() {
           return setOpen(false);
@@ -227430,7 +227481,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   //             sections,
   //             secondHome,
   //             businessRecordsMulti,
-  //             createdAt: new Date().toISOString()
+  //             createdAt: new Date().toLocaleDateString("en-CA")
   //         };
   //         try {
   //             if (editData) {
@@ -228035,14 +228086,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   //                     onConfirm={(date) => {
   //                         const [section, field] = openDatePicker.field.split('.');
   //                         if (section === 'other') {
-  //                             updateOtherEntry(field, 'startDate', date.toISOString().slice(0, 10));
+  //                             updateOtherEntry(field, 'startDate', date.toLocaleDateString("en-CA").slice(0, 10));
   //                         } else if (section === 'business') {
   //                             const [id, businessField] = field.split('.');
-  //                             updateBusinessRecord(id, businessField, date.toISOString().slice(0, 10));
+  //                             updateBusinessRecord(id, businessField, date.toLocaleDateString("en-CA").slice(0, 10));
   //                         } else if (section === 'secondHome') {
-  //                             setSecondHome(prev => ({ ...prev, [field]: date.toISOString().slice(0, 10) }));
+  //                             setSecondHome(prev => ({ ...prev, [field]: date.toLocaleDateString("en-CA").slice(0, 10) }));
   //                         } else {
-  //                             updateSection(section, field, date.toISOString().slice(0, 10));
+  //                             updateSection(section, field, date.toLocaleDateString("en-CA").slice(0, 10));
   //                         }
   //                         setOpenDatePicker({ field: null, visible: false });
   //                     }}
@@ -282046,8 +282097,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       setIsCommissionDay(!!editData.isCommissionDay);
       setIsRemoteWork(!!editData.isRemoteWork);
       setHoursWorked(editData.remoteHours ? String(editData.remoteHours) : "");
-      setTripType(editData.tripTypeId || null);
-      setTripMode(editData.tripModeId || null);
+      setTripType(editData.tripTypeId || 1);
+      setTripMode(editData.tripModeId || 1);
       setConfirmationNo(editData.confirmationNo || "");
       setVendor(editData.vendor || "");
       setHasProof(!!editData.hasProof);
@@ -282131,7 +282182,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         }
       }
       var payload = {
-        date: date,
+        date: editData.date || new Date().toLocaleDateString("en-CA"),
         typeOfDayId: Number(typeOfDay),
         isCommissionDay: isCommissionDay,
         kind: isTrip ? "trip" : "missing",
@@ -282152,7 +282203,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       };
       if (!isTrip) {
         payload.state = stateId;
-        payload.date = new Date(date).toISOString().split("T")[0];
+        // payload.date = new Date(date).toLocaleDateString("en-CA");
+        // payload.date = new Date(date).toLocaleDateString("en-CA").split("T")[0];
       }
       if (isTrip) {
         payload.originCity = startData.city;
@@ -282163,8 +282215,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         payload.destinationState = endData.state;
         payload.destinationLat = endData.lat;
         payload.destinationLng = endData.lng;
-        payload.startDate = startDate.toISOString();
-        payload.endDate = endDate.toISOString();
+        payload.startDate = startDate.toLocaleDateString("en-CA");
+        payload.endDate = endDate.toLocaleDateString("en-CA");
       }
       if (isEdit) payload.id = editData.id;
       var action = isTrip ? isEdit ? (0, _$$_REQUIRE(_dependencyMap[15], "../redux/actions/action-creator").UPDATETRIP)(payload) : (0, _$$_REQUIRE(_dependencyMap[15], "../redux/actions/action-creator").ADDTRIP)(payload)
@@ -282211,7 +282263,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     //         formData.append("stateId", stateId);
     //         formData.append(
     //             "date",
-    //             new Date(date).toISOString().split("T")[0]
+    //             new Date(date).toLocaleDateString("en-CA").split("T")[0]
     //         );
     //     }
 
@@ -282282,7 +282334,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
               children: [new Date(startDate).toDateString(), " - ", new Date(endDate).toDateString()]
             }) : /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
               style: styles.dateTitle,
-              children: formatDate(date)
+              children: formatDate(editData.date || new Date().toLocaleDateString("en-CA"))
             }), !isTrip && /*#__PURE__*/(0, _jsxRuntime.jsxs)(_jsxRuntime.Fragment, {
               children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
                 title: "Location (State)"
@@ -284115,6 +284167,1156 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   }
 },2083,[79,2075],"node_modules/@react-navigation/bottom-tabs/lib/module/utils/useBottomTabBarHeight.js");
 __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports, _dependencyMap) {
+  "use strict";
+
+  /*
+   * Copyright (c) 2016-present Invertase Limited & Contributors
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this library except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *
+   */
+
+  // Export types from types/messaging
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  var _exportNames = {
+    AuthorizationStatus: true,
+    NotificationAndroidPriority: true,
+    NotificationAndroidVisibility: true
+  };
+  Object.defineProperty(exports, "AuthorizationStatus", {
+    enumerable: true,
+    get: function get() {
+      return _$$_REQUIRE(_dependencyMap[0], "./statics.js").AuthorizationStatus;
+    }
+  });
+  Object.defineProperty(exports, "NotificationAndroidPriority", {
+    enumerable: true,
+    get: function get() {
+      return _$$_REQUIRE(_dependencyMap[0], "./statics.js").NotificationAndroidPriority;
+    }
+  });
+  Object.defineProperty(exports, "NotificationAndroidVisibility", {
+    enumerable: true,
+    get: function get() {
+      return _$$_REQUIRE(_dependencyMap[0], "./statics.js").NotificationAndroidVisibility;
+    }
+  });
+  Object.defineProperty(exports, "default", {
+    enumerable: true,
+    get: function get() {
+      return _namespaced.default;
+    }
+  });
+  Object.keys(_$$_REQUIRE(_dependencyMap[1], "./modular.js")).forEach(function (key) {
+    if (key === "default" || key === "__esModule") return;
+    if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+    if (key in exports && exports[key] === _$$_REQUIRE(_dependencyMap[1], "./modular.js")[key]) return;
+    Object.defineProperty(exports, key, {
+      enumerable: true,
+      get: function get() {
+        return _$$_REQUIRE(_dependencyMap[1], "./modular.js")[key];
+      }
+    });
+  });
+  var _namespaced = _interopRequireWildcard(_$$_REQUIRE(_dependencyMap[2], "./namespaced.js"));
+  Object.keys(_namespaced).forEach(function (key) {
+    if (key === "default" || key === "__esModule") return;
+    if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+    if (key in exports && exports[key] === _namespaced[key]) return;
+    Object.defineProperty(exports, key, {
+      enumerable: true,
+      get: function get() {
+        return _namespaced[key];
+      }
+    });
+  });
+  function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function _interopRequireWildcard(e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (var _t in e) "default" !== _t && {}.hasOwnProperty.call(e, _t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, _t)) && (i.get || i.set) ? o(f, _t, i) : f[_t] = e[_t]); return f; })(e, t); }
+},2084,[2085,2086,2087],"node_modules/@react-native-firebase/messaging/dist/module/index.js");
+__d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports, _dependencyMap) {
+  "use strict";
+
+  // shared between namespaced and modular API
+
+  // Export as objects for runtime use (matching the old statics.js pattern)
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.NotificationAndroidVisibility = exports.NotificationAndroidPriority = exports.AuthorizationStatus = void 0;
+  var AuthorizationStatus = exports.AuthorizationStatus = {
+    NOT_DETERMINED: -1,
+    DENIED: 0,
+    AUTHORIZED: 1,
+    PROVISIONAL: 2,
+    EPHEMERAL: 3
+  };
+  var NotificationAndroidPriority = exports.NotificationAndroidPriority = {
+    PRIORITY_MIN: -2,
+    PRIORITY_LOW: -1,
+    PRIORITY_DEFAULT: 0,
+    PRIORITY_HIGH: 1,
+    PRIORITY_MAX: 2
+  };
+  var NotificationAndroidVisibility = exports.NotificationAndroidVisibility = {
+    VISIBILITY_SECRET: -1,
+    VISIBILITY_PRIVATE: 0,
+    VISIBILITY_PUBLIC: 1
+  };
+},2085,[],"node_modules/@react-native-firebase/messaging/dist/module/statics.js");
+__d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports, _dependencyMap) {
+  "use strict";
+
+  /*
+   * Copyright (c) 2016-present Invertase Limited & Contributors
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this library except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *
+   */
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(exports, "AuthorizationStatus", {
+    enumerable: true,
+    get: function get() {
+      return _$$_REQUIRE(_dependencyMap[0], "./statics.js").AuthorizationStatus;
+    }
+  });
+  Object.defineProperty(exports, "NotificationAndroidPriority", {
+    enumerable: true,
+    get: function get() {
+      return _$$_REQUIRE(_dependencyMap[0], "./statics.js").NotificationAndroidPriority;
+    }
+  });
+  Object.defineProperty(exports, "NotificationAndroidVisibility", {
+    enumerable: true,
+    get: function get() {
+      return _$$_REQUIRE(_dependencyMap[0], "./statics.js").NotificationAndroidVisibility;
+    }
+  });
+  exports.deleteToken = deleteToken;
+  exports.experimentalSetDeliveryMetricsExportedToBigQueryEnabled = experimentalSetDeliveryMetricsExportedToBigQueryEnabled;
+  exports.getAPNSToken = getAPNSToken;
+  exports.getDidOpenSettingsForNotification = getDidOpenSettingsForNotification;
+  exports.getInitialNotification = getInitialNotification;
+  exports.getIsHeadless = getIsHeadless;
+  exports.getMessaging = getMessaging;
+  exports.getToken = getToken;
+  exports.hasPermission = hasPermission;
+  exports.isAutoInitEnabled = isAutoInitEnabled;
+  exports.isDeliveryMetricsExportToBigQueryEnabled = isDeliveryMetricsExportToBigQueryEnabled;
+  exports.isDeviceRegisteredForRemoteMessages = isDeviceRegisteredForRemoteMessages;
+  exports.isNotificationDelegationEnabled = isNotificationDelegationEnabled;
+  exports.isSupported = isSupported;
+  exports.onDeletedMessages = onDeletedMessages;
+  exports.onMessage = onMessage;
+  exports.onMessageSent = onMessageSent;
+  exports.onNotificationOpenedApp = onNotificationOpenedApp;
+  exports.onSendError = onSendError;
+  exports.onTokenRefresh = onTokenRefresh;
+  exports.registerDeviceForRemoteMessages = registerDeviceForRemoteMessages;
+  exports.requestPermission = requestPermission;
+  exports.sendMessage = sendMessage;
+  exports.setAPNSToken = setAPNSToken;
+  exports.setAutoInitEnabled = setAutoInitEnabled;
+  exports.setBackgroundMessageHandler = setBackgroundMessageHandler;
+  exports.setNotificationDelegationEnabled = setNotificationDelegationEnabled;
+  exports.setOpenSettingsForNotificationsHandler = setOpenSettingsForNotificationsHandler;
+  exports.subscribeToTopic = subscribeToTopic;
+  exports.unregisterDeviceForRemoteMessages = unregisterDeviceForRemoteMessages;
+  exports.unsubscribeFromTopic = unsubscribeFromTopic;
+  /**
+   * Returns a Messaging instance for the given app.
+   * @param app - FirebaseApp. Optional.
+   * @returns Messaging instance
+   */
+  function getMessaging(app) {
+    if (app) {
+      return (0, _$$_REQUIRE(_dependencyMap[1], "@react-native-firebase/app").getApp)(app.name).messaging();
+    }
+    return (0, _$$_REQUIRE(_dependencyMap[1], "@react-native-firebase/app").getApp)().messaging();
+  }
+
+  /**
+   * Removes access to an FCM token previously authorized by its scope.
+   * Messages sent by the server to this token will fail.
+   * @param messaging - Messaging instance.
+   * @param tokenOptions - Options to override senderId (iOS) and projectId (Android).
+   * @returns Promise that resolves when the token is deleted.
+   */
+  function deleteToken(messaging, tokenOptions) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.deleteToken.call(messaging, tokenOptions, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * Returns an FCM token for this device. Optionally, you can specify custom options for your own use case.
+   * @param messaging - Messaging instance.
+   * @param options - Options to override senderId (iOS) and appName.
+   * @returns Promise that resolves with the FCM token.
+   */
+  function getToken(messaging, options) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.getToken.call(messaging, options, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * When any FCM payload is received, the listener callback is called with a `RemoteMessage`.
+   * > This subscriber method is only called when the app is active (in the foreground).
+   * @param messaging - Messaging instance.
+   * @param listener - Called with a `RemoteMessage` when a new FCM payload is received from the server.
+   * @returns Function to unsubscribe from the message listener.
+   */
+  function onMessage(messaging, listener) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.onMessage.call(messaging, listener, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * When the user presses a notification displayed via FCM, this listener will be called if the app
+   * has opened from a background state.
+   * @param messaging - Messaging instance.
+   * @param listener - Called with a `RemoteMessage` when a notification press opens the application.
+   * @returns Function to unsubscribe from the notification opened listener.
+   */
+  function onNotificationOpenedApp(messaging, listener) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.onNotificationOpenedApp.call(messaging, listener, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * Called when a new registration token is generated for the device. For example, this event can happen when a
+   * token expires or when the server invalidates the token.
+   * > This subscriber method is only called when the app is active (in the foreground).
+   * @param messaging - Messaging instance.
+   * @param listener - Called with a FCM token when the token is refreshed.
+   * @returns Function to unsubscribe from the token refresh listener.
+   */
+  function onTokenRefresh(messaging, listener) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.onTokenRefresh.call(messaging, listener, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * On iOS, messaging permission must be requested by the current application before messages can
+   * be received or sent.
+   * @param messaging - Messaging instance.
+   * @param iosPermissions - All the available permissions for iOS that can be requested.
+   * @returns Promise that resolves with the authorization status.
+   */
+  function requestPermission(messaging, iosPermissions) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.requestPermission.call(messaging, iosPermissions, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * Returns whether messaging auto initialization is enabled or disabled for the device.
+   * @param messaging - Messaging instance.
+   * @returns Boolean indicating whether auto initialization is enabled.
+   */
+  function isAutoInitEnabled(messaging) {
+    return (0, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").withModularFlag)(function () {
+      return messaging.isAutoInitEnabled;
+    });
+  }
+
+  /**
+   * Sets whether messaging auto initialization is enabled or disabled for the device.
+   * @param messaging - Messaging instance.
+   * @param enabled - A boolean value to enable or disable auto initialization.
+   * @returns Promise that resolves when the setting is updated.
+   */
+  function setAutoInitEnabled(messaging, enabled) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.setAutoInitEnabled.call(messaging, enabled, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * When a notification from FCM has triggered the application to open from a quit state,
+   * this method will return a `RemoteMessage` containing the notification data, or `null` if
+   * the app was opened via another method.
+   * @param messaging - Messaging instance.
+   * @returns Promise that resolves with the initial notification or null.
+   */
+  function getInitialNotification(messaging) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.getInitialNotification.call(messaging, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * When the app is opened from iOS notifications settings from a quit state,
+   * this method will return `true` or `false` if the app was opened via another method.
+   * @param messaging - Messaging instance.
+   * @returns Promise that resolves with a boolean indicating if the app was opened from settings.
+   */
+  function getDidOpenSettingsForNotification(messaging) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.getDidOpenSettingsForNotification.call(messaging, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * Returns whether the root view is headless or not
+   * i.e true if the app was launched in the background (for example, by data-only cloud message)
+   * @param messaging - Messaging instance.
+   * @returns Promise that resolves with a boolean indicating if the app is headless.
+   */
+  function getIsHeadless(messaging) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.getIsHeadless.call(messaging, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * On iOS, if your app wants to receive remote messages from FCM (via APNs), you must explicitly register
+   * with APNs if auto-registration has been disabled.
+   * @param messaging - Messaging instance.
+   * @returns Promise that resolves when the device is registered.
+   */
+  function registerDeviceForRemoteMessages(messaging) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.registerDeviceForRemoteMessages.call(messaging, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * Returns a boolean value whether the user has registered for remote notifications via
+   * `registerDeviceForRemoteMessages()`. For iOS. Android always returns `true`.
+   * @param messaging - Messaging instance.
+   * @returns Boolean indicating if the device is registered for remote messages.
+   */
+  function isDeviceRegisteredForRemoteMessages(messaging) {
+    return (0, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").withModularFlag)(function () {
+      return messaging.isDeviceRegisteredForRemoteMessages;
+    });
+  }
+
+  /**
+   * Unregisters the app from receiving remote notifications.
+   * @param messaging - Messaging instance.
+   * @returns Promise that resolves when the device is unregistered.
+   */
+  function unregisterDeviceForRemoteMessages(messaging) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.unregisterDeviceForRemoteMessages.call(messaging, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * On iOS, it is possible to get the users APNs token. This may be required if you want to send messages to your
+   * iOS devices without using the FCM service.
+   * @param messaging - Messaging instance.
+   * @returns Promise that resolves with the APNs token or null.
+   */
+  function getAPNSToken(messaging) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.getAPNSToken.call(messaging, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * On iOS, This method is used to set the APNs Token received by the application delegate.
+   * Note that the token is expected to be a hexadecimal string, as it is an NSData type in
+   * the underlying native firebase SDK, and raw data may only be passed as a string if it is
+   * hex encoded. Calling code is responsible for correct encoding, you should verify by comparing
+   * the results of `getAPNSToken()` with your token parameter to make sure they are equivalent.
+   *
+   * Messaging uses method swizzling to ensure that the APNs token is set automatically.
+   * However, if you have disabled swizzling by setting FirebaseAppDelegateProxyEnabled to NO
+   * in your app's Info.plist, you should manually set the APNs token in your application
+   * delegate's application(_:didRegisterForRemoteNotificationsWithDeviceToken:) method.
+   *
+   * If you would like to set the type of the APNs token, rather than relying on automatic
+   * detection, provide a type of either 'prod', 'sandbox'. Omitting the type parameter
+   * or specifying 'unknown' will rely on automatic type detection based on provisioning profile.
+   *
+   * At a native level you may also call objective-c `[FIRMessaging setAPNSToken];` as needed.
+   *
+   * @param messaging - Messaging instance.
+   * @param token - A hexadecimal string representing your APNs token.
+   * @param type - Optional. A string specifying 'prod', 'sandbox' or 'unknown' token type.
+   * @returns Promise that resolves when the APNs token is set.
+   */
+  function setAPNSToken(messaging, token, type) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.setAPNSToken.call(messaging, token, type, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * Returns a `AuthorizationStatus` as to whether the user has messaging permission for this app.
+   * @param messaging - Messaging instance.
+   * @returns Promise that resolves with the authorization status.
+   */
+  function hasPermission(messaging) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.hasPermission.call(messaging, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * Called when the FCM server deletes pending messages.
+   * @param messaging - Messaging instance.
+   * @param listener - Called when the FCM deletes pending messages.
+   * @returns Function to unsubscribe from the deleted messages listener.
+   */
+  function onDeletedMessages(messaging, listener) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.onDeletedMessages.call(messaging, listener, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * When sending a `RemoteMessage`, this listener is called when the message has been sent to FCM.
+   * @param messaging - Messaging instance.
+   * @param listener - Called when the FCM sends the remote message to FCM.
+   * @returns Function to unsubscribe from the message sent listener.
+   */
+  function onMessageSent(messaging, listener) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.onMessageSent.call(messaging, listener, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * When sending a `RemoteMessage`, this listener is called when an error is thrown and the
+   * message could not be sent.
+   * @param messaging - Messaging instance.
+   * @param listener - Called when the FCM sends the remote message to FCM.
+   * @returns Function to unsubscribe from the send error listener.
+   */
+  function onSendError(messaging, listener) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.onSendError.call(messaging, listener, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * Set a message handler function which is called when the app is in the background
+   * or terminated. In Android, a headless task is created, allowing you to access the React Native environment
+   * to perform tasks such as updating local storage, or sending a network request.
+   * @param messaging - Messaging instance.
+   * @param handler - Called when a message is sent and the application is in a background or terminated state.
+   * @returns void
+   */
+  function setBackgroundMessageHandler(messaging, handler) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.setBackgroundMessageHandler.call(messaging, handler, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * Set a handler function which is called when the `${App Name} notifications settings`
+   * link in iOS settings is clicked.
+   * @param messaging - Messaging instance.
+   * @param handler - Called when link in iOS settings is clicked.
+   * @returns void
+   */
+  function setOpenSettingsForNotificationsHandler(messaging, handler) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.setOpenSettingsForNotificationsHandler.call(messaging, handler, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * Send a new `RemoteMessage` to the FCM server.
+   * @param messaging - Messaging instance.
+   * @param message - A `RemoteMessage` interface.
+   * @returns Promise that resolves when the message is sent.
+   */
+  function sendMessage(messaging, message) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.sendMessage.call(messaging, message, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * Apps can subscribe to a topic, which allows the FCM server to send targeted messages to only those
+   * devices subscribed to that topic.
+   * @param messaging - Messaging instance.
+   * @param topic - The topic name.
+   * @returns Promise that resolves when the subscription is complete.
+   */
+  function subscribeToTopic(messaging, topic) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.subscribeToTopic.call(messaging, topic, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * Unsubscribe the device from a topic.
+   * @param messaging - Messaging instance.
+   * @param topic - The topic name.
+   * @returns Promise that resolves when the unsubscription is complete.
+   */
+  function unsubscribeFromTopic(messaging, topic) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.unsubscribeFromTopic.call(messaging, topic, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * Returns a boolean whether message delivery metrics are exported to BigQuery.
+   * @param messaging - Messaging instance.
+   * @returns Boolean indicating if message delivery metrics are exported to BigQuery.
+   */
+  function isDeliveryMetricsExportToBigQueryEnabled(messaging) {
+    return (0, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").withModularFlag)(function () {
+      return messaging.isDeliveryMetricsExportToBigQueryEnabled;
+    });
+  }
+
+  /**
+   * Returns a boolean whether message delegation is enabled. Android only,
+   * always returns false on iOS
+   * @param messaging - Messaging instance.
+   * @returns Boolean indicating if notification delegation is enabled.
+   */
+  function isNotificationDelegationEnabled(messaging) {
+    return (0, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").withModularFlag)(function () {
+      return messaging.isNotificationDelegationEnabled;
+    });
+  }
+
+  /**
+   * Sets whether message notification delegation is enabled or disabled.
+   * The value is false by default. Set this to true to allow delegation of notification to Google Play Services.
+   * Note if true message handlers will not function on Android, and it has no effect on iOS
+   * @param messaging - Messaging instance.
+   * @param enabled - A boolean value to enable or disable delegation of messages to Google Play Services.
+   * @returns Promise that resolves when the setting is updated.
+   */
+  function setNotificationDelegationEnabled(messaging, enabled) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.setNotificationDelegationEnabled.call(messaging, enabled, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * Checks if all required APIs exist in the browser.
+   * @param messaging - Messaging instance.
+   * @returns Promise that resolves with a boolean indicating if the APIs are supported.
+   */
+  function isSupported(messaging) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.isSupported.call(messaging, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+
+  /**
+   * Sets whether message delivery metrics are exported to BigQuery is enabled or disabled.
+   * The value is false by default. Set this to true to allow exporting of message delivery metrics to BigQuery.
+   * @param messaging - Messaging instance.
+   * @param enabled - A boolean value to enable or disable exporting of message delivery metrics to BigQuery.
+   * @returns Promise that resolves when the setting is updated.
+   */
+  function experimentalSetDeliveryMetricsExportedToBigQueryEnabled(messaging, enabled) {
+    // @ts-ignore - MODULAR_DEPRECATION_ARG is used internally
+    return messaging.setDeliveryMetricsExportToBigQuery.call(messaging, enabled, _$$_REQUIRE(_dependencyMap[2], "@react-native-firebase/app/dist/module/common").MODULAR_DEPRECATION_ARG);
+  }
+},2086,[2085,716,703],"node_modules/@react-native-firebase/messaging/dist/module/modular.js");
+__d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports, _dependencyMap) {
+  "use strict";
+
+  /*
+   * Copyright (c) 2016-present Invertase Limited & Contributors
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this library except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *
+   */
+  var _interopRequireDefault = _$$_REQUIRE(_dependencyMap[0], "@babel/runtime/helpers/interopRequireDefault");
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.firebase = exports.default = exports.SDK_VERSION = void 0;
+  var _toConsumableArray2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[1], "@babel/runtime/helpers/toConsumableArray"));
+  var _asyncToGenerator2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[2], "@babel/runtime/helpers/asyncToGenerator"));
+  var _slicedToArray2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[3], "@babel/runtime/helpers/slicedToArray"));
+  var _classCallCheck2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[4], "@babel/runtime/helpers/classCallCheck"));
+  var _createClass2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[5], "@babel/runtime/helpers/createClass"));
+  var _possibleConstructorReturn2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[6], "@babel/runtime/helpers/possibleConstructorReturn"));
+  var _getPrototypeOf2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[7], "@babel/runtime/helpers/getPrototypeOf"));
+  var _inherits2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[8], "@babel/runtime/helpers/inherits"));
+  var _reactNative = _$$_REQUIRE(_dependencyMap[9], "react-native");
+  var _remoteMessageOptions = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[10], "./remoteMessageOptions.js"));
+  function _callSuper(t, o, e) { return o = (0, _getPrototypeOf2.default)(o), (0, _possibleConstructorReturn2.default)(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], (0, _getPrototypeOf2.default)(t).constructor) : o.apply(t, e)); }
+  function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
+  var statics = {
+    AuthorizationStatus: _$$_REQUIRE(_dependencyMap[11], "./statics.js").AuthorizationStatus,
+    NotificationAndroidPriority: _$$_REQUIRE(_dependencyMap[11], "./statics.js").NotificationAndroidPriority,
+    NotificationAndroidVisibility: _$$_REQUIRE(_dependencyMap[11], "./statics.js").NotificationAndroidVisibility
+  };
+  var namespace = 'messaging';
+  var nativeModuleName = 'RNFBMessagingModule';
+  var backgroundMessageHandler;
+  var openSettingsForNotificationHandler;
+  var playServicesAvailability;
+  var FirebaseMessagingModule = /*#__PURE__*/function (_FirebaseModule) {
+    function FirebaseMessagingModule(app, config, customUrlOrRegion) {
+      var _this;
+      (0, _classCallCheck2.default)(this, FirebaseMessagingModule);
+      _this = _callSuper(this, FirebaseMessagingModule, [app, config, customUrlOrRegion]);
+      _this._isAutoInitEnabled = _this.native.isAutoInitEnabled != null ? _this.native.isAutoInitEnabled : true;
+      _this._isDeliveryMetricsExportToBigQueryEnabled = _this.native.isDeliveryMetricsExportToBigQueryEnabled != null ? _this.native.isDeliveryMetricsExportToBigQueryEnabled : false;
+      _this._isRegisteredForRemoteNotifications = _this.native.isRegisteredForRemoteNotifications != null ? _this.native.isRegisteredForRemoteNotifications : true;
+      _this._isNotificationDelegationEnabled = _this.native.isNotificationDelegationEnabled != null ? _this.native.isNotificationDelegationEnabled : false;
+      _reactNative.AppRegistry.registerHeadlessTask('ReactNativeFirebaseMessagingHeadlessTask', function () {
+        if (!backgroundMessageHandler) {
+          // eslint-disable-next-line no-console
+          console.warn('No background message handler has been set. Set a handler via the "setBackgroundMessageHandler" method.');
+          return function () {
+            return Promise.resolve();
+          };
+        }
+        return function (remoteMessage) {
+          return backgroundMessageHandler(remoteMessage);
+        };
+      });
+      if (_$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isIOS) {
+        _this.emitter.addListener('messaging_message_received_background', function (remoteMessage) {
+          if (!backgroundMessageHandler) {
+            // eslint-disable-next-line no-console
+            console.warn('No background message handler has been set. Set a handler via the "setBackgroundMessageHandler" method.');
+            return Promise.resolve();
+          }
+
+          // Ensure the handler is a promise
+          var handlerPromise = Promise.resolve(backgroundMessageHandler(remoteMessage));
+          handlerPromise.finally(function () {
+            _this.native.completeNotificationProcessing();
+          });
+          return handlerPromise;
+        });
+        _this.emitter.addListener('messaging_settings_for_notification_opened', function (remoteMessage) {
+          if (!openSettingsForNotificationHandler) {
+            // eslint-disable-next-line no-console
+            console.warn('No handler for notification settings link has been set. Set a handler via the "setOpenSettingsForNotificationsHandler" method');
+            return Promise.resolve();
+          }
+          return openSettingsForNotificationHandler(remoteMessage);
+        });
+      }
+      return _this;
+    }
+    (0, _inherits2.default)(FirebaseMessagingModule, _FirebaseModule);
+    return (0, _createClass2.default)(FirebaseMessagingModule, [{
+      key: "isAutoInitEnabled",
+      get: function get() {
+        return this._isAutoInitEnabled;
+      }
+
+      /**
+       * @ios
+       */
+    }, {
+      key: "isDeviceRegisteredForRemoteMessages",
+      get: function get() {
+        if (_$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isAndroid) {
+          return true;
+        }
+        return this._isRegisteredForRemoteNotifications;
+      }
+    }, {
+      key: "isNotificationDelegationEnabled",
+      get: function get() {
+        return this._isNotificationDelegationEnabled;
+      }
+    }, {
+      key: "isDeliveryMetricsExportToBigQueryEnabled",
+      get: function get() {
+        return this._isDeliveryMetricsExportToBigQueryEnabled;
+      }
+    }, {
+      key: "setAutoInitEnabled",
+      value: function setAutoInitEnabled(enabled) {
+        if (!(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isBoolean)(enabled)) {
+          throw new Error("firebase.messaging().setAutoInitEnabled(*) 'enabled' expected a boolean value.");
+        }
+        this._isAutoInitEnabled = enabled;
+        return this.native.setAutoInitEnabled(enabled);
+      }
+    }, {
+      key: "getInitialNotification",
+      value: function getInitialNotification() {
+        return this.native.getInitialNotification().then(function (value) {
+          if (value) {
+            return value;
+          }
+          return null;
+        });
+      }
+    }, {
+      key: "getDidOpenSettingsForNotification",
+      value: function getDidOpenSettingsForNotification() {
+        if (!_$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isIOS) return Promise.resolve(false);
+        return this.native.getDidOpenSettingsForNotification().then(function (value) {
+          return value;
+        });
+      }
+    }, {
+      key: "getIsHeadless",
+      value: function getIsHeadless() {
+        return this.native.getIsHeadless();
+      }
+    }, {
+      key: "getToken",
+      value: function getToken(options) {
+        if (!(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isUndefined)(options == null ? void 0 : options.appName) && !(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isString)(options == null ? void 0 : options.appName)) {
+          throw new Error("firebase.messaging().getToken(*) 'appName' expected a string.");
+        }
+        if (!(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isUndefined)(options == null ? void 0 : options.senderId) && !(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isString)(options == null ? void 0 : options.senderId)) {
+          throw new Error("firebase.messaging().getToken(*) 'senderId' expected a string.");
+        }
+        var appName = (options == null ? void 0 : options.appName) || this.app.name;
+        var senderId = (options == null ? void 0 : options.senderId) || this.app.options.messagingSenderId;
+        return this.native.getToken(appName, senderId);
+      }
+    }, {
+      key: "deleteToken",
+      value: function deleteToken(options) {
+        if (!(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isUndefined)(options == null ? void 0 : options.appName) && !(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isString)(options == null ? void 0 : options.appName)) {
+          throw new Error("firebase.messaging().deleteToken(*) 'appName' expected a string.");
+        }
+        if (!(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isUndefined)(options == null ? void 0 : options.senderId) && !(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isString)(options == null ? void 0 : options.senderId)) {
+          throw new Error("firebase.messaging().deleteToken(*) 'senderId' expected a string.");
+        }
+        var appName = (options == null ? void 0 : options.appName) || this.app.name;
+        var senderId = (options == null ? void 0 : options.senderId) || this.app.options.messagingSenderId;
+        return this.native.deleteToken(appName, senderId);
+      }
+    }, {
+      key: "onMessage",
+      value: function onMessage(listener) {
+        if (!(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isFunction)(listener)) {
+          throw new Error("firebase.messaging().onMessage(*) 'listener' expected a function.");
+        }
+        var subscription = this.emitter.addListener('messaging_message_received', listener);
+        return function () {
+          return subscription.remove();
+        };
+      }
+    }, {
+      key: "onNotificationOpenedApp",
+      value: function onNotificationOpenedApp(listener) {
+        if (!(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isFunction)(listener)) {
+          throw new Error("firebase.messaging().onNotificationOpenedApp(*) 'listener' expected a function.");
+        }
+        var subscription = this.emitter.addListener('messaging_notification_opened', listener);
+        return function () {
+          return subscription.remove();
+        };
+      }
+    }, {
+      key: "onTokenRefresh",
+      value: function onTokenRefresh(listener) {
+        if (!(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isFunction)(listener)) {
+          throw new Error("firebase.messaging().onTokenRefresh(*) 'listener' expected a function.");
+        }
+        var subscription = this.emitter.addListener('messaging_token_refresh', function (event) {
+          var token = event.token;
+          listener(token);
+        });
+        return function () {
+          return subscription.remove();
+        };
+      }
+
+      /**
+       * @platform ios
+       */
+    }, {
+      key: "requestPermission",
+      value: function requestPermission(permissions) {
+        if (_$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isAndroid) {
+          return Promise.resolve(_$$_REQUIRE(_dependencyMap[11], "./statics.js").AuthorizationStatus.AUTHORIZED);
+        }
+        var defaultPermissions = {
+          alert: true,
+          announcement: false,
+          badge: true,
+          carPlay: true,
+          provisional: false,
+          sound: true,
+          criticalAlert: false,
+          providesAppNotificationSettings: false
+        };
+        if (!permissions) {
+          return this.native.requestPermission(defaultPermissions);
+        }
+        if (!(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isObject)(permissions)) {
+          throw new Error('firebase.messaging().requestPermission(*) expected an object value.');
+        }
+        Object.entries(permissions).forEach(function (_ref) {
+          var _ref2 = (0, _slicedToArray2.default)(_ref, 2),
+            key = _ref2[0],
+            value = _ref2[1];
+          if (!(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").hasOwnProperty)(defaultPermissions, key)) {
+            throw new Error(`firebase.messaging().requestPermission(*) unexpected key "${key}" provided to permissions object.`);
+          }
+          if (!(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isBoolean)(value)) {
+            throw new Error(`firebase.messaging().requestPermission(*) the permission "${key}" expected a boolean value.`);
+          }
+          defaultPermissions[key] = value;
+        });
+        return this.native.requestPermission(defaultPermissions);
+      }
+    }, {
+      key: "registerDeviceForRemoteMessages",
+      value: function registerDeviceForRemoteMessages() {
+        if (_$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isAndroid) {
+          return Promise.resolve();
+        }
+        var autoRegister = this.firebaseJson['messaging_ios_auto_register_for_remote_messages'];
+        if (autoRegister === undefined || autoRegister === true) {
+          // eslint-disable-next-line no-console
+          console.warn(`Usage of "messaging().registerDeviceForRemoteMessages()" is not required. You only need to register if auto-registration is disabled in your 'firebase.json' configuration file via the 'messaging_ios_auto_register_for_remote_messages' property.`);
+        }
+        this._isRegisteredForRemoteNotifications = true;
+        return this.native.registerForRemoteNotifications();
+      }
+
+      /**
+       * @platform ios
+       */
+    }, {
+      key: "unregisterDeviceForRemoteMessages",
+      value: function unregisterDeviceForRemoteMessages() {
+        if (_$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isAndroid) {
+          return Promise.resolve();
+        }
+        this._isRegisteredForRemoteNotifications = false;
+        return this.native.unregisterForRemoteNotifications();
+      }
+
+      /**
+       * @platform ios
+       */
+    }, {
+      key: "getAPNSToken",
+      value: function getAPNSToken() {
+        if (_$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isAndroid) {
+          return Promise.resolve(null);
+        }
+        return this.native.getAPNSToken();
+      }
+
+      /**
+       * @platform ios
+       */
+    }, {
+      key: "setAPNSToken",
+      value: function setAPNSToken(token, type) {
+        if ((0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isUndefined)(token) || !(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isString)(token)) {
+          throw new Error("firebase.messaging().setAPNSToken(*) 'token' expected a string value.");
+        }
+        if (!(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isUndefined)(type) && (!(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isString)(type) || !['prod', 'sandbox', 'unknown'].includes(type))) {
+          throw new Error("firebase.messaging().setAPNSToken(*) 'type' expected one of 'prod', 'sandbox', or 'unknown'.");
+        }
+        if (_$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isAndroid) {
+          return Promise.resolve();
+        }
+        return this.native.setAPNSToken(token, type);
+      }
+    }, {
+      key: "hasPermission",
+      value: function hasPermission() {
+        return this.native.hasPermission();
+      }
+
+      // https://firebase.google.com/docs/reference/android/com/google/firebase/messaging/FirebaseMessagingService.html#public-void-ondeletedmessages-
+    }, {
+      key: "onDeletedMessages",
+      value: function onDeletedMessages(listener) {
+        if (!(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isFunction)(listener)) {
+          throw new Error("firebase.messaging().onDeletedMessages(*) 'listener' expected a function.");
+        }
+        var subscription = this.emitter.addListener('messaging_message_deleted', listener);
+        return function () {
+          return subscription.remove();
+        };
+      }
+
+      // https://firebase.google.com/docs/reference/android/com/google/firebase/messaging/FirebaseMessagingService.html#onMessageSent(java.lang.String)
+    }, {
+      key: "onMessageSent",
+      value: function onMessageSent(listener) {
+        if (!(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isFunction)(listener)) {
+          throw new Error("firebase.messaging().onMessageSent(*) 'listener' expected a function.");
+        }
+        var subscription = this.emitter.addListener('messaging_message_sent', listener);
+        return function () {
+          subscription.remove();
+        };
+      }
+
+      // https://firebase.google.com/docs/reference/android/com/google/firebase/messaging/FirebaseMessagingService.html#onSendError(java.lang.String,%20java.lang.Exception)
+    }, {
+      key: "onSendError",
+      value: function onSendError(listener) {
+        if (!(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isFunction)(listener)) {
+          throw new Error("firebase.messaging().onSendError(*) 'listener' expected a function.");
+        }
+        var subscription = this.emitter.addListener('messaging_message_send_error', listener);
+        return function () {
+          return subscription.remove();
+        };
+      }
+
+      /**
+       * Set a handler that will be called when a message is received while the app is in the background.
+       * Should be called before the app is registered in `AppRegistry`, for example in `index.js`.
+       * An app is considered to be in the background if no active window is displayed.
+       * @param handler called with an argument of type messaging.RemoteMessage that must be async and return a Promise
+       */
+    }, {
+      key: "setBackgroundMessageHandler",
+      value: function setBackgroundMessageHandler(handler) {
+        if (!(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isFunction)(handler)) {
+          throw new Error("firebase.messaging().setBackgroundMessageHandler(*) 'handler' expected a function.");
+        }
+        backgroundMessageHandler = handler;
+        if (_$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isIOS) {
+          this.native.signalBackgroundMessageHandlerSet();
+        }
+      }
+    }, {
+      key: "setOpenSettingsForNotificationsHandler",
+      value: function setOpenSettingsForNotificationsHandler(handler) {
+        if (!_$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isIOS) {
+          return;
+        }
+        if (!(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isFunction)(handler)) {
+          throw new Error("firebase.messaging().setOpenSettingsForNotificationsHandler(*) 'handler' expected a function.");
+        }
+        openSettingsForNotificationHandler = handler;
+      }
+    }, {
+      key: "sendMessage",
+      value: function sendMessage(remoteMessage) {
+        if (_$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isIOS) {
+          throw new Error(`firebase.messaging().sendMessage() is only supported on Android devices.`);
+        }
+        var options;
+        try {
+          var senderId = this.app.options.messagingSenderId;
+          if (!senderId) {
+            throw new Error("'messagingSenderId' is required in Firebase app options.");
+          }
+          options = (0, _remoteMessageOptions.default)(senderId, remoteMessage);
+        } catch (e) {
+          throw new Error(`firebase.messaging().sendMessage(*) ${e.message}.`);
+        }
+        return this.native.sendMessage(options);
+      }
+    }, {
+      key: "subscribeToTopic",
+      value: function subscribeToTopic(topic) {
+        if (!(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isString)(topic)) {
+          throw new Error("firebase.messaging().subscribeToTopic(*) 'topic' expected a string value.");
+        }
+        if (topic.indexOf('/') > -1) {
+          throw new Error('firebase.messaging().subscribeToTopic(*) \'topic\' must not include "/".');
+        }
+        return this.native.subscribeToTopic(topic);
+      }
+    }, {
+      key: "unsubscribeFromTopic",
+      value: function unsubscribeFromTopic(topic) {
+        if (!(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isString)(topic)) {
+          throw new Error("firebase.messaging().unsubscribeFromTopic(*) 'topic' expected a string value.");
+        }
+        if (topic.indexOf('/') > -1) {
+          throw new Error('firebase.messaging().unsubscribeFromTopic(*) \'topic\' must not include "/".');
+        }
+        return this.native.unsubscribeFromTopic(topic);
+      }
+
+      /**
+       * unsupported
+       */
+    }, {
+      key: "useServiceWorker",
+      value: function useServiceWorker() {
+        // eslint-disable-next-line no-console
+        console.warn('firebase.messaging().useServiceWorker() is not supported on react-native-firebase.');
+      }
+    }, {
+      key: "usePublicVapidKey",
+      value: function usePublicVapidKey() {
+        // eslint-disable-next-line no-console
+        console.warn('firebase.messaging().usePublicVapidKey() is not supported on react-native-firebase.');
+      }
+    }, {
+      key: "setDeliveryMetricsExportToBigQuery",
+      value: function setDeliveryMetricsExportToBigQuery(enabled) {
+        if (!(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isBoolean)(enabled)) {
+          throw new Error("firebase.messaging().setDeliveryMetricsExportToBigQuery(*) 'enabled' expected a boolean value.");
+        }
+        this._isDeliveryMetricsExportToBigQueryEnabled = enabled;
+        return this.native.setDeliveryMetricsExportToBigQuery(enabled);
+      }
+    }, {
+      key: "setNotificationDelegationEnabled",
+      value: function setNotificationDelegationEnabled(enabled) {
+        if (!(0, _$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isBoolean)(enabled)) {
+          throw new Error("firebase.messaging().setNotificationDelegationEnabled(*) 'enabled' expected a boolean value.");
+        }
+        this._isNotificationDelegationEnabled = enabled;
+        if (_$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isIOS) {
+          return Promise.resolve();
+        }
+        return this.native.setNotificationDelegationEnabled(enabled);
+      }
+    }, {
+      key: "isSupported",
+      value: function () {
+        var _isSupported = (0, _asyncToGenerator2.default)(function* () {
+          if (_$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isAndroid) {
+            var _firebase = (0, _$$_REQUIRE(_dependencyMap[13], "@react-native-firebase/app/dist/module/internal").getFirebaseRoot)();
+            var app = this.app;
+            // @ts-ignore - secret "app" argument to avoid deprecation warning when getApp() is called under the hood
+            playServicesAvailability = _firebase.utils(app).playServicesAvailability;
+            return playServicesAvailability.isAvailable;
+          }
+          // Always return "true" for iOS. Web will be implemented when it is supported
+          return true;
+        });
+        function isSupported() {
+          return _isSupported.apply(this, arguments);
+        }
+        return isSupported;
+      }()
+    }]);
+  }(_$$_REQUIRE(_dependencyMap[13], "@react-native-firebase/app/dist/module/internal").FirebaseModule); // import { SDK_VERSION } from '@react-native-firebase/messaging';
+  var SDK_VERSION = exports.SDK_VERSION = _$$_REQUIRE(_dependencyMap[14], "./version.js").version;
+
+  // import messaging from '@react-native-firebase/messaging';
+  // messaging().X(...);
+  var messagingNamespace = (0, _$$_REQUIRE(_dependencyMap[13], "@react-native-firebase/app/dist/module/internal").createModuleNamespace)({
+    statics: statics,
+    version: _$$_REQUIRE(_dependencyMap[14], "./version.js").version,
+    namespace: namespace,
+    nativeModuleName: nativeModuleName,
+    nativeEvents: ['messaging_token_refresh', 'messaging_message_sent', 'messaging_message_deleted', 'messaging_message_received', 'messaging_message_send_error', 'messaging_notification_opened'].concat((0, _toConsumableArray2.default)(_$$_REQUIRE(_dependencyMap[12], "@react-native-firebase/app/dist/module/common").isIOS ? ['messaging_message_received_background', 'messaging_settings_for_notification_opened'] : [])),
+    hasMultiAppSupport: false,
+    hasCustomUrlOrRegionSupport: false,
+    ModuleClass: FirebaseMessagingModule
+  });
+  var _default = exports.default = messagingNamespace; // import messaging, { firebase } from '@react-native-firebase/messaging';
+  // messaging().X(...);
+  // firebase.messaging().X(...);
+  var firebase = exports.firebase = (0, _$$_REQUIRE(_dependencyMap[13], "@react-native-firebase/app/dist/module/internal").getFirebaseRoot)();
+},2087,[1,47,178,39,7,3,8,10,11,17,2088,2085,703,721,2089],"node_modules/@react-native-firebase/messaging/dist/module/namespaced.js");
+__d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports, _dependencyMap) {
+  "use strict";
+
+  /*
+   * Copyright (c) 2016-present Invertase Limited & Contributors
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this library except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *
+   */
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = remoteMessageOptions;
+  function remoteMessageOptions(messagingSenderId, remoteMessage) {
+    var out = {};
+    if ((0, _$$_REQUIRE(_dependencyMap[0], "@react-native-firebase/app/dist/module/common").isUndefined)(remoteMessage) || !(0, _$$_REQUIRE(_dependencyMap[0], "@react-native-firebase/app/dist/module/common").isObject)(remoteMessage)) {
+      throw new Error("'remoteMessage' expected an object value");
+    }
+    if (!remoteMessage.to) {
+      out.to = `${messagingSenderId}@fcm.googleapis.com`;
+    } else if (!(0, _$$_REQUIRE(_dependencyMap[0], "@react-native-firebase/app/dist/module/common").isString)(remoteMessage.to)) {
+      throw new Error("'remoteMessage.to' expected a string value");
+    } else {
+      out.to = remoteMessage.to;
+    }
+    if (!remoteMessage.messageId) {
+      out.messageId = (0, _$$_REQUIRE(_dependencyMap[0], "@react-native-firebase/app/dist/module/common").generateFirestoreId)();
+    } else if (!(0, _$$_REQUIRE(_dependencyMap[0], "@react-native-firebase/app/dist/module/common").isString)(remoteMessage.messageId)) {
+      throw new Error("'remoteMessage.messageId' expected a string value");
+    } else {
+      out.messageId = remoteMessage.messageId;
+    }
+    if (!(0, _$$_REQUIRE(_dependencyMap[0], "@react-native-firebase/app/dist/module/common").hasOwnProperty)(remoteMessage, 'ttl')) {
+      out.ttl = 3600;
+    } else {
+      if (!(0, _$$_REQUIRE(_dependencyMap[0], "@react-native-firebase/app/dist/module/common").isNumber)(remoteMessage.ttl)) {
+        throw new Error("'remoteMessage.ttl' expected a number value");
+      }
+      if (remoteMessage.ttl < 0 || !(0, _$$_REQUIRE(_dependencyMap[0], "@react-native-firebase/app/dist/module/common").isInteger)(remoteMessage.ttl)) {
+        throw new Error("'remoteMessage.ttl' expected a positive integer value");
+      }
+      out.ttl = remoteMessage.ttl;
+    }
+    if (!remoteMessage.data) {
+      out.data = {};
+    } else if (!(0, _$$_REQUIRE(_dependencyMap[0], "@react-native-firebase/app/dist/module/common").isObject)(remoteMessage.data)) {
+      throw new Error("'remoteMessage.data' expected an object value");
+    } else {
+      // Serialize all objects to strings
+      out.data = {};
+      for (var key in remoteMessage.data) {
+        if ((0, _$$_REQUIRE(_dependencyMap[0], "@react-native-firebase/app/dist/module/common").hasOwnProperty)(remoteMessage.data, key)) {
+          var value = remoteMessage.data[key];
+          if (typeof value === 'object' && !Array.isArray(value) && value !== null) {
+            out.data[key] = JSON.stringify(value);
+          } else {
+            out.data[key] = String(value);
+          }
+        }
+      }
+    }
+    if (remoteMessage.collapseKey) {
+      if (!(0, _$$_REQUIRE(_dependencyMap[0], "@react-native-firebase/app/dist/module/common").isString)(remoteMessage.collapseKey)) {
+        throw new Error("'remoteMessage.collapseKey' expected a string value");
+      }
+      out.collapseKey = remoteMessage.collapseKey;
+    }
+    if (remoteMessage.messageType) {
+      if (!(0, _$$_REQUIRE(_dependencyMap[0], "@react-native-firebase/app/dist/module/common").isString)(remoteMessage.messageType)) {
+        throw new Error("'remoteMessage.messageType' expected a string value");
+      }
+      out.messageType = remoteMessage.messageType;
+    }
+    return out;
+  }
+},2088,[703],"node_modules/@react-native-firebase/messaging/dist/module/remoteMessageOptions.js");
+__d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports, _dependencyMap) {
+  "use strict";
+
+  // Generated by genversion.
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.version = void 0;
+  var version = exports.version = '23.8.8';
+},2089,[],"node_modules/@react-native-firebase/messaging/dist/module/version.js");
+__d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports, _dependencyMap) {
   var _interopRequireDefault = _$$_REQUIRE(_dependencyMap[0], "@babel/runtime/helpers/interopRequireDefault");
   Object.defineProperty(exports, "__esModule", {
     value: true
@@ -284173,7 +285375,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       return _ref2.apply(this, arguments);
     };
   }();
-},2084,[1,178,17,2085],"src/helpers/locationPermission2.js");
+},2090,[1,178,17,2091],"src/helpers/locationPermission2.js");
 __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports, _dependencyMap) {
   var _interopRequireDefault = _$$_REQUIRE(_dependencyMap[0], "@babel/runtime/helpers/interopRequireDefault");
   Object.defineProperty(exports, "__esModule", {
@@ -284190,7 +285392,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     INTERNAL_ERROR: -1
   });
   var _default = exports.default = _Geolocation.default;
-},2085,[1,2086],"node_modules/react-native-geolocation-service/js/index.js");
+},2091,[1,2092],"node_modules/react-native-geolocation-service/js/index.js");
 __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports, _dependencyMap) {
   var _interopRequireDefault = _$$_REQUIRE(_dependencyMap[0], "@babel/runtime/helpers/interopRequireDefault");
   Object.defineProperty(exports, "__esModule", {
@@ -284294,7 +285496,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     }
   };
   var _default = exports.default = Geolocation;
-},2086,[1,178,17],"node_modules/react-native-geolocation-service/js/Geolocation.native.js");
+},2092,[1,178,17],"node_modules/react-native-geolocation-service/js/Geolocation.native.js");
 __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports, _dependencyMap) {
   "use strict";
 
@@ -284470,20 +285672,20 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     children: null,
     loading: null
   });
-},2087,[79],"node_modules/redux-persist/lib/integration/react.js");
+},2093,[79],"node_modules/redux-persist/lib/integration/react.js");
 __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports, _dependencyMap) {
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
   exports.navigationRef = void 0;
   var navigationRef = exports.navigationRef = (0, _$$_REQUIRE(_dependencyMap[0], "@react-navigation/native").createNavigationContainerRef)();
-},2088,[951],"src/helpers/NavigationService.js");
+},2094,[951],"src/helpers/NavigationService.js");
 __d(function(global, require, _importDefaultUnused, _importAllUnused, module, exports, _dependencyMapUnused) {
   module.exports = {
   "name": "domiGo",
   "displayName": "domiGo"
 }
 ;
-},2089,[],"app.json");
+},2095,[],"app.json");
 __r(117);
 __r(0);

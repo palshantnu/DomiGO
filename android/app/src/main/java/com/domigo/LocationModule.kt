@@ -87,7 +87,8 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     private var geoJsonFeatures: JSONArray? = null
 
     private var lastTripKey: String = ""
-    private val MIN_STAY_TIME = 2 * 60 * 1000 // 2 min
+    // private val MIN_STAY_TIME = 2 * 60 * 1000 // 2 min
+    private val MIN_STAY_TIME = 10 * 1000 // 2 min
 
 
     companion object {
@@ -97,7 +98,8 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         private const val GOOGLE_GEOCODING_URL = "https://maps.googleapis.com/maps/api/geocode/json"
         private const val FOUR_HOURS_MS = 4 * 60 * 60 * 1000
         // private const val FOUR_HOURS_MS = 1 * 60 * 1000
-        private const val GEOCODE_INTERVAL = 45 * 60 * 1000L
+        // private const val GEOCODE_INTERVAL = 45 * 60 * 1000L
+        private const val GEOCODE_INTERVAL = 0L
         private const val OFFLINE_QUEUE_KEY = "domigo_offline_trip_queue"
         private const val MAX_OFFLINE_RETRIES = 5
         private const val PREF_PREV_STATE_CODE = "domigo_prev_state_code"
@@ -543,67 +545,67 @@ private fun scheduleMidnightMissingDay() {
                                 sendEvent("onAddressResolved", addressData)
                                 
                                 // Send to Domigo API with conditions
-                                // sendToDomigoAPI(lat, lng, city, state,stateCode,countryCode, fullAddress)
-                                if (geofencingMode == "local_native") {
+                                sendToDomigoAPI(lat, lng, city, state,stateCode,countryCode, fullAddress)
+                                // if (geofencingMode == "local_native") {
 
-                                    if (state.equals(previousStateName, ignoreCase = true)) {
-                                        isTransitionInProgress = false
-                                        return
-                                    }
+                                //     // if (state.equals(previousStateName, ignoreCase = true)) {
+                                //     //     isTransitionInProgress = false
+                                //     //     return
+                                //     // }
                                 
-                                    val originStateSafe = previousStateName
-                                    val originLatSafe = previousLat
-                                    val originLngSafe = previousLng
-                                    val originCitySafe = previousCity
-                                    val originEnterTimeSafe = previousEnterTime
+                                //     val originStateSafe = previousStateName
+                                //     val originLatSafe = previousLat
+                                //     val originLngSafe = previousLng
+                                //     val originCitySafe = previousCity
+                                //     val originEnterTimeSafe = previousEnterTime
                                 
-                                    // sendEntryFormData(
-                                    //     kind = "trip",
-                                    //     date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
-                                    //     typeOfDayId = null,
-                                    //     isCommissionDay = false,
-                                    //     isRemoteWork = false,
-                                    //     remoteHours = 0,
-                                    //     isTravelling = true,
-                                    //     tripTypeId = 1,
-                                    //     tripModeId = 1,
-                                    //     confirmationNo = "",
-                                    //     vendor = "",
-                                    //     hasProof = false,
-                                    //     proofType = "other",
-                                    //     notes = "",
-                                    //     creationType = "automatic",
-                                    //     remoteLocation = "",
-                                    //     state = null,
-                                    //     isUpdated=false,
+                                //     sendEntryFormData(
+                                //         kind = "trip",
+                                //         date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
+                                //         typeOfDayId = null,
+                                //         isCommissionDay = false,
+                                //         isRemoteWork = false,
+                                //         remoteHours = 0,
+                                //         isTravelling = true,
+                                //         tripTypeId = 1,
+                                //         tripModeId = 1,
+                                //         confirmationNo = "",
+                                //         vendor = "",
+                                //         hasProof = false,
+                                //         proofType = "other",
+                                //         notes = "",
+                                //         creationType = "automatic",
+                                //         remoteLocation = "",
+                                //         state = null,
+                                //         isUpdated=false,
                                 
-                                    //     originCity = originCitySafe,
-                                    //     originState = originStateSafe,
-                                    //     originLat = originLatSafe,
-                                    //     originLng = originLngSafe,
+                                //         originCity = originCitySafe,
+                                //         originState = originStateSafe,
+                                //         originLat = originLatSafe,
+                                //         originLng = originLngSafe,
                                 
-                                    //     destinationCity = city,
-                                    //     destinationState = state,
-                                    //     destinationLat = lat,
-                                    //     destinationLng = lng,
+                                //         destinationCity = city,
+                                //         destinationState = state,
+                                //         destinationLat = lat,
+                                //         destinationLng = lng,
                                 
-                                    //     startDate = originEnterTimeSafe,
-                                    //     endDate = System.currentTimeMillis()
-                                    // )
+                                //         startDate = originEnterTimeSafe,
+                                //         endDate = System.currentTimeMillis()
+                                //     )
                                 
-                                    // 🔥 UPDATE STATE HERE (Online case)
-                                    previousStateName = state
-                                    previousStateCode = stateCode
-                                    previousCountryCode = countryCode
-                                    previousLat = lat
-                                    previousLng = lng
-                                    previousCity = city
-                                    previousEnterTime = System.currentTimeMillis()
-                                    saveStateToPrefs()
+                                //     // 🔥 UPDATE STATE HERE (Online case)
+                                //     previousStateName = state
+                                //     previousStateCode = stateCode
+                                //     previousCountryCode = countryCode
+                                //     previousLat = lat
+                                //     previousLng = lng
+                                //     previousCity = city
+                                //     previousEnterTime = System.currentTimeMillis()
+                                //     saveStateToPrefs()
                                 
-                                    isTransitionInProgress = false
-                                    return
-                                }
+                                //     isTransitionInProgress = false
+                                //     return
+                                // }
                             }
                         } else {
                             Log.e(TAG, "Google Geocoding API error: $status")
@@ -728,10 +730,10 @@ private fun scheduleMidnightMissingDay() {
     if (previousStateCode.isNotEmpty()) {
 
         // SAME STATE → DO NOTHING
-        // if (stateCode == previousStateCode) {
-        //     Log.d(TAG, "🏠 Same state ($stateCode) — Trip NOT created")
-        //     return
-        // }
+        if (stateCode == previousStateCode) {
+            Log.d(TAG, "🏠 Same state ($stateCode) — Trip NOT created")
+            return
+        }
     
         // DIFFERENT STATE → CREATE TRIP
         Log.d(TAG, "🚗 STATE CHANGED: $previousStateCode → $stateCode")
@@ -1689,9 +1691,9 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
             lastTripKey = tripKey
 
             // CITY FETCH (optional)
-            if (isInternetAvailable()) {
-                reverseGeocodeInBackground(lat, lng)
-            }
+            // if (isInternetAvailable()) {
+            //     reverseGeocodeInBackground(lat, lng)
+            // }
 
             // CREATE TRIP
             sendEntryFormData(
@@ -1730,7 +1732,7 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
 
             isTransitionInProgress = false
 
-    sendToDomigoAPI(lat, lng, detectedState, detectedState, detectedState, geofencingCountry, detectedState)
+    // sendToDomigoAPI(lat, lng, detectedState, detectedState, detectedState, geofencingCountry, detectedState)
 }
 
 }
