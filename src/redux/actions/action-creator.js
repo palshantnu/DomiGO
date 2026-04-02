@@ -155,8 +155,8 @@ export const updatePersonalInfoAction = (data) => (dispatch, getState) => new Pr
   // data.user_id = userData?.id;
   // const formData = jsonToFormData(data)
   // console.log('formData==>', formData);
-        console.log('aaaaaadata',data);
-  updateUserPersonalInfoService(data).then(async(res) => {
+  console.log('aaaaaadata', data);
+  updateUserPersonalInfoService(data).then(async (res) => {
     console.log('res===>', res.data.success);
 
     await dispatch(getPersonalProfileDataAction())
@@ -172,11 +172,11 @@ export const updatePersonalInfoAction = (data) => (dispatch, getState) => new Pr
 //   console.log('dataaaaa',data);
 //     new Promise((resolve, reject) => {
 
-    // });
+// });
 
 
 export const ADDTRIP = (formData) => {
-  console.log('FormData>>>>>>>>',formData);
+  console.log('FormData>>>>>>>>', formData);
   return async (dispatch) => {
     dispatch({
       type: ADD_TRIP_REQUEST,
@@ -186,7 +186,7 @@ export const ADDTRIP = (formData) => {
       // console.log('hellooooo')
       // const response = await axiosinstance.post(EndPoints.addTrip, formData)
       const response = await axiosinstance.post('trip-days', formData)
-      console.log('response',response);
+      console.log('response', response);
       // console.log('hello')
       const responseJson = response.data;
       // console.log('responseJson==>', responseJson);
@@ -221,13 +221,13 @@ export const ADDTRIP = (formData) => {
         type: ADD_TRIP_FAILURE,
         payload: 'ADD_TRIP_FAILURE',
       })
-      console.log('e----->',e);
+      console.log('e----->', e);
       return ({ response: e })
     }
   }
 }
 export const UPDATETRIP = (formData) => {
-  console.log('FormData>>>>>>>>',formData);
+  console.log('FormData>>>>>>>>', formData);
   return async (dispatch) => {
     dispatch({
       type: UPDATE_TRIP_REQUEST,
@@ -238,7 +238,7 @@ export const UPDATETRIP = (formData) => {
       // const response = await axiosinstance.post('trip-days', formData)
       console.log('helloooo');
       const response = await axiosinstance.put(`${'trip-days'}/${formData.id}`, formData)
-      console.log('helloooo',response);
+      console.log('helloooo', response);
 
       const responseJson = response.data;
       console.log('responseJson==>', responseJson);
@@ -257,23 +257,23 @@ export const UPDATETRIP = (formData) => {
       return ({ response: responseJson })
     }
     catch (e) {
-        if (e.response) {
-          // Server ne response diya (400, 500 etc)
-          console.log('Status:', e.response.status);
-          console.log('Data:', e.response.data);
-          console.log('Headers:', e.response.headers);
-        } else if (e.request) {
-          // Request gayi but response nahi aaya
-          console.log('No response:', e.request);
-        } else {
-          // Request set karte time e
-          console.log('e message:', e.message);
-        }
+      if (e.response) {
+        // Server ne response diya (400, 500 etc)
+        console.log('Status:', e.response.status);
+        console.log('Data:', e.response.data);
+        console.log('Headers:', e.response.headers);
+      } else if (e.request) {
+        // Request gayi but response nahi aaya
+        console.log('No response:', e.request);
+      } else {
+        // Request set karte time e
+        console.log('e message:', e.message);
+      }
       dispatch({
         type: UPDATE_TRIP_FAILURE,
         payload: 'UPDATE_TRIP_FAILURE',
       })
-      console.log('e----->',e);
+      console.log('e----->', e);
       return ({ response: e })
     }
   }
@@ -291,7 +291,7 @@ export function GET_TRIP_DETAILS(id) {
       if (responseJson.message === "Success") {
         dispatch({
           type: GET_TRIP_DETAILS_SUCCESS,
-          payload: responseJson.result,   
+          payload: responseJson.result,
         });
         return Promise.resolve(responseJson.result);
       }
@@ -326,7 +326,7 @@ export function GET_TRIP_SUMMARY_DETAILS(id) {
       if (responseJson.message === "Success") {
         dispatch({
           type: GET_TRIP_SUMMARY_DETAILS_SUCCESS,
-          payload: responseJson.result,   
+          payload: responseJson.result,
         });
         return Promise.resolve(responseJson.result);
       }
@@ -410,6 +410,7 @@ export function GET_Document_Category_LIST() {
   }
 }
 export const ADD_DOCUMENT_RECORD = (formData) => {
+  console.log('calling add api');
   console.log('formData', formData);
 
   return async (dispatch) => {
@@ -418,12 +419,36 @@ export const ADD_DOCUMENT_RECORD = (formData) => {
       payload: 'ADD_DOCUMENT_RECORD_REQUEST',
     })
     try {
-      const response = await axiosinstance.post(EndPoints.addDocumentRecords, formData,{
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Accept: 'application/json',
-        },
-      })
+      const form = new FormData();
+
+      Object.keys(formData).forEach(key => {
+        if (key === "attachment" && formData.attachment?.uri) {
+          form.append("attachment", {
+            uri: formData.attachment.uri,
+            name: formData.attachment.name,
+            type: formData.attachment.type,
+          });
+        } else {
+          form.append(key, formData[key]);
+        }
+      });
+
+      const response = await axiosinstance.post(
+        EndPoints.addDocumentRecords,
+        form,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Accept: 'application/json',
+          },
+        }
+      );
+      // const response = await axiosinstance.post(EndPoints.addDocumentRecords, formData,{
+      //   headers: {
+      //     'Content-Type': 'multipart/form-data',
+      //     Accept: 'application/json',
+      //   },
+      // })
       const responseJson = response.data;
       // console.log('responseJson=--------=>', responseJson);
 
@@ -570,12 +595,13 @@ export function DELETE_RESIDENCY_RECORD(id) {
 }
 
 export function UPDATE_RESIDENCY_RECORD(id, payload) {
+  console.log('calling update API');
   return async dispatch => {
     try {
       const formData = new FormData();
 
       Object.keys(payload).forEach(key => {
-        if (key === "attachment" && payload.attachment?.uri) {
+        if (key === "attachment" && payload.attachment?.uri && !payload.attachment.uri.startsWith("http")) {
           formData.append("attachment", {
             uri: payload.attachment.uri,
             type: payload.attachment.type || "image/jpeg",
@@ -618,7 +644,7 @@ export function GET_RESIDENCY_RECORD_DETAILS(id) {
       if (responseJson.message === "Success") {
         dispatch({
           type: GET_RESIDENCY_DOC_DETAILS_SUCCESS,
-          payload: responseJson.result,   
+          payload: responseJson.result,
         });
         return Promise.resolve(responseJson.result);
       }
@@ -825,7 +851,7 @@ export function GET_STATE_WISE_METRICS() {
 //     }
 //   }
 // }
-export function GET_YEAR_WISE_TIMELINE({year}) {
+export function GET_YEAR_WISE_TIMELINE({ year }) {
   return async (dispatch) => {
     try {
       // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
@@ -859,7 +885,7 @@ export function GET_YEAR_WISE_TIMELINE({year}) {
 
 export function GET_WEEK_WISE_TIMELINE({ start, end }) {
 
-  
+
   return async (dispatch) => {
     try {
       // const response = await axiosinstance.get(`http://3.91.116.18:4001/api/dashboard/calendar/week?end=${end}&start=${start}`)
@@ -939,7 +965,7 @@ export function GET_WEEK_WISE_TIMELINE({ start, end }) {
 
 export const GET_MONTH_WISE_TIMELINE = ({ month, year }) => {
   // console.log('fbfsvbv',month,year);
-  
+
   return async (dispatch) => {
     try {
       dispatch({ type: 'GET_MONTH_WISE_TIMELINE' });
@@ -982,7 +1008,7 @@ export const GET_MONTH_WISE_TIMELINE = ({ month, year }) => {
   };
 };
 
-export function GET_STATE_WISE_TRIPS({state}) {  
+export function GET_STATE_WISE_TRIPS({ state }) {
   return async (dispatch) => {
     try {
       // const response = await axiosinstance.get(`trips/state/${state}`)
@@ -1208,7 +1234,7 @@ export function GET_MISSING_ACTIVITY_LIST() {
 }
 
 export function GET_REPORTS({ type, date }) {
-  console.log('type','date', type, date);
+  console.log('type', 'date', type, date);
   return async (dispatch) => {
     try {
       // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
@@ -1395,7 +1421,7 @@ export const FETCH_SUBSCRIPTION_PRODUCTS = () => async (dispatch) => {
 };
 
 export const PURCHASE_SUBSCRIPTION = (sku) => async (dispatch) => {
-  console.log('internal',sku);
+  console.log('internal', sku);
   dispatch({ type: SET_SUBSCRIPTION_LOADING, payload: true });
   try {
     await SubscriptionService.buySubscription(sku);

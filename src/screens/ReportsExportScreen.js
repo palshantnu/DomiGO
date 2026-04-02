@@ -15,9 +15,11 @@ import { connect } from "react-redux";
 import { GET_REPORTS, GET_WEEK_WISE_TIMELINE } from '../redux/actions/action-creator';
 import FeatureGateWrapper from '../components/FeatureGateWrapper';
 import { FEATURES } from '../config/featureAccess';
+import RNFS from 'react-native-fs';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 
 
-function ReportsExportScreen({ GET_WEEK_WISE_TIMELINE, weekWiseTimeline, GET_REPORTS, resportsList }) {
+function ReportsExportScreen({ GET_WEEK_WISE_TIMELINE, weekWiseTimeline, GET_REPORTS, resportsList, loginToken }) {
     const [selectedFilter, setSelectedFilter] = useState("Weekly");
 
     const filters = ["Weekly", "Monthly", "Quarterly", "Yearly"];
@@ -87,6 +89,42 @@ function ReportsExportScreen({ GET_WEEK_WISE_TIMELINE, weekWiseTimeline, GET_REP
             return '#EBB408';
         } else {
             return '#EE4444';
+        }
+    };
+
+
+
+    const handleExport = async () => {
+        try {
+            const type = filterToTypeMap[selectedFilter];
+            const date = getTodayDate();
+    
+            const url = `http://3.91.116.18:4001/api/dashboard/v2/reports/export?type=${type}&format=pdf&date=${date}`;
+    
+            const { config, fs } = ReactNativeBlobUtil;
+    
+            const filePath = fs.dirs.DownloadDir + `/report-${type}.pdf`;
+    
+            const res = await config({
+                fileCache: true,
+                path: filePath,
+                addAndroidDownloads: {
+                    useDownloadManager: true, // 🔥 THIS ENABLES NOTIFICATION
+                    notification: true,
+                    path: filePath,
+                    description: 'Downloading report...',
+                    title: `Report-${type}.pdf`,
+                    mime: 'application/pdf',
+                    mediaScannable: true,
+                },
+            }).fetch('GET', url, {
+                Authorization: `Bearer ${loginToken}`,
+            });
+    
+            console.log('File saved at:', res.path());
+    
+        } catch (error) {
+            console.log('Download error:', error);
         }
     };
 
@@ -209,7 +247,7 @@ function ReportsExportScreen({ GET_WEEK_WISE_TIMELINE, weekWiseTimeline, GET_REP
                                         Download a comprehensive report of your tax residency history and compliance status.
                                     </Text>
 
-                                    <TouchableOpacity style={styles.exportBtn}>
+                                    <TouchableOpacity style={styles.exportBtn} onPress={handleExport}>
                                         <Ionicons name="download-outline" size={18} color="#fff" />
                                         <Text style={styles.exportBtnText}>Export Now</Text>
                                     </TouchableOpacity>

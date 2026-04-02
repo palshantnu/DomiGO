@@ -83,7 +83,7 @@ export default function SettingsScreen() {
             <TouchableOpacity style={styles.row}>
               <TouchableOpacity style={styles.rowLeft}
               onPress={() => navigation.navigate('ResidencyHistory')}>
-              // onPress={() => navigation.navigate('ResidencyDeclarationChecklistScreen')}>
+              {/* //  onPress={() => navigation.navigate('ResidencyDeclarationChecklistScreen')}> */}
                 {/* <ICON_Language height={24} width={24} /> */}
                 <ICON_File_dock height={24} width={24} />
                 <View style={{ width: '100%' }}>

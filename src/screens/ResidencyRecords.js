@@ -2066,21 +2066,27 @@ const ResidencyHistoryScreen = ({
 
 
     const handleSectionPress = (category, sectionInfo) => {
+        console.log('sectionInfo',sectionInfo);
         const sectionKey = getSectionKeyFromCategory(category.name);
 
-        if (sectionInfo.data?.enabled || (Array.isArray(sectionInfo.data) && sectionInfo.data.length > 0)) {
+        // if (sectionInfo.data == null || (Array.isArray(sectionInfo.data) && sectionInfo.data.length > 0)) {
+        if (sectionInfo?.data != null ) {
             // If enabled/has data, navigate to details
-            navigation.navigate("ResidencyRecordDetails", {
+            navigation.navigate("CreateResidencyRecord", {
                 category,
                 sectionKey,
+                mode: 'edit',
+                editData: sectionInfo.data,
                 data: sectionInfo.data
             });
         } else {
             // If disabled, navigate to add form for this section
+            const record = sectionInfo.data;
             navigation.navigate("CreateResidencyRecord", {
                 category, // Pass the full category object
                 sectionKey,
-                mode: 'add'
+                editData: false,
+                mode: 'add',
             });
         }
     };

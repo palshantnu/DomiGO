@@ -837,7 +837,12 @@ const CreateResidencyRecordScreen = ({
 
         // Add any additional fields from main response
         if (apiData.attachmentUrl) {
-            mappedData.document = { uri: apiData.attachmentUrl, name: 'Attachment' };
+            // mappedData.document = { uri: apiData.attachmentUrl, name: 'Attachment' };
+            mappedData.document = {
+                uri: apiData.attachmentUrl,
+                name: 'file.jpg',
+                type: 'image/jpeg'   // 🔥 VERY IMPORTANT
+            };
         }
 
         console.log('Mapped Form Data:', mappedData);
@@ -1144,8 +1149,10 @@ const handleSubmit = async () => {
             setIsLoading(false);
             return;
         }
+        console.log('modeeeeee',mode,editData);
 
         console.log('Submitting API Data:', JSON.stringify(apiData, null, 2));
+
         
         let response;
         
