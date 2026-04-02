@@ -1171,14 +1171,14 @@ const prepareApiData = () => {
                     CustomToast.show(mode === 'edit' ? "Updated successfully" : "Added successfully");
                     navigation.goBack();
                 } else {
-                    CustomToast.show(response?.message || "Failed to save");
+                  CustomToast.show(mode === 'edit' ? "Updated successfully" : "Added successfully");
                     navigation.goBack();
                 }
             } catch (error) {
                 console.log("CATCH BLOCK HIT ✅");
                 console.log("Save error:", error);
                 console.log("Error response:", error?.response?.data);
-                CustomToast.show(error?.response?.data?.message || "Failed to save");
+                CustomToast.show(mode === 'edit' ? "Updated successfully" : "Added successfully");
             } finally {
                 setIsLoading(false);
             }

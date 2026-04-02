@@ -17,7 +17,8 @@ import FeatureGateWrapper from '../components/FeatureGateWrapper';
 import { FEATURES } from '../config/featureAccess';
 import RNFS from 'react-native-fs';
 import ReactNativeBlobUtil from 'react-native-blob-util';
-
+import { CustomToast } from "../helpers/CommonHelpers";
+import FileViewer from 'react-native-file-viewer';
 
 function ReportsExportScreen({ GET_WEEK_WISE_TIMELINE, weekWiseTimeline, GET_REPORTS, resportsList, loginToken }) {
     const [selectedFilter, setSelectedFilter] = useState("Weekly");
@@ -98,31 +99,31 @@ function ReportsExportScreen({ GET_WEEK_WISE_TIMELINE, weekWiseTimeline, GET_REP
         try {
             const type = filterToTypeMap[selectedFilter];
             const date = getTodayDate();
-    
+
             const url = `http://3.91.116.18:4001/api/dashboard/v2/reports/export?type=${type}&format=pdf&date=${date}`;
-    
+
             const { config, fs } = ReactNativeBlobUtil;
-    
-            const filePath = fs.dirs.DownloadDir + `/report-${type}.pdf`;
-    
+
+            const filePath =
+                Platform.OS === 'ios'
+                    ? `${fs.dirs.DocumentDir}/report-${type}.pdf`
+                    : `${fs.dirs.DownloadDir}/report-${type}.pdf`;
+
             const res = await config({
                 fileCache: true,
                 path: filePath,
-                addAndroidDownloads: {
-                    useDownloadManager: true, // 🔥 THIS ENABLES NOTIFICATION
-                    notification: true,
-                    path: filePath,
-                    description: 'Downloading report...',
-                    title: `Report-${type}.pdf`,
-                    mime: 'application/pdf',
-                    mediaScannable: true,
-                },
             }).fetch('GET', url, {
                 Authorization: `Bearer ${loginToken}`,
+                Accept: 'application/pdf',
             });
-    
-            console.log('File saved at:', res.path());
-    
+
+            const savedPath = res.path();
+
+            console.log('File saved at:', savedPath);
+
+            await FileViewer.open(savedPath);
+
+            CustomToast.show('File saved successfully!');
         } catch (error) {
             console.log('Download error:', error);
         }
@@ -199,18 +200,18 @@ function ReportsExportScreen({ GET_WEEK_WISE_TIMELINE, weekWiseTimeline, GET_REP
 
                         <View style={styles.summaryBox}>
                             {/* <FeatureGateWrapper feature={FEATURES.COMPLIANCE_SCORE} featureName="Compliance Score"> */}
-                                <View style={{ flexDirection: 'row', width: '100%', }}>
-                                    <Ionicons name="stats-chart-outline" size={20} style={{ marginTop: 10 }} color={colors.primary} />
-                                    <View style={{ marginLeft: 5 }}>
-                                        <Text style={{ ...styles.summaryValue, fontSize: 15, flex: 1, marginRight: 8 }}>
-                                            Compliance
-                                            Score</Text>
-                                        <Text style={styles.summaryValue}>{resportsList?.summary?.complianceScore}</Text>
-                                        <Text style={styles.summaryLabel}>
-                                            Your current estimated tax compliance.
-                                        </Text>
-                                    </View>
+                            <View style={{ flexDirection: 'row', width: '100%', }}>
+                                <Ionicons name="stats-chart-outline" size={20} style={{ marginTop: 10 }} color={colors.primary} />
+                                <View style={{ marginLeft: 5 }}>
+                                    <Text style={{ ...styles.summaryValue, fontSize: 15, flex: 1, marginRight: 8 }}>
+                                        Compliance
+                                        Score</Text>
+                                    <Text style={styles.summaryValue}>{resportsList?.summary?.complianceScore}</Text>
+                                    <Text style={styles.summaryLabel}>
+                                        Your current estimated tax compliance.
+                                    </Text>
                                 </View>
+                            </View>
                             {/* </FeatureGateWrapper> */}
                         </View>
                     </View>
@@ -238,22 +239,22 @@ function ReportsExportScreen({ GET_WEEK_WISE_TIMELINE, weekWiseTimeline, GET_REP
 
                     {/* Export */}
                     {/* <FeatureGateWrapper feature={FEATURES.EXPORT_REPORTS} featureName="Export Reports"> */}
-                        <View style={styles.exportCard}>
-                            <View style={{ flexDirection: 'row', width: '100%', }}>
-                                <Ionicons name="document-text-outline" style={{ marginTop: 15, width: '25%' }} size={56} color={'#65C466'} />
-                                <View style={{ paddingRight: 10, width: '75%' }}>
-                                    <Text style={styles.exportTitle}>Generate Full Report</Text>
-                                    <Text style={styles.exportDesc}>
-                                        Download a comprehensive report of your tax residency history and compliance status.
-                                    </Text>
+                    <View style={styles.exportCard}>
+                        <View style={{ flexDirection: 'row', width: '100%', }}>
+                            <Ionicons name="document-text-outline" style={{ marginTop: 15, width: '25%' }} size={56} color={'#65C466'} />
+                            <View style={{ paddingRight: 10, width: '75%' }}>
+                                <Text style={styles.exportTitle}>Generate Full Report</Text>
+                                <Text style={styles.exportDesc}>
+                                    Download a comprehensive report of your tax residency history and compliance status.
+                                </Text>
 
-                                    <TouchableOpacity style={styles.exportBtn} onPress={handleExport}>
-                                        <Ionicons name="download-outline" size={18} color="#fff" />
-                                        <Text style={styles.exportBtnText}>Export Now</Text>
-                                    </TouchableOpacity>
-                                </View>
+                                <TouchableOpacity style={styles.exportBtn} onPress={handleExport}>
+                                    <Ionicons name="download-outline" size={18} color="#fff" />
+                                    <Text style={styles.exportBtnText}>Export Now</Text>
+                                </TouchableOpacity>
                             </View>
                         </View>
+                    </View>
                     {/* </FeatureGateWrapper> */}
 
                 </ScrollView>
