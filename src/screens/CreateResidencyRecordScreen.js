@@ -1133,52 +1133,56 @@ const prepareApiData = () => {
     //     }
     // };
     // Handle form submission
-const handleSubmit = async () => {
-    // Basic validation
-    if (!category?.id) {
-        CustomToast.show("Category is required");
-        return;
-    }
+        const handleSubmit = async () => {
+            // Basic validation
+            if (!category?.id) {
+                CustomToast.show("Category is required");
+                return;
+            }
 
-    setIsLoading(true);
+            setIsLoading(true);
 
-    try {
-        const apiData = prepareApiData();
-        
-        if (!apiData) {
-            setIsLoading(false);
-            return;
-        }
-        console.log('modeeeeee',mode,editData);
+            try {
+                const apiData = prepareApiData();
+                
+                if (!apiData) {
+                    setIsLoading(false);
+                    return;
+                }
+                console.log('modeeeeee',mode,editData);
 
-        console.log('Submitting API Data:', JSON.stringify(apiData, null, 2));
+                console.log('Submitting API Data:', JSON.stringify(apiData, null, 2));
 
-        
-        let response;
-        
-        if (mode === 'edit' && editData?.id) {
-            response = await dispatch(UPDATE_RESIDENCY_RECORD(editData.id, apiData));
-        } else {
-            response = await ADD_DOCUMENT_RECORD(apiData);
-        }
-        
-        console.log('API Response:', response);
-        
-        if (response?.success || response?.message === "Success") {
-            CustomToast.show(mode === 'edit' ? "Updated successfully" : "Added successfully");
-            navigation.goBack();
-        } else {
-            CustomToast.show(response?.message || "Failed to save");
-            navigation.goBack();
-        }
-    } catch (error) {
-        console.log("Save error:", error);
-        console.log("Error response:", error?.response?.data);
-        CustomToast.show(error?.response?.data?.message || "Failed to save");
-    } finally {
-        setIsLoading(false);
-    }
-};
+                
+                let response;
+                
+                if (mode === 'edit' && editData?.id) {
+                    console.log("STEP 1");
+                    response = await (UPDATE_RESIDENCY_RECORD(editData.id, apiData));
+                    console.log("STEP 2"); 
+                    console.log("API Response11111:", response);
+                } else {
+                    response = await ADD_DOCUMENT_RECORD(apiData);
+                }
+                
+                console.log('API Response:', response);
+                
+                if (response?.success || response?.message === "Success") {
+                    CustomToast.show(mode === 'edit' ? "Updated successfully" : "Added successfully");
+                    navigation.goBack();
+                } else {
+                    CustomToast.show(response?.message || "Failed to save");
+                    navigation.goBack();
+                }
+            } catch (error) {
+                console.log("CATCH BLOCK HIT ✅");
+                console.log("Save error:", error);
+                console.log("Error response:", error?.response?.data);
+                CustomToast.show(error?.response?.data?.message || "Failed to save");
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
     return (
         <LinearGradient

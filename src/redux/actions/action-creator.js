@@ -607,9 +607,12 @@ export function UPDATE_RESIDENCY_RECORD(id, payload) {
             type: payload.attachment.type || "image/jpeg",
             name: payload.attachment.name || "file.jpg"
           });
-        } else {
+        }  if (key !== "attachment") {
           formData.append(key, payload[key]);
         }
+        // else {
+        //   formData.append(key, payload[key]);
+        // }
       });
 
       const response = await axiosinstance.patch(
@@ -619,17 +622,23 @@ export function UPDATE_RESIDENCY_RECORD(id, payload) {
           headers: { "Content-Type": "multipart/form-data" }
         }
       );
+      console.log('json>>>>>>>>>>', response);
+
 
       const json = response.data;
+      console.log('json>>>>>>>>>>', json);
       if (json.message === "Success") {
-        return Promise.resolve(json);
+        // return Promise.resolve(json);
+        return json;
       }
 
-      return Promise.reject(json);
+      // return Promise.reject(json);
+      throw json;
 
     } catch (error) {
       console.log("UPDATE ERROR =>", error);
-      return Promise.reject(error);
+      // return Promise.reject(error);
+      throw error
     }
   };
 }
