@@ -29,7 +29,7 @@
 //                         </View>
 //                     )}
 //                 </View>
-                
+
 //                 {showToggle && (
 //                     <Switch
 //                         trackColor={{ false: "#E0E0E0", true: colors.primary }}
@@ -53,7 +53,7 @@
 //                         }
 //                         return null;
 //                     })}
-                    
+
 //                     {values.document && (
 //                         <View style={styles.valueRow}>
 //                             <Ionicons name="document-attach" size={16} color={colors.primary} />
@@ -179,14 +179,14 @@
 //     showAddMultiple = false,
 //     onAddMultiple
 // }) => {
-    
+
 //     // Format values for display
 //     const getDisplayValues = () => {
 //         if (!values) return null;
-        
+
 //         // Handle different data structures
 //         const displayData = {};
-        
+
 //         if (values.date) displayData.Date = values.date;
 //         if (values.issueDate) displayData['Issue Date'] = values.issueDate;
 //         if (values.startDate) displayData['Start Date'] = values.startDate;
@@ -203,7 +203,7 @@
 //         if (values.type) displayData.Type = values.type;
 //         if (values.owns !== undefined) displayData.Owner = values.owns ? 'Yes' : 'No';
 //         if (values.exemptions !== undefined) displayData.Exemptions = values.exemptions ? 'Yes' : 'No';
-        
+
 //         return displayData;
 //     };
 
@@ -224,7 +224,7 @@
 //                         </View>
 //                     )}
 //                 </View>
-                
+
 //                 {showToggle && (
 //                     <Switch
 //                         trackColor={{ false: "#E0E0E0", true: colors.primary }}
@@ -243,7 +243,7 @@
 //                             <Text style={styles.valueText} numberOfLines={1}>{value}</Text>
 //                         </View>
 //                     ))}
-                    
+
 //                     {values.document && (
 //                         <View style={styles.valueRow}>
 //                             <Ionicons name="document-attach" size={16} color={colors.primary} />
@@ -355,9 +355,11 @@
 // export default ResidencySection;
 // components/ResidencySection.js
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Switch, Linking } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import colors from '../theme/colors';
+import FileViewer from 'react-native-file-viewer';
+import RNFS from 'react-native-fs';
 
 const ResidencySection = ({
     title,
@@ -370,20 +372,20 @@ const ResidencySection = ({
     showAddMultiple = false,
     onAddMultiple
 }) => {
-    
+
     // Format values for display based on category
     const getDisplayValues = () => {
         if (!values || !isEnabled) return null;
-        
+
         const displayData = [];
-        
+
         // Handle different data structures from API
         if (values.metadata) {
             // If metadata exists, use it
-            const metadata = typeof values.metadata === 'string' 
-                ? JSON.parse(values.metadata) 
+            const metadata = typeof values.metadata === 'string'
+                ? JSON.parse(values.metadata)
                 : values.metadata;
-            
+
             if (metadata) {
                 Object.entries(metadata).forEach(([key, value]) => {
                     if (value && typeof value !== 'object') {
@@ -396,13 +398,13 @@ const ResidencySection = ({
             }
         } else {
             // Direct values from the object
-            if (values.issueDate) displayData.push({ 
-                label: 'Issue Date', 
-                value: new Date(values.issueDate).toLocaleDateString() 
+            if (values.issueDate) displayData.push({
+                label: 'Issue Date',
+                value: new Date(values.issueDate).toLocaleDateString()
             });
-            if (values.renewDate) displayData.push({ 
-                label: 'Renew Date', 
-                value: new Date(values.renewDate).toLocaleDateString() 
+            if (values.renewDate) displayData.push({
+                label: 'Renew Date',
+                value: new Date(values.renewDate).toLocaleDateString()
             });
             if (values.state) displayData.push({ label: 'State', value: values.state });
             if (values.city) displayData.push({ label: 'City', value: values.city });
@@ -412,23 +414,68 @@ const ResidencySection = ({
             if (values.type) displayData.push({ label: 'Type', value: values.type });
             if (values.details) displayData.push({ label: 'Details', value: values.details });
         }
-        
+
         // Add document info
         if (values.attachmentUrl) {
-            displayData.push({ 
-                label: 'Document', 
+            displayData.push({
+                label: 'Document',
                 value: '📎 Attached',
-                isDocument: true 
+                isDocument: true
             });
         }
-        
+
         return displayData;
+    };
+
+    // const openAttachment = (url) => {
+    //     if (url) {
+    //         Linking.openURL(url).catch(err => {
+    //             console.log("Error opening file:", err);
+    //         });
+    //     }
+    // };
+    const openAttachment = async (url) => {
+        try {
+            if (!url) return;
+            if (!url) return;
+
+            // ✅ remove query params
+            const cleanUrl = url.split('?')[0];
+    
+            const fileName = cleanUrl.split('/').pop();
+            const localPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
+    
+            // ✅ check if file already exists
+            const fileExists = await RNFS.exists(localPath);
+    
+            if (!fileExists) {
+                console.log("Downloading file...");
+    
+                const download = await RNFS.downloadFile({
+                    fromUrl: url,
+                    toFile: localPath,
+                }).promise;
+    
+                if (download.statusCode !== 200) {
+                    console.log("Download failed");
+                    return;
+                }
+            } else {
+                console.log("File already exists, opening directly...");
+            }
+    
+            // ✅ open file
+            await FileViewer.open(localPath);
+    
+        } catch (error) {
+            console.log("Error:", error);
+        }
     };
 
     const displayValues = getDisplayValues();
 
     return (
-        <TouchableOpacity 
+        <TouchableOpacity
             style={[styles.sectionCard, isEnabled && styles.sectionCardEnabled]}
             onPress={onPress}
             activeOpacity={0.7}
@@ -442,7 +489,7 @@ const ResidencySection = ({
                         </View>
                     )}
                 </View>
-                
+
                 {showToggle && (
                     <Switch
                         trackColor={{ false: "#E0E0E0", true: colors.primary }}
@@ -458,16 +505,27 @@ const ResidencySection = ({
                     {displayValues.map((item, index) => (
                         <View key={index} style={styles.valueRow}>
                             <Text style={styles.valueLabel}>{item.label}:</Text>
-                            <Text style={styles.valueText} numberOfLines={1}>
+                            {/* <Text style={styles.valueText} numberOfLines={1}>
                                 {item.value}
-                            </Text>
+                            </Text> */}
+                            {item.isDocument ? (
+                                <TouchableOpacity onPress={() => openAttachment(values.attachmentUrl)}>
+                                    <Text style={[styles.valueText, { color: colors.primary }]}>
+                                        {item.value}
+                                    </Text>
+                                </TouchableOpacity>
+                            ) : (
+                                <Text style={styles.valueText} numberOfLines={1}>
+                                    {item.value}
+                                </Text>
+                            )}
                         </View>
                     ))}
                 </View>
             )}
 
             {showAddMultiple && isEnabled && (
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={styles.addMultipleButton}
                     onPress={onAddMultiple}
                 >
