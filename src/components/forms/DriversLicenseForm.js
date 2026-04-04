@@ -115,9 +115,10 @@ import DatePicker from 'react-native-date-picker';
 import { pick } from '@react-native-documents/picker';
 import colors from '../../theme/colors';
 
-const DriversLicenseForm = ({ data = {}, onChange }) => {
+const DriversLicenseForm = ({ data = {}, onChange,userData }) => {
     const [openDatePicker, setOpenDatePicker] = useState(false);
-
+console.log('data>>>>>>>>>',data);
+console.log('data>>>>>>>>>',userData);
     const updateField = (field, value) => {
         onChange({ ...data, [field]: value });
     };

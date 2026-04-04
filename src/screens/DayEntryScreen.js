@@ -32,12 +32,42 @@ import DatePicker from "react-native-date-picker";
 
 /* ---------------- HELPERS ---------------- */
 
+// const formatDate = (dateStr) => {
+//     const d = new Date(dateStr);
+//     const day = d.toLocaleDateString("en-US", { weekday: "long" });
+//     const date = d.getDate();
+//     const month = d.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
+//     const year = d.getFullYear();
+//     return `${day} ${date}-${month}-${year}`;
+// };
+
+// const formatDate = (dateStr) => {
+//     const [y, m, d] = dateStr.split('-').map(Number);
+//     const dateObj = new Date(y, m - 1, d);
+
+//     const day = dateObj.toLocaleDateString("en-US", { weekday: "long" });
+//     const date = dateObj.getDate();
+//     const month = dateObj.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
+//     const year = dateObj.getFullYear();
+
+//     return `${day} ${date}-${month}-${year}`;
+// };
 const formatDate = (dateStr) => {
-    const d = new Date(dateStr);
-    const day = d.toLocaleDateString("en-US", { weekday: "long" });
-    const date = d.getDate();
-    const month = d.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
-    const year = d.getFullYear();
+    if (!dateStr) return "";
+
+    // ✅ Handle ISO format (2026-04-03T...)
+    const cleanDate = dateStr.split("T")[0];
+
+    const [y, m, d] = cleanDate.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d);
+
+    if (isNaN(dateObj)) return "Invalid Date";
+
+    const day = dateObj.toLocaleDateString("en-US", { weekday: "long" });
+    const date = dateObj.getDate();
+    const month = dateObj.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
+    const year = dateObj.getFullYear();
+
     return `${day} ${date}-${month}-${year}`;
 };
 
@@ -372,7 +402,7 @@ const DayEntryScreen = ({
         }
     }
         const payload = {
-            date: editData.date || new Date().toLocaleDateString("en-CA"),
+            date: editData?.date || date|| new Date().toLocaleDateString("en-CA"),
             typeOfDayId: Number(typeOfDay),
             isCommissionDay,
             kind: isTrip ? "trip" : "missing",
@@ -520,7 +550,7 @@ const DayEntryScreen = ({
                         { isTrip && isEdit ?
                         <Text style={styles.dateTitle}>{new Date(startDate).toDateString()} - {new Date(endDate).toDateString()}</Text>
                            :
-                        <Text style={styles.dateTitle}>{formatDate(editData.date || new Date().toLocaleDateString("en-CA"))}</Text>
+                        <Text style={styles.dateTitle}>{formatDate(editData?.date || date || new Date().toLocaleDateString("en-CA"))}</Text>
                         }
                         {!isTrip && (
                             <>

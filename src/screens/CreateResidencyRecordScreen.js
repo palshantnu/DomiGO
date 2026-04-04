@@ -796,6 +796,7 @@ import PropertyOwnershipForm from '../components/forms/PropertyOwnershipForm';
 const CreateResidencyRecordScreen = ({ 
     ADD_DOCUMENT_RECORD,
     UPDATE_RESIDENCY_RECORD,
+    userData
 }) => {
     const navigation = useNavigation();
     const route = useRoute();
@@ -957,6 +958,7 @@ const CreateResidencyRecordScreen = ({
             data: formData,
             onChange: setFormData,
             mode: mode,
+            userData:userData
         };
 
         // Log available form components
@@ -1291,7 +1293,7 @@ const styles = StyleSheet.create({
 
 function mapStateToProps(state) {
     return {
-        // Add any required state
+      userData: state.auth.userData,
     };
 }
 

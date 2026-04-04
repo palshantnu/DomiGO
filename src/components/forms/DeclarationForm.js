@@ -87,14 +87,13 @@ import { GOOGLE_KEY } from "../../helpers/CommonHelpers";
 import GoogleAutoComplete from "../GoogleAutoComplete";
 import colors from "../../theme/colors";
 
-const DeclarationForm = ({ data, onChange }) => {
+const DeclarationForm = ({ data, onChange,userData }) => {
     const [openDeclarationDate, setOpenDeclarationDate] = useState(false);
     const [openEstablishedDate, setOpenEstablishedDate] = useState(false);
 
     const updateField = (field, value) => {
         onChange({ ...data, [field]: value });
     };
-
     const YesNoButton = ({ label, field }) => (
         // <View style={styles.row}>
         //     <TouchableOpacity
@@ -217,7 +216,7 @@ const DeclarationForm = ({ data, onChange }) => {
                 placeholder="Search Address"
                 apiKey={GOOGLE_KEY}
                 isResidence={true}
-                value={data.address}
+                value={userData.state}
                 onSelect={(value) => updateField('address', value)}
             />
 

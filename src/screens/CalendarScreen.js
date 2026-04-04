@@ -404,7 +404,8 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const currentDate = new Date(dateKey);
+    // const currentDate = new Date(dateKey);
+    const currentDate = parseLocalDate(dateKey);
     currentDate.setHours(0, 0, 0, 0);
 
     // ❌ Future date block

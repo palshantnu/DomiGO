@@ -437,7 +437,6 @@ const ResidencySection = ({
     const openAttachment = async (url) => {
         try {
             if (!url) return;
-            if (!url) return;
 
             // ✅ remove query params
             const cleanUrl = url.split('?')[0];

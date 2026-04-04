@@ -543,6 +543,10 @@ private fun scheduleMidnightMissingDay() {
                 }
                                 
                                 sendEvent("onAddressResolved", addressData)
+                                if (state.isBlank() || city.isBlank()) {
+                                    Log.d(TAG, "🚫 Invalid geocode data — skipped")
+                                    return
+                                }
                                 
                                 // Send to Domigo API with conditions
                                 sendToDomigoAPI(lat, lng, city, state,stateCode,countryCode, fullAddress)
@@ -732,6 +736,14 @@ private fun scheduleMidnightMissingDay() {
         // SAME STATE → DO NOTHING
         if (stateCode == previousStateCode) {
             Log.d(TAG, "🏠 Same state ($stateCode) — Trip NOT created")
+            return
+        }
+        if (state.isBlank() || stateCode.isBlank()) {
+            Log.d(TAG, "🚫 Skipped: Empty state")
+            return
+        }
+        if (stateCode.equals(previousStateCode, ignoreCase = true)) {
+            Log.d(TAG, "🏠 Same state — skipped")
             return
         }
     

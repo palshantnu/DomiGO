@@ -69,6 +69,19 @@ const TripListScreen = ({ tripList }) => {
     // CustomToast.show(" refreshed");
   };
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "";
+  
+    const cleanDate = dateStr.includes("T")
+      ? dateStr.split("T")[0]
+      : dateStr;
+  
+    const [y, m, d] = cleanDate.split("-").map(Number);
+    const dateObj = new Date(y, m - 1, d);
+  
+    return dateObj.toDateString();
+  };
+
   const todayDate = getTodayDateYYYYMMDD();
 console.log(todayDate); // e.g. 2026-01-03
 
@@ -148,7 +161,8 @@ console.log(todayDate); // e.g. 2026-01-03
 
               }
               {/* <Text style={styles.dateText}>{new Date(trip.endDate).toDateString()}</Text> */}
-              <Text style={styles.dateText}>{new Date(trip.date).toDateString()}</Text>
+              {/* <Text style={styles.dateText}>{new Date(trip.date).toDateString()}</Text> */}
+              <Text style={styles.dateText}>{formatDate(trip.date)}</Text>
 
               <View style={styles.divider} />
 
