@@ -77,7 +77,8 @@ const MenuScreen = ({ userPersonalData, getPersonalProfileDataAction, GET_SUPPOR
           </View>
           <Text style={styles.sectionTitle}>Settings</Text>
           <View style={styles.card}>
-            <MenuRow icon="lock-closed-outline" label="My Locations" />
+            <MenuRow icon="lock-closed-outline" label="My Locations" 
+             onPress={() => navigation.navigate('MyLocationsScreen')}/>
             <MenuRow icon="notifications-outline" label="Notifications" />
             <MenuRow
               icon="location-outline"

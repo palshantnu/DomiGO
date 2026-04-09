@@ -10,6 +10,9 @@ import {
     Modal,
     TextInput,
     RefreshControl,
+    PermissionsAndroid,
+    ActivityIndicator,
+    Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Progress from 'react-native-progress';
@@ -33,6 +36,9 @@ import { CustomToast } from '../helpers/CommonHelpers';
 import FeatureGateWrapper from '../components/FeatureGateWrapper';
 import TrialBanner from '../components/TrialBanner';
 import { FEATURES } from '../config/featureAccess';
+import Geolocation from '@react-native-community/geolocation';
+import { GOOGLE_KEY } from "../helpers/CommonHelpers"
+
 
 
 
@@ -44,6 +50,8 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
     const [selectedState, setSelectedState] = React.useState(null);
     const [thresholdValue, setThresholdValue] = React.useState('');
     const [refreshing, setRefreshing] = React.useState(false)
+    const [locationModal, setLocationModal] = React.useState(false);
+    const [currentLocation, setCurrentLocation] = React.useState(null);
     console.log('stateWiseResidency>>>>', stateWiseResidency);
     console.log('complianceScore>>>>', complianceScore);
     console.log('userData>>>>', userData);
@@ -68,8 +76,42 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
 
     const onRefresh = async () => {
         setRefreshing(true);
+        if (!isGPSOn) {
+            CustomToast.show("Please enable GPS");
+            setRefreshing(false);
+            return;
+        }
 
         try {
+            const coords = await getCurrentLocation();
+
+            const locationDetails = await getAddressFromLatLong(
+                coords.latitude,
+                coords.longitude
+            );
+
+            const finalLocation = {
+                latitude: coords.latitude,
+                longitude: coords.longitude,
+                state: locationDetails.state,
+                city: locationDetails.city,
+                address: locationDetails.address,
+            };
+
+            console.log("FINAL LOCATION 👉", finalLocation);
+
+            // 🔥 API me sab separate jaayega
+            // await sendLocationAPI(finalLocation);
+            const response = await sendLocationAPI(finalLocation);
+
+            if (!response) {
+                CustomToast.show("Location not saved");
+            }
+
+            setCurrentLocation(finalLocation);
+            setLocationModal(true);
+
+
             await dispatch(GET_FINAL_YEAR_PROGRESS);
             await dispatch(GET_STATE_WISE_RESIDENCY);
             await dispatch(GET_COMPLIANCE_SCORE);
@@ -102,6 +144,135 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
     }, []);
 
     const isFocused = useIsFocused();
+
+    const getCurrentLocation = async () => {
+        if (Platform.OS === 'android') {
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+            );
+    
+            if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+                throw new Error("Location permission denied");
+            }
+        }
+        return new Promise((resolve, reject) => {
+            Geolocation.getCurrentPosition(
+                position => {
+                    const { latitude, longitude } = position.coords;
+
+                    const locationData = {
+                        latitude,
+                        longitude,
+                    };
+
+                    resolve(locationData);
+                },
+                error => {
+                    reject(error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 10000,
+                }
+            );
+        });
+    };
+
+
+    const getAddressFromLatLong = async (lat, lng) => {
+        try {
+            const res = await fetch(
+                `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_KEY}`
+            );
+
+            const data = await res.json();
+            if (!data.results || data.results.length === 0) {
+                return {
+                    address: "Unknown",
+                    city: "",
+                    state: "",
+                };
+            }
+            const result = data.results[0];
+
+            let city = "";
+            let state = "";
+            let address = result?.formatted_address || "";
+
+            result.address_components.forEach(component => {
+                if (component.types.includes("locality")) {
+                    city = component.long_name;
+                }
+
+                if (component.types.includes("administrative_area_level_1")) {
+                    state = component.long_name;
+                }
+            });
+            if (!city) {
+                const fallback = result.address_components.find(component =>
+                    component.types.includes("sublocality") ||
+                    component.types.includes("administrative_area_level_2")
+                );
+
+                city = fallback?.long_name || "";
+            }
+
+            return {
+                address,
+                city,
+                state,
+            };
+
+        } catch (e) {
+            console.log(e);
+            return {
+                address: "Unknown",
+                city: "",
+                state: "",
+            };
+        }
+    };
+
+    // const sendLocationAPI = async (location) => {
+    //     console.log("SENDING 👉", location);
+    //     try {
+    //         const res = await fetch("http://3.91.116.18:4001/api/locations", {
+    //             method: "POST",
+    //             headers: {
+    //                 "Content-Type": "application/json",
+    //             },
+    //             body: JSON.stringify(location),
+    //         });
+
+    //         return await res.json();
+    //     } catch (e) {
+    //         console.log("API error", e);
+    //     }
+    // };
+
+    const sendLocationAPI = async (location) => {
+        console.log("SENDING 👉", location);
+    
+        try {
+            const res = await fetch("http://3.91.116.18:4001/api/locations", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${loginToken}`, // ✅ token added
+                },
+                body: JSON.stringify(location),
+            });
+    
+            const data = await res.json();
+            console.log("RESPONSE 👉", data);
+    
+            return data;
+    
+        } catch (e) {
+            console.log("API error", e);
+        }
+    };
 
 
 
@@ -268,11 +439,11 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                             </Text> */}
                         </View>
 
-                            <TouchableOpacity
-                                style={styles.metricBox}
-                                onPress={() => navigation.navigate('ReportsExport')}
-                            >
-                        <FeatureGateWrapper feature={FEATURES.READINESS_SCORE} featureName="Readiness Score">
+                        <TouchableOpacity
+                            style={styles.metricBox}
+                            onPress={() => navigation.navigate('ReportsExport')}
+                        >
+                            <FeatureGateWrapper feature={FEATURES.READINESS_SCORE} featureName="Readiness Score">
 
                                 <Text style={styles.metricValue}>
                                     {complianceScore?.complianceScore ?? 0}%
@@ -282,9 +453,9 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                                 <Text style={styles.metricSub}>
                                     {finalYearProgress?.missingDays ?? 0} missing days
                                 </Text>
-                        </FeatureGateWrapper>
+                            </FeatureGateWrapper>
 
-                            </TouchableOpacity>
+                        </TouchableOpacity>
 
                     </View>
 
@@ -601,6 +772,56 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                                         <Text style={styles.saveText1}>Save</Text>
                                     </TouchableOpacity>
                                 </View>
+                            </View>
+                        </View>
+                    </Modal>
+
+                    <Modal
+                        transparent
+                        animationType="fade"
+                        visible={locationModal}
+                    >
+                        <View style={styles.modalOverlay}>
+                            <View style={{
+                                width: '85%',
+                                backgroundColor: '#fff',
+                                borderRadius: 16,
+                                padding: 20,
+                                alignItems: 'center'
+                            }}>
+                                <Text style={{ fontSize: 16, fontWeight: '700', marginBottom: 10 }}>
+                                    📍 Your Current Location
+                                </Text>
+
+                                {currentLocation && (
+                                    <>
+                                        <Text style={{ textAlign: 'center', color: '#555', marginBottom: 10 }}>
+                                            {currentLocation.address}
+                                        </Text>
+
+                                        {/* <Text style={{ fontSize: 12, color: '#888' }}>
+                                            Lat: {currentLocation.latitude}
+                                        </Text>
+
+                                        <Text style={{ fontSize: 12, color: '#888' }}>
+                                            Lng: {currentLocation.longitude}
+                                        </Text> */}
+                                    </>
+                                )}
+
+                                <TouchableOpacity
+                                    style={{
+                                        backgroundColor: colors.primary,
+                                        paddingVertical: 10,
+                                        paddingHorizontal: 25,
+                                        borderRadius: 20
+                                    }}
+                                    onPress={() => setLocationModal(false)}
+                                >
+                                    <Text style={{ color: '#fff', fontWeight: '600' }}>
+                                        OK
+                                    </Text>
+                                </TouchableOpacity>
                             </View>
                         </View>
                     </Modal>

@@ -1004,7 +1004,7 @@ const CreateResidencyRecordScreen = ({
             case 'Other - Vehicle Title':
             case 'Other - Vehicle Insurance':
                 return <OthersForm {...formProps} />;
-            case 'Other - Second home':
+            case 'Other - Second home ':
                 return <SecondHomeForm {...formProps} />;
             default:
                 console.log('No form found for category:', category?.name);

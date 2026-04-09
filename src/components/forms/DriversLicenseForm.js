@@ -117,8 +117,6 @@ import colors from '../../theme/colors';
 
 const DriversLicenseForm = ({ data = {}, onChange,userData }) => {
     const [openDatePicker, setOpenDatePicker] = useState(false);
-console.log('data>>>>>>>>>',data);
-console.log('data>>>>>>>>>',userData);
     const updateField = (field, value) => {
         onChange({ ...data, [field]: value });
     };

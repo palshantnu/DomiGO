@@ -7,6 +7,7 @@ import {
   TextInput,
   Image,
   StatusBar,
+  Platform,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -24,6 +25,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
 import appleAuth from '@invertase/react-native-apple-authentication';
+import messaging from '@react-native-firebase/messaging';
 
 GoogleSignin.configure({
   webClientId: '354808270826-gns6qrt56geta1g46vv26j9l3n3jk415.apps.googleusercontent.com', // Firebase se
@@ -36,6 +38,7 @@ const LoginScreen = ({ navigation, signIn }) => {
   const { callApi: callLoginApi, loading: loginLoading } = useAPI();
   const [netInfo, setNetInfo] = useState(true);
   const [buttonLoader, setButtonLoader] = useState(false);
+  const [fcmtoken, setFcmtoken] = useState("");
 
 
 
@@ -67,7 +70,9 @@ const LoginScreen = ({ navigation, signIn }) => {
     setButtonLoader(true);
     const data = {
       email: email.trim(),
-      password: password.trim()
+      password: password.trim(),
+      deviceType: Platform.OS === "ios" ? "ios" : "android", // 👈 add
+      deviceToken: fcmtoken || "123456", // 👈 redux se aa raha hai
     };
     callLoginApi(signIn(data))
       .then(async (response) => {
@@ -93,6 +98,23 @@ const LoginScreen = ({ navigation, signIn }) => {
         CustomToast.show('something_went_wrong');
         console.log('Catch Error SignIn Screen = ', e);
       });
+  }
+
+
+  React.useEffect(() => {
+    requestPermission()
+    getToken()
+  }, []);
+  
+  async function requestPermission() {
+    const authStatus = await messaging().requestPermission();
+    console.log('Permission status:', authStatus);
+  }
+
+  async function getToken() {
+    const token = await messaging().getToken();
+    console.log('FCM Token:', token);
+    setFcmtoken(token)
   }
 
   React.useEffect(() => {

@@ -89,6 +89,9 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     private var lastTripKey: String = ""
     // private val MIN_STAY_TIME = 2 * 60 * 1000 // 2 min
     private val MIN_STAY_TIME = 10 * 1000 // 2 min
+    private var lastLocationPingTime: Long = 0
+    private var lastSentState: String = ""
+
 
 
     companion object {
@@ -111,6 +114,9 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         private const val PREF_PREV_ENTER_TIME = "domigo_prev_enter_time"
         private const val PREF_LAST_TRACKED_DATE = "domigo_last_tracked_date"
         private const val PREF_CURRENT_STATE = "domigo_current_state"
+        private const val LOCATION_PING_INTERVAL = 15 * 60 * 1000 // 15 min
+
+        
     }
 
     override fun getName(): String {
@@ -923,6 +929,73 @@ if (!stateChanged && !timePassed) {
         })
     }
 
+
+    private fun sendLocationPing(
+    lat: Double,
+    lng: Double,
+    state: String,
+    stateCode: String,
+    countryCode: String
+    ) {
+    val currentTime = System.currentTimeMillis()
+    val timeDiff = currentTime - lastLocationPingTime
+
+    val isTimeBased = timeDiff >= LOCATION_PING_INTERVAL
+    val isStateChanged = stateCode != lastSentState
+
+    // 🚫 skip if neither condition met
+    if (!isTimeBased && !isStateChanged) {
+    Log.d(TAG, "⏳ Location ping skipped (no 15min / no state change)")
+    return
+    }
+
+    val jsonBody = JSONObject().apply {
+    put("latitude", lat)
+    put("longitude", lng)
+    put("state", state)
+    put("city", state) // optional
+    put("address", state)
+    }
+
+    Log.d(TAG, "📡 Sending LOCATION PING → $state ($lat,$lng)")
+
+    val mediaType = "application/json; charset=utf-8".toMediaType()
+    val requestBody = jsonBody.toString().toRequestBody(mediaType)
+
+    val request = Request.Builder()
+    .url(apiUrl)
+    .post(requestBody)
+    .addHeader("Content-Type", "application/json")
+    .addHeader("Authorization", "Bearer $domigoToken")
+    .build()
+
+    httpClient.newCall(request).enqueue(object : okhttp3.Callback {
+    override fun onFailure(call: Call, e: IOException) {
+        Log.e(TAG, "❌ Location ping failed: ${e.message}")
+    }
+
+    override fun onResponse(call: Call, response: Response) {
+        if (response.isSuccessful) {
+            Log.d(TAG, "✅ Location ping success")
+
+            lastLocationPingTime = currentTime
+            lastSentState = stateCode
+            sendEvent("onApiSuccess", Arguments.createMap().apply {
+                putString("message", "Location sent to API successfully")
+                putString("state", state)
+                putString("city", state)
+            })
+        } else {
+            Log.e(TAG, "❌ Location ping error: ${response.code}")
+            val errorBody = response.body?.string() ?: "Unknown error"
+            sendEvent("onLocationError", Arguments.createMap().apply {
+                putString("error", "API error ${response.code}: $errorBody")
+            })
+        }
+    }
+    })
+    }
+
     private fun startForegroundService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val serviceIntent = Intent(context, LocationForegroundService::class.java)
@@ -1573,6 +1646,13 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
     val oldState = previousStateName.trim()
 
     Log.d(TAG, "DEBUG → OLD=$oldState NEW=$newState")
+    sendLocationPing(
+    lat,
+    lng,
+    detectedState,
+    detectedState,
+    geofencingCountry
+    )
     // currentStateName = detectedState
     // val detectedState = detectStateFromGeoJSON(lat, lng)
     // if (detectedState == null) { Log.w(TAG, "local_native: no state detected for $lat,$lng"); return }

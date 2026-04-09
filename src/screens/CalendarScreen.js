@@ -884,7 +884,8 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
                           color="#FF9500"
                         />
                         <Text style={{ marginLeft: 6, fontWeight: "600" }}>
-                          {day.activity.typeOfDay?.name}
+                        {getAutoTypeOfDayName(day.activity, day.date)}
+                          {/* {day.activity.typeOfDay?.name} */}
                         </Text>
                       </View>
 
@@ -1065,7 +1066,8 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
               }
             >
               <Text style={{ fontWeight: "600", color: "#FF9500" }}>
-                Missing Day: {section.missing.typeOfDay?.name}
+                {/* Missing Day: {section.missing.typeOfDay?.name} */}
+                Missing Day: {getAutoTypeOfDayName(section.missing, section.date)}
               </Text>
               <Text style={{ color: "#666" }}>
                 State: {section.missing.state}
@@ -1082,6 +1084,26 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
       )}
     </View>
   );
+
+  const getAutoTypeOfDayName = (activity, date) => {
+    if (!activity) return "";
+  
+    const isDefault = activity?.typeOfDay?.id === 1;
+    const isAuto = activity?.creationType === "automatic";
+  
+    if (!isDefault || !isAuto) {
+      return activity?.typeOfDay?.name;
+    }
+  
+    const d = new Date(date);
+    const day = d.getDay();
+  
+    if (day === 0 || day === 6) {
+      return "Weekend"; // id = 3
+    }
+  
+    return "Working"; // id = 2
+  };
 
 
   return (

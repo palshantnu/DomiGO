@@ -8,6 +8,7 @@ import {
   Image,
   StatusBar,
   PermissionsAndroid,
+  Platform,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,6 +21,8 @@ import { SliderButton } from '../../components/SliderButton';
 import { GOOGLE_KEY } from "../../helpers/CommonHelpers";
 import AddressAutoComplete from "../../components/AddressAutoComplete";
 import Geolocation from "@react-native-community/geolocation";
+import messaging from '@react-native-firebase/messaging';
+
 
 const SignupScreen = ({ navigation, signUp }) => {
   const [email, setEmail] = useState("");
@@ -32,6 +35,8 @@ const SignupScreen = ({ navigation, signUp }) => {
   const [stateName, setStateName] = useState("");
   const [country, setCountry] = useState("");
   const [countryCode, setCountryCode] = useState("");
+  const [fcmtoken, setFcmtoken] = useState("");
+
 
 
 
@@ -128,6 +133,9 @@ const SignupScreen = ({ navigation, signUp }) => {
 
 
   const SignUpUser = async () => {
+    if (!fcmtoken) {
+      return CustomToast.show("Please wait, initializing device...");
+    }
     console.log('SignUpUser');
     if (!netInfo) {
       return CustomToast.show("No internet connection");
@@ -163,11 +171,13 @@ const SignupScreen = ({ navigation, signUp }) => {
       password,
       city,
       address,
-      state: stateName
+      state: stateName,
+      deviceType: Platform.OS === "ios" ? "ios" : "android", // 👈 add
+      deviceToken: fcmtoken || "123456", // 👈 redux se aa raha hai
     }
+    setButtonLoader(true);
     signUp(data, true, true).then((response) => {
       console.log('response==>', response);
-      setButtonLoader(true);
       try {
         if (response.success) {
           setTimeout(() => setButtonLoader(false), 2000)
@@ -187,8 +197,24 @@ const SignupScreen = ({ navigation, signUp }) => {
         setButtonLoader(false)
       }
     }).finally(() => {
-      setButtonLoader(true);
+      setButtonLoader(false);
     })
+  }
+
+  React.useEffect(() => {
+    requestPermission()
+    getToken()
+  }, []);
+  
+  async function requestPermission() {
+    const authStatus = await messaging().requestPermission();
+    console.log('Permission status:', authStatus);
+  }
+
+  async function getToken() {
+    const token = await messaging().getToken();
+    console.log('FCM Token:', token);
+    setFcmtoken(token)
   }
 
   React.useEffect(() => {

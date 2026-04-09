@@ -17,6 +17,8 @@ import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 import HelpSupportScreen from '../screens/HelpSupportScreen';
 import AboutUsScreen from '../screens/AboutUsScreen';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
+import MyLocationsScreen from '../screens/MyLocationsScreen';
+import AddTertiaryLocationScreen from '../screens/AddTertiaryLocationScreen';
 
 
 export default function SettingsNavigation() {
@@ -91,6 +93,16 @@ export default function SettingsNavigation() {
         <Stack.Screen
           name="SubscriptionScreen"
           component={SubscriptionScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="MyLocationsScreen"
+          component={MyLocationsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AddTertiaryLocation"
+          component={AddTertiaryLocationScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

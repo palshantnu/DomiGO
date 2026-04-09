@@ -53,6 +53,38 @@ function DayDetailScreen({
     return unsubscribe;
   }, [navigation]);
 
+
+  const getAutoTypeOfDayName = (tripDay) => {
+    if (!tripDay) return "";
+  
+    // ✅ ONLY for missing day
+    if (tripDay?.kind !== "missing") {
+      return tripDay?.typeOfDay?.name;
+    }
+  
+    const isDefault = tripDay?.typeOfDay?.id === 1;
+    const isAuto = tripDay?.creationType === "automatic";
+  
+    // ❌ agar default nahi ya automatic nahi → original hi dikhao
+    if (!isDefault || !isAuto) {
+      return tripDay?.typeOfDay?.name;
+    }
+  
+    const dateStr = tripDay?.date;
+    if (!dateStr) return tripDay?.typeOfDay?.name;
+  
+    const d = new Date(dateStr);
+    const day = d.getDay();
+  
+    // ✅ Weekend
+    if (day === 0 || day === 6) {
+      return "Weekend"; // id = 3
+    }
+  
+    // ✅ Weekday
+    return "Working"; // id = 2
+  };
+
   return (
     <LinearGradient
       colors={["#9ab1fa", "#ffffff"]}
@@ -150,7 +182,8 @@ function DayDetailScreen({
                   <Ionicons name="calendar-outline" size={22} color={colors.primary} />
                   <View style={{ marginLeft: 10 }}>
                     <Text style={styles.summaryLabel}>Type of Day</Text>
-                    <Text style={styles.summaryValue}>{TripSummaryDetails?.tripDay?.typeOfDay?.name}</Text>
+                    {/* <Text style={styles.summaryValue}>{TripSummaryDetails?.tripDay?.typeOfDay?.name}</Text> */}
+                    <Text style={styles.summaryValue}>{getAutoTypeOfDayName(TripSummaryDetails?.tripDay)}</Text>
                   </View>
                 </View>
 

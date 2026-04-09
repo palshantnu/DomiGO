@@ -2135,7 +2135,8 @@ const ResidencyHistoryScreen = ({
                                 title={getSectionTitle(category.name)}
                                 // isEnabled={sectionInfo.data?.enabled}
                                 isEnabled={sectionInfo.data !== null}
-                                onToggle={(val) => handleSectionToggle(category, val)}
+                                // onToggle={(val) => handleSectionToggle(category, val)}
+                                onToggle={() => handleSectionPress(category, sectionInfo)}
                                 onPress={() => handleSectionPress(category, sectionInfo)}
                                 values={sectionInfo.data}
                                 showAddMultiple={category.name === 'Business Records' && sectionInfo.data?.enabled}

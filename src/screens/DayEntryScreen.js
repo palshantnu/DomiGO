@@ -224,6 +224,34 @@ const DayEntryScreen = ({
         }
     }, [isTrip, isEdit, editData]);
 
+
+
+    useEffect(() => {
+        if (isTrip) return; // ❌ only missing day
+
+        // ✅ ONLY automatic entries pe apply hoga
+        const isAuto = editData?.creationType === "automatic" || creationType === "automatic";
+        if (!isAuto) return;
+
+        // check only when typeOfDay = 1 (default)
+        if (Number(typeOfDay) !== 1) return;
+
+        const currentDate = editData?.date || date;
+        if (!currentDate) return;
+
+        const d = new Date(currentDate);
+        const day = d.getDay(); // 0 = Sunday, 6 = Saturday
+
+        if (day === 0 || day === 6) {
+            // Weekend
+            setTypeOfDay(3);
+        } else {
+            // Weekday
+            setTypeOfDay(2);
+        }
+
+    }, [typeOfDay, date, editData, isTrip]);
+
     /* ---------------- EDIT PREFILL ---------------- */
 
     // useEffect(() => {
@@ -307,7 +335,7 @@ const DayEntryScreen = ({
             if (editData.startDate) {
                 setStartDate(new Date(editData.startDate + ""));
             }
-    
+
             if (editData.endDate) {
                 setEndDate(new Date(editData.endDate + ""));
             }
@@ -380,29 +408,29 @@ const DayEntryScreen = ({
     /* ---------------- SAVE ---------------- */
 
     const handleSave = () => {
-    if (!typeOfDay) {
-        CustomToast.show("Please select Type of Day");
-        return;
-    }
-
-    if (isTrip) {
-        if (!startData || !endData) {
-            CustomToast.show("Please select start and end locations");
+        if (!typeOfDay) {
+            CustomToast.show("Please select Type of Day");
             return;
         }
 
-        if (!startDate || !endDate) {
-            CustomToast.show("Please select start and end dates");
-            return;
-        }
+        if (isTrip) {
+            if (!startData || !endData) {
+                CustomToast.show("Please select start and end locations");
+                return;
+            }
 
-        if (startDate > endDate) {
-            CustomToast.show("Start date cannot be after End date");
-            return;
+            if (!startDate || !endDate) {
+                CustomToast.show("Please select start and end dates");
+                return;
+            }
+
+            if (startDate > endDate) {
+                CustomToast.show("Start date cannot be after End date");
+                return;
+            }
         }
-    }
         const payload = {
-            date: editData?.date || date|| new Date().toLocaleDateString("en-CA"),
+            date: editData?.date || date || new Date().toLocaleDateString("en-CA"),
             typeOfDayId: Number(typeOfDay),
             isCommissionDay,
             kind: isTrip ? "trip" : "missing",
@@ -547,10 +575,10 @@ const DayEntryScreen = ({
 
                 <ScrollView showsVerticalScrollIndicator={false}>
                     <View style={styles.card}>
-                        { isTrip && isEdit ?
-                        <Text style={styles.dateTitle}>{new Date(startDate).toDateString()} - {new Date(endDate).toDateString()}</Text>
-                           :
-                        <Text style={styles.dateTitle}>{formatDate(editData?.date || date || new Date().toLocaleDateString("en-CA"))}</Text>
+                        {isTrip && isEdit ?
+                            <Text style={styles.dateTitle}>{new Date(startDate).toDateString()} - {new Date(endDate).toDateString()}</Text>
+                            :
+                            <Text style={styles.dateTitle}>{formatDate(editData?.date || date || new Date().toLocaleDateString("en-CA"))}</Text>
                         }
                         {!isTrip && (
                             <>
@@ -851,7 +879,7 @@ const DayEntryScreen = ({
                             boxStyles={styles.dropdownBox}
                         />
 
-                      { (editData?.typeOfDay?.name == "Working" || typeOfDay == 2 ) && (
+                        {(editData?.typeOfDay?.name == "Working" || typeOfDay == 2) && (
                             <>
                                 <FieldLabel title="Hours Worked" />
                                 <TextInput
