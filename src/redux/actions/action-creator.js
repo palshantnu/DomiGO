@@ -74,7 +74,15 @@ import {
   GET_ABOUT_APP_SUCCESS,
   ABOUT_APP_FAILURE,
   GET_PRIVACY_POLICY_SUCCESS,
-  PRIVACY_POLICY_FAILURE
+  PRIVACY_POLICY_FAILURE,
+  GET_USER_LOCATIONS_SUCCESS,
+  USER_LOCATIONS_FAILURE,
+  ADD_USER_LOCATIONS_REQUEST,
+  ADD_USER_LOCATIONS_SUCCESS,
+  ADD_USER_LOCATIONS_FAILURE,
+  UPDATE_USER_LOCATIONS_REQUEST,
+  UPDATE_USER_LOCATIONS_SUCCESS,
+  UPDATE_USER_LOCATIONS_FAILURE
 
 } from './action-types';
 import axiosinstance from '../../axios/axiosinstance';
@@ -1391,6 +1399,121 @@ export function GET_PRIVACY_POLICY() {
       })
       console.log('catch error API PRIVACY_POLICY_FAILURE', e)
       return Promise.reject(CommonError)
+    }
+  }
+}
+
+export function GET_USER_LOCATIONS() {
+  return async (dispatch) => {
+    try {
+      // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
+      const response = await axiosinstance.get(`user-locations`)
+      const responseJson = response.data;
+      // console.log('responseYEARJson-=>', responseJson);
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_USER_LOCATIONS_SUCCESS,
+          payload: responseJson.result,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: USER_LOCATIONS_FAILURE,
+        payload: 'USER_LOCATIONS_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: USER_LOCATIONS_FAILURE,
+        payload: 'USER_LOCATIONS_FAILURE',
+      })
+      console.log('catch error API USER_LOCATIONS_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+
+
+export const ADDUSERLOCATIONS = (formData) => {
+  return async (dispatch) => {
+    dispatch({
+      type: ADD_USER_LOCATIONS_REQUEST,
+      payload: 'ADD_USER_LOCATIONS_REQUEST',
+    })
+    try {
+      const response = await axiosinstance.post('user-locations', formData)
+      const responseJson = response.data;
+      console.log('responseJson==>', responseJson);
+
+      if (response.message == 'Success') {
+        dispatch({
+          type: ADD_USER_LOCATIONS_SUCCESS,
+          payload: responseJson,
+        })
+        return { response: responseJson }
+      }
+      dispatch({
+        type: ADD_USER_LOCATIONS_FAILURE,
+        payload: 'ADD_USER_LOCATIONS_FAILURE',
+      })
+      return ({ response: responseJson })
+    }
+    catch (e) {
+      dispatch({
+        type: ADD_USER_LOCATIONS_FAILURE,
+        payload: 'ADD_USER_LOCATIONS_FAILURE',
+      })
+      return ({ response: e })
+    }
+  }
+}
+
+export const UPDATEUSERLOCATIONS = (formData,id) => {
+  console.log('formData',formData);
+  console.log("ID going:", id);
+  return async (dispatch) => {
+    dispatch({
+      type: UPDATE_USER_LOCATIONS_REQUEST,
+      payload: 'UPDATE_USER_LOCATIONS_REQUEST',
+    })
+    try {
+      const response = await axiosinstance.put(`user-locations/${id}`, formData)
+      const responseJson = response.data;
+      console.log('responseJson==>', responseJson);
+
+      if (response.message == 'Success') {
+        dispatch({
+          type: UPDATE_USER_LOCATIONS_SUCCESS,
+          payload: responseJson,
+        })
+        return { response: responseJson }
+      }
+      dispatch({
+        type: UPDATE_USER_LOCATIONS_FAILURE,
+        payload: 'UPDATE_USER_LOCATIONS_FAILURE',
+      })
+      return ({ response: responseJson })
+    }
+    catch (e) {
+      if (e.response) {
+        // Server ne response diya (400, 500 etc)
+        console.log('Status:', e.response.status);
+        console.log('Data:', e.response.data);
+        console.log('Headers:', e.response.headers);
+      } else if (e.request) {
+        // Request gayi but response nahi aaya
+        console.log('No response:', e.request);
+      } else {
+        // Request set karte time e
+        console.log('e message:', e.message);
+      }
+      dispatch({
+        type: UPDATE_USER_LOCATIONS_FAILURE,
+        payload: 'UPDATE_USER_LOCATIONS_FAILURE',
+      })
+      console.log('e----->', e);
+
+      return ({ response: e })
     }
   }
 }

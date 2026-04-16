@@ -25,7 +25,7 @@ import { connect, useDispatch } from 'react-redux';
 import startTracking, { stopTracking } from '../helpers/LocationTracker';
 import { startDomigoTracking } from '../helpers/MainTracker';
 import DomigoTracker from '../helpers/MainTracker';
-import { GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COMPLIANCE_SCORE, UPDATE_STATE_THRESHOLD } from '../redux/actions/action-creator';
+import { GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COMPLIANCE_SCORE, UPDATE_STATE_THRESHOLD, GET_USER_LOCATIONS } from '../redux/actions/action-creator';
 import { ensureLocationReady } from '../helpers/locationHandler';
 import { forceEnableGPS } from '../helpers/locationGuard';
 import { checkGPSStatus } from '../helpers/gpsStatus';
@@ -43,7 +43,7 @@ import { GOOGLE_KEY } from "../helpers/CommonHelpers"
 
 
 
-const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COMPLIANCE_SCORE, UPDATE_STATE_THRESHOLD, loginToken, finalYearProgress, stateWiseResidency, userData, complianceScore, }) => {
+const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COMPLIANCE_SCORE, UPDATE_STATE_THRESHOLD, GET_USER_LOCATIONS, loginToken, finalYearProgress, stateWiseResidency, userData, complianceScore, userLocations }) => {
     const [showStateModal, setShowStateModal] = React.useState(false);
     const [isGPSOn, setIsGPSOn] = React.useState(true);
     const [thresholdModalVisible, setThresholdModalVisible] = React.useState(false);
@@ -55,6 +55,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
     console.log('stateWiseResidency>>>>', stateWiseResidency);
     console.log('complianceScore>>>>', complianceScore);
     console.log('userData>>>>', userData);
+    console.log('userLocations>>>>', userLocations);
 
     const dispatch = useDispatch();
 
@@ -73,6 +74,11 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
         setThresholdValue(String(item.threshold));
         setThresholdModalVisible(true);
     };
+    const locationMap = {};
+
+    userLocations?.forEach(loc => {
+        locationMap[loc.state] = loc.type;
+    });
 
     const onRefresh = async () => {
         setRefreshing(true);
@@ -115,6 +121,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
             await dispatch(GET_FINAL_YEAR_PROGRESS);
             await dispatch(GET_STATE_WISE_RESIDENCY);
             await dispatch(GET_COMPLIANCE_SCORE);
+            await dispatch(GET_USER_LOCATIONS);
         } catch (e) {
             console.log('Refresh error', e);
         }
@@ -138,6 +145,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
         dispatch(GET_FINAL_YEAR_PROGRESS)
         dispatch(GET_STATE_WISE_RESIDENCY)
         dispatch(GET_COMPLIANCE_SCORE)
+        dispatch(GET_USER_LOCATIONS)
         // return () => {
         //   stopDomigoTracking();
         // };
@@ -150,7 +158,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
             const granted = await PermissionsAndroid.request(
                 PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
             );
-    
+
             if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
                 throw new Error("Location permission denied");
             }
@@ -253,7 +261,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
 
     const sendLocationAPI = async (location) => {
         console.log("SENDING 👉", location);
-    
+
         try {
             const res = await fetch("http://3.91.116.18:4001/api/locations", {
                 method: "POST",
@@ -263,12 +271,12 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                 },
                 body: JSON.stringify(location),
             });
-    
+
             const data = await res.json();
             console.log("RESPONSE 👉", data);
-    
+
             return data;
-    
+
         } catch (e) {
             console.log("API error", e);
         }
@@ -588,7 +596,11 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                                 // stateWiseResidency
                                 sortedStateResidency
                                     ?.map((item, index) => {
-                                        const isHomeState = item.state === userData?.state;
+                                        // const isHomeState = item.state === userData?.state;
+                                        const locationType = locationMap[item.state]; // primary / secondary / other / undefined
+
+                                        const isPrimary = locationType === "primary";
+                                        const isUserLocation = !!locationType;
                                         const daysLeft = item.threshold - item.days;
                                         return (
 
@@ -670,11 +682,11 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                                                     <Text style={[styles.smallCircleText,]}>{item?.threshold - item.days}</Text>
                                                 </TouchableOpacity>
                                                 <Text style={styles.smallCircle1Text1}>Left</Text>
-                                                {isHomeState && (
+                                                {isUserLocation && (
                                                     <Icon
                                                         name="home"
                                                         size={24}
-                                                        color={colors.primary}
+                                                        color={isPrimary ? colors.primary : "#000"}
                                                         style={styles.homeIcon}
                                                     />
                                                 )}
@@ -841,6 +853,7 @@ function mapStateToProps(state) {
         finalYearProgress: state.common.finalYearProgress,
         stateWiseResidency: state.common.stateWiseResidency,
         complianceScore: state.common.complianceScore,
+        userLocations: state.common.userLocations,
     };
 }
 
@@ -850,6 +863,7 @@ const mapDispatchToProps = {
     GET_STATE_WISE_RESIDENCY,
     GET_COMPLIANCE_SCORE,
     UPDATE_STATE_THRESHOLD,
+    GET_USER_LOCATIONS,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(HomeScreen);

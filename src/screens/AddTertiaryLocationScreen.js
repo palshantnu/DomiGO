@@ -1,186 +1,185 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
-    View,
-    Text,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    Alert,
-    PermissionsAndroid,
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Alert,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Header from "../components/Header";
 import colors from "../theme/colors";
-import Ionicons from "react-native-vector-icons/Ionicons";
-import GoogleAutoComplete from "../components/GoogleAutoComplete";
-import { CustomToast, GOOGLE_KEY } from "../helpers/CommonHelpers";
-import Geolocation from "@react-native-community/geolocation";
-// import { connect } from "react-redux";
-// import { addLocation } from "../redux/actions/locationActions";
+import {
+  ADDUSERLOCATIONS,
+  UPDATEUSERLOCATIONS,
+} from "../redux/actions/action-creator";
+import { useDispatch } from "react-redux";
+import AddressAutoFill from "../components/AddressAutoFill";
+import { GOOGLE_KEY } from "../helpers/CommonHelpers"
 
-const AddTertiaryLocationScreen = ({ navigation, addLocation }) => {
-    const [address, setAddress] = useState("");
-    const [countryCode, setCountryCode] = useState("");
-    const [stateName, setStateName] = useState("");
-    const [city, setCity] = useState("");
+// 👉 API functions (apne hisaab se adjust karna)
+// import api from "../api"; 
 
+const AddTertiaryLocationScreen = ({ route, navigation }) => {
+  const { mode = "add", location, type = "other" } = route.params || {};
 
-    const getLocation = async () => {
-        Geolocation.getCurrentPosition(
-          async position => {
-            const { latitude, longitude } = position.coords;
-            // const latitude = 26.21
-            // const longitude = 78.18
-    
-            // Reverse Geocoding API
-            const response = await fetch(
-              `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_KEY}`
-            );
-    
-            const json = await response.json();
-    
-            console.log('json', json);
-    
-    
-            if (json.results.length > 0) {
-              const countryData = json.results[0].address_components.find(c =>
-                c.types.includes("country")
-              );
-              console.log('countryData?.long_name', countryData?.long_name);
-    
-              setCountry(countryData?.long_name || "");
-              setCountryCode(countryData?.short_name?.toLowerCase() || "");
-            }
-          },
-          error => console.log(error),
-          { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-        );
-      }
-      useEffect(() => {
-        const requestLocationPermission = async () => {
-          if (Platform.OS === 'android') {
-            const granted = await PermissionsAndroid.request(
-              PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-              {
-                title: 'Location Permission',
-                message: 'App needs access to your location',
-                buttonPositive: 'OK',
-              }
-            );
-            getLocation()
-            return granted === PermissionsAndroid.RESULTS.GRANTED;
-          }
-          return true;
-        };
-        requestLocationPermission();
-      }, [])
+  const isEdit = mode === "edit";
 
-    const handleSave = () => {
-        // if (!address) return;
-        if (!address) {
-            Alert.alert("Please enter location");
-            return;
-        }
+  const [country, setCountry] = useState(location?.country || "");
+  const [stateName, setStateName] = useState(location?.state || "");
+  const [city, setCity] = useState(location?.city || "");
+  const [address, setAddress] = useState(location?.address || "");
+  const [selectedType, setSelectedType] = useState(location?.type || type);
 
-        addLocation({
-            type: "TERTIARY",
-            address,
-        });
+  const dispatch = useDispatch();
 
-        navigation.goBack();
+  const handleSave = async () => {
+    if (!country || !stateName || !city || !address) {
+      Alert.alert("Please fill all fields");
+      return;
+    }
+
+    const payload = {
+      country,
+      state: stateName,
+      city,
+      address,
+      type: selectedType,
+      isPrimary: selectedType === "primary",
+      isActive: true,
     };
 
-    return (
-        <LinearGradient
-            colors={["#9ab1fa", "#ffffff"]}
-            start={{ x: 1, y: 0 }}
-            end={{ x: 0.8, y: 0.4 }}
-            locations={[0.05, 0.55]}
-            style={styles.container}
-        >
-            <SafeAreaView style={styles.container}>
-                <Header title="Add Location" />
+    try {
+      if (isEdit) {
+        await dispatch(
+          UPDATEUSERLOCATIONS(payload, location.id)
+        );
+      } else {
+        await dispatch(ADDUSERLOCATIONS(payload));
+      }
 
-                <View style={styles.wrapper}>
-                    <Text style={styles.label}>Enter Address</Text>
+      Alert.alert("Success");
+      navigation.goBack();
 
-                    {/* <View style={styles.inputBox}> */}
-                        {/* <Ionicons name="location-outline" size={18} color="#888" /> */}
-                        {/* <TextInput
-              placeholder="Type location..."
-              value={address}
-              onChangeText={setAddress}
-              style={styles.input}
-            /> */}
-                        <GoogleAutoComplete
-                            placeholder="Search Address"
-                            apiKey={GOOGLE_KEY}
-                            countryCode={countryCode}
-                            stateName={stateName}
-                            isStateSearch={false}
-                            onSelect={setCity}
-                            value={city}
-                        />
-                    {/* </View> */}
+    } catch (e) {
+      console.log(e);
+      Alert.alert("Error saving location");
+    }
+  };
 
-                    {/* Save Button */}
-                    <TouchableOpacity style={styles.button} onPress={handleSave}>
-                        <Text style={styles.buttonText}>Save Location</Text>
-                    </TouchableOpacity>
-                </View>
-            </SafeAreaView>
-        </LinearGradient>
-    );
+  return (
+    <LinearGradient style={{ flex: 1 }} colors={["#9ab1fa", "#fff"]}
+      start={{ x: 1, y: 0 }}
+      end={{ x: 0.8, y: 0.4 }}
+      locations={[0.05, 0.55]}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <Header title={isEdit ? "Edit Location" : "Add Location"} />
+
+        <View style={{ padding: 16 }}>
+
+          {/* TYPE SELECT */}
+          <Text style={styles.label}>Select Type</Text>
+          <View style={styles.typeRow}>
+            {["primary", "secondary", "other"].map((item) => (
+              <TouchableOpacity
+                key={item}
+                style={[
+                  styles.typeBtn,
+                  selectedType === item && { backgroundColor: colors.primary }
+                ]}
+                onPress={() => setSelectedType(item)}
+              >
+                <Text style={{ color: selectedType === item ? "#fff" : "#000" }}>
+                  {item.toUpperCase()}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* ADDRESS */}
+          <Text style={styles.label}>Address</Text>
+          <AddressAutoFill
+            apiKey={GOOGLE_KEY}
+            value={address}
+            onSelect={(data) => {
+              setAddress(data.address);
+              setCity(data.city);
+              setStateName(data.state);
+              setCountry(data.country);
+            }}
+          />
+
+          {/* CITY */}
+          <Text style={styles.label}>City</Text>
+          <TextInput
+            value={city}
+            style={styles.input}
+            editable={false}
+          />
+
+          {/* STATE */}
+          <Text style={styles.label}>State</Text>
+          <TextInput
+            value={stateName}
+            style={styles.input}
+            editable={false}
+          />
+
+          {/* COUNTRY */}
+          <Text style={styles.label}>Country</Text>
+          <TextInput
+            value={country}
+            style={styles.input}
+            editable={false}
+          />
+
+          {/* BUTTON */}
+          <TouchableOpacity style={styles.button} onPress={handleSave}>
+            <Text style={styles.buttonText}>
+              {isEdit ? "Update Location" : "Save Location"}
+            </Text>
+          </TouchableOpacity>
+
+        </View>
+      </SafeAreaView>
+    </LinearGradient>
+  );
 };
 
-// export default connect(null, { addLocation })(AddTertiaryLocationScreen);
-export default AddTertiaryLocationScreen
+export default AddTertiaryLocationScreen;
+
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-
-    wrapper: {
-        paddingHorizontal: 16,
-        marginTop: 20,
-    },
-
-    label: {
-        fontSize: 14,
-        color: colors.textDark,
-        marginBottom: 6,
-        fontWeight: "500",
-    },
-
-    inputBox: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#fff",
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: colors.border,
-        paddingHorizontal: 12,
-        paddingVertical: 12,
-    },
-
-    input: {
-        flex: 1,
-        marginLeft: 8,
-        fontSize: 14,
-    },
-
-    button: {
-        marginTop: 30,
-        backgroundColor: colors.primary,
-        paddingVertical: 14,
-        borderRadius: 25,
-        alignItems: "center",
-    },
-
-    buttonText: {
-        color: "#fff",
-        fontSize: 16,
-        fontWeight: "600",
-    },
+  label: {
+    marginTop: 10,
+    marginBottom: 5,
+    fontWeight: "600",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 10,
+  },
+  button: {
+    marginTop: 30,
+    backgroundColor: colors.primary,
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  typeRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  typeBtn: {
+    padding: 10,
+    borderWidth: 1,
+    borderRadius: 8,
+  },
 });

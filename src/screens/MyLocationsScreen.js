@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -13,35 +13,50 @@ import Header from "../components/Header";
 import colors from "../theme/colors";
 import navigation from "../navigation";
 import { useNavigation } from "@react-navigation/native";
+import { connect } from "react-redux";
+import { GET_FAQS, GET_SUPPORT_CONTACT, GET_USER_LOCATIONS } from '../redux/actions/action-creator';
 
-const MyLocationsScreen = () => {
+const MyLocationsScreen = ({ GET_USER_LOCATIONS, userLocations, }) => {
   const navigation = useNavigation();
 
+  useEffect(() => {
+    GET_USER_LOCATIONS();
+  }, []);
 
-    const LocationRow = ({ icon, label, value, isLast }) => (
-        <View
-          style={[
-            styles.row,
-            !isLast && { borderBottomWidth: 1, borderBottomColor: "#eee" },
-          ]}
-        >
-          <Ionicons
-            name={icon}
-            size={18}
-            color="#595959"
-            style={styles.icon}
-          />
-      
-          <View style={{ flex: 1 }}>
-            <Text style={styles.label}>{label}</Text>
-            <Text style={styles.value}>{value}</Text>
-          </View>
-      
-          <TouchableOpacity>
-            <Ionicons name="pencil" size={18} color={colors.primary} />
-          </TouchableOpacity>
-        </View>
-      );
+
+  console.log('userLocations', userLocations);
+
+  const primaryLocation = userLocations?.find(loc => loc.type === "primary");
+  const secondaryLocation = userLocations?.find(loc => loc.type === "secondary");
+  const others = userLocations?.filter(loc => loc.type === "other");
+
+  const formatLocation = (loc) => {
+    if (!loc) return "Not Added";
+    return `${loc.city}, ${loc.state}, ${loc.country}`;
+  };
+
+
+  const LocationRow = ({ icon, label, value, loc }) => (
+    <View style={styles.row}>
+      <Ionicons name={icon} size={18} style={styles.icon} />
+
+      <View style={{ flex: 1 }}>
+        <Text style={styles.label}>{label}</Text>
+        <Text style={styles.value}>{value}</Text>
+      </View>
+
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate("AddTertiaryLocation", {
+            mode: "edit",
+            location: loc,
+          })
+        }
+      >
+        <Ionicons name="pencil" size={18} color={colors.primary} />
+      </TouchableOpacity>
+    </View>
+  );
   return (
     <LinearGradient
       colors={["#9ab1fa", "#ffffff"]}
@@ -51,7 +66,7 @@ const MyLocationsScreen = () => {
       style={styles.container}
     >
       <SafeAreaView style={styles.container}>
-        
+
         {/* Header */}
         <Header title="My Locations" />
 
@@ -59,32 +74,65 @@ const MyLocationsScreen = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 30 }}
         >
-          
+
           {/* SECTION */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Saved Locations</Text>
 
             <View style={styles.card}>
-              
+
               {/* Primary */}
-              <LocationRow
-                icon="star"
-                label="Primary Location"
-                value="New York, USA"
-              />
+              {primaryLocation && (
+                <LocationRow
+                  icon="star"
+                  label="Primary Location"
+                  value={formatLocation(primaryLocation)}
+                  loc={primaryLocation}
+                />
+
+              )}
 
               {/* Secondary */}
               <LocationRow
                 icon="location-outline"
                 label="Secondary Location"
-                value="Florida, USA"
+                value={formatLocation(secondaryLocation)}
+                loc={secondaryLocation}
               />
 
+              {!secondaryLocation && (
+                <TouchableOpacity
+                  style={styles.addRow}
+                  onPress={() => navigation.navigate("AddTertiaryLocation", { mode: "add", type: "secondary" })}
+                >
+                  <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
+                  <Text style={styles.addText}>Add Secondary Location</Text>
+                </TouchableOpacity>
+              )}
+
+              {/* Tertiary (optional show) */}
+              {others.map((loc, index) => (
+                <LocationRow
+                  key={loc.id}
+                  icon="location-outline"
+                  label={`Other Location ${index + 1}`}
+                  value={formatLocation(loc)}
+                  loc={loc}
+                />
+              ))}
+
               {/* Add Tertiary */}
-              <TouchableOpacity style={styles.addRow}
-              onPress={()=>navigation.navigate("AddTertiaryLocation")}>
+              <TouchableOpacity
+                style={styles.addRow}
+                onPress={() =>
+                  navigation.navigate("AddTertiaryLocation", {
+                    mode: "add",
+                    type: "other",
+                  })
+                }
+              >
                 <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
-                <Text style={styles.addText}>Add Tertiary Location</Text>
+                <Text style={styles.addText}>Add Location</Text>
               </TouchableOpacity>
 
             </View>
@@ -96,69 +144,82 @@ const MyLocationsScreen = () => {
   );
 };
 
-export default MyLocationsScreen;
+function mapStateToProps(state) {
+  return {
+    userData: state.auth.userData,
+    loginToken: state.auth.loginToken,
+    userLocations: state.common.userLocations,
+  };
+}
+
+
+const mapDispatchToProps = {
+  GET_USER_LOCATIONS,
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(MyLocationsScreen);
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-    },
-  
-    section: {
-      marginTop: 20,
-      paddingHorizontal: 15,
-    },
-  
-    sectionTitle: {
-      fontSize: 16,
-      fontWeight: "600",
-      color: colors.textDark,
-      marginBottom: 8,
-    },
-  
-    card: {
-      backgroundColor: colors.card,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
-      paddingHorizontal: 12,
-    },
-  
-    row: {
-      flexDirection: "row",
-      alignItems: "center",
-      paddingVertical: 15,
-    },
-  
-    icon: {
-      marginRight: 10,
-      backgroundColor: "#E9E9E9",
-      borderRadius: 50,
-      padding: 10,
-    },
-  
-    label: {
-      fontSize: 13,
-      color: colors.textLight,
-    },
-  
-    value: {
-      fontSize: 14,
-      fontWeight: "600",
-      color: colors.textDark,
-      marginTop: 2,
-    },
-  
-    addRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      paddingVertical: 15,
-      justifyContent: "center",
-    },
-  
-    addText: {
-      marginLeft: 8,
-      fontSize: 14,
-      color: colors.primary,
-      fontWeight: "600",
-    },
-  });
+  container: {
+    flex: 1,
+  },
+
+  section: {
+    marginTop: 20,
+    paddingHorizontal: 15,
+  },
+
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.textDark,
+    marginBottom: 8,
+  },
+
+  card: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 12,
+  },
+
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 15,
+  },
+
+  icon: {
+    marginRight: 10,
+    backgroundColor: "#E9E9E9",
+    borderRadius: 50,
+    padding: 10,
+  },
+
+  label: {
+    fontSize: 13,
+    color: colors.textLight,
+  },
+
+  value: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.textDark,
+    marginTop: 2,
+  },
+
+  addRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 15,
+    justifyContent: "center",
+  },
+
+  addText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: colors.primary,
+    fontWeight: "600",
+  },
+});

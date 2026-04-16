@@ -301,6 +301,26 @@ const DayEntryScreen = ({
     //     }
     // }, [isEdit, editData, isTrip]);
 
+    const formatDateTime = (dateStr) => {
+        if (!dateStr) return "";
+    
+        const d = new Date(dateStr);
+    
+        if (isNaN(d)) return "Invalid Date";
+    
+        const day = d.toLocaleDateString("en-US", { weekday: "long" });
+        const date = d.getDate();
+        const month = d.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
+        const year = d.getFullYear();
+    
+        const time = d.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+    
+        return `${day} ${date}-${month}-${year} | ${time}`;
+    };
+
 
     useEffect(() => {
         if (!isEdit || !editData) return;
@@ -829,7 +849,8 @@ const DayEntryScreen = ({
                                     >
                                         <Ionicons name="calendar-outline" size={18} color="#777" />
                                         <Text style={styles.dateText}>
-                                            {startDate.toDateString()}
+                                            {/* {startDate.toDateString()} */}
+                                            {formatDateTime(startDate)}
                                         </Text>
                                     </TouchableOpacity>
                                     <FieldLabel title="End Date" />
@@ -838,7 +859,8 @@ const DayEntryScreen = ({
                                         onPress={() => setOpenEndPicker(true)}
                                     >
                                         <Ionicons name="calendar-outline" size={18} color="#777" />
-                                        <Text style={styles.dateText}>{endDate.toDateString()}</Text>
+                                        {/* <Text style={styles.dateText}>{endDate.toDateString()}</Text> */}
+                                        <Text style={styles.dateText}>{formatDateTime(endDate)}</Text>
                                     </TouchableOpacity>
                                 </View>
 

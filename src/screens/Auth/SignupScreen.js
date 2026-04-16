@@ -36,6 +36,10 @@ const SignupScreen = ({ navigation, signUp }) => {
   const [country, setCountry] = useState("");
   const [countryCode, setCountryCode] = useState("");
   const [fcmtoken, setFcmtoken] = useState("");
+  const [secondaryAddress, setSecondaryAddress] = useState("");
+  const [secondaryCity, setSecondaryCity] = useState("");
+  const [secondaryState, setSecondaryState] = useState("");
+  const [secondaryCountry, setSecondaryCountry] = useState("");
 
 
 
@@ -71,6 +75,76 @@ const SignupScreen = ({ navigation, signUp }) => {
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
     );
   }
+
+
+  const extractCountryFromAddress = async (fullAddress) => {
+    try {
+      const res = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(fullAddress)}&key=${GOOGLE_KEY}`
+      );
+  
+      const json = await res.json();
+  
+      if (json.results?.length > 0) {
+        const countryData = json.results[0].address_components.find(c =>
+          c.types.includes("country")
+        );
+  
+        setCountry(countryData?.long_name || "");
+      }
+    } catch (error) {
+      console.log("Country extract error:", error);
+    }
+  };
+
+  const extractSecondaryCityState = async (fullAddress) => {
+    try {
+      const res = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(fullAddress)}&key=${GOOGLE_KEY}`
+      );
+  
+      const json = await res.json();
+  
+      if (json.results?.length > 0) {
+        let city = "";
+        let state = "";
+  
+        json.results[0].address_components.forEach(component => {
+          if (component.types.includes("locality")) {
+            city = component.long_name;
+          }
+          if (component.types.includes("administrative_area_level_1")) {
+            state = component.long_name;
+          }
+        });
+  
+        setSecondaryCity(city);
+        setSecondaryState(state);
+      }
+    } catch (error) {
+      console.log("Secondary Address extract error:", error);
+    }
+  };
+
+  const extractSecondaryCountry = async (fullAddress) => {
+    try {
+      const res = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(fullAddress)}&key=${GOOGLE_KEY}`
+      );
+  
+      const json = await res.json();
+  
+      if (json.results?.length > 0) {
+        const countryData = json.results[0].address_components.find(c =>
+          c.types.includes("country")
+        );
+  
+        setSecondaryCountry(countryData?.long_name || "");
+      }
+    } catch (error) {
+      console.log("Secondary country error:", error);
+    }
+  };
 
 
 
@@ -172,9 +246,18 @@ const SignupScreen = ({ navigation, signUp }) => {
       city,
       address,
       state: stateName,
+      country,
       deviceType: Platform.OS === "ios" ? "ios" : "android", // 👈 add
       deviceToken: fcmtoken || "123456", // 👈 redux se aa raha hai
+      // 👇 optional fields
+      ...(secondaryAddress && {
+        secondaryAddress,
+        secondaryCity,
+        secondaryState,
+        secondaryCountry,
+      }),
     }
+    console.log('sigupbody',data);
     setButtonLoader(true);
     signUp(data, true, true).then((response) => {
       console.log('response==>', response);
@@ -205,7 +288,7 @@ const SignupScreen = ({ navigation, signUp }) => {
     requestPermission()
     getToken()
   }, []);
-  
+
   async function requestPermission() {
     const authStatus = await messaging().requestPermission();
     console.log('Permission status:', authStatus);
@@ -258,6 +341,20 @@ const SignupScreen = ({ navigation, signUp }) => {
             onSelect={(selectedAddress) => {
               setAddress(selectedAddress);
               extractCityStateFromAddress(selectedAddress);
+              extractCountryFromAddress(selectedAddress);
+            }}
+          />
+        </View>
+        <View style={{ marginBottom: 20 }}>
+          <AddressAutoComplete
+            apiKey={GOOGLE_KEY}
+            value={secondaryAddress}
+            countryCode={countryCode}
+            placeholder="Secondary Address (Optional)"
+            onSelect={(selectedAddress) => {
+              setSecondaryAddress(selectedAddress);
+              extractSecondaryCityState(selectedAddress); // ✅ correct
+              extractSecondaryCountry(selectedAddress);
             }}
           />
         </View>
