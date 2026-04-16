@@ -31,4 +31,4 @@ export const GEOFENCING_MODE = 'local_native';
 // export const GEOFENCING_MODE = 'local_js';
 
 // Country whose state boundaries are used — 'US' or 'IN'
-export const GEOFENCING_COUNTRY = 'IN'
+export const GEOFENCING_COUNTRY = 'US'
