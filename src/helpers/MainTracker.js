@@ -1,7 +1,7 @@
-import { NativeModules, NativeEventEmitter, Platform } from 'react-native';
+import { NativeModules, NativeEventEmitter, Platform, Alert } from 'react-native';
 import { GOOGLE_KEY } from './CommonHelpers';
 import store from '../redux/store';
-import { GEOFENCING_MODE, GEOFENCING_COUNTRY } from '../config/featureFlags';
+import { GEOFENCING_MODE, GEOFENCING_COUNTRY, CITY_CHANGE_EVENTS_ENABLED } from '../config/featureFlags';
 import LocalStateDetectionService from '../services/LocalStateDetectionService';
 import OfflineQueueService from '../services/OfflineQueueService';
 import axiosinstance from '../axios/axiosinstance';
@@ -111,11 +111,14 @@ class DomigoTracker {
       const API_URL = "http://3.91.116.18:4001/api/locations";
 
       const config = {
-        interval: 20000,
+        // 60s matches the native default; state-level detection doesn't need faster sampling.
+        interval: 60000,
         domigoToken: token || loginToken,
         apiUrl: API_URL,
         geofencingMode: GEOFENCING_MODE,
         geofencingCountry: GEOFENCING_COUNTRY,
+        // Gate city/county change detection. Must stay false until backend filter is live.
+        cityChangeEventsEnabled: CITY_CHANGE_EVENTS_ENABLED,
       };
 
       if (GEOFENCING_MODE === 'google') {
@@ -458,6 +461,32 @@ class DomigoTracker {
         console.log(`ℹ️ Domigo ${Platform.OS} - Status:`, status);
       })
     );
+
+    this.subscriptions.push(
+          locationEventEmitter.addListener('onCityChangeDetected', (data) => {
+            console.log("🏙️🏙️🏙️ CITY CHANGE EVENT DETECTED! 🏙️🏙️🏙️");
+            console.log("📊 City Change Data:", JSON.stringify(data, null, 2));
+            console.log(`📍 From: ${data.fromCounty}`);
+            console.log(`📍 To: ${data.toCounty}`);
+            console.log(`📍 State: ${data.state}`);
+            console.log(`📍 Lat/Lng: ${data.lat}, ${data.lng}`);
+
+            // Optional: Show alert for testing
+            if (__DEV__) {
+              Alert.alert(
+                'City Change Detected',
+                `Moved from ${data.fromCounty} to ${data.toCounty}\nState: ${data.state}`
+              );
+            }
+          })
+    );
+
+    this.subscriptions.push(
+      locationEventEmitter.addListener('onCityChangeDebug', (data) => {
+        console.log('🐛 CITY CHANGE DEBUG BODY:', JSON.stringify(data, null, 2));
+      })
+    );
+    
 
 
 

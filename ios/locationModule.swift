@@ -26,6 +26,16 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
 
   private var lastTripKey: String = ""
   private let LAST_TRIP_KEY = "LocationTracker_lastTripKey"
+
+    // MARK: - County Tracking (NEW)
+  private var previousCountyFips: String = ""
+  private var previousCountyName: String = ""
+  private var previousCountyEnterTime: TimeInterval = 0
+
+  private var lastCityChangeKey: String = ""
+  private var countyChangeDetectedTime: TimeInterval = 0
+
+  private let MIN_COUNTY_STAY_SECONDS: TimeInterval = 10 // 3 min
   
   
   // MARK: - Network Monitoring
@@ -66,7 +76,21 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   // Geofencing config
   private var geofencingMode: String = ""
   private var geofencingCountry: String = ""
+
+  // Phase 1 kill switch for city/county change detection. Set via JS setConfig.
+  // When false (default), no city_change events are emitted regardless of GPS input.
+  // Must stay false until the backend filters kind='city_change' from trip-count queries.
+  private var cityChangeEventsEnabled: Bool = false
+
   private var geoJsonFeatures: [[String: Any]]? = nil
+
+  // Phase 2: per-state county cache. Lazily populated; avoids re-reading counties/<FIPS>.json on every tick.
+  private var countyFeatureCache: [String: [[String: Any]]] = [:]
+
+  // Result structs for state/county detection — carry both FIPS and name so callers
+  // can key county files on FIPS without re-running state detection.
+  struct StateMatch { let fips: String?; let name: String }
+  struct CountyMatch { let fips: String; let name: String }
 
   // Offline queue
   private let OFFLINE_QUEUE_KEY = "LocationTracker_offlineTripQueue"
@@ -242,8 +266,14 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   private func setupLocationManager() {
     locationManager = CLLocationManager()
     locationManager.delegate = self
-    locationManager.desiredAccuracy = kCLLocationAccuracyBest
-    locationManager.distanceFilter = 50
+    // kCLLocationAccuracyHundredMeters + 100 m distanceFilter is the Apple-review-safe
+    // configuration for state-level tracking:
+    //   • draws ~10× less battery than kCLLocationAccuracyBest
+    //   • 100 m is far below the smallest state width; zero impact on detection
+    //   • pairs with startMonitoringSignificantLocationChanges (primary wake-up).
+    locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+    locationManager.distanceFilter = 100
+    locationManager.activityType = .other
     locationManager.allowsBackgroundLocationUpdates = true
     locationManager.pausesLocationUpdatesAutomatically = false
     locationManager.startMonitoringSignificantLocationChanges()
@@ -340,6 +370,11 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     if let country = config["geofencingCountry"] as? String {
       self.geofencingCountry = country
     }
+    if let cityChange = config["cityChangeEventsEnabled"] as? Bool {
+      self.cityChangeEventsEnabled = cityChange
+    }
+
+    print("📍 Config updated — mode: \(geofencingMode), country: \(geofencingCountry), cityChange: \(cityChangeEventsEnabled)")
 
     DispatchQueue.main.async {
       self.fetchLastStateFromAPI()
@@ -833,6 +868,15 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         previousCity = city
         previousStateName = state
         previousEnterTime = currentTimeMs
+      }
+      if let fips = newState.fips,
+        let county = detectCountyFromGeoJSON(stateFips: fips, lat: lat, lng: lng) {
+
+          previousCountyFips = county.fips
+          previousCountyName = county.name
+          previousCountyEnterTime = Date().timeIntervalSince1970
+
+          print("📍 County seeded after state change: \(county.name)")
       }
       let tripKey = "\(previousStateName)-\(state)-\(Int(previousEnterTime))"
 
@@ -1461,6 +1505,10 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
 
   // MARK: - Local GeoJSON Detection
 
+  // Loads state boundaries from the app bundle. Supports two shapes:
+  //   • New US format (src/geo/states.json → us-states.json): root is an array of
+  //     { id, name, bbox, geometry }. bbox enables fast prefiltering.
+  //   • Old GeoJSON FeatureCollection (India): root is an object with a "features" array.
   private func loadGeoJsonFeatures() -> [[String: Any]] {
     if let cached = geoJsonFeatures { return cached }
 
@@ -1469,10 +1517,19 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
 
     guard let url = Bundle.main.url(forResource: fileName, withExtension: ext),
       let data = try? Data(contentsOf: url),
-      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-      let features = json["features"] as? [[String: Any]]
+      let parsed = try? JSONSerialization.jsonObject(with: data)
     else {
       print("Failed to load GeoJSON \(fileName).\(ext)")
+      return []
+    }
+
+    let features: [[String: Any]]
+    if let array = parsed as? [[String: Any]] {
+      features = array
+    } else if let obj = parsed as? [String: Any], let arr = obj["features"] as? [[String: Any]] {
+      features = arr
+    } else {
+      print("Unexpected GeoJSON shape in \(fileName).\(ext)")
       return []
     }
 
@@ -1481,31 +1538,90 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     return features
   }
 
-  private func detectStateFromGeoJSON(lat: Double, lng: Double) -> String? {
+  private func bboxSkips(_ feature: [String: Any], lat: Double, lng: Double) -> Bool {
+    guard let bbox = feature["bbox"] as? [Double], bbox.count == 4 else { return false }
+    return lng < bbox[0] || lng > bbox[2] || lat < bbox[1] || lat > bbox[3]
+  }
+
+  private func pointInGeometry(lat: Double, lng: Double, geometry: [String: Any]) -> Bool {
+    guard let type = geometry["type"] as? String else { return false }
+    if type == "Polygon", let coords = geometry["coordinates"] as? [[[Double]]] {
+      return pointInPolygonRings(lat: lat, lng: lng, rings: coords)
+    }
+    if type == "MultiPolygon", let polys = geometry["coordinates"] as? [[[[Double]]]] {
+      for poly in polys {
+        if pointInPolygonRings(lat: lat, lng: lng, rings: poly) { return true }
+      }
+    }
+    return false
+  }
+
+  private func detectStateFromGeoJSON(lat: Double, lng: Double) -> StateMatch? {
     let features = loadGeoJsonFeatures()
-    let nameKey = geofencingCountry == "IN" ? "ST_NM" : "name"
+    let isIN = geofencingCountry == "IN"
 
     for feature in features {
-      guard let geometry = feature["geometry"] as? [String: Any],
-        let type = geometry["type"] as? String,
-        let properties = feature["properties"] as? [String: Any]
-      else { continue }
+      if bboxSkips(feature, lat: lat, lng: lng) { continue }
+      guard let geometry = feature["geometry"] as? [String: Any] else { continue }
+      if !pointInGeometry(lat: lat, lng: lng, geometry: geometry) { continue }
 
-      var inside = false
-      if type == "Polygon", let coords = geometry["coordinates"] as? [[[Double]]] {
-        inside = pointInPolygonRings(lat: lat, lng: lng, rings: coords)
-      } else if type == "MultiPolygon", let polys = geometry["coordinates"] as? [[[[Double]]]] {
-        for poly in polys {
-          if pointInPolygonRings(lat: lat, lng: lng, rings: poly) {
-            inside = true
-            break
-          }
+      let name: String? = isIN
+        ? (feature["properties"] as? [String: Any])?["ST_NM"] as? String
+        : feature["name"] as? String
+      let fips: String? = isIN ? nil : (feature["id"] as? String)
+      guard let stateName = name else { return nil }
+      return StateMatch(fips: fips, name: stateName)
+    }
+    return nil
+  }
+
+  func detectCountyFromGeoJSON(stateFips: String, lat: Double, lng: Double) -> CountyMatch? {
+    guard let features = countyFeatureCache[stateFips] else { return nil }
+
+    for feature in features {
+        if let geometry = feature["geometry"] as? [String: Any],
+           let properties = feature["properties"] as? [String: Any] {
+
+            // 👉 yaha point-in-polygon logic reuse karna padega (same as state detection)
+
+            if isPointInsidePolygon(lat: lat, lng: lng, geometry: geometry) {
+                let fips = properties["GEOID"] as? String ?? ""
+                let name = properties["NAME"] as? String ?? ""
+                return CountyMatch(fips: fips, name: name)
+            }
         }
-      }
+    }
+    return nil
+}
 
-      if inside {
-        return properties[nameKey] as? String
-      }
+  // Loads counties for the given state FIPS (e.g. "06" for CA) from the bundle's
+  // `counties/<FIPS>.json` (added to Xcode as a blue folder reference).
+  // Returns nil if the file is missing (e.g. India has no county data bundled).
+  private func loadCountyFeatures(stateFips: String) -> [[String: Any]]? {
+    if let cached = countyFeatureCache[stateFips] { return cached }
+
+    guard let url = Bundle.main.url(forResource: stateFips, withExtension: "json", subdirectory: "counties"),
+      let data = try? Data(contentsOf: url),
+      let features = (try? JSONSerialization.jsonObject(with: data)) as? [[String: Any]]
+    else {
+      print("No county data for state \(stateFips)")
+      return nil
+    }
+
+    countyFeatureCache[stateFips] = features
+    print("Counties loaded: \(features.count) features for state \(stateFips)")
+    return features
+  }
+
+  private func detectCountyFromGeoJSON(stateFips: String, lat: Double, lng: Double) -> CountyMatch? {
+    guard let features = loadCountyFeatures(stateFips: stateFips) else { return nil }
+    for feature in features {
+      if bboxSkips(feature, lat: lat, lng: lng) { continue }
+      guard let geometry = feature["geometry"] as? [String: Any] else { continue }
+      if !pointInGeometry(lat: lat, lng: lng, geometry: geometry) { continue }
+      guard let fips = feature["id"] as? String,
+            let name = feature["name"] as? String else { continue }
+      return CountyMatch(fips: fips, name: name)
     }
     return nil
   }
@@ -1537,13 +1653,16 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   }
 
   private func processWithLocalGeoJSON(lat: Double, lng: Double) {
-    guard let detectedState = detectStateFromGeoJSON(lat: lat, lng: lng) 
+    guard let match = detectStateFromGeoJSON(lat: lat, lng: lng)
     else {
-      print("local_native: no state detected",lat,lng)
+      print("local_native: no state detected", lat, lng)
       return
     }
 
-      print("local_native: no state detected",detectedState)
+    // Name remains the key used throughout previousStateName comparisons.
+    // match.fips is available here for Phase 3 county detection (unused in Phase 2).
+    let detectedState = match.name
+    print("local_native: detected state", detectedState)
 
           self.checkAndSendToAPI(
               lat: lat,
@@ -1566,8 +1685,34 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       return
     }
 
+    // if detectedState == previousStateName {
+    //   return
+    // }
+    // SAME STATE
     if detectedState == previousStateName {
-      return
+
+        if !cityChangeEventsEnabled {
+            return
+        }
+
+        guard let stateFips = detectedState.fips else { return }
+        guard let county = detectCountyFromGeoJSON(stateFips: stateFips, lat: lat, lng: lng) else { return }
+
+        // first time seed
+        if previousCountyFips.isEmpty {
+            previousCountyFips = county.fips
+            previousCountyName = county.name
+            previousCountyEnterTime = Date().timeIntervalSince1970
+            print("📍 Initial county: \(county.name)")
+            return
+        }
+
+        if county.fips == previousCountyFips {
+            return
+        }
+
+        handleCountyTransition(state: detectedState, newCounty: county, lat: lat, lng: lng)
+        return
     }
 
     if isTransitionInProgress {
@@ -1641,6 +1786,53 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       saveState()
     }
   }
+
+  private func handleCountyTransition(
+    state: StateMatch,
+    newCounty: CountyMatch,
+    lat: Double,
+    lng: Double
+) {
+    let now = Date().timeIntervalSince1970
+
+    if countyChangeDetectedTime == 0 {
+        countyChangeDetectedTime = now
+        return
+    }
+
+    if now - countyChangeDetectedTime < 30 { return }
+    countyChangeDetectedTime = 0
+
+    if now - previousCountyEnterTime < MIN_COUNTY_STAY_SECONDS {
+        print("⏱️ County stay too short")
+        return
+    }
+
+    let key = "\(previousCountyFips)_\(newCounty.fips)_\(previousCountyEnterTime)"
+    if key == lastCityChangeKey { return }
+
+    lastCityChangeKey = key
+
+    let originCounty = previousCountyName
+
+    print("🏙️ COUNTY CHANGE: \(originCounty) → \(newCounty.name)")
+
+    // 🔥 SEND EVENT TO JS
+    let data: [String: Any] = [
+        "fromCounty": originCounty,
+        "toCounty": newCounty.name,
+        "state": state.name,
+        "lat": lat,
+        "lng": lng,
+        "timestamp": now * 1000
+    ]
+
+    safeSendEvent(withName: "onCityChangeDetected", body: data)
+
+    previousCountyFips = newCounty.fips
+    previousCountyName = newCounty.name
+    previousCountyEnterTime = now
+}
 
   private func createTrip(
     originCity: String?,

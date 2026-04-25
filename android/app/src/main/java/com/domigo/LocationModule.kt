@@ -56,13 +56,21 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         reactContext.getSharedPreferences("domigo_location", Context.MODE_PRIVATE)
 
     // Configuration
-    private var locationInterval: Long = 20000L 
-    private var locationDistance: Float = 0f
+    // 60s interval + 100m distance filter: for state-level tracking this is the sweet spot —
+    // stationary users produce 0 wake-ups (GPS noise < 100m), driving users still get a fix
+    // well before crossing any state line (at 60 mph ≈ 1.7km/min vs. state widths of 100+ km).
+    private var locationInterval: Long = 60000L
+    private var locationDistance: Float = 100f
     private var googleApiKey: String = ""
     private var domigoToken: String = ""
     private var apiUrl: String = ""
     private var geofencingMode: String = ""
     private var geofencingCountry: String = ""
+
+    // Phase 1 kill switch for city/county change detection. Set via JS setConfig.
+    // When false (default), no city_change events are emitted regardless of GPS input.
+    // Must stay false until the backend filters kind='city_change' from trip-count queries.
+    private var cityChangeEventsEnabled: Boolean = false
 
     // Track last values to avoid duplicate API calls
     private var lastState: String = ""
@@ -80,6 +88,17 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     private var currentStateName: String = ""
     private var isTransitionInProgress = false
     private var stateChangeDetectedTime: Long = 0L
+
+
+    private var previousCountyFips: String = ""
+    private var previousCountyName: String = ""
+    private var previousCountyEnterTime: Long = 0L
+    private var lastCityChangeKey: String = ""
+    private var countyChangeDetectedTime: Long = 0L
+
+    // private val MIN_COUNTY_STAY_MS = 1 * 60 * 1000 // 3 min
+    // private val MIN_COUNTY_STAY_MS = 20 * 1000 // 3 min
+    private val MIN_COUNTY_STAY_MS =  3000 // 3 min
 
     private var lastGeocodeTime: Long = 0L
 
@@ -101,8 +120,10 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         private const val GOOGLE_GEOCODING_URL = "https://maps.googleapis.com/maps/api/geocode/json"
         private const val FOUR_HOURS_MS = 4 * 60 * 60 * 1000
         // private const val FOUR_HOURS_MS = 1 * 60 * 1000
-        // private const val GEOCODE_INTERVAL = 45 * 60 * 1000L
-        private const val GEOCODE_INTERVAL = 0L
+        // Safety throttle for the `google` fallback mode only. Active mode `local_native`
+        // calls Google on state change (not by this interval). 1 h = defence-in-depth in case
+        // the feature flag is ever flipped back to `google` without reviewing cost.
+        private const val GEOCODE_INTERVAL = 60 * 60 * 1000L
         private const val OFFLINE_QUEUE_KEY = "domigo_offline_trip_queue"
         private const val MAX_OFFLINE_RETRIES = 5
         private const val PREF_PREV_STATE_CODE = "domigo_prev_state_code"
@@ -144,8 +165,11 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
             if (config.hasKey("geofencingCountry")) {
                 geofencingCountry = config.getString("geofencingCountry") ?: ""
             }
-            
-            Log.d(TAG, "Config updated - Interval: $locationInterval, Mode: $geofencingMode, Country: $geofencingCountry")
+            if (config.hasKey("cityChangeEventsEnabled")) {
+                cityChangeEventsEnabled = config.getBoolean("cityChangeEventsEnabled")
+            }
+
+            Log.d(TAG, "Config updated - Interval: $locationInterval, Mode: $geofencingMode, Country: $geofencingCountry, CityChange: $cityChangeEventsEnabled")
 
             backfillMissingDays()
         } catch (e: Exception) {
@@ -1225,6 +1249,45 @@ private fun sendEntryFormData(
             }
         
     }
+    if (kind == "city_change") {
+        body
+            .addFormDataPart("originCity", s(originCity))
+            .addFormDataPart("originState", s(originState))
+            .addFormDataPart("originLat", d(originLat))
+            .addFormDataPart("originLng", d(originLng))
+
+            .addFormDataPart("destinationCity", s(destinationCity))
+            .addFormDataPart("destinationState", s(destinationState))
+            .addFormDataPart("destinationLat", d(destinationLat))
+            .addFormDataPart("destinationLng", d(destinationLng))
+            startDate?.let {
+                body.addFormDataPart("startDate", formatDate(it))
+            }
+        
+            endDate?.let {
+                body.addFormDataPart("endDate", formatDate(it))
+            }
+        
+    }
+
+    if (kind == "city_change") {
+        val debugData = Arguments.createMap().apply {
+            putString("kind", kind)
+            putString("date", date)
+            putString("originCity", originCity)
+            putString("originState", originState)
+            putString("destinationCity", destinationCity)
+            putString("destinationState", destinationState)
+            putDouble("originLat", originLat ?: 0.0)
+            putDouble("originLng", originLng ?: 0.0)
+            putDouble("destinationLat", destinationLat ?: 0.0)
+            putDouble("destinationLng", destinationLng ?: 0.0)
+            putString("startDate", startDate?.let { formatDate(it) })
+            putString("endDate", endDate?.let { formatDate(it) })
+        }
+        sendEvent("onCityChangeDebug", debugData)
+    }
+    
 
     val request = Request.Builder()
         // .url("http://3.91.116.18:4001/api/trips")
@@ -1568,6 +1631,10 @@ private fun backfillMissingDays() {
 
 // ==================== Local GeoJSON Detection (Option B) ====================
 
+// Loads state boundaries from bundled assets. Supports two shapes:
+//   • New US format (src/geo/states.json → us-states.json): root is a JSONArray of
+//     { id, name, bbox, geometry }. bbox enables fast prefiltering.
+//   • Old GeoJSON FeatureCollection (India): root is an object with a "features" array.
 private fun loadGeoJsonFeatures(): JSONArray {
     geoJsonFeatures?.let { return it }
     val fileName = when (geofencingCountry) {
@@ -1575,9 +1642,12 @@ private fun loadGeoJsonFeatures(): JSONArray {
         else -> "us-states.json"
     }
     try {
-        val json = context.assets.open(fileName).bufferedReader().use { it.readText() }
-        val root = JSONObject(json)
-        val features = root.getJSONArray("features")
+        val raw = context.assets.open(fileName).bufferedReader().use { it.readText() }
+        val features = if (raw.trimStart().startsWith("[")) {
+            JSONArray(raw)
+        } else {
+            JSONObject(raw).getJSONArray("features")
+        }
         geoJsonFeatures = features
         Log.d(TAG, "GeoJSON loaded: ${features.length()} features from $fileName")
         return features
@@ -1587,26 +1657,88 @@ private fun loadGeoJsonFeatures(): JSONArray {
     }
 }
 
-private fun detectStateFromGeoJSON(lat: Double, lng: Double): String? {
+// Phase 2: state + county detection. Data-class results carry both FIPS and name so
+// Phase 3 can key county files on FIPS without re-running state detection.
+data class StateMatch(val fips: String?, val name: String)
+data class CountyMatch(val fips: String, val name: String)
+
+// Per-state county feature cache. Lazily populated on first lookup for each state;
+// avoids re-parsing the counties/<FIPS>.json file on every tick.
+private val countyFeatureCache: MutableMap<String, JSONArray> = mutableMapOf()
+
+private fun bboxSkips(feature: JSONObject, lat: Double, lng: Double): Boolean {
+    val bbox = feature.optJSONArray("bbox") ?: return false
+    if (bbox.length() != 4) return false
+    val minX = bbox.getDouble(0); val minY = bbox.getDouble(1)
+    val maxX = bbox.getDouble(2); val maxY = bbox.getDouble(3)
+    return lng < minX || lng > maxX || lat < minY || lat > maxY
+}
+
+private fun pointInGeometry(lat: Double, lng: Double, geometry: JSONObject): Boolean {
+    val coords = geometry.getJSONArray("coordinates")
+    return when (geometry.getString("type")) {
+        "Polygon" -> pointInPolygonRings(lat, lng, coords)
+        "MultiPolygon" -> {
+            for (p in 0 until coords.length()) {
+                if (pointInPolygonRings(lat, lng, coords.getJSONArray(p))) return true
+            }
+            false
+        }
+        else -> false
+    }
+}
+
+private fun detectStateFromGeoJSON(lat: Double, lng: Double): StateMatch? {
     val features = loadGeoJsonFeatures()
-    val nameKey = if (geofencingCountry == "IN") "ST_NM" else "name"
+    val isIN = geofencingCountry == "IN"
     for (i in 0 until features.length()) {
         val feature = features.getJSONObject(i)
-        val geometry = feature.getJSONObject("geometry")
-        val type = geometry.getString("type")
-        val coords = geometry.getJSONArray("coordinates")
-        val inside = when (type) {
-            "Polygon" -> pointInPolygonRings(lat, lng, coords)
-            "MultiPolygon" -> {
-                var found = false
-                for (p in 0 until coords.length()) {
-                    if (pointInPolygonRings(lat, lng, coords.getJSONArray(p))) { found = true; break }
-                }
-                found
-            }
-            else -> false
+        if (bboxSkips(feature, lat, lng)) continue
+        if (!pointInGeometry(lat, lng, feature.getJSONObject("geometry"))) continue
+
+        val name: String? = if (isIN) {
+            feature.getJSONObject("properties").optString("ST_NM", null)
+        } else {
+            feature.optString("name", null)
         }
-        if (inside) return feature.getJSONObject("properties").optString(nameKey, null)
+        // val fips: String? = if (isIN) null else feature.optString("id", null)
+        val fips: String? = if (isIN) {
+            null
+        } else {
+            if (feature.has("id")) feature.getString("id") else null
+        }
+        if (name == null) return null
+        return StateMatch(fips, name)
+    }
+    return null
+}
+
+// Loads counties for the given state FIPS (e.g. "06" for CA) from
+// assets/counties/<FIPS>.json. Returns null if the file is missing (e.g. India,
+// which doesn't bundle county data).
+private fun loadCountyFeatures(stateFips: String): JSONArray? {
+    countyFeatureCache[stateFips]?.let { return it }
+    return try {
+        val raw = context.assets.open("counties/$stateFips.json").bufferedReader().use { it.readText() }
+        val features = JSONArray(raw)
+        countyFeatureCache[stateFips] = features
+        Log.d(TAG, "Counties loaded: ${features.length()} features for state $stateFips")
+        features
+    } catch (e: Exception) {
+        Log.w(TAG, "No county data for state $stateFips", e)
+        null
+    }
+}
+
+private fun detectCountyFromGeoJSON(stateFips: String, lat: Double, lng: Double): CountyMatch? {
+    val features = loadCountyFeatures(stateFips) ?: return null
+    for (i in 0 until features.length()) {
+        val feature = features.getJSONObject(i)
+        if (bboxSkips(feature, lat, lng)) continue
+        if (!pointInGeometry(lat, lng, feature.getJSONObject("geometry"))) continue
+        val fips = feature.optString("id", null) ?: continue
+        val name = feature.optString("name", null) ?: continue
+        return CountyMatch(fips, name)
     }
     return null
 }
@@ -1634,197 +1766,304 @@ private fun pointInRing(lat: Double, lng: Double, ring: JSONArray): Boolean {
     return inside
 }
 
+// Entry point for the local_native geofencing path. Runs on every location tick
+// (per LocationModule's processLocationInBackground dispatch) when GEOFENCING_MODE == "local_native".
+//
+// Flow:
+//   1. Polygon-detect the state from bundled GeoJSON (no network).
+//   2. Emit a heartbeat ping to our own /api/locations endpoint.
+//   3. Emit onAddressResolved to JS for UI.
+//   4. First-time init: set previous* and return.
+//   5. Same state: return (no Google, no trip).
+//   6. State changed + online: reverse-geocode via Google for city enrichment;
+//      sendToDomigoAPI in its success path creates the trip and updates state.
+//   7. State changed + offline: debounce / min-stay / dedupe guards, then create
+//      the trip locally (destinationCity left blank) and update state.
 private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
-    val detectedState = detectStateFromGeoJSON(lat, lng)
-
-    if (detectedState == null) {
+    val match = detectStateFromGeoJSON(lat, lng)
+    println("🔍 MATCH DEBUG → ${match?.name} | fips=${match?.fips}")
+    if (match == null) {
         Log.w(TAG, "local_native: no state detected for $lat,$lng")
+        println("❌ STATE DETECTION FAILED for $lat,$lng")
         return
     }
 
+
+    // Name is the authoritative key used throughout previousStateName comparisons.
+    // match.fips is threaded through for Phase 3 (county detection keys on FIPS).
+    val detectedState = match.name
+    val county = match.fips?.let { detectCountyFromGeoJSON(it, lat, lng) }
     val newState = detectedState.trim()
     val oldState = previousStateName.trim()
-
     Log.d(TAG, "DEBUG → OLD=$oldState NEW=$newState")
-    sendLocationPing(
-    lat,
-    lng,
-    detectedState,
-    detectedState,
-    geofencingCountry
-    )
-    // currentStateName = detectedState
-    // val detectedState = detectStateFromGeoJSON(lat, lng)
-    // if (detectedState == null) { Log.w(TAG, "local_native: no state detected for $lat,$lng"); return }
-    // currentStateName = detectedState
+
+    println("📍 STATE: old=$oldState new=$newState, fips=${match.fips}")
+    println("📍 cityChangeEventsEnabled = $cityChangeEventsEnabled")
+
+    // Heartbeat to our own API (itself gated by LOCATION_PING_INTERVAL + state change inside sendLocationPing).
+    sendLocationPing(lat, lng, detectedState, detectedState, geofencingCountry)
+
+    // Surface to JS for UI (no Google).
     val addressData = Arguments.createMap().apply {
         putDouble("latitude", lat); putDouble("longitude", lng)
-        putString("city", ""); putString("state", detectedState)
-        putString("stateCode", ""); putString("countryCode", geofencingCountry)
+        putString("city",  county?.name ?: ""); putString("state", detectedState)
+        putString("stateCode", match.fips ?: ""); putString("countryCode", geofencingCountry)
         putString("fullAddress", ""); putDouble("timestamp", System.currentTimeMillis().toDouble())
     }
-    // if (previousEnterTime == 0L) {
-    //     previousLat = lat; previousLng = lng
-    //     previousStateName = detectedState; previousStateCode = detectedState
-    //     previousCountryCode = geofencingCountry; previousEnterTime = System.currentTimeMillis()
-    //     saveStateToPrefs()
-    //     Log.d(TAG, "local_native: initialized state=$detectedState")
-    // }
     sendEvent("onAddressResolved", addressData)
-    // sendToDomigoAPI(lat, lng, detectedState, detectedState, detectedState, geofencingCountry, detectedState)
 
-        // First time initialize
-        if (previousStateName.isEmpty()) {
-            previousStateName = detectedState
-            previousStateCode = detectedState
-            previousCountryCode = geofencingCountry
-            previousLat = lat
-            previousLng = lng
-            previousEnterTime = System.currentTimeMillis()
-            saveStateToPrefs()
+    // First-time init.
+    if (previousStateName.isEmpty()) {
+        previousStateName = detectedState
+        previousStateCode = detectedState
+        previousCountryCode = geofencingCountry
+        previousLat = lat
+        previousLng = lng
+        previousEnterTime = System.currentTimeMillis()
+        saveStateToPrefs()
+        Log.d(TAG, "📍 Initial state set: $detectedState")
+        return
+    }
+
+    // 🔥 Root guard: same state → no Google call, no trip. Fixes the ~180 req/hr Google bill.
+    // if (newState.equals(oldState, ignoreCase = true)) {
+    //     Log.d(TAG, "🏠 Same state — skipping (no Google call, no trip)")
+    //     return
+    // }
+    if (newState.equals(oldState, ignoreCase = true)) {
+        println("📍 Same state detected - checking county change")
+        if (!cityChangeEventsEnabled) {
+            println("❌ City change events DISABLED")
+            return
+        }
+        println("✅ City change events ENABLED")
     
-            Log.d(TAG, "📍 Initial state set: $detectedState")
+        // val stateFips = match.fips ?: return
+        val stateFips = match.fips ?: run {
+            Log.e(TAG, "❌ FIPS missing for ${match.name}")
+            println("❌ FIPS is NULL for state ${match.name}")
+            return
+        }
+        println("📍 Looking for county with state FIPS: $stateFips")
+        val county = detectCountyFromGeoJSON(stateFips, lat, lng) ?: return
+
+        if (county == null) {
+            println("❌ No county found for FIPS $stateFips at $lat,$lng")
+            return
+        }
+        
+        println("✅ County found: ${county.name} (FIPS: ${county.fips})")
+        println("📍 Previous county: $previousCountyName (FIPS: $previousCountyFips)")
+
+    
+        // First time seed
+        if (previousCountyFips.isEmpty()) {
+            previousCountyFips = county.fips
+            previousCountyName = county.name
+            previousCountyEnterTime = System.currentTimeMillis()
+            Log.d(TAG, "📍 Initial county set: ${county.name}")
             return
         }
     
-        // Strong comparison
-        // if (detectedState.trim().equals(previousStateName.trim(), ignoreCase = true)) {
-        //     Log.d(TAG, "🏠 Same state ($detectedState) — skipping")
-        //     return
-        // }
-
-        // if (isTransitionInProgress) {
-        //     Log.d(TAG, "⛔ Transition already in progress — skipping")
-        //     return
-        // }
-
-        // isTransitionInProgress = true
-
-        // Log.d(TAG, "🚗 STATE CHANGED: $previousStateName → $detectedState")
-
-
-
+        // No change
+        if (county.fips == previousCountyFips) {
+            return
+        }
     
-        // reverseGeocodeInBackground(lat, lng)
-        if (isInternetAvailable()) {
-            reverseGeocodeInBackground(lat, lng)
-            return  // ❗ Important
-        } 
-            Log.d(TAG, "Offline — creating trip with basic state only")
+        // COUNTY CHANGE DETECTED
+        handleCountyTransition(match, county, lat, lng)
+        return
+    }
 
-            // SAFE COPY of origin
-            // -------- OFFLINE CASE --------
-            // ================= DUPLICATE SAFE LOGIC =================
+    // State changed → online: enrich city via Google (and let its success path post the trip + update state).
+    if (isInternetAvailable()) {
+        reverseGeocodeInBackground(lat, lng)
+        return
+    }
 
-            // val newState = detectedState.trim()
-            // val oldState = previousStateName.trim()
+    // State changed → offline: guard, then create trip locally.
+    Log.d(TAG, "Offline — creating trip with basic state only")
 
-            // SAME STATE → skip
-            if (newState.equals(oldState, ignoreCase = true)) {
-                Log.d(TAG, "🏠 Same state — skipping")
-                return
-            }
+    // Debounce rapid border flaps.
+    if (stateChangeDetectedTime == 0L) {
+        stateChangeDetectedTime = System.currentTimeMillis()
+        return
+    }
+    val diff = System.currentTimeMillis() - stateChangeDetectedTime
+    if (diff < 10000) return
+    stateChangeDetectedTime = 0L
 
-            // Debounce start
-            if (stateChangeDetectedTime == 0L) {
-                stateChangeDetectedTime = System.currentTimeMillis()
-                return
-            }
+    // Minimum stay in the previous state (avoids spurious trips during transit noise).
+    val stayDuration = System.currentTimeMillis() - previousEnterTime
+    if (stayDuration < MIN_STAY_TIME) {
+        Log.d(TAG, "⏱️ Ignoring short stay")
+        return
+    }
 
-            val diff = System.currentTimeMillis() - stateChangeDetectedTime
-            if (diff < 10000) {   // 🔥 10 sec
-                return
-            }
+    // Trip-level dedupe keyed on (origin, destination, origin-enter-time).
+    val tripKey = "${oldState}_${newState}_${previousEnterTime}"
+    if (tripKey == lastTripKey) {
+        Log.d(TAG, "🚫 Duplicate trip blocked")
+        return
+    }
+    if (isTransitionInProgress) {
+        Log.d(TAG, "⛔ Transition already in progress")
+        return
+    }
+    isTransitionInProgress = true
 
-            stateChangeDetectedTime = 0L
+    Log.d(TAG, "🚗 STATE CHANGED: $oldState → $newState")
 
-            // ⏱️ Minimum stay check
-            val stayDuration = System.currentTimeMillis() - previousEnterTime
-            if (stayDuration < MIN_STAY_TIME) {
-                Log.d(TAG, "⏱️ Ignoring short stay")
-                return
-            }
+    // Snapshot origin before mutating previous*.
+    val originStateSafe = previousStateName
+    val originLatSafe = previousLat
+    val originLngSafe = previousLng
+    val originCitySafe = previousCity
+    val originEnterTimeSafe = previousEnterTime
 
-            // 🔐 Unique trip key
-            val tripKey = "${oldState}_${newState}_${previousEnterTime}"
+    // Commit new state before firing the trip API.
+    previousStateName = newState
+    previousStateCode = newState
+    previousCountryCode = geofencingCountry
+    previousLat = lat
+    previousLng = lng
+    previousEnterTime = System.currentTimeMillis()
+    saveStateToPrefs()
+    match.fips?.let { fips ->
+        val county = detectCountyFromGeoJSON(fips, lat, lng)
+        if (county != null) {
+            previousCountyFips = county.fips
+            previousCountyName = county.name
+            previousCountyEnterTime = System.currentTimeMillis()
+    
+            Log.d(TAG, "📍 County seeded after state change: ${county.name}")
+        }
+    }
+    lastTripKey = tripKey
 
-            if (tripKey == lastTripKey) {
-                Log.d(TAG, "🚫 Duplicate trip blocked")
-                return
-            }
+    sendEntryFormData(
+        kind = "trip",
+        date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
+        typeOfDayId = null,
+        isCommissionDay = false,
+        isRemoteWork = false,
+        remoteHours = 0,
+        isTravelling = true,
+        tripTypeId = 1,
+        tripModeId = 1,
+        confirmationNo = "",
+        vendor = "",
+        hasProof = false,
+        proofType = "other",
+        notes = "",
+        creationType = "automatic",
+        remoteLocation = "",
+        state = null,
+        isUpdated = false,
+        originCity = originCitySafe,
+        originState = originStateSafe,
+        originLat = originLatSafe,
+        originLng = originLngSafe,
+        destinationCity = "",
+        destinationState = newState,
+        destinationLat = lat,
+        destinationLng = lng,
+        startDate = originEnterTimeSafe,
+        endDate = System.currentTimeMillis()
+    )
 
-            // Transition lock
-            if (isTransitionInProgress) {
-                Log.d(TAG, "⛔ Transition already in progress")
-                return
-            }
-            isTransitionInProgress = true
+    isTransitionInProgress = false
+}
 
-            Log.d(TAG, "🚗 STATE CHANGED: $oldState → $newState")
 
-            // SAFE COPY
-            val originStateSafe = previousStateName
-            val originLatSafe = previousLat
-            val originLngSafe = previousLng
-            val originCitySafe = previousCity
-            val originEnterTimeSafe = previousEnterTime
+private fun handleCountyTransition(
+    state: StateMatch,
+    newCounty: CountyMatch,
+    lat: Double,
+    lng: Double
+) {
+    val now = System.currentTimeMillis()
 
-            // 🔥 IMPORTANT: UPDATE STATE BEFORE API
-            previousStateName = newState
-            previousStateCode = newState
-            previousCountryCode = geofencingCountry
-            previousLat = lat
-            previousLng = lng
-            previousEnterTime = System.currentTimeMillis()
+    // debounce
+    if (countyChangeDetectedTime == 0L) {
+        countyChangeDetectedTime = now
+        return
+    }
 
-            saveStateToPrefs()
+    // if (now - countyChangeDetectedTime < 3000) return
+    countyChangeDetectedTime = 0L
 
-            // SAVE KEY
-            lastTripKey = tripKey
+    // // min stay
+    // if (now - previousCountyEnterTime < MIN_COUNTY_STAY_MS) {
+    //     Log.d(TAG, "⏱️ County stay too short")
+    //     return
+    // }
 
-            // CITY FETCH (optional)
-            // if (isInternetAvailable()) {
-            //     reverseGeocodeInBackground(lat, lng)
-            // }
+    val key = "${previousCountyFips}_${newCounty.fips}_$previousCountyEnterTime"
+    if (key == lastCityChangeKey) {
+        Log.d(TAG, "🚫 Duplicate city change")
+        return
+    }
 
-            // CREATE TRIP
-            sendEntryFormData(
-                kind = "trip",
-                date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
-                typeOfDayId = null,
-                isCommissionDay = false,
-                isRemoteWork = false,
-                remoteHours = 0,
-                isTravelling = true,
-                tripTypeId = 1,
-                tripModeId = 1,
-                confirmationNo = "",
-                vendor = "",
-                hasProof = false,
-                proofType = "other",
-                notes = "",
-                creationType = "automatic",
-                remoteLocation = "",
-                state = null,
-                isUpdated = false,
+    lastCityChangeKey = key
 
-                originCity = originCitySafe,
-                originState = originStateSafe,
-                originLat = originLatSafe,
-                originLng = originLngSafe,
+    val originCounty = previousCountyName
+    val originEnterTime = previousCountyEnterTime
 
-                destinationCity = "",
-                destinationState = newState,
-                destinationLat = lat,
-                destinationLng = lng,
+    Log.d(TAG, "🏙️ COUNTY CHANGED: $originCounty → ${newCounty.name}")
 
-                startDate = originEnterTimeSafe,
-                endDate = System.currentTimeMillis()
-            )
 
-            isTransitionInProgress = false
+    // 🔥 SEND TO JS
+    val eventData = Arguments.createMap().apply {
+        putString("fromCounty", originCounty)
+        putString("toCounty", newCounty.name)
+        putString("state", state.name)
+        putDouble("lat", lat)
+        putDouble("lng", lng)
+        putDouble("timestamp", now.toDouble())
+    }
 
-    // sendToDomigoAPI(lat, lng, detectedState, detectedState, detectedState, geofencingCountry, detectedState)
+    sendEvent("onCityChangeDetected", eventData)
+
+    // update state
+    previousCountyEnterTime = System.currentTimeMillis()
+    previousCountyFips = newCounty.fips
+    previousCountyName = newCounty.name
+
+    // 🔥 API CALL
+    sendEntryFormData(
+        kind = "city_change",
+        date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
+        typeOfDayId = null,
+        isCommissionDay = false,
+        isRemoteWork = false,
+        remoteHours = 0,
+        isTravelling = false,
+        tripTypeId = 1,
+        tripModeId = 1,
+        confirmationNo = "",
+        vendor = "",
+        hasProof = false,
+        proofType = "other",
+        notes = "",
+        creationType = "automatic",
+        remoteLocation = "",
+        state = state.name,
+        isUpdated = false,
+
+        originCity = originCounty,
+        originState = state.name,
+        originLat = previousLat,
+        originLng = previousLng,
+
+        destinationCity = newCounty.name,
+        destinationState = state.name,
+        destinationLat = lat,
+        destinationLng = lng,
+
+        startDate = originEnterTime,
+        endDate = now
+    )
 }
 
 }

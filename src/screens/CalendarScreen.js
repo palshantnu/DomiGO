@@ -45,9 +45,44 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   }, []);
   const today = new Date();
 
-  const parseLocalDate = (dateStr) => {
-    const [y, m, d] = dateStr.split('-').map(Number);
-    return new Date(y, m - 1, d);
+  // const parseLocalDate = (dateStr) => {
+  //   const [y, m, d] = dateStr.split('-').map(Number);
+  //   return new Date(y, m - 1, d);
+  // };
+  // const parseLocalDate = (dateInput) => {
+  //   if (!dateInput) return new Date(); // fallback
+
+  //   // अगर already Date hai → return as it is
+  //   if (dateInput instanceof Date) return dateInput;
+
+  //   // अगर string hai
+  //   if (typeof dateInput === 'string') {
+  //     const parts = dateInput.split('-');
+  //     if (parts.length === 3) {
+  //       const [y, m, d] = parts.map(Number);
+  //       return new Date(y, m - 1, d);
+  //     }
+  //   }
+
+  //   // fallback
+  //   return new Date(dateInput);
+  // };
+
+  const parseLocalDate = (input) => {
+    if (!input) return new Date();
+  
+    if (input instanceof Date) return input;
+  
+    if (typeof input === "string") {
+      if (input.includes("T")) {
+        return new Date(input); // ISO safe
+      }
+  
+      const [y, m, d] = input.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+  
+    return new Date(input);
   };
 
   const [visibleMonth, setVisibleMonth] = useState({
@@ -78,8 +113,17 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
 
-    const formatDate = (date) =>
-      date.toLocaleDateString("en-CA").split('T')[0]; // YYYY-MM-DD
+
+    const formatDate = (date) => {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+    
+      return `${y}-${m}-${d}`;
+    };
+
+    // const formatDate = (date) =>
+    //   date.toLocaleDateString("en-CA").split('T')[0]; // YYYY-MM-DD
 
     return {
       start: formatDate(startOfWeek),
@@ -106,7 +150,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     React.useCallback(() => {
       const today = new Date();
       const { start, end } = getCurrentWeekDates();
-  
+
       GET_WEEK_WISE_TIMELINE({ start, end });;
       GET_YEAR_WISE_TIMELINE({ year: selectedYear });
       GET_MONTH_WISE_TIMELINE({
@@ -134,10 +178,10 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     "Arizona": "#1d3b73",
   };
 
-const TRIP_DOT = { key: "trip", color: "#9E9E9E" };     // Grey
-const ADD_MISSING_DOT = { key: "add-missing", color: "#FF3B30" }; // Red
-const EDIT_MISSING_DOT = { key: "edit-missing", color: "#FFCC00" }; // Yellow
-const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
+  const TRIP_DOT = { key: "trip", color: "#9E9E9E" };     // Grey
+  const ADD_MISSING_DOT = { key: "add-missing", color: "#FF3B30" }; // Red
+  const EDIT_MISSING_DOT = { key: "edit-missing", color: "#FFCC00" }; // Yellow
+  const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
 
   const MISSING_DOT = {
     key: 'missing',
@@ -219,55 +263,56 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
   // };
   const isActuallyEdited = (item) => {
     if (!item.updatedAt || !item.createdAt) return false;
-  
+
     const created = new Date(item.createdAt);
     const updated = new Date(item.updatedAt);
-  
+
     const diffInSeconds = (updated - created) / 1000;
-  
+
     return diffInSeconds > 12000; // 2 minute se zyada ho toh edited
   };
 
   const getMarkedDates = (monthWiseTimeline, year, month) => {
     const marked = {};
-  
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-  
+
     const daysInMonth = new Date(year, month, 0).getDate();
-  
+
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const dayData = monthWiseTimeline?.[dateStr] || [];
-  
+
       // const currentDate = new Date(dateStr);
       const currentDate = parseLocalDate(dateStr);
       currentDate.setHours(0, 0, 0, 0);
-  
+
       const dots = [];
-  
+
       // ❌ Future date → skip
       if (currentDate > today) {
         marked[dateStr] = { dots: [] };
         continue;
       }
-  
+
       const trips = dayData.filter(d => d.kind === "trip");
       const missing = dayData
         .filter(d => d.kind === "missing")
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+        // .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+        .sort((a, b) => parseLocalDate(b.createdAt) - parseLocalDate(a.createdAt))[0];
 
-  
+
       // ===============================
       // 🔵 PRIORITY LOGIC
       // ===============================
 
-      console.log('missing>>>>',missing);
-  
+      console.log('missing>>>>', missing);
+
       if (trips.length > 0) {
         dots.push(TRIP_DOT);
       }
-  
+
       if (!missing) {
         // ➕ Missing not added yet
         dots.push(ADD_MISSING_DOT);
@@ -281,10 +326,10 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
           dots.push(EDIT_MISSING_DOT);
         }
       }
-  
+
       marked[dateStr] = { dots };
     }
-  
+
     return marked;
   };
 
@@ -417,7 +462,8 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
     // ✅ MISSING (LATEST ONE)
     const missingEntry = [...dayData]
       .filter(d => d.kind === "missing")
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+      // .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+      .sort((a, b) => parseLocalDate(b.createdAt) - parseLocalDate(a.createdAt))[0];
 
     // 🔥 STORE STATE
     setSelectedDate(dateKey);
@@ -513,7 +559,8 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
       if (item.kind === "missing") {
         if (
           !latestMissing ||
-          new Date(item.createdAt) > new Date(latestMissing.createdAt)
+          // new Date(item.createdAt) > new Date(latestMissing.createdAt)
+          parseLocalDate(item.createdAt) > new Date(latestMissing.createdAt)
         ) {
           latestMissing = item;
         }
@@ -527,17 +574,19 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
     return Object.keys(weekResult)
       .map(date => {
         const { trips, latestMissing } = normalizeDayData(weekResult[date]);
-  
+
         // 🔥 agar na trip hai na missing → skip
         if (trips.length === 0 && !latestMissing) return null;
-  
+
         return {
           date,
-          formattedDate: new Date(date).toLocaleDateString('en-IN', {
+          // formattedDate: new Date(date).toLocaleDateString('en-IN', {
+          formattedDate: parseLocalDate(date).toLocaleDateString('en-IN', {
             day: '2-digit',
             month: 'short',
           }),
-          day: new Date(date).toLocaleDateString('en-US', {
+          // day: new Date(date).toLocaleDateString('en-US', {
+          day: parseLocalDate(date).toLocaleDateString('en-US', {
             weekday: 'short',
           }),
           trips,
@@ -546,17 +595,20 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
       })
       .filter(Boolean);
   };
-  
+
 
 
 
 
 
   const getWeekKey = (dateStr) => {
-    const date = new Date(dateStr);
+    // const date = new Date(dateStr);
+    const date = parseLocalDate(dateStr);
     const start = new Date(date);
+    // const start = parseLocalDate(date);
     start.setDate(date.getDate() - date.getDay()); // Sunday
     const end = new Date(start);
+    // const end = parseLocalDate(date);
     end.setDate(start.getDate() + 6);
 
     const format = d =>
@@ -564,6 +616,26 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
 
     return `${format(start)} - ${format(end)}`;
   };
+
+  // const getWeekKey = (dateStr) => {
+  //   const date = parseLocalDate(dateStr);
+  
+  //   const day = date.getDay();
+  
+  //   // ✅ Monday start fix
+  //   const diff = day === 0 ? -6 : 1 - day;
+  
+  //   const start = new Date(date);
+  //   start.setDate(date.getDate() + diff);
+  
+  //   const end = new Date(start);
+  //   end.setDate(start.getDate() + 6);
+  
+  //   const format = d =>
+  //     d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+  
+  //   return `${format(start)} - ${format(end)}`;
+  // };
 
 
 
@@ -884,7 +956,7 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
                           color="#FF9500"
                         />
                         <Text style={{ marginLeft: 6, fontWeight: "600" }}>
-                        {getAutoTypeOfDayName(day.activity, day.date)}
+                          {getAutoTypeOfDayName(day.activity, day.date)}
                           {/* {day.activity.typeOfDay?.name} */}
                         </Text>
                       </View>
@@ -909,7 +981,8 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
   const regulatoryCalendar = getWeekCalendarData(weekWiseTimeline);
   const getTimelineData = (dataObj = {}) => {
     const formatDate = (date) =>
-      new Date(date).toLocaleDateString('en-IN', {
+      // new Date(date).toLocaleDateString('en-IN', {
+      parseLocalDate(date).toLocaleDateString('en-IN', {
         day: '2-digit',
         month: 'short',
       });
@@ -921,8 +994,10 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
         const first = dayArray[0];
         const last = dayArray[dayArray.length - 1];
 
-        const start = new Date(first.startDate);
-        const end = new Date(last.endDate);
+        // const start = new Date(first.startDate);
+        // const end = new Date(last.endDate);
+        const start = parseLocalDate(first.startDate);
+        const end = parseLocalDate(last.endDate);
 
         const days =
           Math.max(
@@ -938,7 +1013,7 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
           manual: first.isManual ?? false,
           color:
             // STATE_COLOR_MAP[last.destinationState] || colors.primary,
-           colors.primary,
+            colors.primary,
         };
       })
       .filter(Boolean);
@@ -1087,21 +1162,22 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
 
   const getAutoTypeOfDayName = (activity, date) => {
     if (!activity) return "";
-  
+
     const isDefault = activity?.typeOfDay?.id === 1;
     const isAuto = activity?.creationType === "automatic";
-  
+
     if (!isDefault || !isAuto) {
       return activity?.typeOfDay?.name;
     }
-  
-    const d = new Date(date);
+
+    // const d = new Date(date);
+    const d = parseLocalDate(date);
     const day = d.getDay();
-  
+
     if (day === 0 || day === 6) {
       return "Weekend"; // id = 3
     }
-  
+
     return "Working"; // id = 2
   };
 
@@ -1584,8 +1660,10 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
 
               {/* ✅ Manual option (ALWAYS for past/today) */}
               <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: isMissingAlreadyAdded && selectedMissingDate.isUpdated? '#007AFF': 
-                isMissingAlreadyAdded && !selectedMissingDate.isUpdated?'#FFCC00' : '#FF3B30' }]}
+                style={[styles.actionBtn, {
+                  backgroundColor: isMissingAlreadyAdded && selectedMissingDate.isUpdated ? '#007AFF' :
+                    isMissingAlreadyAdded && !selectedMissingDate.isUpdated ? '#FFCC00' : '#FF3B30'
+                }]}
                 onPress={() => {
                   setDayActionModalVisible(false);
                   // navigation.navigate('AddMissingDayScreen', {
@@ -1629,8 +1707,8 @@ const REEDIT_MISSING_DOT = { key: "reedit-missing", color: "#007AFF" }; // Blue
               >
                 <Text style={[styles.actionText, { color: '#fff' }]}>
                   {/* {isMissingAlreadyAdded ? 'Fill Missing Day' : 'Add Missing Day'} */}
-                {  isMissingAlreadyAdded && selectedMissingDate.isUpdated? 'Edit Missing Day Info': 
-                isMissingAlreadyAdded && !selectedMissingDate.isUpdated ?'Fix Missing Day Info' : 'Add Missing Day Info'}
+                  {isMissingAlreadyAdded && selectedMissingDate.isUpdated ? 'Edit Missing Day Info' :
+                    isMissingAlreadyAdded && !selectedMissingDate.isUpdated ? 'Fix Missing Day Info' : 'Add Missing Day Info'}
                 </Text>
               </TouchableOpacity>
 

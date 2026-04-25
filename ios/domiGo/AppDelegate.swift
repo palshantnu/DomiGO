@@ -192,8 +192,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
         locationManager.delegate = self
         locationManager.allowsBackgroundLocationUpdates = true
         locationManager.pausesLocationUpdatesAutomatically = false
-        locationManager.desiredAccuracy = kCLLocationAccuracyBest
-        locationManager.distanceFilter = 50
+        // State-level detection only — HundredMeters is ~10× more battery-friendly than Best
+        // and Apple reviewers scrutinise continuous Best-accuracy tracking in background.
+        locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        locationManager.distanceFilter = 100
+        locationManager.activityType = .other
         
         // Check current authorization status without blocking
         let status = locationManager.authorizationStatus

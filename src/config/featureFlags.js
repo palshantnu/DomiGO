@@ -32,3 +32,16 @@ export const GEOFENCING_MODE = 'local_native';
 
 // Country whose state boundaries are used — 'US' or 'IN'
 export const GEOFENCING_COUNTRY = 'US'
+
+// Kill switch for automatic city/county change detection (Phase 1+).
+// When true, the tracker emits `kind: "city_change"` entries to /api/trip-days
+// whenever the user crosses a county line within the same state.
+//
+// DO NOT flip to `true` in production until the backend has deployed:
+//   - `WHERE kind != 'city_change'` on the trip-count query
+//   - `WHERE kind != 'city_change'` on the days-in-state aggregator
+//   - `kind = 'city_change'` accepted by the /api/trip-days validator
+//
+// Otherwise these records will inflate trip counts and residency day counts.
+// See CITY_CHANGE_PLAN_2026-04-20.md "Backend dependencies" for details.
+export const CITY_CHANGE_EVENTS_ENABLED = true
