@@ -36,6 +36,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [showYearDropdown, setShowYearDropdown] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState("ALL")
   const yearOptions = useMemo(() => {
     return [
       currentYear - 2,
@@ -70,18 +71,18 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
   const parseLocalDate = (input) => {
     if (!input) return new Date();
-  
+
     if (input instanceof Date) return input;
-  
+
     if (typeof input === "string") {
       if (input.includes("T")) {
         return new Date(input); // ISO safe
       }
-  
+
       const [y, m, d] = input.split("-").map(Number);
       return new Date(y, m - 1, d);
     }
-  
+
     return new Date(input);
   };
 
@@ -118,7 +119,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
       const y = date.getFullYear();
       const m = String(date.getMonth() + 1).padStart(2, '0');
       const d = String(date.getDate()).padStart(2, '0');
-    
+
       return `${y}-${m}-${d}`;
     };
 
@@ -550,10 +551,14 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     // console.log('dayData',dayData);
     const trips = [];
     let latestMissing = null;
+    const cityChanges = [];
 
     dayData.forEach(item => {
       if (item.kind === "trip") {
         trips.push(item);
+      }
+      if (item.kind === "city_change") {
+        cityChanges.push(item);
       }
 
       if (item.kind === "missing") {
@@ -567,16 +572,27 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
       }
     });
 
-    return { trips, latestMissing };
+    return { trips, cityChanges, latestMissing };
   };
 
   const getWeekCalendarData = (weekResult = {}) => {
     return Object.keys(weekResult)
       .map(date => {
-        const { trips, latestMissing } = normalizeDayData(weekResult[date]);
+        const { trips, cityChanges, latestMissing } = normalizeDayData(weekResult[date]);
+
+        let filteredTrips = [];
+        if (selectedFilter === "TRIP") {
+          filteredTrips = trips;
+        } else if (selectedFilter === "CITY_CHANGE") {
+          filteredTrips = cityChanges;
+        } else {
+          filteredTrips = [...trips, ...cityChanges];
+        }
 
         // 🔥 agar na trip hai na missing → skip
-        if (trips.length === 0 && !latestMissing) return null;
+        // if (trips.length === 0 && !latestMissing) return null;
+        if (filteredTrips.length === 0 && !latestMissing) return null;
+
 
         return {
           date,
@@ -589,7 +605,8 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
           day: parseLocalDate(date).toLocaleDateString('en-US', {
             weekday: 'short',
           }),
-          trips,
+          // trips,
+          trips: filteredTrips,
           missing: latestMissing,
         };
       })
@@ -619,21 +636,21 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
   // const getWeekKey = (dateStr) => {
   //   const date = parseLocalDate(dateStr);
-  
+
   //   const day = date.getDay();
-  
+
   //   // ✅ Monday start fix
   //   const diff = day === 0 ? -6 : 1 - day;
-  
+
   //   const start = new Date(date);
   //   start.setDate(date.getDate() + diff);
-  
+
   //   const end = new Date(start);
   //   end.setDate(start.getDate() + 6);
-  
+
   //   const format = d =>
   //     d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
-  
+
   //   return `${format(start)} - ${format(end)}`;
   // };
 
@@ -705,7 +722,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
       if (!Array.isArray(items)) return;
 
       items.forEach(item => {
-        if (item.kind === "trip") {
+        if (item.kind === "trip" || item.kind === "city_change") {
           normalized[date].trips.push(item);
         }
 
@@ -904,27 +921,34 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                   </Text>
 
                   {/* 🚗 TRIPS */}
-                  {day?.trips?.map(trip => (
-                    <TouchableOpacity
-                      key={trip.id}
-                      style={styles.tripRow}
-                      onPress={() => navigation.navigate("DayDetail", trip)}
-                    >
-                      <View style={styles.tripLine}>
-                        <View style={styles.blueDot} />
-                        <Text style={styles.tripText}>
-                          {trip.originCity}, {trip.originState}
-                        </Text>
-                      </View>
+                  {/* {day?.trips?.map(trip => ( */}
+                  {day?.trips
+                    ?.filter(trip => {
+                      if (selectedFilter === "TRIP") return trip.kind === "trip";
+                      if (selectedFilter === "CITY_CHANGE") return trip.kind === "city_change";
+                      return true; // ALL
+                    })
+                    .map(trip => (
+                      <TouchableOpacity
+                        key={trip.id}
+                        style={styles.tripRow}
+                        onPress={() => navigation.navigate("DayDetail", trip)}
+                      >
+                        <View style={styles.tripLine}>
+                          <View style={styles.blueDot} />
+                          <Text style={styles.tripText}>
+                            {trip.originCity}, {trip.originState}
+                          </Text>
+                        </View>
 
-                      <View style={styles.tripLine}>
-                        <View style={styles.greenDot} />
-                        <Text style={styles.tripText}>
-                          {trip.destinationCity}, {trip.destinationState}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
+                        <View style={styles.tripLine}>
+                          <View style={styles.greenDot} />
+                          <Text style={styles.tripText}>
+                            {trip.destinationCity}, {trip.destinationState}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
 
                   {/* 🟠 ACTIVITY */}
                   {day.activity && (
@@ -1117,9 +1141,13 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
               style={styles.locationRow}
               onPress={() => navigation.navigate("DayDetail", trip)}
             >
-              <View style={[styles.dot, { backgroundColor: "#2F80ED" }]} />
+              <View style={[styles.dot, {
+                backgroundColor:
+                  trip.kind === "city_change" ? "#FF9500" : "#2F80ED",
+              },]} />
               <Text style={styles.locationText}>
                 {trip.originCity} → {trip.destinationCity}
+                {trip.kind === "city_change" && " (City Trips)"}
               </Text>
             </TouchableOpacity>
           ))}
@@ -1338,6 +1366,27 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                 borderRadius: 10,
               }}
             >
+              {/* 🔥 FILTER BUTTONS HERE */}
+              <View style={{ flexDirection: 'row', marginBottom: 10 }}>
+                {["ALL", "TRIP", "CITY_CHANGE"].map(type => (
+                  <TouchableOpacity
+                    key={type}
+                    onPress={() => setSelectedFilter(type)}
+                    style={{
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderRadius: 20,
+                      backgroundColor: selectedFilter === type ? colors.primary : "#eee",
+                      marginRight: 8,
+                    }}
+                  >
+                    <Text style={{ color: selectedFilter === type ? "#fff" : "#000" }}>
+                      {type === "ALL" ? "All" : type === "TRIP" ? "Trips" : "City Trips"}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
               {regulatoryCalendar.length === 0 ? (
 
 
@@ -1521,6 +1570,27 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                   </View>
                 )}
               </View>
+              {/* 🔥 FILTER BUTTONS HERE */}
+              <View style={{ flexDirection: 'row', marginBottom: 10 }}>
+                {["ALL", "TRIP", "CITY_CHANGE"].map(type => (
+                  <TouchableOpacity
+                    key={type}
+                    onPress={() => setSelectedFilter(type)}
+                    style={{
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderRadius: 20,
+                      backgroundColor: selectedFilter === type ? colors.primary : "#eee",
+                      marginRight: 8,
+                    }}
+                  >
+                    <Text style={{ color: selectedFilter === type ? "#fff" : "#000" }}>
+                      {type === "ALL" ? "All" : type === "TRIP" ? "Trips" : "City Trips"}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
 
               <ScrollView showsVerticalScrollIndicator={false}>
                 {/* {weeklyData.map(renderWeekCard)} */}
