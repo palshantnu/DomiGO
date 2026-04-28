@@ -35,7 +35,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   private var lastCityChangeKey: String = ""
   private var countyChangeDetectedTime: TimeInterval = 0
 
-  private let MIN_COUNTY_STAY_SECONDS: TimeInterval = 10 // 3 min
+  private let MIN_COUNTY_STAY_MS: TimeInterval = 3000
   
   
   // MARK: - Network Monitoring
@@ -156,6 +156,8 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       "onLocationStatus",
       "onTripApiResponse",
       "onTripApiError",
+      "onCityChangeDetected",
+      "onCityChangeDebug",
       "onBackgroundLocationProcessed"
     ]
   }
@@ -869,15 +871,14 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         previousStateName = state
         previousEnterTime = currentTimeMs
       }
-      if let fips = newState.fips,
-        let county = detectCountyFromGeoJSON(stateFips: fips, lat: lat, lng: lng) {
+     if let county = detectCountyFromGeoJSON(stateFips: state, lat: lat, lng: lng) {
 
-          previousCountyFips = county.fips
-          previousCountyName = county.name
-          previousCountyEnterTime = Date().timeIntervalSince1970
+    previousCountyFips = county.fips
+    previousCountyName = county.name
+    previousCountyEnterTime = Date().timeIntervalSince1970 * 1000
 
-          print("📍 County seeded after state change: \(county.name)")
-      }
+    print("📍 County seeded after state change: \(county.name)")
+}
       let tripKey = "\(previousStateName)-\(state)-\(Int(previousEnterTime))"
 
       if tripKey == lastTripKey {
@@ -1283,7 +1284,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       addOptionalField("state", stateId)
     }
 
-    if kind == "trip" {
+    if kind == "trip" || kind == "city_change" {
       addOptionalField("originCity", originCity)
       addOptionalField("originState", originState)
       addOptionalDoubleField("originLat", originLat)
@@ -1301,6 +1302,38 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       if let end = endDate {
         addField("endDate", formatDate1(end))
       }
+    }
+
+    if kind == "city_change" {
+      let formattedStartDate: String
+      if let startDate = startDate {
+        formattedStartDate = formatDate1(startDate)
+      } else {
+        formattedStartDate = ""
+      }
+
+      let formattedEndDate: String
+      if let endDate = endDate {
+        formattedEndDate = formatDate1(endDate)
+      } else {
+        formattedEndDate = ""
+      }
+
+      var debugData: [String: Any] = [:]
+      debugData["kind"] = kind
+      debugData["date"] = date ?? ""
+      debugData["originCity"] = originCity ?? ""
+      debugData["originState"] = originState ?? ""
+      debugData["destinationCity"] = destinationCity ?? ""
+      debugData["destinationState"] = destinationState ?? ""
+      debugData["originLat"] = originLat ?? 0.0
+      debugData["originLng"] = originLng ?? 0.0
+      debugData["destinationLat"] = destinationLat ?? 0.0
+      debugData["destinationLng"] = destinationLng ?? 0.0
+      debugData["startDate"] = formattedStartDate
+      debugData["endDate"] = formattedEndDate
+
+      safeSendEvent(withName: "onCityChangeDebug", body: debugData)
     }
 
     body.append("--\(boundary)--\r\n".data(using: .utf8)!)
@@ -1457,7 +1490,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       addField("attachments", "[]")
     }
 
-    if kind == "trip" {
+    if kind == "trip" || kind == "city_change" {
       addField("originCity", payload["originCity"] as? String ?? "")
       addField("originState", payload["originState"] as? String ?? "")
       addField("destinationCity", payload["destinationCity"] as? String ?? "")
@@ -1476,12 +1509,12 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       }
 
       addField("typeOfDayId", "1")
-      addField("isTravelling", "true")
+      addField("isTravelling", kind == "city_change" ? "false" : "true")
       addField("tripTypeId", "1")
       addField("tripModeId", "1")
       addField("hasProof", "false")
       addField("proofType", "other")
-      addField("notes", "Offline trip sync")
+      addField("notes", kind == "city_change" ? "" : "Offline trip sync")
       addField("creationType", payload["creationType"] as? String ?? "automatic")
       addField("attachments", "[]")
     }
@@ -1575,43 +1608,26 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     return nil
   }
 
-  func detectCountyFromGeoJSON(stateFips: String, lat: Double, lng: Double) -> CountyMatch? {
-    guard let features = countyFeatureCache[stateFips] else { return nil }
-
-    for feature in features {
-        if let geometry = feature["geometry"] as? [String: Any],
-           let properties = feature["properties"] as? [String: Any] {
-
-            // 👉 yaha point-in-polygon logic reuse karna padega (same as state detection)
-
-            if isPointInsidePolygon(lat: lat, lng: lng, geometry: geometry) {
-                let fips = properties["GEOID"] as? String ?? ""
-                let name = properties["NAME"] as? String ?? ""
-                return CountyMatch(fips: fips, name: name)
-            }
-        }
-    }
-    return nil
-}
-
   // Loads counties for the given state FIPS (e.g. "06" for CA) from the bundle's
   // `counties/<FIPS>.json` (added to Xcode as a blue folder reference).
   // Returns nil if the file is missing (e.g. India has no county data bundled).
-  private func loadCountyFeatures(stateFips: String) -> [[String: Any]]? {
+private func loadCountyFeatures(stateFips: String) -> [[String: Any]]? {
+    print("👉 Loading counties for FIPS:", stateFips)
     if let cached = countyFeatureCache[stateFips] { return cached }
 
-    guard let url = Bundle.main.url(forResource: stateFips, withExtension: "json", subdirectory: "counties"),
-      let data = try? Data(contentsOf: url),
-      let features = (try? JSONSerialization.jsonObject(with: data)) as? [[String: Any]]
+    // Try without subdirectory first
+    guard let url = Bundle.main.url(forResource: stateFips, withExtension: "json"),
+          let data = try? Data(contentsOf: url),
+          let features = (try? JSONSerialization.jsonObject(with: data)) as? [[String: Any]]
     else {
-      print("No county data for state \(stateFips)")
-      return nil
+        print("No county data for state \(stateFips)")
+        return nil
     }
 
     countyFeatureCache[stateFips] = features
     print("Counties loaded: \(features.count) features for state \(stateFips)")
     return features
-  }
+}
 
   private func detectCountyFromGeoJSON(stateFips: String, lat: Double, lng: Double) -> CountyMatch? {
     guard let features = loadCountyFeatures(stateFips: stateFips) else { return nil }
@@ -1621,6 +1637,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       if !pointInGeometry(lat: lat, lng: lng, geometry: geometry) { continue }
       guard let fips = feature["id"] as? String,
             let name = feature["name"] as? String else { continue }
+            
       return CountyMatch(fips: fips, name: name)
     }
     return nil
@@ -1663,6 +1680,8 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     // match.fips is available here for Phase 3 county detection (unused in Phase 2).
     let detectedState = match.name
     print("local_native: detected state", detectedState)
+    print("👉 Detected state name:", match.name)
+    print("👉 Detected state FIPS:", match.fips ?? "nil")
 
           self.checkAndSendToAPI(
               lat: lat,
@@ -1695,14 +1714,20 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
             return
         }
 
-        guard let stateFips = detectedState.fips else { return }
-        guard let county = detectCountyFromGeoJSON(stateFips: stateFips, lat: lat, lng: lng) else { return }
+      //  let stateFips = detectedState
+      guard let stateFips = match.fips else {
+    print("❌ Missing FIPS for state:", match.name)
+    return
+}
 
+loadCountyFeatures(stateFips: stateFips) // ✅ CORREC
+        guard let county = detectCountyFromGeoJSON(stateFips: stateFips, lat: lat, lng: lng) else { return }
+print("📍 county: \(county)")
         // first time seed
         if previousCountyFips.isEmpty {
             previousCountyFips = county.fips
             previousCountyName = county.name
-            previousCountyEnterTime = Date().timeIntervalSince1970
+            previousCountyEnterTime = Date().timeIntervalSince1970 * 1000
             print("📍 Initial county: \(county.name)")
             return
         }
@@ -1788,50 +1813,86 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   }
 
   private func handleCountyTransition(
-    state: StateMatch,
+    state: String,
     newCounty: CountyMatch,
     lat: Double,
     lng: Double
 ) {
-    let now = Date().timeIntervalSince1970
+      print("🏙️ COUNTY CHANGE",newCounty)
+    let now = Date().timeIntervalSince1970 * 1000
 
-    if countyChangeDetectedTime == 0 {
-        countyChangeDetectedTime = now
-        return
-    }
+    // if countyChangeDetectedTime == 0 {
+    //     countyChangeDetectedTime = now
+    //     return
+    // }
 
-    if now - countyChangeDetectedTime < 30 { return }
-    countyChangeDetectedTime = 0
+    // countyChangeDetectedTime = 0
 
-    if now - previousCountyEnterTime < MIN_COUNTY_STAY_SECONDS {
-        print("⏱️ County stay too short")
-        return
-    }
-
+    // Android currently keeps this min-stay disabled and relies on the
+    // two-hit debounce above, so iOS follows the same behavior.
+    // if now - previousCountyEnterTime < MIN_COUNTY_STAY_MS {
+    //     print("⏱️ County stay too short")
+    //     return
+    // }
+ print("🏙️ COUNTY CHANGE2",newCounty)
     let key = "\(previousCountyFips)_\(newCounty.fips)_\(previousCountyEnterTime)"
     if key == lastCityChangeKey { return }
-
+ print("🏙️ COUNTY CHANGE3",newCounty)
     lastCityChangeKey = key
-
+ print("🏙️ COUNTY CHANGE4",newCounty)
     let originCounty = previousCountyName
+    let originEnterTime = previousCountyEnterTime
 
-    print("🏙️ COUNTY CHANGE: \(originCounty) → \(newCounty.name)")
+    print("🏙️ COUNTY CHANGE5: \(originCounty) → \(newCounty.name)")
 
-    // 🔥 SEND EVENT TO JS
-    let data: [String: Any] = [
-        "fromCounty": originCounty,
-        "toCounty": newCounty.name,
-        "state": state.name,
-        "lat": lat,
-        "lng": lng,
-        "timestamp": now * 1000
-    ]
+    var eventData: [String: Any] = [:]
+    eventData["fromCounty"] = originCounty
+    eventData["toCounty"] = newCounty.name
+    eventData["state"] = state
+    eventData["lat"] = lat
+    eventData["lng"] = lng
+    eventData["timestamp"] = now
 
-    safeSendEvent(withName: "onCityChangeDetected", body: data)
+    safeSendEvent(withName: "onCityChangeDetected", body: eventData)
 
+    previousCountyEnterTime = now
     previousCountyFips = newCounty.fips
     previousCountyName = newCounty.name
-    previousCountyEnterTime = now
+
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd"
+    let today = formatter.string(from: Date())
+
+    sendTripFormData(
+      kind: "city_change",
+      date: today,
+      typeOfDayId: 1,
+      isCommissionDay: false,
+      isRemoteWork: false,
+      remoteHours: 0,
+      isTravelling: false,
+      tripTypeId: 1,
+      tripModeId: 1,
+      confirmationNo: "",
+      vendor: "",
+      hasProof: false,
+      proofType: "other",
+      notes: "",
+      creationType: "automatic",
+      remoteLocation: "",
+      stateId: state,
+      isUpdated: false,
+      originCity: originCounty,
+      originState: state,
+      originLat: previousLat,
+      originLng: previousLng,
+      destinationCity: newCounty.name,
+      destinationState: state,
+      destinationLat: lat,
+      destinationLng: lng,
+      startDate: originEnterTime,
+      endDate: now
+    )
 }
 
   private func createTrip(

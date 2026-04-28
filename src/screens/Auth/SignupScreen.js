@@ -207,9 +207,9 @@ const SignupScreen = ({ navigation, signUp }) => {
 
 
   const SignUpUser = async () => {
-    if (!fcmtoken) {
-      return CustomToast.show("Please wait, initializing device...");
-    }
+    // if (!fcmtoken) {
+    //   return CustomToast.show("Please wait, initializing device...");
+    // }
     console.log('SignUpUser');
     if (!netInfo) {
       return CustomToast.show("No internet connection");
