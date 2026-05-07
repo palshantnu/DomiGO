@@ -37,6 +37,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [showYearDropdown, setShowYearDropdown] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState("ALL")
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const yearOptions = useMemo(() => {
     return [
       currentYear - 2,
@@ -1136,19 +1137,38 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
             );
           })} */}
           {section.trips.map(trip => (
+            // <TouchableOpacity
+            //   key={trip.id}
+            //   style={styles.locationRow}
+            //   onPress={() => navigation.navigate("DayDetail", trip)}
+            // >
+            //   <View style={[styles.dot, {
+            //     backgroundColor:
+            //       trip.kind === "city_change" ? "#FF9500" : "#2F80ED",
+            //   },]} />
+            //   <Text style={styles.locationText}>
+            //     {trip.originCity} → {trip.destinationCity}
+            //     {trip.kind === "city_change" && " (City Trips)"}
+            //   </Text>
+            // </TouchableOpacity>
             <TouchableOpacity
               key={trip.id}
-              style={styles.locationRow}
+              style={styles.tripRow}
               onPress={() => navigation.navigate("DayDetail", trip)}
             >
-              <View style={[styles.dot, {
-                backgroundColor:
-                  trip.kind === "city_change" ? "#FF9500" : "#2F80ED",
-              },]} />
-              <Text style={styles.locationText}>
-                {trip.originCity} → {trip.destinationCity}
-                {trip.kind === "city_change" && " (City Trips)"}
-              </Text>
+              <View style={styles.tripLine}>
+                <View style={styles.blueDot} />
+                <Text style={styles.tripText}>
+                  {trip.originCity}, {trip.originState}
+                </Text>
+              </View>
+
+              <View style={styles.tripLine}>
+                <View style={styles.greenDot} />
+                <Text style={styles.tripText}>
+                  {trip.destinationCity}, {trip.destinationState}
+                </Text>
+              </View>
             </TouchableOpacity>
           ))}
           {section.missing && (
@@ -1367,24 +1387,88 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
               }}
             >
               {/* 🔥 FILTER BUTTONS HERE */}
-              <View style={{ flexDirection: 'row', marginBottom: 10 }}>
-                {["ALL", "TRIP", "CITY_CHANGE"].map(type => (
-                  <TouchableOpacity
-                    key={type}
-                    onPress={() => setSelectedFilter(type)}
+              <View style={{ marginBottom: 10 }}>
+                <TouchableOpacity
+                  onPress={() => setShowFilterDropdown(!showFilterDropdown)}
+                  style={{
+                    paddingHorizontal: 14,
+                    paddingVertical: 12,
+                    borderRadius: 10,
+                    backgroundColor: "#F3F3F3",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ fontSize: 14, color: "#000" }}>
+                    {
+                      selectedFilter === "ALL"
+                        ? "All"
+                        : selectedFilter === "TRIP"
+                          ? "State Trips"
+                          : selectedFilter === "CITY_CHANGE"
+                            ? "County Trips"
+                            : selectedFilter === "CITY_TRIPS"
+                              ? "City Trips"
+                              : "Locations"
+                    }
+                  </Text>
+
+                  <Ionicons
+                    name={showFilterDropdown ? "chevron-up" : "chevron-down"}
+                    size={18}
+                    color="#000"
+                  />
+                </TouchableOpacity>
+
+                {showFilterDropdown && (
+                  <View
                     style={{
-                      paddingHorizontal: 12,
-                      paddingVertical: 6,
-                      borderRadius: 20,
-                      backgroundColor: selectedFilter === type ? colors.primary : "#eee",
-                      marginRight: 8,
+                      backgroundColor: "#fff",
+                      marginTop: 6,
+                      borderRadius: 10,
+                      elevation: 3,
+                      overflow: "hidden",
                     }}
                   >
-                    <Text style={{ color: selectedFilter === type ? "#fff" : "#000" }}>
-                      {type === "ALL" ? "All" : type === "TRIP" ? "Trips" : "City Trips"}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                    {[
+                      { label: "All", value: "ALL" },
+                      { label: "State Trips", value: "TRIP" },
+                      { label: "County Trips", value: "CITY_CHANGE" },
+                      { label: "City Trips", value: "CITY_TRIPS" },
+                      { label: "Locations", value: "LOCATIONS" },
+                    ].map(item => (
+                      <TouchableOpacity
+                        key={item.value}
+                        onPress={() => {
+                          setSelectedFilter(item.value);
+                          setShowFilterDropdown(false);
+                        }}
+                        style={{
+                          paddingVertical: 12,
+                          paddingHorizontal: 14,
+                          borderBottomWidth: 0.5,
+                          borderBottomColor: "#E5E5E5",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color:
+                              selectedFilter === item.value
+                                ? colors.primary
+                                : "#000",
+                            fontWeight:
+                              selectedFilter === item.value
+                                ? "600"
+                                : "400",
+                          }}
+                        >
+                          {item.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
               </View>
 
               {regulatoryCalendar.length === 0 ? (
@@ -1571,24 +1655,88 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                 )}
               </View>
               {/* 🔥 FILTER BUTTONS HERE */}
-              <View style={{ flexDirection: 'row', marginBottom: 10 }}>
-                {["ALL", "TRIP", "CITY_CHANGE"].map(type => (
-                  <TouchableOpacity
-                    key={type}
-                    onPress={() => setSelectedFilter(type)}
+              <View style={{ marginBottom: 10 }}>
+                <TouchableOpacity
+                  onPress={() => setShowFilterDropdown(!showFilterDropdown)}
+                  style={{
+                    paddingHorizontal: 14,
+                    paddingVertical: 12,
+                    borderRadius: 10,
+                    backgroundColor: "#F3F3F3",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ fontSize: 14, color: "#000" }}>
+                    {
+                      selectedFilter === "ALL"
+                        ? "All"
+                        : selectedFilter === "TRIP"
+                          ? "State Trips"
+                          : selectedFilter === "CITY_CHANGE"
+                            ? "County Trips"
+                            : selectedFilter === "CITY_TRIPS"
+                              ? "City Trips"
+                              : "Locations"
+                    }
+                  </Text>
+
+                  <Ionicons
+                    name={showFilterDropdown ? "chevron-up" : "chevron-down"}
+                    size={18}
+                    color="#000"
+                  />
+                </TouchableOpacity>
+
+                {showFilterDropdown && (
+                  <View
                     style={{
-                      paddingHorizontal: 12,
-                      paddingVertical: 6,
-                      borderRadius: 20,
-                      backgroundColor: selectedFilter === type ? colors.primary : "#eee",
-                      marginRight: 8,
+                      backgroundColor: "#fff",
+                      marginTop: 6,
+                      borderRadius: 10,
+                      elevation: 3,
+                      overflow: "hidden",
                     }}
                   >
-                    <Text style={{ color: selectedFilter === type ? "#fff" : "#000" }}>
-                      {type === "ALL" ? "All" : type === "TRIP" ? "Trips" : "City Trips"}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                    {[
+                      { label: "All", value: "ALL" },
+                      { label: "State Trips", value: "TRIP" },
+                      { label: "County Trips", value: "CITY_CHANGE" },
+                      { label: "City Trips", value: "CITY_TRIPS" },
+                      { label: "Locations", value: "LOCATIONS" },
+                    ].map(item => (
+                      <TouchableOpacity
+                        key={item.value}
+                        onPress={() => {
+                          setSelectedFilter(item.value);
+                          setShowFilterDropdown(false);
+                        }}
+                        style={{
+                          paddingVertical: 12,
+                          paddingHorizontal: 14,
+                          borderBottomWidth: 0.5,
+                          borderBottomColor: "#E5E5E5",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color:
+                              selectedFilter === item.value
+                                ? colors.primary
+                                : "#000",
+                            fontWeight:
+                              selectedFilter === item.value
+                                ? "600"
+                                : "400",
+                          }}
+                        >
+                          {item.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
               </View>
 
 

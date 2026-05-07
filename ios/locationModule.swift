@@ -843,6 +843,69 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     task.resume()
   }
 
+  private func normalizeState(_ state: String) -> String {
+    let trimmed = state.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+
+    let stateMap: [String: String] = [
+        "AL": "ALABAMA",
+        "AK": "ALASKA",
+        "AZ": "ARIZONA",
+        "AR": "ARKANSAS",
+        "CA": "CALIFORNIA",
+        "CO": "COLORADO",
+        "CT": "CONNECTICUT",
+        "DE": "DELAWARE",
+        "FL": "FLORIDA",
+        "GA": "GEORGIA",
+        "HI": "HAWAII",
+        "ID": "IDAHO",
+        "IL": "ILLINOIS",
+        "IN": "INDIANA",
+        "IA": "IOWA",
+        "KS": "KANSAS",
+        "KY": "KENTUCKY",
+        "LA": "LOUISIANA",
+        "ME": "MAINE",
+        "MD": "MARYLAND",
+        "MA": "MASSACHUSETTS",
+        "MI": "MICHIGAN",
+        "MN": "MINNESOTA",
+        "MS": "MISSISSIPPI",
+        "MO": "MISSOURI",
+        "MT": "MONTANA",
+        "NE": "NEBRASKA",
+        "NV": "NEVADA",
+        "NH": "NEW HAMPSHIRE",
+        "NJ": "NEW JERSEY",
+        "NM": "NEW MEXICO",
+        "NY": "NEW YORK",
+        "NC": "NORTH CAROLINA",
+        "ND": "NORTH DAKOTA",
+        "OH": "OHIO",
+        "OK": "OKLAHOMA",
+        "OR": "OREGON",
+        "PA": "PENNSYLVANIA",
+        "RI": "RHODE ISLAND",
+        "SC": "SOUTH CAROLINA",
+        "SD": "SOUTH DAKOTA",
+        "TN": "TENNESSEE",
+        "TX": "TEXAS",
+        "UT": "UTAH",
+        "VT": "VERMONT",
+        "VA": "VIRGINIA",
+        "WA": "WASHINGTON",
+        "WV": "WEST VIRGINIA",
+        "WI": "WISCONSIN",
+        "WY": "WYOMING"
+    ]
+
+    if let fullName = stateMap[trimmed] {
+        return fullName
+    }
+
+    return trimmed
+}
+
   private func checkAndSendToAPI(
     lat: Double, lng: Double, city: String, state: String, address: String,
     isBackground: Bool = false, geocodeFailed: Bool = false
@@ -854,7 +917,14 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     let lastApiTimeSeconds = lastApiTime / 1000
     let timeDifferenceSeconds = currentTimeSeconds - lastApiTimeSeconds
 
-    let stateChanged = !state.isEmpty && !lastState.isEmpty && state != lastState
+    let normalizedCurrentState = normalizeState(state)
+    let normalizedLastState = normalizeState(lastState)
+
+    // let stateChanged = !state.isEmpty && !lastState.isEmpty && state != lastState
+    let stateChanged =
+    !normalizedCurrentState.isEmpty &&
+    !normalizedLastState.isEmpty &&
+    normalizedCurrentState != normalizedLastState
     let timePassed = timeDifferenceSeconds >= FOUR_HOURS_IN_SECONDS
 
     print("⏰ Time difference: \(timeDifferenceSeconds / 60) minutes")
@@ -868,7 +938,8 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         previousLat = lat
         previousLng = lng
         previousCity = city
-        previousStateName = state
+        // previousStateName = state
+        previousStateName = normalizedCurrentState
         previousEnterTime = currentTimeMs
       }
      if let county = detectCountyFromGeoJSON(stateFips: state, lat: lat, lng: lng) {
@@ -945,14 +1016,15 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         isBackground: isBackground
       )
 
-      lastState = state
+      lastState = normalizedCurrentState
       lastApiTime = currentTimeMs
 
       if !geocodeFailed {
         previousLat = lat
         previousLng = lng
         previousCity = city
-        previousStateName = state
+        // previousStateName = state
+        previousStateName = normalizedCurrentState
         previousEnterTime = currentTimeMs
       }
 
