@@ -480,6 +480,25 @@ class DomigoTracker {
             }
           })
     );
+    this.subscriptions.push(
+      locationEventEmitter.addListener('onRealCityChangeDetected', (data) => {
+        console.log("🏙️🏙️🏙️ CITY CHANGE EVENT DETECTED! 🏙️🏙️🏙️");
+        console.log("📊 City Change Data:", JSON.stringify(data, null, 2));
+        console.log(`📍 From: ${data.fromCity}`);
+        console.log(`📍 To: ${data.toCity}`);
+        console.log(`📍 county: ${data.county}`);
+        console.log(`📍 State: ${data.state}`);
+        console.log(`📍 Lat/Lng: ${data.lat}, ${data.lng}`);
+
+        // Optional: Show alert for testing
+        // if (__DEV__) {
+        //   Alert.alert(
+        //     'City Change Detected',
+        //     `Moved from ${data.fromCounty} to ${data.toCounty}\nState: ${data.state}`
+        //   );
+        // }
+      })
+);
 
     this.subscriptions.push(
       locationEventEmitter.addListener('onCityChangeDebug', (data) => {

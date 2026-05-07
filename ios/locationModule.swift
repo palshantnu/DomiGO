@@ -32,6 +32,9 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   private var previousCountyName: String = ""
   private var previousCountyEnterTime: TimeInterval = 0
 
+  private var previousDetectedCity: String = ""
+  private var previousCityEnterTime: TimeInterval = 0
+
   private var lastCityChangeKey: String = ""
   private var countyChangeDetectedTime: TimeInterval = 0
 
@@ -86,6 +89,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
 
   // Phase 2: per-state county cache. Lazily populated; avoids re-reading counties/<FIPS>.json on every tick.
   private var countyFeatureCache: [String: [[String: Any]]] = [:]
+  private var cityFeatureCache: [String: [[String: Any]]] = [:]
 
   // Result structs for state/county detection — carry both FIPS and name so callers
   // can key county files on FIPS without re-running state detection.
@@ -1610,6 +1614,10 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
 
   // MARK: - Local GeoJSON Detection
 
+  private func sanitizeStateFileName(_ state: String) -> String {
+    return state.replacingOccurrences(of: " ", with: "")
+}
+
   // Loads state boundaries from the app bundle. Supports two shapes:
   //   • New US format (src/geo/states.json → us-states.json): root is an array of
   //     { id, name, bbox, geometry }. bbox enables fast prefiltering.
@@ -1701,6 +1709,53 @@ private func loadCountyFeatures(stateFips: String) -> [[String: Any]]? {
     return features
 }
 
+private func loadCityFeatures(stateName: String) -> [[String: Any]]? {
+
+    let safeStateName =
+        sanitizeStateFileName(stateName)
+
+    if let cached = cityFeatureCache[safeStateName] {
+        return cached
+    }
+
+    guard let url = Bundle.main.url(
+        forResource: safeStateName,
+        withExtension: "json",
+        subdirectory: "cities"
+    ) else {
+
+        print("❌ No city data for \(safeStateName)")
+        return nil
+    }
+
+    do {
+
+        let data = try Data(contentsOf: url)
+
+        guard let json =
+            try JSONSerialization.jsonObject(with: data)
+                as? [String: Any],
+
+              let features =
+                json["features"] as? [[String: Any]]
+        else {
+            return nil
+        }
+
+        cityFeatureCache[safeStateName] = features
+
+        print("✅ Cities loaded: \(features.count) for \(safeStateName)")
+
+        return features
+
+    } catch {
+
+        print("❌ Failed loading city data:", error)
+
+        return nil
+    }
+}
+
   private func detectCountyFromGeoJSON(stateFips: String, lat: Double, lng: Double) -> CountyMatch? {
     guard let features = loadCountyFeatures(stateFips: stateFips) else { return nil }
     for feature in features {
@@ -1714,6 +1769,54 @@ private func loadCountyFeatures(stateFips: String) -> [[String: Any]]? {
     }
     return nil
   }
+
+  private func detectCityFromGeoJSON(
+    stateName: String,
+    lat: Double,
+    lng: Double
+) -> String? {
+
+    guard let features =
+        loadCityFeatures(stateName: stateName)
+    else {
+        return nil
+    }
+
+    for feature in features {
+
+        if bboxSkips(feature, lat: lat, lng: lng) {
+            continue
+        }
+
+        guard let geometry =
+            feature["geometry"] as? [String: Any]
+        else {
+            continue
+        }
+
+        if !pointInGeometry(
+            lat: lat,
+            lng: lng,
+            geometry: geometry
+        ) {
+            continue
+        }
+
+        guard let properties =
+            feature["properties"] as? [String: Any]
+        else {
+            continue
+        }
+
+        if let city =
+            properties["NAME"] as? String {
+
+            return city
+        }
+    }
+
+    return nil
+}
 
   private func pointInPolygonRings(lat: Double, lng: Double, rings: [[[Double]]]) -> Bool {
     guard !rings.isEmpty else { return false }
@@ -1805,6 +1908,42 @@ print("📍 county: \(county)")
         }
 
         if county.fips == previousCountyFips {
+
+            guard let detectedCity = detectCityFromGeoJSON(
+                stateName: detectedState,
+                lat: lat,
+                lng: lng
+            ) else {
+                return
+            }
+
+            // first city seed
+            if previousDetectedCity.isEmpty {
+
+                previousDetectedCity = detectedCity
+                previousCityEnterTime =
+                    Date().timeIntervalSince1970 * 1000
+
+                print("🏙️ Initial city: \(detectedCity)")
+                return
+            }
+
+            // same city
+            if detectedCity.lowercased()
+                == previousDetectedCity.lowercased() {
+
+                return
+            }
+
+            // city changed
+            handleCityTransition(
+                state: detectedState,
+                oldCity: previousDetectedCity,
+                newCity: detectedCity,
+                lat: lat,
+                lng: lng
+            )
+
             return
         }
 
@@ -1965,6 +2104,81 @@ print("📍 county: \(county)")
       startDate: originEnterTime,
       endDate: now
     )
+}
+
+private func handleCityTransition(
+    state: String,
+    oldCity: String,
+    newCity: String,
+    lat: Double,
+    lng: Double
+) {
+
+    let now =
+        Date().timeIntervalSince1970 * 1000
+
+    let key =
+        "\(oldCity)_\(newCity)_\(previousCityEnterTime)"
+
+    if key == lastCityChangeKey {
+        return
+    }
+
+    lastCityChangeKey = key
+
+    print("🏙️ CITY CHANGE: \(oldCity) → \(newCity)")
+
+    safeSendEvent(
+        withName: "onCityChangeDetected",
+        body: [
+            "fromCounty": oldCity,
+            "toCounty": newCity,
+            "state": state,
+            "lat": lat,
+            "lng": lng,
+            "timestamp": now
+        ]
+    )
+
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd"
+
+    let today =
+        formatter.string(from: Date())
+
+    // sendTripFormData(
+    //     kind: "city_change",
+    //     date: today,
+    //     typeOfDayId: 1,
+    //     isCommissionDay: false,
+    //     isRemoteWork: false,
+    //     remoteHours: 0,
+    //     isTravelling: false,
+    //     tripTypeId: 1,
+    //     tripModeId: 1,
+    //     confirmationNo: "",
+    //     vendor: "",
+    //     hasProof: false,
+    //     proofType: "other",
+    //     notes: "",
+    //     creationType: "automatic",
+    //     remoteLocation: "",
+    //     stateId: state,
+    //     isUpdated: false,
+    //     originCity: oldCity,
+    //     originState: state,
+    //     originLat: previousLat,
+    //     originLng: previousLng,
+    //     destinationCity: newCity,
+    //     destinationState: state,
+    //     destinationLat: lat,
+    //     destinationLng: lng,
+    //     startDate: previousCityEnterTime,
+    //     endDate: now
+    // )
+
+    // previousDetectedCity = newCity
+    // previousCityEnterTime = now
 }
 
   private func createTrip(

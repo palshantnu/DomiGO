@@ -93,6 +93,11 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     private var previousCountyFips: String = ""
     private var previousCountyName: String = ""
     private var previousCountyEnterTime: Long = 0L
+
+    private var previousCityFips: String = ""
+    private var previousCityName: String = ""
+    private var previousCityEnterTime: Long = 0L
+
     private var lastCityChangeKey: String = ""
     private var countyChangeDetectedTime: Long = 0L
 
@@ -1661,10 +1666,12 @@ private fun loadGeoJsonFeatures(): JSONArray {
 // Phase 3 can key county files on FIPS without re-running state detection.
 data class StateMatch(val fips: String?, val name: String)
 data class CountyMatch(val fips: String, val name: String)
+data class CityMatch(val fips: String, val name: String)
 
 // Per-state county feature cache. Lazily populated on first lookup for each state;
 // avoids re-parsing the counties/<FIPS>.json file on every tick.
 private val countyFeatureCache: MutableMap<String, JSONArray> = mutableMapOf()
+private val cityFeatureCache: MutableMap<String, JSONArray> = mutableMapOf()
 
 private fun bboxSkips(feature: JSONObject, lat: Double, lng: Double): Boolean {
     val bbox = feature.optJSONArray("bbox") ?: return false
@@ -1730,6 +1737,30 @@ private fun loadCountyFeatures(stateFips: String): JSONArray? {
     }
 }
 
+private fun loadCityFeatures(stateName: String): JSONArray? {
+    val safeStateName =
+        stateName.replace(" ", "")
+    cityFeatureCache[safeStateName]?.let {
+        return it
+    }
+    return try {
+        val raw = context.assets
+            .open("cities/$safeStateName.json")
+            .bufferedReader()
+            .use { it.readText() }
+
+        val json = JSONObject(raw)
+        val features =
+            json.getJSONArray("features")
+        cityFeatureCache[safeStateName] = features
+        Log.d(TAG,"Cities loaded: ${features.length()} for $safeStateName")
+        features
+    } catch (e: Exception) {
+        Log.e( TAG,"Failed loading city data for $safeStateName",e)
+        null
+    }
+}
+
 private fun detectCountyFromGeoJSON(stateFips: String, lat: Double, lng: Double): CountyMatch? {
     val features = loadCountyFeatures(stateFips) ?: return null
     for (i in 0 until features.length()) {
@@ -1740,6 +1771,44 @@ private fun detectCountyFromGeoJSON(stateFips: String, lat: Double, lng: Double)
         val name = feature.optString("name", null) ?: continue
         return CountyMatch(fips, name)
     }
+    return null
+}
+
+private fun detectCityFromGeoJSON(
+    stateName: String,
+    lat: Double,
+    lng: Double
+): CityMatch? {
+
+    val features = loadCityFeatures(stateName) ?: return null
+
+    for (i in 0 until features.length()) {
+
+        val feature = features.getJSONObject(i)
+
+        if (bboxSkips(feature, lat, lng)) continue
+
+        if (!pointInGeometry(
+                lat,
+                lng,
+                feature.getJSONObject("geometry")
+            )
+        ) continue
+
+        val properties = feature.getJSONObject("properties")
+
+        val cityName =
+            properties.optString("NAME", null) ?: continue
+
+        val cityFips =
+            properties.optString("GEOID", cityName)
+
+        return CityMatch(
+            cityFips,
+            cityName
+        )
+    }
+
     return null
 }
 
@@ -1845,33 +1914,88 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
             return
         }
         println("📍 Looking for county with state FIPS: $stateFips")
-        val county = detectCountyFromGeoJSON(stateFips, lat, lng) ?: return
-
-        if (county == null) {
-            println("❌ No county found for FIPS $stateFips at $lat,$lng")
-            return
-        }
-        
-        println("✅ County found: ${county.name} (FIPS: ${county.fips})")
-        println("📍 Previous county: $previousCountyName (FIPS: $previousCountyFips)")
-
+        val county = detectCountyFromGeoJSON(stateFips, lat, lng)
+        ?: return
     
-        // First time seed
-        if (previousCountyFips.isEmpty()) {
-            previousCountyFips = county.fips
-            previousCountyName = county.name
-            previousCountyEnterTime = System.currentTimeMillis()
-            Log.d(TAG, "📍 Initial county set: ${county.name}")
-            return
-        }
-    
-        // No change
-        if (county.fips == previousCountyFips) {
-            return
-        }
-    
-        // COUNTY CHANGE DETECTED
-        handleCountyTransition(match, county, lat, lng)
+            // FIRST TIME COUNTY SEED
+            if (previousCountyFips.isEmpty()) {
+            
+                previousCountyFips = county.fips
+                previousCountyName = county.name
+                previousCountyEnterTime = System.currentTimeMillis()
+            
+                // ALSO SEED CITY
+                val city = detectCityFromGeoJSON(
+                    match.name,
+                    lat,
+                    lng
+                )
+            
+                if (city != null) {
+                    previousCityFips = city.fips
+                    previousCityName = city.name
+                    previousCityEnterTime = System.currentTimeMillis()
+                }
+            
+                return
+            }
+            
+            // COUNTY CHANGED
+            if (county.fips != previousCountyFips) {
+            
+                handleCountyTransition(
+                    match,
+                    county,
+                    lat,
+                    lng
+                )
+            
+                // RESET CITY
+                val city = detectCityFromGeoJSON(
+                    match.name,
+                    lat,
+                    lng
+                )
+            
+                if (city != null) {
+                    previousCityFips = city.fips
+                    previousCityName = city.name
+                    previousCityEnterTime = System.currentTimeMillis()
+                }
+            
+                return
+            }
+            
+            // SAME COUNTY → CHECK CITY
+            val city = detectCityFromGeoJSON(
+                match.name,
+                lat,
+                lng
+            ) ?: return
+            
+            // FIRST TIME CITY SEED
+            if (previousCityFips.isEmpty()) {
+            
+                previousCityFips = city.fips
+                previousCityName = city.name
+                previousCityEnterTime = System.currentTimeMillis()
+            
+                return
+            }
+            
+            // SAME CITY
+            if (city.fips == previousCityFips) {
+                return
+            }
+            
+            // CITY CHANGED
+            handleCityTransition(
+                match,
+                county,
+                city,
+                lat,
+                lng
+            )
         return
     }
 
@@ -2064,6 +2188,54 @@ private fun handleCountyTransition(
         startDate = originEnterTime,
         endDate = now
     )
+}
+
+private fun handleCityTransition(
+    state: StateMatch,
+    county: CountyMatch,
+    newCity: CityMatch,
+    lat: Double,
+    lng: Double
+) {
+
+    val now = System.currentTimeMillis()
+
+    val key =
+        "${previousCityFips}_${newCity.fips}_$previousCityEnterTime"
+
+    if (key == lastCityChangeKey) {
+        return
+    }
+
+    lastCityChangeKey = key
+
+    val originCity = previousCityName
+
+    Log.d(
+        TAG,
+        "🏙️ CITY CHANGED: $originCity → ${newCity.name}"
+    )
+
+    val eventData = Arguments.createMap().apply {
+
+        putString("fromCity", originCity)
+        putString("toCity", newCity.name)
+
+        putString("county", county.name)
+        putString("state", state.name)
+
+        putDouble("lat", lat)
+        putDouble("lng", lng)
+    }
+
+    sendEvent(
+        "onRealCityChangeDetected",
+        eventData
+    )
+
+    previousCityFips = newCity.fips
+    previousCityName = newCity.name
+    previousCityEnterTime = now
 }
 
 }
