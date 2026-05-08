@@ -2022,6 +2022,9 @@ print("📍 county: \(county)")
         self.previousLng = lng
         self.previousCity = city
         self.previousStateName = detectedState
+        // RESET CITY TRACKING
+        self.previousDetectedCity = ""
+        self.previousCityEnterTime = 0
         self.previousEnterTime = currentTimeMs
         self.lastTripProcessedTime = currentTimeMs
         self.isTransitionInProgress = false
@@ -2043,7 +2046,10 @@ print("📍 county: \(county)")
 
       previousLat = lat
       previousLng = lng
-      previousCity = detectedState ?? ""
+      previousCity = ""
+      // RESET CITY TRACKING
+      previousDetectedCity = ""
+      previousCityEnterTime = 0
       previousStateName = detectedState
       previousEnterTime = currentTimeMs
       lastTripProcessedTime = currentTimeMs
@@ -2147,6 +2153,25 @@ private func handleCityTransition(
 
     let now =
         Date().timeIntervalSince1970 * 1000
+
+        // Ignore fake transition like:
+        // Florida -> Daytona Beach
+        // where oldCity is actually state name
+
+        if oldCity
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        ==
+        state
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased() {
+
+            print("⚠️ Ignoring fake city transition from state name")
+
+            previousDetectedCity = newCity
+            previousCityEnterTime = now
+            return
+        }
 
     let key =
         "\(oldCity)_\(newCity)_\(previousCityEnterTime)"
