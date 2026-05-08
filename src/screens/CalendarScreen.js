@@ -577,13 +577,13 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
       }
     });
 
-    return { trips, cityChanges,countyChanges, latestMissing };
+    return { trips, cityChanges, countyChanges, latestMissing };
   };
 
   const getWeekCalendarData = (weekResult = {}) => {
     return Object.keys(weekResult)
       .map(date => {
-        const { trips, cityChanges,countyChanges, latestMissing } = normalizeDayData(weekResult[date]);
+        const { trips, cityChanges, countyChanges, latestMissing } = normalizeDayData(weekResult[date]);
 
         let filteredTrips = [];
         if (selectedFilter === "TRIP") {
@@ -592,8 +592,8 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
           filteredTrips = cityChanges;
         }
         else if (selectedFilter === "COUNTY_CHANGE") {
-        filteredTrips = countyChanges;
-        } 
+          filteredTrips = countyChanges;
+        }
         else {
           filteredTrips = [...trips, ...cityChanges, ...countyChanges,];
         }
@@ -951,14 +951,22 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                         <View style={styles.tripLine}>
                           <View style={styles.blueDot} />
                           <Text style={styles.tripText}>
-                            {trip.originCity}, {trip.originState}
+                            {/* {trip.originCity}, {trip.originState} */}
+                            {trip.kind === "county_change"
+                              ? trip.originCounty
+                              : trip.originCity
+                            }, {trip.originState}
                           </Text>
                         </View>
 
                         <View style={styles.tripLine}>
                           <View style={styles.greenDot} />
                           <Text style={styles.tripText}>
-                            {trip.destinationCity}, {trip.destinationState}
+                            {/* {trip.destinationCity}, {trip.destinationState} */}
+                            {trip.kind === "county_change"
+                              ? trip.destinationCounty
+                              : trip.destinationCity
+                            }, {trip.destinationState}
                           </Text>
                         </View>
                       </TouchableOpacity>
@@ -1172,14 +1180,22 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
               <View style={styles.tripLine}>
                 <View style={styles.blueDot} />
                 <Text style={styles.tripText}>
-                  {trip.originCity}, {trip.originState}
+                  {/* {trip.originCity}, {trip.originState} */}
+                  {trip.kind === "county_change"
+                    ? trip.originCounty
+                    : trip.originCity
+                  }, {trip.originState}
                 </Text>
               </View>
 
               <View style={styles.tripLine}>
                 <View style={styles.greenDot} />
                 <Text style={styles.tripText}>
-                  {trip.destinationCity}, {trip.destinationState}
+                  {/* {trip.destinationCity}, {trip.destinationState}*/}
+                  {trip.kind === "county_change"
+                    ? trip.destinationCounty
+                    : trip.destinationCity
+                  }, {trip.destinationState}
                 </Text>
               </View>
             </TouchableOpacity>
