@@ -999,10 +999,12 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
           stateId: nil,
           isUpdated:false,
           originCity: previousCity,
+          originCounty: nil,
           originState: previousStateName,
           originLat: previousLat,
           originLng: previousLng,
           destinationCity: city,
+          destinationCounty: nil,
           destinationState: state,
           destinationLat: lat,
           destinationLng: lng,
@@ -1215,10 +1217,12 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         stateId: state,
         isUpdated:false,
         originCity: nil,
+        originCounty: nil,
         originState: nil,
         originLat: nil,
         originLng: nil,
         destinationCity: nil,
+        destinationCounty: nil,
         destinationState: nil,
         destinationLat: nil,
         destinationLng: nil
@@ -1284,10 +1288,13 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     stateId: String?,
     isUpdated:Bool,
     originCity: String?,
+    originCounty: String?,
     originState: String?,
     originLat: Double?,
     originLng: Double?,
+
     destinationCity: String?,
+    destinationCounty: String?,
     destinationState: String?,
     destinationLat: Double?,
     destinationLng: Double?,
@@ -1360,25 +1367,47 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       addOptionalField("state", stateId)
     }
 
-    if kind == "trip" || kind == "city_change" {
-      addOptionalField("originCity", originCity)
-      addOptionalField("originState", originState)
-      addOptionalDoubleField("originLat", originLat)
-      addOptionalDoubleField("originLng", originLng)
+      if kind == "trip" || kind == "city_change" {
 
-      addOptionalField("destinationCity", destinationCity)
-      addOptionalField("destinationState", destinationState)
-      addOptionalDoubleField("destinationLat", destinationLat)
-      addOptionalDoubleField("destinationLng", destinationLng)
+        addOptionalField("originCity", originCity)
+        addOptionalField("originState", originState)
+        addOptionalDoubleField("originLat", originLat)
+        addOptionalDoubleField("originLng", originLng)
 
-      if let start = startDate {
-        addField("startDate", formatDate1(start))
+        addOptionalField("destinationCity", destinationCity)
+        addOptionalField("destinationState", destinationState)
+        addOptionalDoubleField("destinationLat", destinationLat)
+        addOptionalDoubleField("destinationLng", destinationLng)
+
+        if let start = startDate {
+          addField("startDate", formatDate1(start))
+        }
+
+        if let end = endDate {
+          addField("endDate", formatDate1(end))
+        }
       }
 
-      if let end = endDate {
-        addField("endDate", formatDate1(end))
+      if kind == "county_change" {
+
+        addOptionalField("originCounty", originCounty)
+        addOptionalField("originState", originState)
+        addOptionalDoubleField("originLat", originLat)
+        addOptionalDoubleField("originLng", originLng)
+
+        addOptionalField("destinationCounty", destinationCounty)
+        addOptionalField("destinationState", destinationState)
+        addOptionalDoubleField("destinationLat", destinationLat)
+        addOptionalDoubleField("destinationLng", destinationLng)
+
+        if let start = startDate {
+          addField("startDate", formatDate1(start))
+        }
+
+        if let end = endDate {
+          addField("endDate", formatDate1(end))
+        }
       }
-    }
 
     if kind == "city_change" {
       let formattedStartDate: String
@@ -1721,7 +1750,7 @@ private func loadCityFeatures(stateName: String) -> [[String: Any]]? {
     guard let url = Bundle.main.url(
         forResource: safeStateName,
         withExtension: "json",
-        subdirectory: "cities"
+        // subdirectory: "cities"
     ) else {
 
         print("❌ No city data for \(safeStateName)")
@@ -2075,7 +2104,7 @@ print("📍 county: \(county)")
     let today = formatter.string(from: Date())
 
     sendTripFormData(
-      kind: "city_change",
+      kind: "county_change",
       date: today,
       typeOfDayId: 1,
       isCommissionDay: false,
@@ -2093,11 +2122,13 @@ print("📍 county: \(county)")
       remoteLocation: "",
       stateId: state,
       isUpdated: false,
-      originCity: originCounty,
+      originCity: nil,
+      originCounty: originCounty,
       originState: state,
       originLat: previousLat,
       originLng: previousLng,
-      destinationCity: newCounty.name,
+      destinationCity: nil,
+      destinationCounty: newCounty.name,
       destinationState: state,
       destinationLat: lat,
       destinationLng: lng,
@@ -2146,39 +2177,41 @@ private func handleCityTransition(
     let today =
         formatter.string(from: Date())
 
-    // sendTripFormData(
-    //     kind: "city_change",
-    //     date: today,
-    //     typeOfDayId: 1,
-    //     isCommissionDay: false,
-    //     isRemoteWork: false,
-    //     remoteHours: 0,
-    //     isTravelling: false,
-    //     tripTypeId: 1,
-    //     tripModeId: 1,
-    //     confirmationNo: "",
-    //     vendor: "",
-    //     hasProof: false,
-    //     proofType: "other",
-    //     notes: "",
-    //     creationType: "automatic",
-    //     remoteLocation: "",
-    //     stateId: state,
-    //     isUpdated: false,
-    //     originCity: oldCity,
-    //     originState: state,
-    //     originLat: previousLat,
-    //     originLng: previousLng,
-    //     destinationCity: newCity,
-    //     destinationState: state,
-    //     destinationLat: lat,
-    //     destinationLng: lng,
-    //     startDate: previousCityEnterTime,
-    //     endDate: now
-    // )
+    sendTripFormData(
+        kind: "city_change",
+        date: today,
+        typeOfDayId: 1,
+        isCommissionDay: false,
+        isRemoteWork: false,
+        remoteHours: 0,
+        isTravelling: false,
+        tripTypeId: 1,
+        tripModeId: 1,
+        confirmationNo: "",
+        vendor: "",
+        hasProof: false,
+        proofType: "other",
+        notes: "",
+        creationType: "automatic",
+        remoteLocation: "",
+        stateId: state,
+        isUpdated: false,
+        originCity: oldCity,
+        originCounty: nil,
+        originState: state,
+        originLat: previousLat,
+        originLng: previousLng,
+        destinationCity: newCity,
+        destinationCounty: nil,
+        destinationState: state,
+        destinationLat: lat,
+        destinationLng: lng,
+        startDate: previousCityEnterTime,
+        endDate: now
+    )
 
-    // previousDetectedCity = newCity
-    // previousCityEnterTime = now
+    previousDetectedCity = newCity
+    previousCityEnterTime = now
 }
 
   private func createTrip(
@@ -2217,10 +2250,12 @@ private func handleCityTransition(
       stateId: nil,
       isUpdated:false,
       originCity: originCity,
+      originCounty: nil,
       originState: originState,
       originLat: originLat,
       originLng: originLng,
       destinationCity: destinationCity,
+      destinationCounty: nil,
       destinationState: destinationState,
       destinationLat: destinationLat,
       destinationLng: destinationLng,

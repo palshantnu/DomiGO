@@ -553,6 +553,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     const trips = [];
     let latestMissing = null;
     const cityChanges = [];
+    const countyChanges = [];
 
     dayData.forEach(item => {
       if (item.kind === "trip") {
@@ -560,6 +561,9 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
       }
       if (item.kind === "city_change") {
         cityChanges.push(item);
+      }
+      if (item.kind === "county_change") {
+        countyChanges.push(item);
       }
 
       if (item.kind === "missing") {
@@ -573,21 +577,25 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
       }
     });
 
-    return { trips, cityChanges, latestMissing };
+    return { trips, cityChanges,countyChanges, latestMissing };
   };
 
   const getWeekCalendarData = (weekResult = {}) => {
     return Object.keys(weekResult)
       .map(date => {
-        const { trips, cityChanges, latestMissing } = normalizeDayData(weekResult[date]);
+        const { trips, cityChanges,countyChanges, latestMissing } = normalizeDayData(weekResult[date]);
 
         let filteredTrips = [];
         if (selectedFilter === "TRIP") {
           filteredTrips = trips;
         } else if (selectedFilter === "CITY_CHANGE") {
           filteredTrips = cityChanges;
-        } else {
-          filteredTrips = [...trips, ...cityChanges];
+        }
+        else if (selectedFilter === "COUNTY_CHANGE") {
+        filteredTrips = countyChanges;
+        } 
+        else {
+          filteredTrips = [...trips, ...cityChanges, ...countyChanges,];
         }
 
         // 🔥 agar na trip hai na missing → skip
@@ -723,7 +731,11 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
       if (!Array.isArray(items)) return;
 
       items.forEach(item => {
-        if (item.kind === "trip" || item.kind === "city_change") {
+        if (
+          item.kind === "trip" ||
+          item.kind === "city_change" ||
+          item.kind === "county_change"
+        ) {
           normalized[date].trips.push(item);
         }
 
@@ -927,6 +939,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                     ?.filter(trip => {
                       if (selectedFilter === "TRIP") return trip.kind === "trip";
                       if (selectedFilter === "CITY_CHANGE") return trip.kind === "city_change";
+                      if (selectedFilter === "COUNTY_CHANGE") return trip.kind === "county_change";
                       return true; // ALL
                     })
                     .map(trip => (
@@ -1406,9 +1419,9 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                         ? "All"
                         : selectedFilter === "TRIP"
                           ? "State Trips"
-                          : selectedFilter === "CITY_CHANGE"
+                          : selectedFilter === "COUNTY_CHANGE"
                             ? "County Trips"
-                            : selectedFilter === "CITY_TRIPS"
+                            : selectedFilter === "CITY_CHANGE"
                               ? "City Trips"
                               : "Locations"
                     }
@@ -1434,8 +1447,8 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                     {[
                       { label: "All", value: "ALL" },
                       { label: "State Trips", value: "TRIP" },
-                      { label: "County Trips", value: "CITY_CHANGE" },
-                      { label: "City Trips", value: "CITY_TRIPS" },
+                      { label: "County Trips", value: "COUNTY_CHANGE" },
+                      { label: "City Trips", value: "CITY_CHANGE" },
                       { label: "Locations", value: "LOCATIONS" },
                     ].map(item => (
                       <TouchableOpacity
@@ -1674,9 +1687,9 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                         ? "All"
                         : selectedFilter === "TRIP"
                           ? "State Trips"
-                          : selectedFilter === "CITY_CHANGE"
+                          : selectedFilter === "COUNTY_CHANGE"
                             ? "County Trips"
-                            : selectedFilter === "CITY_TRIPS"
+                            : selectedFilter === "CITY_CHANGE"
                               ? "City Trips"
                               : "Locations"
                     }
@@ -1702,8 +1715,8 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                     {[
                       { label: "All", value: "ALL" },
                       { label: "State Trips", value: "TRIP" },
-                      { label: "County Trips", value: "CITY_CHANGE" },
-                      { label: "City Trips", value: "CITY_TRIPS" },
+                      { label: "County Trips", value: "COUNTY_CHANGE" },
+                      { label: "City Trips", value: "CITY_CHANGE" },
                       { label: "Locations", value: "LOCATIONS" },
                     ].map(item => (
                       <TouchableOpacity

@@ -68,8 +68,8 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     private var geofencingCountry: String = ""
 
     // Phase 1 kill switch for city/county change detection. Set via JS setConfig.
-    // When false (default), no city_change events are emitted regardless of GPS input.
-    // Must stay false until the backend filters kind='city_change' from trip-count queries.
+    // When false (default), no county_change events are emitted regardless of GPS input.
+    // Must stay false until the backend filters kind='county_change' from trip-count queries.
     private var cityChangeEventsEnabled: Boolean = false
 
     // Track last values to avoid duplicate API calls
@@ -1183,16 +1183,19 @@ private fun sendEntryFormData(
     isUpdated: Boolean?,
 
     // TRIP ONLY
-    originCity: String?,
+    originCity: String? = null,
     originState: String?,
     originLat: Double?,
     originLng: Double?,
-    destinationCity: String?,
+    destinationCity: String? = null,
     destinationState: String?,
     destinationLat: Double?,
     destinationLng: Double?,
     startDate: Long? = null,
-    endDate: Long? = null
+    endDate: Long? = null,
+    // county change only
+    originCounty: String? = null,
+    destinationCounty: String? = null,
 ) {
 
     fun s(v: String?) = v ?: ""
@@ -1254,14 +1257,14 @@ private fun sendEntryFormData(
             }
         
     }
-    if (kind == "city_change") {
+    if (kind == "county_change") {
         body
-            .addFormDataPart("originCity", s(originCity))
+            .addFormDataPart("originCounty", s(originCounty))
             .addFormDataPart("originState", s(originState))
             .addFormDataPart("originLat", d(originLat))
             .addFormDataPart("originLng", d(originLng))
 
-            .addFormDataPart("destinationCity", s(destinationCity))
+            .addFormDataPart("destinationCounty", s(destinationCounty))
             .addFormDataPart("destinationState", s(destinationState))
             .addFormDataPart("destinationLat", d(destinationLat))
             .addFormDataPart("destinationLng", d(destinationLng))
@@ -1276,12 +1279,33 @@ private fun sendEntryFormData(
     }
 
     if (kind == "city_change") {
+        body
+            .addFormDataPart("originCity", s(originCity))
+            .addFormDataPart("originState", s(originState))
+            .addFormDataPart("originLat", d(originLat))
+            .addFormDataPart("originLng", d(originLng))
+    
+            .addFormDataPart("destinationCity", s(destinationCity))
+            .addFormDataPart("destinationState", s(destinationState))
+            .addFormDataPart("destinationLat", d(destinationLat))
+            .addFormDataPart("destinationLng", d(destinationLng))
+    
+        startDate?.let {
+            body.addFormDataPart("startDate", formatDate(it))
+        }
+    
+        endDate?.let {
+            body.addFormDataPart("endDate", formatDate(it))
+        }
+    }
+
+    if (kind == "county_change") {
         val debugData = Arguments.createMap().apply {
             putString("kind", kind)
             putString("date", date)
-            putString("originCity", originCity)
+            putString("originCounty", originCounty)
             putString("originState", originState)
-            putString("destinationCity", destinationCity)
+            putString("destinationCounty", destinationCounty)
             putString("destinationState", destinationState)
             putDouble("originLat", originLat ?: 0.0)
             putDouble("originLng", originLng ?: 0.0)
@@ -1291,6 +1315,39 @@ private fun sendEntryFormData(
             putString("endDate", endDate?.let { formatDate(it) })
         }
         sendEvent("onCityChangeDebug", debugData)
+    }
+
+    if (kind == "city_change") {
+
+        val debugData = Arguments.createMap().apply {
+    
+            putString("kind", kind)
+            putString("date", date)
+    
+            putString("originCity", originCity)
+            putString("originState", originState)
+    
+            putString("destinationCity", destinationCity)
+            putString("destinationState", destinationState)
+    
+            putDouble("originLat", originLat ?: 0.0)
+            putDouble("originLng", originLng ?: 0.0)
+    
+            putDouble("destinationLat", destinationLat ?: 0.0)
+            putDouble("destinationLng", destinationLng ?: 0.0)
+    
+            putString(
+                "startDate",
+                startDate?.let { formatDate(it) }
+            )
+    
+            putString(
+                "endDate",
+                endDate?.let { formatDate(it) }
+            )
+        }
+    
+        sendEvent("onRealCityChangeDebug", debugData)
     }
     
 
@@ -1411,6 +1468,8 @@ fun createMissingDay() {
         originState = null,
         originLat = null,
         originLng = null,
+        originCounty = null,
+        destinationCounty = null,
         destinationCity = null,
         destinationState = null,
         destinationLat = null,
@@ -1624,7 +1683,9 @@ private fun backfillMissingDays() {
                 isUpdated = false,
                 state = stateForBackfill,
                 originCity = null, originState = null, originLat = null, originLng = null,
-                destinationCity = null, destinationState = null, destinationLat = null, destinationLng = null
+                destinationCity = null, destinationState = null, destinationLat = null, destinationLng = null,
+                originCounty = null,
+                destinationCounty = null,
             )
             cal.add(Calendar.DAY_OF_MONTH, 1)
         }
@@ -2156,7 +2217,7 @@ private fun handleCountyTransition(
 
     // 🔥 API CALL
     sendEntryFormData(
-        kind = "city_change",
+        kind = "county_change",
         date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
         typeOfDayId = null,
         isCommissionDay = false,
@@ -2175,12 +2236,12 @@ private fun handleCountyTransition(
         state = state.name,
         isUpdated = false,
 
-        originCity = originCounty,
+        originCounty = originCounty,
         originState = state.name,
         originLat = previousLat,
         originLng = previousLng,
 
-        destinationCity = newCounty.name,
+        destinationCounty = newCounty.name,
         destinationState = state.name,
         destinationLat = lat,
         destinationLng = lng,
@@ -2210,6 +2271,7 @@ private fun handleCityTransition(
     lastCityChangeKey = key
 
     val originCity = previousCityName
+    val originEnterTime = previousCityEnterTime
 
     Log.d(
         TAG,
@@ -2235,7 +2297,55 @@ private fun handleCityTransition(
 
     previousCityFips = newCity.fips
     previousCityName = newCity.name
-    previousCityEnterTime = now
+    val newEnterTime = now
+
+    previousCityFips = newCity.fips
+    previousCityName = newCity.name
+    previousCityEnterTime = newEnterTime
+
+    sendEntryFormData(
+        kind = "city_change",
+
+        date = SimpleDateFormat(
+            "yyyy-MM-dd",
+            Locale.getDefault()
+        ).format(Date()),
+
+        typeOfDayId = null,
+        isCommissionDay = false,
+        isRemoteWork = false,
+        remoteHours = 0,
+        isTravelling = false,
+
+        tripTypeId = 1,
+        tripModeId = 1,
+
+        confirmationNo = "",
+        vendor = "",
+
+        hasProof = false,
+        proofType = "other",
+
+        notes = "",
+        creationType = "automatic",
+        remoteLocation = "",
+
+        state = state.name,
+        isUpdated = false,
+
+        originCity = originCity,
+        originState = state.name,
+        originLat = previousLat,
+        originLng = previousLng,
+
+        destinationCity = newCity.name,
+        destinationState = state.name,
+        destinationLat = lat,
+        destinationLng = lng,
+
+        startDate = originEnterTime,
+        endDate = now
+    )
 }
 
 }
