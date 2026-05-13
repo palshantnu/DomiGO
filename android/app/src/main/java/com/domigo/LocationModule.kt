@@ -114,6 +114,7 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     // private val MIN_STAY_TIME = 2 * 60 * 1000 // 2 min
     private val MIN_STAY_TIME = 10 * 1000 // 2 min
     private var lastLocationPingTime: Long = 0
+    private var lastHoursApiTime: Long = 0
     private var lastSentState: String = ""
 
 
@@ -141,7 +142,9 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         private const val PREF_LAST_TRACKED_DATE = "domigo_last_tracked_date"
         private const val PREF_CURRENT_STATE = "domigo_current_state"
         private const val LOCATION_PING_INTERVAL = 15 * 60 * 1000 // 15 min
-
+        private const val HOURS_API_INTERVAL = 4 * 60 * 60 * 1000L
+        // private const val HOURS_API_INTERVAL = 2 * 60 * 1000L
+        private const val PREF_LAST_HOURS_API_TIME = "pref_last_hours_api_time"
         
     }
 
@@ -960,70 +963,298 @@ if (!stateChanged && !timePassed) {
 
 
     private fun sendLocationPing(
+        lat: Double,
+        lng: Double,
+        state: String,
+        stateCode: String,
+        countryCode: String
+    ) 
+    {
+        val currentTime = System.currentTimeMillis()
+        val timeDiff = currentTime - lastLocationPingTime
+
+        val isTimeBased = timeDiff >= LOCATION_PING_INTERVAL
+        val isStateChanged = stateCode != lastSentState
+
+        // 🚫 skip if neither condition met
+        if (!isTimeBased && !isStateChanged) {
+        Log.d(TAG, "⏳ Location ping skipped (no 15min / no state change)")
+        return
+        }
+
+        val jsonBody = JSONObject().apply {
+        put("latitude", lat)
+        put("longitude", lng)
+        put("state", state)
+        put("city", state) // optional
+        put("address", state)
+        }
+
+        Log.d(TAG, "📡 Sending LOCATION PING → $state ($lat,$lng)")
+
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val requestBody = jsonBody.toString().toRequestBody(mediaType)
+
+        val request = Request.Builder()
+        .url(apiUrl)
+        .post(requestBody)
+        .addHeader("Content-Type", "application/json")
+        .addHeader("Authorization", "Bearer $domigoToken")
+        .build()
+
+        httpClient.newCall(request).enqueue(object : okhttp3.Callback {
+        override fun onFailure(call: Call, e: IOException) {
+            Log.e(TAG, "❌ Location ping failed: ${e.message}")
+        }
+
+        override fun onResponse(call: Call, response: Response) {
+            if (response.isSuccessful) {
+                Log.d(TAG, "✅ Location ping success")
+
+                lastLocationPingTime = currentTime
+                lastSentState = stateCode
+                sendEvent("onApiSuccess", Arguments.createMap().apply {
+                    putString("message", "Location sent to API successfully")
+                    putString("state", state)
+                    putString("city", state)
+                })
+            } else {
+                Log.e(TAG, "❌ Location ping error: ${response.code}")
+                val errorBody = response.body?.string() ?: "Unknown error"
+                sendEvent("onLocationError", Arguments.createMap().apply {
+                    putString("error", "API error ${response.code}: $errorBody")
+                })
+            }
+        }
+        })
+    }
+
+    private fun checkAndSendHoursAPI(
+        lat: Double,
+        lng: Double
+    ) 
+    {
+
+        val now = System.currentTimeMillis()
+
+        // 🔥 configurable interval
+        val interval = HOURS_API_INTERVAL
+
+        if ((now - lastHoursApiTime) < interval) {
+
+            Log.d(TAG, "⏳ Hours API skipped")
+            return
+        }
+
+        // 🔥 interval complete
+        lastHoursApiTime = now
+
+        prefs.edit()
+            .putLong(PREF_LAST_HOURS_API_TIME, now)
+            .apply()
+
+        reverseGeocodeForHoursAPI(lat, lng)
+    }
+    private fun reverseGeocodeForHoursAPI(
+        lat: Double,
+        lng: Double
+    ) 
+    {
+
+        val url =
+            "$GOOGLE_GEOCODING_URL?latlng=$lat,$lng&language=en&key=$googleApiKey"
+
+        val request = Request.Builder()
+            .url(url)
+            .build()
+
+        httpClient.newCall(request)
+          .enqueue(object : okhttp3.Callback {
+
+                override fun onFailure(
+                    call: Call,
+                    e: IOException
+                ) {
+
+                    Log.e(TAG, "❌ Hours geocode failed")
+                }
+
+                override fun onResponse(
+                    call: Call,
+                    response: Response
+                ) {
+
+                    try {
+
+                        val body =
+                            response.body?.string() ?: return
+
+                        val json = JSONObject(body)
+
+                        if (json.getString("status") != "OK") {
+                            return
+                        }
+
+                        val result =
+                            json.getJSONArray("results")
+                                .getJSONObject(0)
+
+                        val components =
+                            result.getJSONArray("address_components")
+
+                        var city = ""
+                        var state = ""
+
+                        for (i in 0 until components.length()) {
+
+                            val component =
+                                components.getJSONObject(i)
+
+                            val types =
+                                component.getJSONArray("types")
+
+                            for (j in 0 until types.length()) {
+
+                                when (types.getString(j)) {
+
+                                    "locality" -> {
+                                        city =
+                                            component.getString("long_name")
+                                    }
+
+                                    "administrative_area_level_1" -> {
+                                        state =
+                                            component.getString("long_name")
+                                    }
+                                }
+                            }
+                        }
+
+                        val address =
+                            result.optString(
+                                "formatted_address",
+                                ""
+                            )
+
+                        sendHoursLocationAPI(
+                            lat,
+                            lng,
+                            city,
+                            state,
+                            address
+                        )
+
+                    } catch (e: Exception) {
+
+                        Log.e(TAG, "❌ Hours parse error")
+                    }
+                }
+            })
+    }
+
+    private fun sendHoursLocationAPI(
     lat: Double,
     lng: Double,
+    city: String,
     state: String,
-    stateCode: String,
-    countryCode: String
-    ) {
-    val currentTime = System.currentTimeMillis()
-    val timeDiff = currentTime - lastLocationPingTime
+    address: String
+    ) 
+    {
 
-    val isTimeBased = timeDiff >= LOCATION_PING_INTERVAL
-    val isStateChanged = stateCode != lastSentState
+        val jsonBody = JSONObject().apply {
 
-    // 🚫 skip if neither condition met
-    if (!isTimeBased && !isStateChanged) {
-    Log.d(TAG, "⏳ Location ping skipped (no 15min / no state change)")
-    return
-    }
-
-    val jsonBody = JSONObject().apply {
-    put("latitude", lat)
-    put("longitude", lng)
-    put("state", state)
-    put("city", state) // optional
-    put("address", state)
-    }
-
-    Log.d(TAG, "📡 Sending LOCATION PING → $state ($lat,$lng)")
-
-    val mediaType = "application/json; charset=utf-8".toMediaType()
-    val requestBody = jsonBody.toString().toRequestBody(mediaType)
-
-    val request = Request.Builder()
-    .url(apiUrl)
-    .post(requestBody)
-    .addHeader("Content-Type", "application/json")
-    .addHeader("Authorization", "Bearer $domigoToken")
-    .build()
-
-    httpClient.newCall(request).enqueue(object : okhttp3.Callback {
-    override fun onFailure(call: Call, e: IOException) {
-        Log.e(TAG, "❌ Location ping failed: ${e.message}")
-    }
-
-    override fun onResponse(call: Call, response: Response) {
-        if (response.isSuccessful) {
-            Log.d(TAG, "✅ Location ping success")
-
-            lastLocationPingTime = currentTime
-            lastSentState = stateCode
-            sendEvent("onApiSuccess", Arguments.createMap().apply {
-                putString("message", "Location sent to API successfully")
-                putString("state", state)
-                putString("city", state)
-            })
-        } else {
-            Log.e(TAG, "❌ Location ping error: ${response.code}")
-            val errorBody = response.body?.string() ?: "Unknown error"
-            sendEvent("onLocationError", Arguments.createMap().apply {
-                putString("error", "API error ${response.code}: $errorBody")
-            })
+            put("latitude", lat)
+            put("longitude", lng)
+            put("state", state)
+            put("city", city)
+            put("address", address)
         }
+
+        val mediaType =
+            "application/json; charset=utf-8".toMediaType()
+
+        val requestBody =
+            jsonBody.toString().toRequestBody(mediaType)
+
+        val request = Request.Builder()
+            .url("https://stage.mydomigo.com/api/locations/hours")
+            .post(requestBody)
+            .addHeader("Content-Type", "application/json")
+            .addHeader("Authorization", "Bearer $domigoToken")
+            .build()
+
+        httpClient.newCall(request)
+            .enqueue(object : okhttp3.Callback {
+
+                override fun onFailure(
+                    call: Call,
+                    e: IOException
+                ) {
+
+                    Log.e(TAG, "❌ Hours API failed")
+                }
+
+                override fun onResponse(
+                    call: Call,
+                    response: Response
+                ) {
+
+                    if (response.isSuccessful) {
+
+                        Log.d(TAG, "✅ Hours API success")
+
+                        val eventData = Arguments.createMap().apply {
+
+                            putBoolean("success", true)
+
+                            putDouble("latitude", lat)
+                            putDouble("longitude", lng)
+
+                            putString("city", city)
+                            putString("state", state)
+                            putString("address", address)
+
+                            putDouble(
+                                "timestamp",
+                                System.currentTimeMillis().toDouble()
+                            )
+                        }
+
+                        sendEvent(
+                            "onHoursApiSuccess",
+                            eventData
+                        )
+
+                    } else {
+
+                        Log.e(
+                            TAG,
+                            "❌ Hours API error: ${response.code}"
+                        )
+                        val errorData = Arguments.createMap().apply {
+
+                        putBoolean("success", false)
+
+                        putInt("statusCode", response.code)
+
+                        putString("city", city)
+                        putString("state", state)
+
+                        putDouble(
+                            "timestamp",
+                            System.currentTimeMillis().toDouble()
+                        )
+                    }
+
+                    sendEvent(
+                        "onHoursApiError",
+                        errorData
+                    )
+                    }
+                }
+            })
     }
-    })
-    }
+
 
     private fun startForegroundService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -1108,7 +1339,7 @@ if (!stateChanged && !timePassed) {
 //         .build()
 
 //     val request = Request.Builder()
-//         .url("http://3.91.116.18:4001/api/trips")  // replace with your addTrip URL
+//         .url("https://stage.mydomigo.com/api/trips")  // replace with your addTrip URL
 //         .post(formBody)
 //         .addHeader("Authorization", "Bearer $domigoToken")
 //         .build()
@@ -1352,8 +1583,8 @@ private fun sendEntryFormData(
     
 
     val request = Request.Builder()
-        // .url("http://3.91.116.18:4001/api/trips")
-        .url("http://3.91.116.18:4001/api/trip-days")
+        // .url("https://stage.mydomigo.com/api/trips")
+        .url("https://stage.mydomigo.com/api/trip-days")
         .post(body.build())
         .addHeader("Authorization", "Bearer $domigoToken")
         .build()
@@ -1509,6 +1740,7 @@ private fun loadStateFromPrefs() {
     previousLng = if (lng != 0.0) lng else null
     previousEnterTime = prefs.getLong(PREF_PREV_ENTER_TIME, 0L)
     currentStateName = prefs.getString(PREF_CURRENT_STATE, "") ?: ""
+    lastHoursApiTime = prefs.getLong(PREF_LAST_HOURS_API_TIME, 0L)
     Log.d(TAG, "Loaded persisted state: code=$previousStateCode name=$previousStateName")
 }
 
@@ -1647,7 +1879,7 @@ private fun sendQueuedEntry(payload: JSONObject): Boolean {
         if (ed.isNotEmpty()) builder.addFormDataPart("endDate", ed)
     }
     val request = Request.Builder()
-        .url("http://3.91.116.18:4001/api/trip-days")
+        .url("https://stage.mydomigo.com/api/trip-days")
         .post(builder.build())
         .addHeader("Authorization", "Bearer $domigoToken")
         .build()
@@ -1932,6 +2164,7 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
 
     // Heartbeat to our own API (itself gated by LOCATION_PING_INTERVAL + state change inside sendLocationPing).
     sendLocationPing(lat, lng, detectedState, detectedState, geofencingCountry)
+    checkAndSendHoursAPI(lat, lng)
 
     // Surface to JS for UI (no Google).
     val addressData = Arguments.createMap().apply {

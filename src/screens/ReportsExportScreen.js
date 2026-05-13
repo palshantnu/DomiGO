@@ -100,7 +100,7 @@ function ReportsExportScreen({ GET_WEEK_WISE_TIMELINE, weekWiseTimeline, GET_REP
             const type = filterToTypeMap[selectedFilter];
             const date = getTodayDate();
 
-            const url = `http://3.91.116.18:4001/api/dashboard/v2/reports/export?type=${type}&format=pdf&date=${date}`;
+            const url = `https://stage.mydomigo.com/api/dashboard/v2/reports/export?type=${type}&format=pdf&date=${date}`;
 
             const { config, fs } = ReactNativeBlobUtil;
 
