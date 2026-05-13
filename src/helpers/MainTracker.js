@@ -481,7 +481,7 @@ class DomigoTracker {
           })
     );
     this.subscriptions.push(
-      locationEventEmitter.addListener('onRealCityChangeDetected', (data) => {
+      locationEventEmitter.addListener('onCityChangeDetected', (data) => {
         console.log("🏙️🏙️🏙️ CITY CHANGE EVENT DETECTED! 🏙️🏙️🏙️");
         console.log("📊 City Change Data:", JSON.stringify(data, null, 2));
         console.log(`📍 From: ${data.fromCity}`);
