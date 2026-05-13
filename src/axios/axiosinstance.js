@@ -2,9 +2,9 @@ import axios from 'axios';
 import { store } from '../redux/store';
 // import Config from 'react-native-config';
 
-export const baseURL = 'http://3.91.116.18:4001/api/';
+export const baseURL = 'https://stage.mydomigo.com/api/';
 // export const baseURL = `${Config.BASE_URL}/api/`;
-export const IMAGE_URL = 'http://3.91.116.18:4001/api/';
+export const IMAGE_URL = 'https://stage.mydomigo.com/api/';
 
 console.log('baseURL',baseURL);
 

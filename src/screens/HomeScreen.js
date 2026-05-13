@@ -245,7 +245,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
     // const sendLocationAPI = async (location) => {
     //     console.log("SENDING 👉", location);
     //     try {
-    //         const res = await fetch("http://3.91.116.18:4001/api/locations", {
+    //         const res = await fetch("https://stage.mydomigo.com/api/locations", {
     //             method: "POST",
     //             headers: {
     //                 "Content-Type": "application/json",
@@ -263,7 +263,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
         console.log("SENDING 👉", location);
 
         try {
-            const res = await fetch("http://3.91.116.18:4001/api/locations", {
+            const res = await fetch("https://stage.mydomigo.com/api/locations", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

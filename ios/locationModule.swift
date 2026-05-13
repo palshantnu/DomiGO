@@ -791,7 +791,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       return
     }
 
-    let apiUrl = "http://3.91.116.18:4001/api/locations/current"
+    let apiUrl = "https://stage.mydomigo.com/api/locations/current"
 
     guard let url = URL(string: apiUrl) else {
       print("❌ Invalid last state API URL")
@@ -1307,7 +1307,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     }
 
     let boundary = UUID().uuidString
-    guard let url = URL(string: "http://3.91.116.18:4001/api/trip-days") else {
+    guard let url = URL(string: "https://stage.mydomigo.com/api/trip-days") else {
       print("❌ Invalid trip API URL")
       return
     }
@@ -1560,7 +1560,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   ) {
     let kind = payload["kind"] as? String ?? "missing"
     let boundary = UUID().uuidString
-    guard let url = URL(string: "http://3.91.116.18:4001/api/trip-days") else {
+    guard let url = URL(string: "https://stage.mydomigo.com/api/trip-days") else {
       completion(false)
       return
     }

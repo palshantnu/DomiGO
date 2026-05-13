@@ -108,7 +108,7 @@ class DomigoTracker {
 
     try {
       // const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEwLCJlbWFpbCI6ImFqYXlAZ21haWwuY29tIiwiaWF0IjoxNzYzOTgzODg5LCJleHAiOjE3NjQwMTI2ODl9.V6muZZvXTE-P8DUuxnzfuhFzjB41C0tj22IxWp3eMEI";
-      const API_URL = "http://3.91.116.18:4001/api/locations";
+      const API_URL = "https://stage.mydomigo.com/api/locations";
 
       const config = {
         // 60s matches the native default; state-level detection doesn't need faster sampling.
@@ -463,22 +463,22 @@ class DomigoTracker {
     );
 
     this.subscriptions.push(
-          locationEventEmitter.addListener('onCityChangeDetected', (data) => {
-            console.log("🏙️🏙️🏙️ CITY CHANGE EVENT DETECTED! 🏙️🏙️🏙️");
-            console.log("📊 City Change Data:", JSON.stringify(data, null, 2));
-            console.log(`📍 From: ${data.fromCounty}`);
-            console.log(`📍 To: ${data.toCounty}`);
-            console.log(`📍 State: ${data.state}`);
-            console.log(`📍 Lat/Lng: ${data.lat}, ${data.lng}`);
+      locationEventEmitter.addListener('onCityChangeDetected', (data) => {
+        console.log("🏙️🏙️🏙️ CITY CHANGE EVENT DETECTED! 🏙️🏙️🏙️");
+        console.log("📊 City Change Data:", JSON.stringify(data, null, 2));
+        console.log(`📍 From: ${data.fromCounty}`);
+        console.log(`📍 To: ${data.toCounty}`);
+        console.log(`📍 State: ${data.state}`);
+        console.log(`📍 Lat/Lng: ${data.lat}, ${data.lng}`);
 
-            // Optional: Show alert for testing
-            if (__DEV__) {
-              Alert.alert(
-                'City Change Detected',
-                `Moved from ${data.fromCounty} to ${data.toCounty}\nState: ${data.state}`
-              );
-            }
-          })
+        // Optional: Show alert for testing
+        if (__DEV__) {
+          Alert.alert(
+            'City Change Detected',
+            `Moved from ${data.fromCounty} to ${data.toCounty}\nState: ${data.state}`
+          );
+        }
+      })
     );
     this.subscriptions.push(
       locationEventEmitter.addListener('onRealCityChangeDetected', (data) => {
@@ -498,14 +498,14 @@ class DomigoTracker {
         //   );
         // }
       })
-);
+    );
 
     this.subscriptions.push(
       locationEventEmitter.addListener('onCityChangeDebug', (data) => {
         console.log('🐛 CITY CHANGE DEBUG BODY:', JSON.stringify(data, null, 2));
       })
     );
-    
+
 
 
 
@@ -526,6 +526,40 @@ class DomigoTracker {
       locationEventEmitter.addListener('onTripApiError', (error) => {
         console.error('🚗 Trip API Error:', error);
       })
+    );
+    this.subscriptions.push(
+      locationEventEmitter.addListener(
+        'onHoursApiSuccess',
+        (data) => {
+
+          console.log(
+            '🕓 HOURS API SUCCESS',
+            {
+              city: data.city,
+              state: data.state,
+              address: data.address,
+              lat: data.latitude,
+              lng: data.longitude,
+              time: new Date(
+                data.timestamp
+              ).toLocaleString(),
+            }
+          );
+        }
+      )
+    );
+
+    this.subscriptions.push(
+      locationEventEmitter.addListener(
+        'onHoursApiError',
+        (data) => {
+
+          console.log(
+            '❌ HOURS API ERROR',
+            data
+          );
+        }
+      )
     );
 
 
