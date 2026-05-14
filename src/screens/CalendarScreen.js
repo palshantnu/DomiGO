@@ -18,11 +18,11 @@ import Header from '../components/Header';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import CustomScroll from '../components/CustomScroll';
-import { GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIMELINE, GET_YEAR_WISE_TIMELINE, GET_MISSING_ACTIVITY_LIST } from '../redux/actions/action-creator';
+import { GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIMELINE, GET_YEAR_WISE_TIMELINE, GET_MISSING_ACTIVITY_LIST, GET_WEEK_WISE_LOCATION, GET_YEAR_WISE_LOCATION } from '../redux/actions/action-creator';
 import { connect } from 'react-redux';
 import { useFocusEffect } from '@react-navigation/native';
 
-function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIMELINE, GET_YEAR_WISE_TIMELINE, GET_MISSING_ACTIVITY_LIST, missingActivityList, yearWiseTimeline, weekWiseTimeline, monthWiseTimeline }) {
+function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIMELINE, GET_YEAR_WISE_TIMELINE, GET_YEAR_WISE_LOCATION, GET_WEEK_WISE_LOCATION, GET_MISSING_ACTIVITY_LIST, missingActivityList, yearWiseTimeline, weekWiseTimeline, monthWiseTimeline, weekWiseLocation, yearWiseLocation }) {
   const [selectedTab, setSelectedTab] = useState('Month');
   const [selectedResidencyType, setSelectedResidencyType] = useState('past');
   const [tripModalVisible, setTripModalVisible] = useState(false);
@@ -92,8 +92,10 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     year: today.getFullYear(),
   });
 
-  console.log('yearWiseTimeline', yearWiseTimeline);
-  console.log('weekWiseTimeline', weekWiseTimeline);
+  // console.log('yearWiseTimeline', yearWiseTimeline);
+  // console.log('weekWiseTimeline', weekWiseTimeline);
+  console.log('yearWiseLocation', yearWiseLocation);
+  console.log('weekWiseLocation', weekWiseLocation);
   console.log('monthWiseTimeline', monthWiseTimeline);
   console.log('missingActivityList', missingActivityList);
 
@@ -140,7 +142,9 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     const { start, end } = getCurrentWeekDates();
 
     GET_WEEK_WISE_TIMELINE({ start, end });;
+    GET_WEEK_WISE_LOCATION({ start, end });;
     GET_YEAR_WISE_TIMELINE({ year: selectedYear });
+    GET_YEAR_WISE_LOCATION({ year: selectedYear });
     GET_MONTH_WISE_TIMELINE({
       month: today.getMonth() + 1, // JS months 0-based
       year: today.getFullYear(),
@@ -153,8 +157,10 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
       const today = new Date();
       const { start, end } = getCurrentWeekDates();
 
-      GET_WEEK_WISE_TIMELINE({ start, end });;
+      GET_WEEK_WISE_TIMELINE({ start, end });
+      GET_WEEK_WISE_LOCATION({ start, end });
       GET_YEAR_WISE_TIMELINE({ year: selectedYear });
+      GET_YEAR_WISE_LOCATION({ year: selectedYear });
       GET_MONTH_WISE_TIMELINE({
         month: today.getMonth() + 1, // JS months 0-based
         year: today.getFullYear(),
@@ -580,6 +586,13 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     return { trips, cityChanges, countyChanges, latestMissing };
   };
 
+  const normalizeLocationData = (data = {}) => {
+    return Object.keys(data).map(date => ({
+      date,
+      locations: data[date] || [],
+    }));
+  };
+
   const getWeekCalendarData = (weekResult = {}) => {
     return Object.keys(weekResult)
       .map(date => {
@@ -719,13 +732,14 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   //   return normalized;
   // };
 
-  const normalizeYearData = (yearWiseTimeline = {}) => {
+  const normalizeYearData = (yearWiseTimeline = {}, yearWiseLocation = {}) => {
     const normalized = {};
 
     Object.entries(yearWiseTimeline).forEach(([date, items]) => {
       normalized[date] = {
         trips: [],
         activity: null,
+        locations: yearWiseLocation?.[date] || [],
       };
 
       if (!Array.isArray(items)) return;
@@ -738,7 +752,6 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
         ) {
           normalized[date].trips.push(item);
         }
-
         if (item.kind === "missing") {
           normalized[date].activity = item;
         }
@@ -806,8 +819,8 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
 
   const normalizedYearData = useMemo(
-    () => normalizeYearData(yearWiseTimeline),
-    [yearWiseTimeline]
+    () => normalizeYearData(yearWiseTimeline, yearWiseLocation),
+    [yearWiseTimeline, yearWiseLocation]
   );
   const weeklyData = useMemo(
     () => getYearWeeklyData(normalizedYearData),
@@ -940,6 +953,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                       if (selectedFilter === "TRIP") return trip.kind === "trip";
                       if (selectedFilter === "CITY_CHANGE") return trip.kind === "city_change";
                       if (selectedFilter === "COUNTY_CHANGE") return trip.kind === "county_change";
+                      if (selectedFilter === "LOCATIONS") return false;
                       return true; // ALL
                     })
                     .map(trip => (
@@ -970,6 +984,47 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                           </Text>
                         </View>
                       </TouchableOpacity>
+                    ))}
+
+                  {(selectedFilter === "LOCATIONS" ||
+                    selectedFilter === "ALL") &&
+                    day?.locations?.map(location => (
+                      <View
+                        key={location.id}
+                        style={{
+                          backgroundColor: "#F7F7F7",
+                          padding: 12,
+                          borderRadius: 10,
+                          marginTop: 8,
+                        }}
+                      >
+                        <Text style={{ fontWeight: "600", color: "#000" }}>
+                          {location.city}, {location.state}
+                        </Text>
+
+                        <Text
+                          style={{
+                            color: "#666",
+                            marginTop: 4,
+                          }}
+                        >
+                          {location.address}
+                        </Text>
+
+                        <Text
+                          style={{
+                            color: "#999",
+                            marginTop: 4,
+                            fontSize: 12,
+                          }}
+                        >
+                          {new Date(location.recordedAt)
+                            .toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                        </Text>
+                      </View>
                     ))}
 
                   {/* 🟠 ACTIVITY */}
@@ -1025,6 +1080,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
 
   const regulatoryCalendar = getWeekCalendarData(weekWiseTimeline);
+  const weekLocationData = normalizeLocationData(weekWiseLocation);
   const getTimelineData = (dataObj = {}) => {
     const formatDate = (date) =>
       // new Date(date).toLocaleDateString('en-IN', {
@@ -1157,49 +1213,125 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
               </Wrapper>
             );
           })} */}
-          {section.trips.map(trip => (
-            // <TouchableOpacity
-            //   key={trip.id}
-            //   style={styles.locationRow}
-            //   onPress={() => navigation.navigate("DayDetail", trip)}
-            // >
-            //   <View style={[styles.dot, {
-            //     backgroundColor:
-            //       trip.kind === "city_change" ? "#FF9500" : "#2F80ED",
-            //   },]} />
-            //   <Text style={styles.locationText}>
-            //     {trip.originCity} → {trip.destinationCity}
-            //     {trip.kind === "city_change" && " (City Trips)"}
-            //   </Text>
-            // </TouchableOpacity>
-            <TouchableOpacity
-              key={trip.id}
-              style={styles.tripRow}
-              onPress={() => navigation.navigate("DayDetail", trip)}
-            >
-              <View style={styles.tripLine}>
-                <View style={styles.blueDot} />
-                <Text style={styles.tripText}>
-                  {/* {trip.originCity}, {trip.originState} */}
-                  {trip.kind === "county_change"
-                    ? trip.originCounty
-                    : trip.originCity
-                  }, {trip.originState}
-                </Text>
-              </View>
+          {(selectedFilter === "LOCATIONS" ||
+            selectedFilter === "ALL") && (
 
-              <View style={styles.tripLine}>
-                <View style={styles.greenDot} />
-                <Text style={styles.tripText}>
-                  {/* {trip.destinationCity}, {trip.destinationState}*/}
-                  {trip.kind === "county_change"
-                    ? trip.destinationCounty
-                    : trip.destinationCity
-                  }, {trip.destinationState}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+
+
+                  <View style={{ flex: 1 }}>
+                    {(weekWiseLocation?.[section.date] || []).map(location => (
+                      <View
+                        key={location.id}
+                        style={{
+                          backgroundColor: "#F7F7F7",
+                          padding: 12,
+                          borderRadius: 10,
+                          marginBottom: 10,
+                        }}
+                      >
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            marginBottom: 6,
+                          }}
+                        >
+                          {/* <View
+                            style={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: 4,
+                              backgroundColor: "#A020F0",
+                              marginRight: 8,
+                            }}
+                          /> */}
+
+                          <Text
+                            style={{
+                              fontWeight: "600",
+                              fontSize: 14,
+                              color: "#000",
+                            }}
+                          >
+                            {location.city}, {location.state}
+                          </Text>
+                        </View>
+
+                        <Text
+                          style={{
+                            color: "#666",
+                            fontSize: 13,
+                            marginLeft: 0,
+                          }}
+                        >
+                          {location.address}
+                        </Text>
+
+                        <Text
+                          style={{
+                            color: "#999",
+                            fontSize: 12,
+                            marginTop: 4,
+                            marginLeft: 0,
+                          }}
+                        >
+                          {new Date(location.recordedAt)
+                            .toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+
+
+            )}
+          {selectedFilter !== "LOCATIONS" &&
+            section.trips.map(trip => (
+              // <TouchableOpacity
+              //   key={trip.id}
+              //   style={styles.locationRow}
+              //   onPress={() => navigation.navigate("DayDetail", trip)}
+              // >
+              //   <View style={[styles.dot, {
+              //     backgroundColor:
+              //       trip.kind === "city_change" ? "#FF9500" : "#2F80ED",
+              //   },]} />
+              //   <Text style={styles.locationText}>
+              //     {trip.originCity} → {trip.destinationCity}
+              //     {trip.kind === "city_change" && " (City Trips)"}
+              //   </Text>
+              // </TouchableOpacity>
+              <TouchableOpacity
+                key={trip.id}
+                style={styles.tripRow}
+                onPress={() => navigation.navigate("DayDetail", trip)}
+              >
+                <View style={styles.tripLine}>
+                  <View style={styles.blueDot} />
+                  <Text style={styles.tripText}>
+                    {/* {trip.originCity}, {trip.originState} */}
+                    {trip.kind === "county_change"
+                      ? trip.originCounty
+                      : trip.originCity
+                    }, {trip.originState}
+                  </Text>
+                </View>
+
+                <View style={styles.tripLine}>
+                  <View style={styles.greenDot} />
+                  <Text style={styles.tripText}>
+                    {/* {trip.destinationCity}, {trip.destinationState}*/}
+                    {trip.kind === "county_change"
+                      ? trip.destinationCounty
+                      : trip.destinationCity
+                    }, {trip.destinationState}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          }
           {section.missing && (
             <TouchableOpacity
               style={{
@@ -1986,6 +2118,8 @@ function mapStateToProps(state) {
     yearWiseTimeline: state.common.yearWiseTimeline,
     weekWiseTimeline: state.common.weekWiseTimeline,
     monthWiseTimeline: state.common.monthWiseTimeline,
+    yearWiseLocation: state.common.yearWiseLocation,
+    weekWiseLocation: state.common.weekWiseLocation,
     missingActivityList: state.common.missingActivityList,
   };
 }
@@ -1995,6 +2129,8 @@ const mapDispatchToProps = {
   GET_WEEK_WISE_TIMELINE,
   GET_MONTH_WISE_TIMELINE,
   GET_YEAR_WISE_TIMELINE,
+  GET_WEEK_WISE_LOCATION,
+  GET_YEAR_WISE_LOCATION,
   GET_MISSING_ACTIVITY_LIST,
 };
 

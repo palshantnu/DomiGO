@@ -14,6 +14,9 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   private var lastState: String = ""
   private var lastApiTime: TimeInterval = 0
   private let FOUR_HOURS_IN_SECONDS: TimeInterval = 4 * 60 * 60  // 4 hours in seconds
+  private var lastHoursApiTime: TimeInterval = 0
+  // private let HOURS_API_INTERVAL: TimeInterval = 4 * 60 * 60
+  private let HOURS_API_INTERVAL: TimeInterval = 30 * 60
   private var previousLat: Double?
   private var previousLng: Double?
   private var previousCity: String = ""
@@ -313,6 +316,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       self.sharedDefaults?.set(self.lastTripProcessedTime, forKey: self.LAST_TRIP_TIME_KEY)
       self.sharedDefaults?.synchronize()
       self.defaults.set(self.lastTripKey, forKey: self.LAST_TRIP_KEY)
+      UserDefaults.standard.set(lastHoursApiTime,forKey: "lastHoursApiTime")
     }
     
   }
@@ -357,7 +361,9 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     print("   Previous City: \(previousCity)")
     print("   Previous State: \(previousStateName)")
     lastTripKey = defaults.string(forKey: LAST_TRIP_KEY) ?? ""
-  }
+    lastHoursApiTime =UserDefaults.standard.double(forKey: "lastHoursApiTime")
+    print("""🕓 Loaded Hours API Time:\(lastHoursApiTime)""")
+    }
 
   override static func requiresMainQueueSetup() -> Bool {
     return true
@@ -704,8 +710,19 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
 
   // MARK: - Location Processing Logic
 
-  private func processLocation(_ location: CLLocation) {
-    addToPendingLocations(location)
+  // private func processLocation(_ location: CLLocation) {
+  //   addToPendingLocations(location)
+  // }
+  private func processLocation(
+    _ location: CLLocation
+  ) {
+
+      addToPendingLocations(location)
+
+      // Separate Hours API flow
+      checkAndSendHoursAPI(
+          location: location
+      )
   }
 
   private func reverseGeocode(_ location: CLLocation) {
@@ -758,6 +775,179 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         isBackground: self.backgroundProcessing
       )
     }
+  }
+
+  private func checkAndSendHoursAPI(
+      location: CLLocation
+  ) {
+
+      let now = Date().timeIntervalSince1970
+
+      let timeDiff =
+          now - lastHoursApiTime
+
+      if timeDiff < HOURS_API_INTERVAL {
+
+          print("""
+          ⏳ Hours API skipped
+          diff: \(Int(timeDiff)) sec
+          """)
+
+          return
+      }
+
+      print("""
+      🕓 Hours API triggered
+      diff: \(Int(timeDiff)) sec
+      """)
+
+      lastHoursApiTime = now
+
+      saveState()
+
+      reverseGeocodeForHoursAPI(
+          location: location
+      )
+  }
+
+  private func reverseGeocodeForHoursAPI(
+    location: CLLocation
+  ) {
+
+      geocoder.reverseGeocodeLocation(
+          location
+      ) { [weak self] placemarks, error in
+
+          guard let self = self else {
+              return
+          }
+
+          if let error = error {
+
+              print("""
+              ❌ Hours reverse geocode failed:
+              \(error.localizedDescription)
+              """)
+
+              return
+          }
+
+          guard let placemark =
+              placemarks?.first else {
+
+              print("❌ No placemark found")
+              return
+          }
+
+          let city =
+              placemark.locality ?? ""
+
+          let state =
+              placemark.administrativeArea ?? ""
+
+          let address =
+              [
+                  placemark.name,
+                  placemark.locality,
+                  placemark.administrativeArea,
+                  placemark.country
+              ]
+              .compactMap { $0 }
+              .joined(separator: ", ")
+
+          self.sendHoursLocationAPI(
+              latitude: location.coordinate.latitude,
+              longitude: location.coordinate.longitude,
+              city: city,
+              state: state,
+              address: address
+          )
+      }
+  }
+  private func sendHoursLocationAPI(
+      latitude: Double,
+      longitude: Double,
+      city: String,
+      state: String,
+      address: String
+  ) {
+
+      guard let token = domigoToken else {
+
+          print("❌ No token for Hours API")
+          return
+      }
+
+      guard let url = URL(
+          string:
+          "https://stage.mydomigo.com/api/locations/hours"
+      ) else {
+          return
+      }
+
+      let body: [String: Any] = [
+
+          "latitude": latitude,
+          "longitude": longitude,
+          "city": city,
+          "state": state,
+          "address": address
+      ]
+
+      var request = URLRequest(url: url)
+
+      request.httpMethod = "POST"
+
+      request.setValue(
+          "application/json",
+          forHTTPHeaderField: "Content-Type"
+      )
+
+      request.setValue(
+          "Bearer \(token)",
+          forHTTPHeaderField: "Authorization"
+      )
+
+      request.httpBody =
+          try? JSONSerialization.data(
+              withJSONObject: body
+          )
+
+      URLSession.shared.dataTask(
+          with: request
+      ) { data, response, error in
+
+          if let error = error {
+
+              print("""
+              ❌ Hours API failed:
+              \(error.localizedDescription)
+              """)
+
+              return
+          }
+
+          if let httpResponse =
+              response as? HTTPURLResponse {
+
+              print("""
+              🕓 Hours API status:
+              \(httpResponse.statusCode)
+              """)
+
+              if httpResponse.statusCode == 200 {
+
+                  print("""
+                  ✅ Hours API success
+
+                  City: \(city)
+                  State: \(state)
+                  Address: \(address)
+                  """)
+              }
+          }
+
+      }.resume()
   }
 
   private func formatAddress(from placemark: CLPlacemark) -> String {

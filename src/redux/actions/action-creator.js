@@ -82,7 +82,11 @@ import {
   ADD_USER_LOCATIONS_FAILURE,
   UPDATE_USER_LOCATIONS_REQUEST,
   UPDATE_USER_LOCATIONS_SUCCESS,
-  UPDATE_USER_LOCATIONS_FAILURE
+  UPDATE_USER_LOCATIONS_FAILURE,
+  GET_WEEK_WISE_LOCATION_SUCCESS,
+  YEAR_WISE_LOCATION_FAILURE,
+  GET_YEAR_WISE_LOCATION_SUCCESS,
+  WEEK_WISE_LOCATION_FAILURE
 
 } from './action-types';
 import axiosinstance from '../../axios/axiosinstance';
@@ -1024,6 +1028,74 @@ export const GET_MONTH_WISE_TIMELINE = ({ month, year }) => {
     }
   };
 };
+
+
+export function GET_YEAR_WISE_LOCATION({ year }) {
+  return async (dispatch) => {
+    try {
+      // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
+      // const response = await axiosinstance.get(`dashboard/v1/timeline/year?year=${year}`)
+      const response = await axiosinstance.get(`locations/location/year?year=${year}`)
+      const responseJson = response.data;
+      // console.log('responseYEARJson-=>', responseJson);
+
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_YEAR_WISE_LOCATION_SUCCESS,
+          payload: responseJson.result,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: YEAR_WISE_LOCATION_FAILURE,
+        payload: 'YEAR_WISE_LOCATION_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: YEAR_WISE_LOCATION_FAILURE,
+        payload: 'YEAR_WISE_LOCATION_FAILURE',
+      })
+      console.log('catch error API YEAR_WISE_LOCATION_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+
+export function GET_WEEK_WISE_LOCATION({ start, end }) {
+
+
+  return async (dispatch) => {
+    try {
+      // const response = await axiosinstance.get(`https://stage.mydomigo.com/api/dashboard/calendar/week?end=${end}&start=${start}`)
+      const response = await axiosinstance.get(`https://stage.mydomigo.com/api/locations/location/week?end=${end}&start=${start}`)
+      // const response = await axiosinstance.get(`https://stage.mydomigo.com/api/dashboard/calendar/week?end=2025-12-28&start=2025-12-22`)
+      // const response = await axiosinstance.get(`https://stage.mydomigo.com/api/dashboard/calendar/week?end=2025-12-07&start=2025-12-01`)
+      const responseJson = response.data;
+      // console.log('responseWEEKJson-=>', responseJson);
+
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_WEEK_WISE_LOCATION_SUCCESS,
+          payload: responseJson.result,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: WEEK_WISE_LOCATION_FAILURE,
+        payload: 'WEEK_WISE_LOCATION_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: WEEK_WISE_LOCATION_FAILURE,
+        payload: 'WEEK_WISE_LOCATION_FAILURE',
+      })
+      console.log('catch error API WEEK_WISE_LOCATION_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
 
 export function GET_STATE_WISE_TRIPS({ state }) {
   return async (dispatch) => {
