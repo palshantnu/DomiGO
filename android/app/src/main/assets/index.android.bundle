@@ -104449,7 +104449,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
             _reactNative.Alert.alert('City Change Detected', `Moved from ${data.fromCounty} to ${data.toCounty}\nState: ${data.state}`);
           }
         }));
-        this.subscriptions.push(locationEventEmitter.addListener('onRealCityChangeDetected', function (data) {
+        this.subscriptions.push(locationEventEmitter.addListener('onCityChangeDetected', function (data) {
           console.log("🏙️🏙️🏙️ CITY CHANGE EVENT DETECTED! 🏙️🏙️🏙️");
           console.log("📊 City Change Data:", JSON.stringify(data, null, 2));
           console.log(`📍 From: ${data.fromCity}`);
@@ -110811,8 +110811,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.UPDATE_STATE_THRESHOLD_SUCCESS = exports.UPDATE_STATE_THRESHOLD_REQUEST = exports.UPDATE_STATE_THRESHOLD_FAILURE = exports.UPDATE_PERSONAL_DATA = exports.UPDATE_MISSINGDAY_SUCCESS = exports.UPDATE_MISSINGDAY_REQUEST = exports.UPDATE_MISSINGDAY_FAILURE = exports.TYPE_OF_DAY_LIST_REQUEST = exports.TYPE_OF_DAY_LIST_FAILURE = exports.TRIP_TYPE_LIST_FAILURE = exports.TRIP_SUMMARY_DETAILS_FAILURE = exports.TRIP_MODE_LIST_SUCCESS = exports.TRIP_MODE_LIST_REQUEST = exports.TRIP_MODE_LIST_FAILURE = exports.TRIP_LIST_SUCCESS = exports.TRIP_LIST_REQUEST = exports.TRIP_LIST_FAILURE = exports.TRIP_DETAILS_FAILURE = exports.SUPPORT_CONTACT_REQUEST = exports.SUPPORT_CONTACT_FAILURE = exports.STATE_WISE_TRIPS_FAILURE = exports.STATE_WISE_RESIDENCY_FAILURE = exports.STATE_WISE_METRICS_FAILURE = exports.STATES_LIST_REQUEST = exports.STATES_LIST_FAILURE = exports.SIGN_UP_SUCCESS = exports.SIGN_UP_REQUEST = exports.SIGN_UP_FAILURE = exports.SIGN_IN_SUCCESS = exports.SIGN_IN_REQUEST = exports.SIGN_IN_FAILURE = exports.SET_TRIAL_START = exports.SET_SUBSCRIPTION_PRODUCTS = exports.SET_SUBSCRIPTION_PLAN = exports.SET_SUBSCRIPTION_LOADING = exports.SET_SUBSCRIPTION_ERROR = exports.SET_APP_LANGUAGE = exports.RESIDENCY_DOC_LIST_SUCCESS = exports.RESIDENCY_DOC_LIST_REQUEST = exports.RESIDENCY_DOC_LIST_FAILURE = exports.RESIDENCY_DOC_DETAILS_FAILURE = exports.REPORTS_REQUEST = exports.REPORTS_FAILURE = exports.PRIVACY_POLICY_REQUEST = exports.PRIVACY_POLICY_FAILURE = exports.NOTIFICATION_FAILURE = exports.MONTH_WISE_TIMELINE_FAILURE = exports.MISSING_ACTIVITY_LIST_REQUEST = exports.MISSING_ACTIVITY_LIST_FAILURE = exports.LOGOUT_SUCCESS = exports.LOGOUT_REQUEST = exports.LOGOUT_FAILURE = exports.GET_YEAR_WISE_TIMELINE_SUCCESS = exports.GET_WEEK_WISE_TIMELINE_SUCCESS = exports.GET_USER_LOCATIONS_SUCCESS = exports.GET_TYPE_OF_DAY_LIST_SUCCESS = exports.GET_TRIP_TYPE_LIST_SUCCESS = exports.GET_TRIP_SUMMARY_DETAILS_SUCCESS = exports.GET_TRIP_MODE_LIST_SUCCESS = exports.GET_TRIP_LIST_SUCCESS = exports.GET_TRIP_DETAILS_SUCCESS = exports.GET_SUPPORT_CONTACT_SUCCESS = exports.GET_STATE_WISE_TRIPS_SUCCESS = exports.GET_STATE_WISE_RESIDENCY_SUCCESS = exports.GET_STATE_WISE_METRICS_SUCCESS = exports.GET_STATES_LIST_SUCCESS = exports.GET_RESIDENCY_DOC_LIST_SUCCESS = exports.GET_RESIDENCY_DOC_DETAILS_SUCCESS = exports.GET_REPORTS_SUCCESS = exports.GET_PRIVACY_POLICY_SUCCESS = exports.GET_NOTIFICATION_SUCCESS = exports.GET_MONTH_WISE_TIMELINE_SUCCESS = exports.GET_MISSING_ACTIVITY_LIST_SUCCESS = exports.GET_FINAL_YEAR_PROGRESS_SUCCESS = exports.GET_FAQS_SUCCESS = exports.GET_DOCUMENT_CATEGORY_LIST_SUCCESS = exports.GET_COMPLIANCE_SCORE_SUCCESS = exports.GET_ABOUT_APP_SUCCESS = exports.FINAL_YEAR_PROGRESS_FAILURE = exports.FAQS_REQUEST = exports.FAQS_FAILURE = exports.DOCUMENT_CATEGORY_LIST_SUCCESS = exports.DOCUMENT_CATEGORY_LIST_REQUEST = exports.DOCUMENT_CATEGORY_LIST_FAILURE = exports.COMPLIANCE_SCORE_FAILURE = exports.CLEAR_SUBSCRIPTION = exports.ADD_USER_LOCATIONS_SUCCESS = exports.ADD_USER_LOCATIONS_REQUEST = exports.ADD_USER_LOCATIONS_FAILURE = exports.ADD_TRIP_SUCCESS = exports.ADD_TRIP_REQUEST = exports.ADD_TRIP_FAILURE = exports.ADD_MISSINGDAY_SUCCESS = exports.ADD_MISSINGDAY_REQUEST = exports.ADD_MISSINGDAY_FAILURE = exports.ADD_DOCUMENT_RECORD_SUCCESS = exports.ADD_DOCUMENT_RECORD_REQUEST = exports.ADD_DOCUMENT_RECORD_FAILURE = exports.ABOUT_APP_REQUEST = exports.ABOUT_APP_FAILURE = void 0;
-  exports.YEAR_WISE_TIMELINE_FAILURE = exports.WEEK_WISE_TIMELINE_FAILURE = exports.USER_LOCATIONS_REQUEST = exports.USER_LOCATIONS_FAILURE = exports.UPDATE_USER_LOCATIONS_SUCCESS = exports.UPDATE_USER_LOCATIONS_REQUEST = exports.UPDATE_USER_LOCATIONS_FAILURE = exports.UPDATE_TRIP_SUCCESS = exports.UPDATE_TRIP_REQUEST = exports.UPDATE_TRIP_FAILURE = void 0;
+  exports.UPDATE_STATE_THRESHOLD_FAILURE = exports.UPDATE_PERSONAL_DATA = exports.UPDATE_MISSINGDAY_SUCCESS = exports.UPDATE_MISSINGDAY_REQUEST = exports.UPDATE_MISSINGDAY_FAILURE = exports.TYPE_OF_DAY_LIST_REQUEST = exports.TYPE_OF_DAY_LIST_FAILURE = exports.TRIP_TYPE_LIST_FAILURE = exports.TRIP_SUMMARY_DETAILS_FAILURE = exports.TRIP_MODE_LIST_SUCCESS = exports.TRIP_MODE_LIST_REQUEST = exports.TRIP_MODE_LIST_FAILURE = exports.TRIP_LIST_SUCCESS = exports.TRIP_LIST_REQUEST = exports.TRIP_LIST_FAILURE = exports.TRIP_DETAILS_FAILURE = exports.SUPPORT_CONTACT_REQUEST = exports.SUPPORT_CONTACT_FAILURE = exports.STATE_WISE_TRIPS_FAILURE = exports.STATE_WISE_RESIDENCY_FAILURE = exports.STATE_WISE_METRICS_FAILURE = exports.STATES_LIST_REQUEST = exports.STATES_LIST_FAILURE = exports.SIGN_UP_SUCCESS = exports.SIGN_UP_REQUEST = exports.SIGN_UP_FAILURE = exports.SIGN_IN_SUCCESS = exports.SIGN_IN_REQUEST = exports.SIGN_IN_FAILURE = exports.SET_TRIAL_START = exports.SET_SUBSCRIPTION_PRODUCTS = exports.SET_SUBSCRIPTION_PLAN = exports.SET_SUBSCRIPTION_LOADING = exports.SET_SUBSCRIPTION_ERROR = exports.SET_APP_LANGUAGE = exports.RESIDENCY_DOC_LIST_SUCCESS = exports.RESIDENCY_DOC_LIST_REQUEST = exports.RESIDENCY_DOC_LIST_FAILURE = exports.RESIDENCY_DOC_DETAILS_FAILURE = exports.REPORTS_REQUEST = exports.REPORTS_FAILURE = exports.PRIVACY_POLICY_REQUEST = exports.PRIVACY_POLICY_FAILURE = exports.NOTIFICATION_FAILURE = exports.MONTH_WISE_TIMELINE_FAILURE = exports.MISSING_ACTIVITY_LIST_REQUEST = exports.MISSING_ACTIVITY_LIST_FAILURE = exports.LOGOUT_SUCCESS = exports.LOGOUT_REQUEST = exports.LOGOUT_FAILURE = exports.GET_YEAR_WISE_TIMELINE_SUCCESS = exports.GET_YEAR_WISE_LOCATION_SUCCESS = exports.GET_WEEK_WISE_TIMELINE_SUCCESS = exports.GET_WEEK_WISE_LOCATION_SUCCESS = exports.GET_USER_LOCATIONS_SUCCESS = exports.GET_TYPE_OF_DAY_LIST_SUCCESS = exports.GET_TRIP_TYPE_LIST_SUCCESS = exports.GET_TRIP_SUMMARY_DETAILS_SUCCESS = exports.GET_TRIP_MODE_LIST_SUCCESS = exports.GET_TRIP_LIST_SUCCESS = exports.GET_TRIP_DETAILS_SUCCESS = exports.GET_SUPPORT_CONTACT_SUCCESS = exports.GET_STATE_WISE_TRIPS_SUCCESS = exports.GET_STATE_WISE_RESIDENCY_SUCCESS = exports.GET_STATE_WISE_METRICS_SUCCESS = exports.GET_STATES_LIST_SUCCESS = exports.GET_RESIDENCY_DOC_LIST_SUCCESS = exports.GET_RESIDENCY_DOC_DETAILS_SUCCESS = exports.GET_REPORTS_SUCCESS = exports.GET_PRIVACY_POLICY_SUCCESS = exports.GET_NOTIFICATION_SUCCESS = exports.GET_MONTH_WISE_TIMELINE_SUCCESS = exports.GET_MISSING_ACTIVITY_LIST_SUCCESS = exports.GET_FINAL_YEAR_PROGRESS_SUCCESS = exports.GET_FAQS_SUCCESS = exports.GET_DOCUMENT_CATEGORY_LIST_SUCCESS = exports.GET_COMPLIANCE_SCORE_SUCCESS = exports.GET_ABOUT_APP_SUCCESS = exports.FINAL_YEAR_PROGRESS_FAILURE = exports.FAQS_REQUEST = exports.FAQS_FAILURE = exports.DOCUMENT_CATEGORY_LIST_SUCCESS = exports.DOCUMENT_CATEGORY_LIST_REQUEST = exports.DOCUMENT_CATEGORY_LIST_FAILURE = exports.COMPLIANCE_SCORE_FAILURE = exports.CLEAR_SUBSCRIPTION = exports.ADD_USER_LOCATIONS_SUCCESS = exports.ADD_USER_LOCATIONS_REQUEST = exports.ADD_USER_LOCATIONS_FAILURE = exports.ADD_TRIP_SUCCESS = exports.ADD_TRIP_REQUEST = exports.ADD_TRIP_FAILURE = exports.ADD_MISSINGDAY_SUCCESS = exports.ADD_MISSINGDAY_REQUEST = exports.ADD_MISSINGDAY_FAILURE = exports.ADD_DOCUMENT_RECORD_SUCCESS = exports.ADD_DOCUMENT_RECORD_REQUEST = exports.ADD_DOCUMENT_RECORD_FAILURE = exports.ABOUT_APP_REQUEST = exports.ABOUT_APP_FAILURE = void 0;
+  exports.YEAR_WISE_TIMELINE_FAILURE = exports.YEAR_WISE_LOCATION_FAILURE = exports.WEEK_WISE_TIMELINE_FAILURE = exports.WEEK_WISE_LOCATION_FAILURE = exports.USER_LOCATIONS_REQUEST = exports.USER_LOCATIONS_FAILURE = exports.UPDATE_USER_LOCATIONS_SUCCESS = exports.UPDATE_USER_LOCATIONS_REQUEST = exports.UPDATE_USER_LOCATIONS_FAILURE = exports.UPDATE_TRIP_SUCCESS = exports.UPDATE_TRIP_REQUEST = exports.UPDATE_TRIP_FAILURE = exports.UPDATE_STATE_THRESHOLD_SUCCESS = exports.UPDATE_STATE_THRESHOLD_REQUEST = void 0;
   var SIGN_IN_REQUEST = exports.SIGN_IN_REQUEST = 'SIGN_IN_REQUEST';
   var SIGN_IN_SUCCESS = exports.SIGN_IN_SUCCESS = 'SIGN_IN_SUCCESS';
   var SIGN_IN_FAILURE = exports.SIGN_IN_FAILURE = 'SIGN_IN_FAILURE';
@@ -110872,6 +110872,10 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   var GET_WEEK_WISE_TIMELINE_SUCCESS = exports.GET_WEEK_WISE_TIMELINE_SUCCESS = 'GET_WEEK_WISE_TIMELINE_SUCCESS';
   var MONTH_WISE_TIMELINE_FAILURE = exports.MONTH_WISE_TIMELINE_FAILURE = 'MONTH_WISE_TIMELINE_FAILURE';
   var GET_MONTH_WISE_TIMELINE_SUCCESS = exports.GET_MONTH_WISE_TIMELINE_SUCCESS = 'GET_MONTH_WISE_TIMELINE_SUCCESS';
+  var YEAR_WISE_LOCATION_FAILURE = exports.YEAR_WISE_LOCATION_FAILURE = 'YEAR_WISE_LOCATION_FAILURE';
+  var GET_YEAR_WISE_LOCATION_SUCCESS = exports.GET_YEAR_WISE_LOCATION_SUCCESS = 'GET_YEAR_WISE_LOCATION_SUCCESS';
+  var WEEK_WISE_LOCATION_FAILURE = exports.WEEK_WISE_LOCATION_FAILURE = 'WEEK_WISE_LOCATION_FAILURE';
+  var GET_WEEK_WISE_LOCATION_SUCCESS = exports.GET_WEEK_WISE_LOCATION_SUCCESS = 'GET_WEEK_WISE_LOCATION_SUCCESS';
   var STATE_WISE_TRIPS_FAILURE = exports.STATE_WISE_TRIPS_FAILURE = 'STATE_WISE_TRIPS_FAILURE';
   var GET_STATE_WISE_TRIPS_SUCCESS = exports.GET_STATE_WISE_TRIPS_SUCCESS = 'GET_STATE_WISE_TRIPS_SUCCESS';
   var UPDATE_STATE_THRESHOLD_REQUEST = exports.UPDATE_STATE_THRESHOLD_REQUEST = 'UPDATE_STATE_THRESHOLD_REQUEST';
@@ -110951,6 +110955,9 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     weekWiseTimeline: [],
     monthWiseTimeline: [],
     yearWiseTimeline: [],
+    weekWiseLocation: [],
+    monthWiseLocation: [],
+    yearWiseLocation: [],
     stateWiseTrips: [],
     notifications: [],
     typeOfDayList: [],
@@ -111032,6 +111039,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       case _$$_REQUIRE(_dependencyMap[0], "../../actions/action-types").GET_MONTH_WISE_TIMELINE_SUCCESS:
         return Object.assign({}, state, {
           monthWiseTimeline: payload || null
+        });
+      case _$$_REQUIRE(_dependencyMap[0], "../../actions/action-types").GET_YEAR_WISE_LOCATION_SUCCESS:
+        return Object.assign({}, state, {
+          yearWiseLocation: payload || null
+        });
+      case _$$_REQUIRE(_dependencyMap[0], "../../actions/action-types").GET_WEEK_WISE_LOCATION_SUCCESS:
+        return Object.assign({}, state, {
+          weekWiseLocation: payload || null
         });
       case _$$_REQUIRE(_dependencyMap[0], "../../actions/action-types").GET_STATE_WISE_TRIPS_SUCCESS:
         return Object.assign({}, state, {
@@ -131265,7 +131280,9 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   exports.GET_TRIP_TYPE_LIST = GET_TRIP_TYPE_LIST;
   exports.GET_TYPE_OF_DAY_LIST = GET_TYPE_OF_DAY_LIST;
   exports.GET_USER_LOCATIONS = GET_USER_LOCATIONS;
+  exports.GET_WEEK_WISE_LOCATION = GET_WEEK_WISE_LOCATION;
   exports.GET_WEEK_WISE_TIMELINE = GET_WEEK_WISE_TIMELINE;
+  exports.GET_YEAR_WISE_LOCATION = GET_YEAR_WISE_LOCATION;
   exports.GET_YEAR_WISE_TIMELINE = GET_YEAR_WISE_TIMELINE;
   exports.UPDATEUSERLOCATIONS = exports.UPDATETRIP = exports.UPDATEMISSINGDAY = exports.SIGNUP = exports.SIGNIN = exports.SET_PLAN_FROM_PURCHASE = exports.RESTORE_SUBSCRIPTION = exports.PURCHASE_SUBSCRIPTION = exports.LOGOUT = exports.INIT_TRIAL = void 0;
   exports.UPDATE_RESIDENCY_RECORD = UPDATE_RESIDENCY_RECORD;
@@ -132298,10 +132315,86 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       };
     }();
   };
-  function GET_STATE_WISE_TRIPS(_ref24) {
-    var state = _ref24.state;
+  function GET_YEAR_WISE_LOCATION(_ref24) {
+    var year = _ref24.year;
     return /*#__PURE__*/function () {
       var _ref25 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+        try {
+          // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
+          // const response = await axiosinstance.get(`dashboard/v1/timeline/year?year=${year}`)
+          var response = yield _axiosinstance.default.get(`locations/location/year?year=${year}`);
+          var responseJson = response.data;
+          // console.log('responseYEARJson-=>', responseJson);
+
+          if (responseJson.message == 'Success') {
+            dispatch({
+              type: _$$_REQUIRE(_dependencyMap[6], "./action-types").GET_YEAR_WISE_LOCATION_SUCCESS,
+              payload: responseJson.result
+            });
+            return Promise.resolve(responseJson);
+          }
+          dispatch({
+            type: _$$_REQUIRE(_dependencyMap[6], "./action-types").YEAR_WISE_LOCATION_FAILURE,
+            payload: 'YEAR_WISE_LOCATION_FAILURE'
+          });
+          return Promise.reject(responseJson);
+        } catch (e) {
+          dispatch({
+            type: _$$_REQUIRE(_dependencyMap[6], "./action-types").YEAR_WISE_LOCATION_FAILURE,
+            payload: 'YEAR_WISE_LOCATION_FAILURE'
+          });
+          console.log('catch error API YEAR_WISE_LOCATION_FAILURE', e);
+          return Promise.reject(CommonError);
+        }
+      });
+      return function (_x21) {
+        return _ref25.apply(this, arguments);
+      };
+    }();
+  }
+  function GET_WEEK_WISE_LOCATION(_ref26) {
+    var start = _ref26.start,
+      end = _ref26.end;
+    return /*#__PURE__*/function () {
+      var _ref27 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+        try {
+          // const response = await axiosinstance.get(`https://stage.mydomigo.com/api/dashboard/calendar/week?end=${end}&start=${start}`)
+          var response = yield _axiosinstance.default.get(`https://stage.mydomigo.com/api/locations/location/week?end=${end}&start=${start}`);
+          // const response = await axiosinstance.get(`https://stage.mydomigo.com/api/dashboard/calendar/week?end=2025-12-28&start=2025-12-22`)
+          // const response = await axiosinstance.get(`https://stage.mydomigo.com/api/dashboard/calendar/week?end=2025-12-07&start=2025-12-01`)
+          var responseJson = response.data;
+          // console.log('responseWEEKJson-=>', responseJson);
+
+          if (responseJson.message == 'Success') {
+            dispatch({
+              type: _$$_REQUIRE(_dependencyMap[6], "./action-types").GET_WEEK_WISE_LOCATION_SUCCESS,
+              payload: responseJson.result
+            });
+            return Promise.resolve(responseJson);
+          }
+          dispatch({
+            type: _$$_REQUIRE(_dependencyMap[6], "./action-types").WEEK_WISE_LOCATION_FAILURE,
+            payload: 'WEEK_WISE_LOCATION_FAILURE'
+          });
+          return Promise.reject(responseJson);
+        } catch (e) {
+          dispatch({
+            type: _$$_REQUIRE(_dependencyMap[6], "./action-types").WEEK_WISE_LOCATION_FAILURE,
+            payload: 'WEEK_WISE_LOCATION_FAILURE'
+          });
+          console.log('catch error API WEEK_WISE_LOCATION_FAILURE', e);
+          return Promise.reject(CommonError);
+        }
+      });
+      return function (_x22) {
+        return _ref27.apply(this, arguments);
+      };
+    }();
+  }
+  function GET_STATE_WISE_TRIPS(_ref28) {
+    var state = _ref28.state;
+    return /*#__PURE__*/function () {
+      var _ref29 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           // const response = await axiosinstance.get(`trips/state/${state}`)
           var response = yield _axiosinstance.default.get(`trip-days/state/${state}`);
@@ -132329,8 +132422,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x21) {
-        return _ref25.apply(this, arguments);
+      return function (_x23) {
+        return _ref29.apply(this, arguments);
       };
     }();
   }
@@ -132338,7 +132431,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     // console.log('formData', formData);
 
     return /*#__PURE__*/function () {
-      var _ref26 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref30 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         dispatch({
           type: _$$_REQUIRE(_dependencyMap[6], "./action-types").UPDATE_STATE_THRESHOLD_REQUEST,
           payload: 'UPDATE_STATE_THRESHOLD_REQUEST'
@@ -132374,14 +132467,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           };
         }
       });
-      return function (_x22) {
-        return _ref26.apply(this, arguments);
+      return function (_x24) {
+        return _ref30.apply(this, arguments);
       };
     }();
   };
   function GET_TYPE_OF_DAY_LIST() {
     return /*#__PURE__*/function () {
-      var _ref27 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref31 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           var response = yield _axiosinstance.default.get('type-of-day');
           var responseJson = response.data;
@@ -132408,14 +132501,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x23) {
-        return _ref27.apply(this, arguments);
+      return function (_x25) {
+        return _ref31.apply(this, arguments);
       };
     }();
   }
   function GET_STATES_LIST() {
     return /*#__PURE__*/function () {
-      var _ref28 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref32 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           var response = yield _axiosinstance.default.get('states');
           var responseJson = response.data;
@@ -132442,14 +132535,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x24) {
-        return _ref28.apply(this, arguments);
+      return function (_x26) {
+        return _ref32.apply(this, arguments);
       };
     }();
   }
   var ADDMISSINGDAY = exports.ADDMISSINGDAY = function ADDMISSINGDAY(formData) {
     return /*#__PURE__*/function () {
-      var _ref29 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref33 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         dispatch({
           type: _$$_REQUIRE(_dependencyMap[6], "./action-types").ADD_MISSINGDAY_REQUEST,
           payload: 'ADD_MISSINGDAY_REQUEST'
@@ -132484,14 +132577,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           };
         }
       });
-      return function (_x25) {
-        return _ref29.apply(this, arguments);
+      return function (_x27) {
+        return _ref33.apply(this, arguments);
       };
     }();
   };
   var UPDATEMISSINGDAY = exports.UPDATEMISSINGDAY = function UPDATEMISSINGDAY(formData) {
     return /*#__PURE__*/function () {
-      var _ref30 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref34 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         dispatch({
           type: _$$_REQUIRE(_dependencyMap[6], "./action-types").UPDATE_MISSINGDAY_REQUEST,
           payload: 'UPDATE_MISSINGDAY_REQUEST'
@@ -132527,14 +132620,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           };
         }
       });
-      return function (_x26) {
-        return _ref30.apply(this, arguments);
+      return function (_x28) {
+        return _ref34.apply(this, arguments);
       };
     }();
   };
   function GET_MISSING_ACTIVITY_LIST() {
     return /*#__PURE__*/function () {
-      var _ref31 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref35 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           var response = yield _axiosinstance.default.get('activity');
           var responseJson = response.data;
@@ -132561,17 +132654,17 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x27) {
-        return _ref31.apply(this, arguments);
+      return function (_x29) {
+        return _ref35.apply(this, arguments);
       };
     }();
   }
-  function GET_REPORTS(_ref32) {
-    var type = _ref32.type,
-      date = _ref32.date;
+  function GET_REPORTS(_ref36) {
+    var type = _ref36.type,
+      date = _ref36.date;
     console.log('type', 'date', type, date);
     return /*#__PURE__*/function () {
-      var _ref33 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref37 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
           // const response = await axiosinstance.get(`dashboard/reports?type=${type}&date=2026-02-01`)
@@ -132599,14 +132692,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x28) {
-        return _ref33.apply(this, arguments);
+      return function (_x30) {
+        return _ref37.apply(this, arguments);
       };
     }();
   }
   function GET_FAQS() {
     return /*#__PURE__*/function () {
-      var _ref34 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref38 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
           var response = yield _axiosinstance.default.get(`faqs`);
@@ -132633,14 +132726,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x29) {
-        return _ref34.apply(this, arguments);
+      return function (_x31) {
+        return _ref38.apply(this, arguments);
       };
     }();
   }
   function GET_SUPPORT_CONTACT() {
     return /*#__PURE__*/function () {
-      var _ref35 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref39 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
           var response = yield _axiosinstance.default.get(`support-contact`);
@@ -132667,14 +132760,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x30) {
-        return _ref35.apply(this, arguments);
+      return function (_x32) {
+        return _ref39.apply(this, arguments);
       };
     }();
   }
   function GET_ABOUT_APP() {
     return /*#__PURE__*/function () {
-      var _ref36 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref40 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
           var response = yield _axiosinstance.default.get(`app-about`);
@@ -132701,14 +132794,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x31) {
-        return _ref36.apply(this, arguments);
+      return function (_x33) {
+        return _ref40.apply(this, arguments);
       };
     }();
   }
   function GET_PRIVACY_POLICY() {
     return /*#__PURE__*/function () {
-      var _ref37 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref41 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
           var response = yield _axiosinstance.default.get(`privacy-policy`);
@@ -132735,14 +132828,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x32) {
-        return _ref37.apply(this, arguments);
+      return function (_x34) {
+        return _ref41.apply(this, arguments);
       };
     }();
   }
   function GET_USER_LOCATIONS() {
     return /*#__PURE__*/function () {
-      var _ref38 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref42 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
           var response = yield _axiosinstance.default.get(`user-locations`);
@@ -132769,14 +132862,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x33) {
-        return _ref38.apply(this, arguments);
+      return function (_x35) {
+        return _ref42.apply(this, arguments);
       };
     }();
   }
   var ADDUSERLOCATIONS = exports.ADDUSERLOCATIONS = function ADDUSERLOCATIONS(formData) {
     return /*#__PURE__*/function () {
-      var _ref39 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref43 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         dispatch({
           type: _$$_REQUIRE(_dependencyMap[6], "./action-types").ADD_USER_LOCATIONS_REQUEST,
           payload: 'ADD_USER_LOCATIONS_REQUEST'
@@ -132811,8 +132904,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           };
         }
       });
-      return function (_x34) {
-        return _ref39.apply(this, arguments);
+      return function (_x36) {
+        return _ref43.apply(this, arguments);
       };
     }();
   };
@@ -132820,7 +132913,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     console.log('formData', formData);
     console.log("ID going:", id);
     return /*#__PURE__*/function () {
-      var _ref40 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref44 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         dispatch({
           type: _$$_REQUIRE(_dependencyMap[6], "./action-types").UPDATE_USER_LOCATIONS_REQUEST,
           payload: 'UPDATE_USER_LOCATIONS_REQUEST'
@@ -132868,8 +132961,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           };
         }
       });
-      return function (_x35) {
-        return _ref40.apply(this, arguments);
+      return function (_x37) {
+        return _ref44.apply(this, arguments);
       };
     }();
   };
@@ -132893,7 +132986,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
 
   var FETCH_SUBSCRIPTION_PRODUCTS = exports.FETCH_SUBSCRIPTION_PRODUCTS = function FETCH_SUBSCRIPTION_PRODUCTS() {
     return /*#__PURE__*/function () {
-      var _ref41 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref45 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         dispatch({
           type: _$$_REQUIRE(_dependencyMap[6], "./action-types").SET_SUBSCRIPTION_LOADING,
           payload: true
@@ -132911,14 +133004,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           });
         }
       });
-      return function (_x36) {
-        return _ref41.apply(this, arguments);
+      return function (_x38) {
+        return _ref45.apply(this, arguments);
       };
     }();
   };
   var PURCHASE_SUBSCRIPTION = exports.PURCHASE_SUBSCRIPTION = function PURCHASE_SUBSCRIPTION(sku) {
     return /*#__PURE__*/function () {
-      var _ref42 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref46 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         console.log('internal', sku);
         dispatch({
           type: _$$_REQUIRE(_dependencyMap[6], "./action-types").SET_SUBSCRIPTION_LOADING,
@@ -132934,14 +133027,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           });
         }
       });
-      return function (_x37) {
-        return _ref42.apply(this, arguments);
+      return function (_x39) {
+        return _ref46.apply(this, arguments);
       };
     }();
   };
   var RESTORE_SUBSCRIPTION = exports.RESTORE_SUBSCRIPTION = function RESTORE_SUBSCRIPTION() {
     return /*#__PURE__*/function () {
-      var _ref43 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref47 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         dispatch({
           type: _$$_REQUIRE(_dependencyMap[6], "./action-types").SET_SUBSCRIPTION_LOADING,
           payload: true
@@ -132989,8 +133082,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           };
         }
       });
-      return function (_x38) {
-        return _ref43.apply(this, arguments);
+      return function (_x40) {
+        return _ref47.apply(this, arguments);
       };
     }();
   };
@@ -163251,11 +163344,15 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       GET_MONTH_WISE_TIMELINE = _ref.GET_MONTH_WISE_TIMELINE,
       GET_WEEK_WISE_TIMELINE = _ref.GET_WEEK_WISE_TIMELINE,
       GET_YEAR_WISE_TIMELINE = _ref.GET_YEAR_WISE_TIMELINE,
+      GET_YEAR_WISE_LOCATION = _ref.GET_YEAR_WISE_LOCATION,
+      GET_WEEK_WISE_LOCATION = _ref.GET_WEEK_WISE_LOCATION,
       GET_MISSING_ACTIVITY_LIST = _ref.GET_MISSING_ACTIVITY_LIST,
       missingActivityList = _ref.missingActivityList,
       yearWiseTimeline = _ref.yearWiseTimeline,
       weekWiseTimeline = _ref.weekWiseTimeline,
-      monthWiseTimeline = _ref.monthWiseTimeline;
+      monthWiseTimeline = _ref.monthWiseTimeline,
+      weekWiseLocation = _ref.weekWiseLocation,
+      yearWiseLocation = _ref.yearWiseLocation;
     var _useState = (0, _react.useState)('Month'),
       _useState2 = (0, _slicedToArray2.default)(_useState, 2),
       selectedTab = _useState2[0],
@@ -163364,8 +163461,11 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       _useState28 = (0, _slicedToArray2.default)(_useState27, 2),
       visibleMonth = _useState28[0],
       setVisibleMonth = _useState28[1];
-    console.log('yearWiseTimeline', yearWiseTimeline);
-    console.log('weekWiseTimeline', weekWiseTimeline);
+
+    // console.log('yearWiseTimeline', yearWiseTimeline);
+    // console.log('weekWiseTimeline', weekWiseTimeline);
+    console.log('yearWiseLocation', yearWiseLocation);
+    console.log('weekWiseLocation', weekWiseLocation);
     console.log('monthWiseTimeline', monthWiseTimeline);
     console.log('missingActivityList', missingActivityList);
     var getCurrentWeekDates = function getCurrentWeekDates() {
@@ -163408,7 +163508,15 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         end: end
       });
       ;
+      GET_WEEK_WISE_LOCATION({
+        start: start,
+        end: end
+      });
+      ;
       GET_YEAR_WISE_TIMELINE({
+        year: selectedYear
+      });
+      GET_YEAR_WISE_LOCATION({
         year: selectedYear
       });
       GET_MONTH_WISE_TIMELINE({
@@ -163427,8 +163535,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         start: start,
         end: end
       });
-      ;
+      GET_WEEK_WISE_LOCATION({
+        start: start,
+        end: end
+      });
       GET_YEAR_WISE_TIMELINE({
+        year: selectedYear
+      });
+      GET_YEAR_WISE_LOCATION({
         year: selectedYear
       });
       GET_MONTH_WISE_TIMELINE({
@@ -163838,6 +163952,15 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         latestMissing: latestMissing
       };
     };
+    var normalizeLocationData = function normalizeLocationData() {
+      var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      return Object.keys(data).map(function (date) {
+        return {
+          date: date,
+          locations: data[date] || []
+        };
+      });
+    };
     var getWeekCalendarData = function getWeekCalendarData() {
       var weekResult = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       return Object.keys(weekResult).map(function (date) {
@@ -163970,6 +164093,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
 
     var normalizeYearData = function normalizeYearData() {
       var yearWiseTimeline = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      var yearWiseLocation = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var normalized = {};
       Object.entries(yearWiseTimeline).forEach(function (_ref2) {
         var _ref3 = (0, _slicedToArray2.default)(_ref2, 2),
@@ -163977,7 +164101,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           items = _ref3[1];
         normalized[date] = {
           trips: [],
-          activity: null
+          activity: null,
+          locations: (yearWiseLocation == null ? void 0 : yearWiseLocation[date]) || []
         };
         if (!Array.isArray(items)) return;
         items.forEach(function (item) {
@@ -164042,8 +164167,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     // };
 
     var normalizedYearData = (0, _react.useMemo)(function () {
-      return normalizeYearData(yearWiseTimeline);
-    }, [yearWiseTimeline]);
+      return normalizeYearData(yearWiseTimeline, yearWiseLocation);
+    }, [yearWiseTimeline, yearWiseLocation]);
     var weeklyData = (0, _react.useMemo)(function () {
       return getYearWeeklyData(normalizedYearData);
     }, [normalizedYearData]);
@@ -164109,7 +164234,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         }), isOpen && /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
           style: styles.expandedContainer,
           children: item.days.map(function (day, idx) {
-            var _day$trips;
+            var _day$trips, _day$locations;
             console.log('dayyyyy', day);
             return /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
               style: {
@@ -164126,6 +164251,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 if (selectedFilter === "TRIP") return trip.kind === "trip";
                 if (selectedFilter === "CITY_CHANGE") return trip.kind === "city_change";
                 if (selectedFilter === "COUNTY_CHANGE") return trip.kind === "county_change";
+                if (selectedFilter === "LOCATIONS") return false;
                 return true; // ALL
               }).map(function (trip) {
                 return /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
@@ -164151,7 +164277,39 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                     })]
                   })]
                 }, trip.id);
-              }), day.activity && /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
+              }), (selectedFilter === "LOCATIONS" || selectedFilter === "ALL") && (day == null || (_day$locations = day.locations) == null ? void 0 : _day$locations.map(function (location) {
+                return /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+                  style: {
+                    backgroundColor: "#F7F7F7",
+                    padding: 12,
+                    borderRadius: 10,
+                    marginTop: 8
+                  },
+                  children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
+                    style: {
+                      fontWeight: "600",
+                      color: "#000"
+                    },
+                    children: [location.city, ", ", location.state]
+                  }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+                    style: {
+                      color: "#666",
+                      marginTop: 4
+                    },
+                    children: location.address
+                  }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+                    style: {
+                      color: "#999",
+                      marginTop: 4,
+                      fontSize: 12
+                    },
+                    children: new Date(location.recordedAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit"
+                    })
+                  })]
+                }, location.id);
+              })), day.activity && /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
                 style: {
                   backgroundColor: "#FFF3E0",
                   borderRadius: 8,
@@ -164203,6 +164361,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       });
     };
     var regulatoryCalendar = getWeekCalendarData(weekWiseTimeline);
+    var weekLocationData = normalizeLocationData(weekWiseLocation);
     var getTimelineData = function getTimelineData() {
       var dataObj = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var formatDate = function formatDate(date) {
@@ -164367,7 +164526,54 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
             style: {
               flex: 1
             },
-            children: [section.trips.map(function (trip) {
+            children: [(selectedFilter === "LOCATIONS" || selectedFilter === "ALL") && /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
+              style: {
+                flex: 1
+              },
+              children: ((weekWiseLocation == null ? void 0 : weekWiseLocation[section.date]) || []).map(function (location) {
+                return /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+                  style: {
+                    backgroundColor: "#F7F7F7",
+                    padding: 12,
+                    borderRadius: 10,
+                    marginBottom: 10
+                  },
+                  children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
+                    style: {
+                      flexDirection: "row",
+                      alignItems: "center",
+                      marginBottom: 6
+                    },
+                    children: /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
+                      style: {
+                        fontWeight: "600",
+                        fontSize: 14,
+                        color: "#000"
+                      },
+                      children: [location.city, ", ", location.state]
+                    })
+                  }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+                    style: {
+                      color: "#666",
+                      fontSize: 13,
+                      marginLeft: 0
+                    },
+                    children: location.address
+                  }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+                    style: {
+                      color: "#999",
+                      fontSize: 12,
+                      marginTop: 4,
+                      marginLeft: 0
+                    },
+                    children: new Date(location.recordedAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit"
+                    })
+                  })]
+                }, location.id);
+              })
+            }), selectedFilter !== "LOCATIONS" && section.trips.map(function (trip) {
               return (
                 /*#__PURE__*/
                 // <TouchableOpacity
@@ -165113,6 +165319,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       yearWiseTimeline: state.common.yearWiseTimeline,
       weekWiseTimeline: state.common.weekWiseTimeline,
       monthWiseTimeline: state.common.monthWiseTimeline,
+      yearWiseLocation: state.common.yearWiseLocation,
+      weekWiseLocation: state.common.weekWiseLocation,
       missingActivityList: state.common.missingActivityList
     };
   }
@@ -165120,6 +165328,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     GET_WEEK_WISE_TIMELINE: _$$_REQUIRE(_dependencyMap[14], "../redux/actions/action-creator").GET_WEEK_WISE_TIMELINE,
     GET_MONTH_WISE_TIMELINE: _$$_REQUIRE(_dependencyMap[14], "../redux/actions/action-creator").GET_MONTH_WISE_TIMELINE,
     GET_YEAR_WISE_TIMELINE: _$$_REQUIRE(_dependencyMap[14], "../redux/actions/action-creator").GET_YEAR_WISE_TIMELINE,
+    GET_WEEK_WISE_LOCATION: _$$_REQUIRE(_dependencyMap[14], "../redux/actions/action-creator").GET_WEEK_WISE_LOCATION,
+    GET_YEAR_WISE_LOCATION: _$$_REQUIRE(_dependencyMap[14], "../redux/actions/action-creator").GET_YEAR_WISE_LOCATION,
     GET_MISSING_ACTIVITY_LIST: _$$_REQUIRE(_dependencyMap[14], "../redux/actions/action-creator").GET_MISSING_ACTIVITY_LIST
   };
   var _default = exports.default = (0, _$$_REQUIRE(_dependencyMap[15], "react-redux").connect)(mapStateToProps, mapDispatchToProps)(CalendarScreen);

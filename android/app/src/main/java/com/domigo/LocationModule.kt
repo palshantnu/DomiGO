@@ -59,8 +59,10 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     // 60s interval + 100m distance filter: for state-level tracking this is the sweet spot —
     // stationary users produce 0 wake-ups (GPS noise < 100m), driving users still get a fix
     // well before crossing any state line (at 60 mph ≈ 1.7km/min vs. state widths of 100+ km).
-    private var locationInterval: Long = 60000L
-    private var locationDistance: Float = 100f
+    // private var locationInterval: Long = 60000L
+    private var locationInterval: Long = 20000L
+    // private var locationDistance: Float = 100f
+    private var locationDistance: Float = 0f
     private var googleApiKey: String = ""
     private var domigoToken: String = ""
     private var apiUrl: String = ""
@@ -143,7 +145,7 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         private const val PREF_CURRENT_STATE = "domigo_current_state"
         private const val LOCATION_PING_INTERVAL = 15 * 60 * 1000 // 15 min
         private const val HOURS_API_INTERVAL = 4 * 60 * 60 * 1000L
-        // private const val HOURS_API_INTERVAL = 2 * 60 * 1000L
+        // private const val HOURS_API_INTERVAL = 30 * 60 * 1000L
         private const val PREF_LAST_HOURS_API_TIME = "pref_last_hours_api_time"
         
     }
@@ -474,7 +476,6 @@ private fun scheduleMidnightMissingDay() {
     
 
     
-        lastGeocodeTime = currentTime
 
         if (geofencingMode == "local_native") {
             processWithLocalGeoJSON(location.latitude, location.longitude)
@@ -486,6 +487,7 @@ private fun scheduleMidnightMissingDay() {
                 Log.d(TAG, "⏳ Skipping geocode call. Next allowed in ${(GEOCODE_INTERVAL - timeDiff)/60000} min")
                 return
             }
+            lastGeocodeTime = currentTime
             reverseGeocodeInBackground(location.latitude, location.longitude)
         }
     }
@@ -1047,11 +1049,11 @@ if (!stateChanged && !timePassed) {
         }
 
         // 🔥 interval complete
-        lastHoursApiTime = now
+        // lastHoursApiTime = now
 
-        prefs.edit()
-            .putLong(PREF_LAST_HOURS_API_TIME, now)
-            .apply()
+        // prefs.edit()
+        //     .putLong(PREF_LAST_HOURS_API_TIME, now)
+        //     .apply()
 
         reverseGeocodeForHoursAPI(lat, lng)
     }
@@ -1202,6 +1204,14 @@ if (!stateChanged && !timePassed) {
                     if (response.isSuccessful) {
 
                         Log.d(TAG, "✅ Hours API success")
+                        lastHoursApiTime = System.currentTimeMillis()
+
+                            prefs.edit()
+                                .putLong(
+                                    PREF_LAST_HOURS_API_TIME,
+                                    lastHoursApiTime
+                                )
+                                .apply()
 
                         val eventData = Arguments.createMap().apply {
 
@@ -2142,6 +2152,7 @@ private fun pointInRing(lat: Double, lng: Double, ring: JSONArray): Boolean {
 //   7. State changed + offline: debounce / min-stay / dedupe guards, then create
 //      the trip locally (destinationCity left blank) and update state.
 private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
+    checkAndSendHoursAPI(lat, lng)
     val match = detectStateFromGeoJSON(lat, lng)
     println("🔍 MATCH DEBUG → ${match?.name} | fips=${match?.fips}")
     if (match == null) {
@@ -2164,7 +2175,6 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
 
     // Heartbeat to our own API (itself gated by LOCATION_PING_INTERVAL + state change inside sendLocationPing).
     sendLocationPing(lat, lng, detectedState, detectedState, geofencingCountry)
-    checkAndSendHoursAPI(lat, lng)
 
     // Surface to JS for UI (no Google).
     val addressData = Arguments.createMap().apply {
