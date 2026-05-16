@@ -15,8 +15,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   private var lastApiTime: TimeInterval = 0
   private let FOUR_HOURS_IN_SECONDS: TimeInterval = 4 * 60 * 60  // 4 hours in seconds
   private var lastHoursApiTime: TimeInterval = 0
-  // private let HOURS_API_INTERVAL: TimeInterval = 4 * 60 * 60
-  private let HOURS_API_INTERVAL: TimeInterval = 30 * 60
+  private let HOURS_API_INTERVAL: TimeInterval = 4 * 60 * 60
   private var previousLat: Double?
   private var previousLng: Double?
   private var previousCity: String = ""
@@ -108,6 +107,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   private var lastRealTimeCheck: TimeInterval = 0
   private let REAL_TIME_CHECK_INTERVAL: TimeInterval = 60
   private var realTimeTimer: Timer?
+  private var lastKnownLocation: CLLocation?
   
   // MARK: - Event Listener Properties
   private var hasListeners = false
@@ -160,6 +160,8 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       "onAddressResolved",
       "onApiSuccess",
       "onLocationError",
+      "onHoursApiSuccess",
+      "onHoursApiError",
       "onLocationStatus",
       "onTripApiResponse",
       "onTripApiError",
@@ -202,8 +204,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   
   @objc private func performRealTimeCheck() {
     let currentTime = Date().timeIntervalSince1970
-    let timeSinceLastCheck = currentTime - lastRealTimeCheck
-    
+
     print("""
     \n🔄 ===== REAL-TIME CHECK =====
     📱 Time: \(Date())
@@ -211,12 +212,11 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     📡 Network: \(isConnected ? "Connected" : "Disconnected")
     ====================================
     """)
-    
-    // Check for pending offline queue
-//    if isConnected {
-//      flushOfflineQueue()
-//    }
-    
+
+    if let location = lastKnownLocation {
+      checkAndSendHoursAPI(location: location)
+    }
+
     lastRealTimeCheck = currentTime
   }
 
@@ -316,7 +316,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       self.sharedDefaults?.set(self.lastTripProcessedTime, forKey: self.LAST_TRIP_TIME_KEY)
       self.sharedDefaults?.synchronize()
       self.defaults.set(self.lastTripKey, forKey: self.LAST_TRIP_KEY)
-      UserDefaults.standard.set(lastHoursApiTime,forKey: "lastHoursApiTime")
+      UserDefaults.standard.set(self.lastHoursApiTime,forKey: "lastHoursApiTime")
     }
     
   }
@@ -361,8 +361,8 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     print("   Previous City: \(previousCity)")
     print("   Previous State: \(previousStateName)")
     lastTripKey = defaults.string(forKey: LAST_TRIP_KEY) ?? ""
-    lastHoursApiTime =UserDefaults.standard.double(forKey: "lastHoursApiTime")
-    print("""🕓 Loaded Hours API Time:\(lastHoursApiTime)""")
+    lastHoursApiTime = UserDefaults.standard.double(forKey: "lastHoursApiTime")
+    print("🕓 Loaded Hours API Time:\(lastHoursApiTime)")
     }
 
   override static func requiresMainQueueSetup() -> Bool {
@@ -679,6 +679,12 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
 //      "📍 Location update: \(location.coordinate.latitude), \(location.coordinate.longitude), accuracy: \(location.horizontalAccuracy)"
 //    )
 //    safeSendEvent(withName: "onLocationChanged", body: locationData)
+    print("""
+        📍 didUpdateLocations CALLED
+        lat: \(location.coordinate.latitude)
+        lng: \(location.coordinate.longitude)
+        accuracy: \(location.horizontalAccuracy)
+        """)
 
     if location.horizontalAccuracy < 100 {
       processLocation(location)
@@ -716,7 +722,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   private func processLocation(
     _ location: CLLocation
   ) {
-
+      lastKnownLocation = location
       addToPendingLocations(location)
 
       // Separate Hours API flow
@@ -780,6 +786,11 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   private func checkAndSendHoursAPI(
       location: CLLocation
   ) {
+    print("""
+    ⏳ Hours API skipped
+    diff:  sec
+    """)
+
 
       let now = Date().timeIntervalSince1970
 
@@ -813,9 +824,9 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   private func reverseGeocodeForHoursAPI(
     location: CLLocation
   ) {
+    let hoursGeocoder = CLGeocoder()
 
-      geocoder.reverseGeocodeLocation(
-          location
+      hoursGeocoder.reverseGeocodeLocation(          location
       ) { [weak self] placemarks, error in
 
           guard let self = self else {
@@ -872,11 +883,11 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       address: String
   ) {
 
-      guard let token = domigoToken else {
+    guard let token = config["domigoToken"] as? String else {
 
-          print("❌ No token for Hours API")
-          return
-      }
+        print("❌ No token for Hours API")
+        return
+    }
 
       guard let url = URL(
           string:
@@ -2064,6 +2075,11 @@ private func loadCityFeatures(stateName: String) -> [[String: Any]]? {
   }
 
   private func processWithLocalGeoJSON(lat: Double, lng: Double) {
+    let location = CLLocation(
+      latitude: lat,
+      longitude: lng
+      )
+    checkAndSendHoursAPI(location: location)
     guard let match = detectStateFromGeoJSON(lat: lat, lng: lng)
     else {
       print("local_native: no state detected", lat, lng)
