@@ -1125,7 +1125,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
 
   private func checkAndSendToAPI(
     lat: Double, lng: Double, city: String, state: String, address: String,
-    isBackground: Bool = false, geocodeFailed: Bool = false
+    isBackground: Bool = false, geocodeFailed: Bool = false, skipTripCreation: Bool = false
   ) {
     
     let currentTimeMs = Date().timeIntervalSince1970 * 1000
@@ -1185,7 +1185,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
           return
       }
 
-      if stateChanged && previousStateName != "" && !isProcessingTrip {
+      if stateChanged && previousStateName != "" && !isProcessingTrip && !skipTripCreation {
         isProcessingTrip = true
         lastTripProcessedTime = currentTimeMs
         lastTripKey = tripKey
@@ -2117,32 +2117,36 @@ private func loadCityFeatures(stateName: String) -> [[String: Any]]? {
     print("👉 Detected state name:", match.name)
     print("👉 Detected state FIPS:", match.fips ?? "nil")
 
-          self.checkAndSendToAPI(
-              lat: lat,
-              lng: lng,
-              city: detectedState,
-              state: detectedState,
-              address: detectedState,
-              isBackground: false
-            )
+    // Snapshot origin values BEFORE checkAndSendToAPI mutates them.
+    // The state-change branch below uses these for the trip's origin fields.
+    let snapshotState = previousStateName
+    let snapshotCity = previousCity
+    let snapshotLat = previousLat
+    let snapshotLng = previousLng
+    let snapshotEnterTime = previousEnterTime
+
+    // Send location heartbeat and update state variables.
+    // skipTripCreation: true — trip creation (with geocoded city) is handled in the
+    // state-change branch below so the destinationCity is never the province name.
+    self.checkAndSendToAPI(
+        lat: lat,
+        lng: lng,
+        city: detectedState,
+        state: detectedState,
+        address: detectedState,
+        isBackground: false,
+        skipTripCreation: true
+    )
     let currentTimeMs = Date().timeIntervalSince1970 * 1000
 
-    if previousEnterTime == 0 {
-      previousLat = lat
-      previousLng = lng
-      previousCity = ""
-      previousStateName = detectedState
-      previousEnterTime = currentTimeMs
-      saveState()
+    // First-time init: no previous state before this call.
+    if snapshotState.isEmpty {
       print("Initialized first state: \(detectedState)")
       return
     }
 
-    // if detectedState == previousStateName {
-    //   return
-    // }
-    // SAME STATE
-    if detectedState == previousStateName {
+    // SAME STATE (case-insensitive, using snapshot before checkAndSendToAPI mutated previousStateName)
+    if detectedState.lowercased() == snapshotState.lowercased() {
 
         if !cityChangeEventsEnabled {
             return
@@ -2218,16 +2222,17 @@ print("📍 county: \(county)")
       return
     }
 
-    print("🚗 STATE CHANGED: \(previousStateName) → \(detectedState)")
+    print("🚗 STATE CHANGED: \(snapshotState) → \(detectedState)")
 
     isTransitionInProgress = true
     stateChangeDetectedTime = 0
 
-    let originState = previousStateName
-    let originLat = previousLat
-    let originLng = previousLng
-    let originCity = previousCity
-    let startTime = previousEnterTime
+    // Use snapshots (captured before checkAndSendToAPI) for correct origin values.
+    let originState = snapshotState
+    let originLat = snapshotLat
+    let originLng = snapshotLng
+    let originCity = snapshotCity
+    let startTime = snapshotEnterTime
 
     let isOnline = isInternetAvailable()
 

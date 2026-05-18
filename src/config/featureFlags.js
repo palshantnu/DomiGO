@@ -32,7 +32,7 @@ export const GEOFENCING_MODE = 'local_native';
 
 // Country whose state/country boundaries are used.
 // Supported values: 'US', 'IN', or 'CA'
-export const GEOFENCING_COUNTRY = 'CA'
+export const GEOFENCING_COUNTRY = 'US';
 
 // Kill switch for automatic city/county change detection (Phase 1+).
 // When true, the tracker emits `kind: "city_change"` entries to /api/trip-days
