@@ -146,6 +146,14 @@ export const STATE_CODES = {
         "Wisconsin": "WI",
         "Wyoming": "WY",
         "District of Columbia": "DC"
+    },
+
+    CA: {
+        "Canada": "CA"
+    },
+
+    CANADA: {
+        "Canada": "CA"
     }
 
 };

@@ -380,6 +380,11 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       self.geofencingMode = mode
     }
     if let country = config["geofencingCountry"] as? String {
+      if country != self.geofencingCountry {
+        self.geoJsonFeatures = nil
+        self.countyFeatureCache.removeAll()
+        self.cityFeatureCache.removeAll()
+      }
       self.geofencingCountry = country
     }
     if let cityChange = config["cityChangeEventsEnabled"] as? Bool {
@@ -1109,7 +1114,14 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     }
 
     return trimmed
-}
+  }
+
+
+  private func stateComparisonKey(_ state: String) -> String {
+      return normalizeState(state)
+          .trimmingCharacters(in: .whitespacesAndNewlines)
+          .lowercased()
+  }
 
   private func checkAndSendToAPI(
     lat: Double, lng: Double, city: String, state: String, address: String,
@@ -1122,8 +1134,10 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     let lastApiTimeSeconds = lastApiTime / 1000
     let timeDifferenceSeconds = currentTimeSeconds - lastApiTimeSeconds
 
-    let normalizedCurrentState = normalizeState(state)
-    let normalizedLastState = normalizeState(lastState)
+    // let normalizedCurrentState = normalizeState(state)
+    // let normalizedLastState = normalizeState(lastState)
+    let normalizedCurrentState = stateComparisonKey(state)
+    let normalizedLastState = stateComparisonKey(lastState)
 
     // let stateChanged = !state.isEmpty && !lastState.isEmpty && state != lastState
     let stateChanged =
@@ -1143,7 +1157,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         previousLat = lat
         previousLng = lng
         previousCity = city
-        // previousStateName = state
+         // comparison key store karo
         previousStateName = normalizedCurrentState
         previousEnterTime = currentTimeMs
       }
@@ -1855,8 +1869,18 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   private func loadGeoJsonFeatures() -> [[String: Any]] {
     if let cached = geoJsonFeatures { return cached }
 
-    let fileName = geofencingCountry == "IN" ? "india-states" : "us-states"
-    let ext = geofencingCountry == "IN" ? "geojson" : "json"
+    let fileName: String
+    let ext: String
+    if geofencingCountry == "IN" {
+      fileName = "india-states"
+      ext = "geojson"
+    } else if geofencingCountry == "CA" {
+      fileName = "canada"
+      ext = "json"
+    } else {
+      fileName = "us-states"
+      ext = "json"
+    }
 
     guard let url = Bundle.main.url(forResource: fileName, withExtension: ext),
       let data = try? Data(contentsOf: url),
@@ -2121,6 +2145,9 @@ private func loadCityFeatures(stateName: String) -> [[String: Any]]? {
     if detectedState == previousStateName {
 
         if !cityChangeEventsEnabled {
+            return
+        }
+        if geofencingCountry != "US" {
             return
         }
 

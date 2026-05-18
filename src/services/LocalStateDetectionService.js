@@ -26,6 +26,7 @@ import countyLoaders from '../geo/countyLoaders';
 const stateLoaders = {
   US: () => require('../geo/states.json'),
   IN: () => require('../assets/india-states.json'),
+  CA: () => require('../geo/canada.json'),
 };
 
 let cachedStateFeatures = null;
@@ -105,6 +106,7 @@ function detectState(latitude, longitude) {
 }
 
 function detectCounty(stateFips, latitude, longitude) {
+  if (GEOFENCING_COUNTRY !== 'US') return null;
   if (!stateFips) return null;
   const features = loadCountyFeatures(stateFips);
   if (!features) return null;

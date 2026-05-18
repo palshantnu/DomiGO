@@ -173,7 +173,13 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
                 geofencingMode = config.getString("geofencingMode") ?: ""
             }
             if (config.hasKey("geofencingCountry")) {
-                geofencingCountry = config.getString("geofencingCountry") ?: ""
+                val nextCountry = config.getString("geofencingCountry") ?: ""
+                if (nextCountry != geofencingCountry) {
+                    geoJsonFeatures = null
+                    countyFeatureCache.clear()
+                    cityFeatureCache.clear()
+                }
+                geofencingCountry = nextCountry
             }
             if (config.hasKey("cityChangeEventsEnabled")) {
                 cityChangeEventsEnabled = config.getBoolean("cityChangeEventsEnabled")
@@ -1947,6 +1953,7 @@ private fun loadGeoJsonFeatures(): JSONArray {
     geoJsonFeatures?.let { return it }
     val fileName = when (geofencingCountry) {
         "IN" -> "india-states.geojson"
+        "CA" -> "canada.json"
         else -> "us-states.json"
     }
     try {
@@ -2210,6 +2217,10 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
             return
         }
         println("✅ City change events ENABLED")
+        if (geofencingCountry != "US") {
+            println("County/city change detection is only enabled for US boundary data")
+            return
+        }
     
         // val stateFips = match.fips ?: return
         val stateFips = match.fips ?: run {

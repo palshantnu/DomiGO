@@ -10,6 +10,7 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		1807FBF92F55ACA600349A1B /* india-states.geojson in Resources */ = {isa = PBXBuildFile; fileRef = 1807FBF72F55ACA600349A1B /* india-states.geojson */; };
 		1807FBFA2F55ACA600349A1B /* us-states.json in Resources */ = {isa = PBXBuildFile; fileRef = 1807FBF82F55ACA600349A1B /* us-states.json */; };
+		1807FBFB2F55ACA600349A1B /* canada.json in Resources */ = {isa = PBXBuildFile; fileRef = 1807FBFC2F55ACA600349A1B /* canada.json */; };
 		1811AC982ED0375D00585ACD /* SLCEventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1811AC972ED0375D00585ACD /* SLCEventEmitter.swift */; };
 		1811AC9A2ED038D500585ACD /* SLCEventEmitter 2.m in Sources */ = {isa = PBXBuildFile; fileRef = 1811AC992ED038D500585ACD /* SLCEventEmitter 2.m */; };
 		183527A92F75252E006A6C0B /* gwalior.gpx in Sources */ = {isa = PBXBuildFile; fileRef = 183527A82F752528006A6C0B /* gwalior.gpx */; };
@@ -32,6 +33,7 @@
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = domiGo/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		1807FBF72F55ACA600349A1B /* india-states.geojson */ = {isa = PBXFileReference; lastKnownFileType = text; path = "india-states.geojson"; sourceTree = "<group>"; };
 		1807FBF82F55ACA600349A1B /* us-states.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "us-states.json"; sourceTree = "<group>"; };
+		1807FBFC2F55ACA600349A1B /* canada.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "canada.json"; sourceTree = "<group>"; };
 		1811AC962ED0374D00585ACD /* domiGo-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "domiGo-Bridging-Header.h"; sourceTree = "<group>"; };
 		1811AC972ED0375D00585ACD /* SLCEventEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SLCEventEmitter.swift; sourceTree = "<group>"; };
 		1811AC992ED038D500585ACD /* SLCEventEmitter 2.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "SLCEventEmitter 2.m"; sourceTree = "<group>"; };
@@ -77,6 +79,7 @@
 				183527A82F752528006A6C0B /* gwalior.gpx */,
 				1807FBF72F55ACA600349A1B /* india-states.geojson */,
 				1807FBF82F55ACA600349A1B /* us-states.json */,
+				1807FBFC2F55ACA600349A1B /* canada.json */,
 				18819CA32F31DDA1003E204A /* GoogleService-Info.plist */,
 				186B82672EF51DFE00A62AFF /* domiGo.entitlements */,
 				18CD2AD92ED5B52400A6C3BC /* LocationTrackerBridge.m */,
@@ -210,6 +213,7 @@
 			files = (
 				183527AD2F752574006A6C0B /* agra.gpx in Resources */,
 				1807FBF92F55ACA600349A1B /* india-states.geojson in Resources */,
+				1807FBFB2F55ACA600349A1B /* canada.json in Resources */,
 				183527AB2F752570006A6C0B /* delhi.gpx in Resources */,
 				1807FBFA2F55ACA600349A1B /* us-states.json in Resources */,
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
