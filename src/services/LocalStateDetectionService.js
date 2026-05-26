@@ -33,6 +33,22 @@ let cachedStateFeatures = null;
 let cachedCountry = null;
 const countyCache = new Map(); // stateFips -> features[]
 
+const CANADIAN_PROVINCE_BOUNDS = [
+  { id: 'YT', name: 'Yukon', bbox: [-141.1, 60.0, -123.7, 69.8] },
+  { id: 'NT', name: 'Northwest Territories', bbox: [-136.6, 60.0, -101.9, 78.9] },
+  { id: 'NU', name: 'Nunavut', bbox: [-121.0, 60.0, -52.0, 84.0] },
+  { id: 'BC', name: 'British Columbia', bbox: [-139.2, 48.2, -114.0, 60.1] },
+  { id: 'AB', name: 'Alberta', bbox: [-120.1, 48.9, -109.9, 60.1] },
+  { id: 'SK', name: 'Saskatchewan', bbox: [-110.1, 48.9, -101.2, 60.1] },
+  { id: 'MB', name: 'Manitoba', bbox: [-102.1, 48.9, -88.8, 60.1] },
+  { id: 'NL', name: 'Newfoundland and Labrador', bbox: [-67.9, 46.5, -52.0, 60.6] },
+  { id: 'ON', name: 'Ontario', bbox: [-95.3, 41.5, -74.2, 56.9] },
+  { id: 'QC', name: 'Quebec', bbox: [-79.9, 44.8, -57.0, 62.7] },
+  { id: 'NB', name: 'New Brunswick', bbox: [-69.2, 44.5, -63.7, 48.2] },
+  { id: 'NS', name: 'Nova Scotia', bbox: [-66.6, 43.2, -59.5, 47.2] },
+  { id: 'PE', name: 'Prince Edward Island', bbox: [-64.7, 45.8, -61.8, 47.1] },
+];
+
 function normalise(raw) {
   // New US array format
   if (Array.isArray(raw)) {
@@ -94,6 +110,15 @@ function stateFipsOf(feature) {
 }
 
 function detectState(latitude, longitude) {
+  if (GEOFENCING_COUNTRY === 'CA') {
+    const province = CANADIAN_PROVINCE_BOUNDS.find(({ bbox }) => (
+      longitude >= bbox[0] && longitude <= bbox[2] && latitude >= bbox[1] && latitude <= bbox[3]
+    ));
+    if (province) {
+      return { fips: province.id, name: province.name };
+    }
+  }
+
   const features = loadStateFeatures();
   const pt = point([longitude, latitude]);
   for (const feature of features) {

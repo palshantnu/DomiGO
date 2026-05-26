@@ -1977,6 +1977,14 @@ private fun loadGeoJsonFeatures(): JSONArray {
 data class StateMatch(val fips: String?, val name: String)
 data class CountyMatch(val fips: String, val name: String)
 data class CityMatch(val fips: String, val name: String)
+data class CanadianProvince(
+    val code: String,
+    val name: String,
+    val minLng: Double,
+    val minLat: Double,
+    val maxLng: Double,
+    val maxLat: Double
+)
 
 // Per-state county feature cache. Lazily populated on first lookup for each state;
 // avoids re-parsing the counties/<FIPS>.json file on every tick.
@@ -2005,7 +2013,33 @@ private fun pointInGeometry(lat: Double, lng: Double, geometry: JSONObject): Boo
     }
 }
 
+private val canadianProvinceBounds = listOf(
+    CanadianProvince("YT", "Yukon", -141.1, 60.0, -123.7, 69.8),
+    CanadianProvince("NT", "Northwest Territories", -136.6, 60.0, -101.9, 78.9),
+    CanadianProvince("NU", "Nunavut", -121.0, 60.0, -52.0, 84.0),
+    CanadianProvince("BC", "British Columbia", -139.2, 48.2, -114.0, 60.1),
+    CanadianProvince("AB", "Alberta", -120.1, 48.9, -109.9, 60.1),
+    CanadianProvince("SK", "Saskatchewan", -110.1, 48.9, -101.2, 60.1),
+    CanadianProvince("MB", "Manitoba", -102.1, 48.9, -88.8, 60.1),
+    CanadianProvince("NL", "Newfoundland and Labrador", -67.9, 46.5, -52.0, 60.6),
+    CanadianProvince("ON", "Ontario", -95.3, 41.5, -74.2, 56.9),
+    CanadianProvince("QC", "Quebec", -79.9, 44.8, -57.0, 62.7),
+    CanadianProvince("NB", "New Brunswick", -69.2, 44.5, -63.7, 48.2),
+    CanadianProvince("NS", "Nova Scotia", -66.6, 43.2, -59.5, 47.2),
+    CanadianProvince("PE", "Prince Edward Island", -64.7, 45.8, -61.8, 47.1)
+)
+
+private fun detectCanadianProvince(lat: Double, lng: Double): StateMatch? {
+    if (geofencingCountry != "CA") return null
+    val province = canadianProvinceBounds.firstOrNull {
+        lng >= it.minLng && lng <= it.maxLng && lat >= it.minLat && lat <= it.maxLat
+    } ?: return null
+    return StateMatch(province.code, province.name)
+}
+
 private fun detectStateFromGeoJSON(lat: Double, lng: Double): StateMatch? {
+    detectCanadianProvince(lat, lng)?.let { return it }
+
     val features = loadGeoJsonFeatures()
     val isIN = geofencingCountry == "IN"
     for (i in 0 until features.length()) {
@@ -2181,7 +2215,7 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
     println("📍 cityChangeEventsEnabled = $cityChangeEventsEnabled")
 
     // Heartbeat to our own API (itself gated by LOCATION_PING_INTERVAL + state change inside sendLocationPing).
-    sendLocationPing(lat, lng, detectedState, detectedState, geofencingCountry)
+    sendLocationPing(lat, lng, detectedState, match.fips ?: detectedState, geofencingCountry)
 
     // Surface to JS for UI (no Google).
     val addressData = Arguments.createMap().apply {
@@ -2195,7 +2229,7 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
     // First-time init.
     if (previousStateName.isEmpty()) {
         previousStateName = detectedState
-        previousStateCode = detectedState
+        previousStateCode = match.fips ?: detectedState
         previousCountryCode = geofencingCountry
         previousLat = lat
         previousLng = lng

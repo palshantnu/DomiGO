@@ -1028,7 +1028,9 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                     ))}
 
                   {/* 🟠 ACTIVITY */}
-                  {day.activity && (
+                  {day.activity && 
+                    selectedFilter !== "COUNTY_CHANGE" &&
+                    selectedFilter !== "CITY_CHANGE" && (
                     <TouchableOpacity
                       style={{
                         backgroundColor: "#FFF3E0",
@@ -1332,7 +1334,9 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
               </TouchableOpacity>
             ))
           }
-          {section.missing && (
+          {section.missing && 
+            selectedFilter !== "COUNTY_CHANGE" &&
+            selectedFilter !== "CITY_CHANGE" && (
             <TouchableOpacity
               style={{
                 backgroundColor: "#FFF3E0",
