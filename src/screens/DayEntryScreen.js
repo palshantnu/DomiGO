@@ -450,7 +450,11 @@ const DayEntryScreen = ({
             }
         }
         const payload = {
-            date: editData?.date || date || new Date().toLocaleDateString("en-CA"),
+            // date: editData?.date || date || new Date().toLocaleDateString("en-CA"),
+            date:
+            !editData && creationType === "manual" && isTrip
+                ? startDate
+                : editData?.date || date || new Date().toLocaleDateString("en-CA"),
             typeOfDayId: Number(typeOfDay),
             isCommissionDay,
             kind: isTrip ? "trip" : "missing",
