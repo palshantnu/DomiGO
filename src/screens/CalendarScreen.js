@@ -47,6 +47,14 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   }, []);
   const today = new Date();
 
+const getLocalDateKey = (value) => {
+  if (!value) return "";
+
+  const date = new Date(value);
+
+  return date.toLocaleDateString("en-CA");
+};
+
   // const parseLocalDate = (dateStr) => {
   //   const [y, m, d] = dateStr.split('-').map(Number);
   //   return new Date(y, m - 1, d);
@@ -349,7 +357,8 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   const missingMap = useMemo(() => {
     const map = {};
     (missingActivityList || []).forEach(item => {
-      const dateKey = item.date.split('T')[0]; // 2026-01-04
+      // const dateKey = item.date.split('T')[0]; // 2026-01-04
+      const dateKey = getLocalDateKey(item.date);
       map[dateKey] = item;
     });
     return map;
@@ -586,12 +595,33 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     return { trips, cityChanges, countyChanges, latestMissing };
   };
 
+  // const normalizeLocationData = (data = {}) => {
+  //   return Object.keys(data).map(date => ({
+  //     date,
+  //     locations: data[date] || [],
+  //   }));
+  // };
+
   const normalizeLocationData = (data = {}) => {
-    return Object.keys(data).map(date => ({
-      date,
-      locations: data[date] || [],
-    }));
-  };
+
+  const grouped = {};
+
+  Object.values(data).forEach(locationArray => {
+
+    locationArray.forEach(location => {
+
+      const localKey = getLocalDateKey(location.recordedAt);
+
+      if (!grouped[localKey]) {
+        grouped[localKey] = [];
+      }
+
+      grouped[localKey].push(location);
+    });
+  });
+
+  return grouped;
+};
 
   const getWeekCalendarData = (weekResult = {}) => {
     return Object.keys(weekResult)
@@ -739,7 +769,8 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
       normalized[date] = {
         trips: [],
         activity: null,
-        locations: yearWiseLocation?.[date] || [],
+        // locations: yearWiseLocation?.[date] || [],
+        locations: normalizeLocationData(yearWiseLocation)?.[date] || [],
       };
 
       if (!Array.isArray(items)) return;
@@ -1018,7 +1049,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                             fontSize: 12,
                           }}
                         >
-                          {new Date(location.recordedAt)
+                          {parseLocalDate(location.recordedAt)
                             .toLocaleTimeString([], {
                               hour: "2-digit",
                               minute: "2-digit",
@@ -1221,7 +1252,8 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
 
                   <View style={{ flex: 1 }}>
-                    {(weekWiseLocation?.[section.date] || []).map(location => (
+                    {/* {(weekWiseLocation?.[section.date] || []).map(location => ( */}
+                    {(weekLocationData?.[section.date] || []).map(location => (
                       <View
                         key={location.id}
                         style={{
@@ -1277,7 +1309,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                             marginLeft: 0,
                           }}
                         >
-                          {new Date(location.recordedAt)
+                          {parseLocalDate(location.recordedAt)
                             .toLocaleTimeString([], {
                               hour: "2-digit",
                               minute: "2-digit",
