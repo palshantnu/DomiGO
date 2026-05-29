@@ -2206,6 +2206,10 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
     // Name is the authoritative key used throughout previousStateName comparisons.
     // match.fips is threaded through for Phase 3 (county detection keys on FIPS).
     val detectedState = match.name
+    if (!currentStateName.equals(detectedState, ignoreCase = true)) {
+        currentStateName = detectedState
+        saveStateToPrefs()
+    }
     val county = match.fips?.let { detectCountyFromGeoJSON(it, lat, lng) }
     val newState = detectedState.trim()
     val oldState = previousStateName.trim()
