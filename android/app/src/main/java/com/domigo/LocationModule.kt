@@ -190,8 +190,8 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
             backfillMissingDays()
         } catch (e: Exception) {
             Log.e(TAG, "Error setting config: ${e.message}")
+            }
         }
-    }
 
     @ReactMethod
     fun startLocationTracking() {
@@ -479,7 +479,7 @@ private fun scheduleMidnightMissingDay() {
 
         val currentTime = System.currentTimeMillis()
         val timeDiff = currentTime - lastGeocodeTime
-    
+
 
     
 
@@ -495,8 +495,8 @@ private fun scheduleMidnightMissingDay() {
             }
             lastGeocodeTime = currentTime
             reverseGeocodeInBackground(location.latitude, location.longitude)
+            }
         }
-    }
 
     private fun reverseGeocodeInBackground(lat: Double, lng: Double) {
         val url = "$GOOGLE_GEOCODING_URL?latlng=$lat,$lng&language=en&key=$googleApiKey"
@@ -1953,7 +1953,6 @@ private fun loadGeoJsonFeatures(): JSONArray {
     geoJsonFeatures?.let { return it }
     val fileName = when (geofencingCountry) {
         "IN" -> "india-states.geojson"
-        "CA" -> "canada.json"
         else -> "us-states.json"
     }
     try {
@@ -1974,7 +1973,7 @@ private fun loadGeoJsonFeatures(): JSONArray {
 
 // Phase 2: state + county detection. Data-class results carry both FIPS and name so
 // Phase 3 can key county files on FIPS without re-running state detection.
-data class StateMatch(val fips: String?, val name: String)
+data class StateMatch(val fips: String?, val name: String, val countryCode: String)
 data class CountyMatch(val fips: String, val name: String)
 data class CityMatch(val fips: String, val name: String)
 data class CanadianProvince(
@@ -2029,19 +2028,22 @@ private val canadianProvinceBounds = listOf(
     CanadianProvince("PE", "Prince Edward Island", -64.7, 45.8, -61.8, 47.1)
 )
 
+private fun isNorthAmericaGeofencing(): Boolean {
+    return geofencingCountry == "US" || geofencingCountry == "CA" || geofencingCountry == "NA"
+}
+
 private fun detectCanadianProvince(lat: Double, lng: Double): StateMatch? {
-    if (geofencingCountry != "CA") return null
+    if (!isNorthAmericaGeofencing()) return null
     val province = canadianProvinceBounds.firstOrNull {
         lng >= it.minLng && lng <= it.maxLng && lat >= it.minLat && lat <= it.maxLat
     } ?: return null
-    return StateMatch(province.code, province.name)
+    return StateMatch(province.code, province.name, "CA")
 }
 
 private fun detectStateFromGeoJSON(lat: Double, lng: Double): StateMatch? {
-    detectCanadianProvince(lat, lng)?.let { return it }
-
     val features = loadGeoJsonFeatures()
     val isIN = geofencingCountry == "IN"
+    val detectedCountry = if (isIN) "IN" else "US"
     for (i in 0 until features.length()) {
         val feature = features.getJSONObject(i)
         if (bboxSkips(feature, lat, lng)) continue
@@ -2059,9 +2061,9 @@ private fun detectStateFromGeoJSON(lat: Double, lng: Double): StateMatch? {
             if (feature.has("id")) feature.getString("id") else null
         }
         if (name == null) return null
-        return StateMatch(fips, name)
+        return StateMatch(fips, name, detectedCountry)
     }
-    return null
+    return detectCanadianProvince(lat, lng)
 }
 
 // Loads counties for the given state FIPS (e.g. "06" for CA) from
@@ -2206,11 +2208,16 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
     // Name is the authoritative key used throughout previousStateName comparisons.
     // match.fips is threaded through for Phase 3 (county detection keys on FIPS).
     val detectedState = match.name
+    val detectedCountry = match.countryCode
     if (!currentStateName.equals(detectedState, ignoreCase = true)) {
         currentStateName = detectedState
         saveStateToPrefs()
     }
-    val county = match.fips?.let { detectCountyFromGeoJSON(it, lat, lng) }
+    val county = if (detectedCountry == "US") {
+        match.fips?.let { detectCountyFromGeoJSON(it, lat, lng) }
+    } else {
+        null
+    }
     val newState = detectedState.trim()
     val oldState = previousStateName.trim()
     Log.d(TAG, "DEBUG → OLD=$oldState NEW=$newState")
@@ -2219,13 +2226,13 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
     println("📍 cityChangeEventsEnabled = $cityChangeEventsEnabled")
 
     // Heartbeat to our own API (itself gated by LOCATION_PING_INTERVAL + state change inside sendLocationPing).
-    sendLocationPing(lat, lng, detectedState, match.fips ?: detectedState, geofencingCountry)
+    sendLocationPing(lat, lng, detectedState, match.fips ?: detectedState, detectedCountry)
 
     // Surface to JS for UI (no Google).
     val addressData = Arguments.createMap().apply {
         putDouble("latitude", lat); putDouble("longitude", lng)
         putString("city",  county?.name ?: ""); putString("state", detectedState)
-        putString("stateCode", match.fips ?: ""); putString("countryCode", geofencingCountry)
+        putString("stateCode", match.fips ?: ""); putString("countryCode", detectedCountry)
         putString("fullAddress", ""); putDouble("timestamp", System.currentTimeMillis().toDouble())
     }
     sendEvent("onAddressResolved", addressData)
@@ -2234,7 +2241,7 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
     if (previousStateName.isEmpty()) {
         previousStateName = detectedState
         previousStateCode = match.fips ?: detectedState
-        previousCountryCode = geofencingCountry
+        previousCountryCode = detectedCountry
         previousLat = lat
         previousLng = lng
         previousEnterTime = System.currentTimeMillis()
@@ -2255,7 +2262,7 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
             return
         }
         println("✅ City change events ENABLED")
-        if (geofencingCountry != "US") {
+        if (detectedCountry != "US") {
             println("County/city change detection is only enabled for US boundary data")
             return
         }
@@ -2354,6 +2361,14 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
 
     // State changed → online: enrich city via Google (and let its success path post the trip + update state).
     if (isInternetAvailable()) {
+        if (detectedCountry != "US") {
+            previousCountyFips = ""
+            previousCountyName = ""
+            previousCountyEnterTime = 0L
+            previousCityFips = ""
+            previousCityName = ""
+            previousCityEnterTime = 0L
+        }
         reverseGeocodeInBackground(lat, lng)
         return
     }
@@ -2400,21 +2415,30 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
 
     // Commit new state before firing the trip API.
     previousStateName = newState
-    previousStateCode = newState
-    previousCountryCode = geofencingCountry
+    previousStateCode = match.fips ?: newState
+    previousCountryCode = detectedCountry
     previousLat = lat
     previousLng = lng
     previousEnterTime = System.currentTimeMillis()
     saveStateToPrefs()
-    match.fips?.let { fips ->
-        val county = detectCountyFromGeoJSON(fips, lat, lng)
-        if (county != null) {
-            previousCountyFips = county.fips
-            previousCountyName = county.name
-            previousCountyEnterTime = System.currentTimeMillis()
-    
-            Log.d(TAG, "📍 County seeded after state change: ${county.name}")
+    if (detectedCountry == "US") {
+        match.fips?.let { fips ->
+            val county = detectCountyFromGeoJSON(fips, lat, lng)
+            if (county != null) {
+                previousCountyFips = county.fips
+                previousCountyName = county.name
+                previousCountyEnterTime = System.currentTimeMillis()
+
+                Log.d(TAG, "County seeded after state change: ${county.name}")
+            }
         }
+    } else {
+        previousCountyFips = ""
+        previousCountyName = ""
+        previousCountyEnterTime = 0L
+        previousCityFips = ""
+        previousCityName = ""
+        previousCityEnterTime = 0L
     }
     lastTripKey = tripKey
 

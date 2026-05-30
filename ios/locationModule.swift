@@ -95,8 +95,32 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
 
   // Result structs for state/county detection — carry both FIPS and name so callers
   // can key county files on FIPS without re-running state detection.
-  struct StateMatch { let fips: String?; let name: String }
+  struct StateMatch { let fips: String?; let name: String; let countryCode: String }
   struct CountyMatch { let fips: String; let name: String }
+  struct CanadianProvince {
+    let code: String
+    let name: String
+    let minLng: Double
+    let minLat: Double
+    let maxLng: Double
+    let maxLat: Double
+  }
+
+  private let canadianProvinceBounds: [CanadianProvince] = [
+    CanadianProvince(code: "YT", name: "Yukon", minLng: -141.1, minLat: 60.0, maxLng: -123.7, maxLat: 69.8),
+    CanadianProvince(code: "NT", name: "Northwest Territories", minLng: -136.6, minLat: 60.0, maxLng: -101.9, maxLat: 78.9),
+    CanadianProvince(code: "NU", name: "Nunavut", minLng: -121.0, minLat: 60.0, maxLng: -52.0, maxLat: 84.0),
+    CanadianProvince(code: "BC", name: "British Columbia", minLng: -139.2, minLat: 48.2, maxLng: -114.0, maxLat: 60.1),
+    CanadianProvince(code: "AB", name: "Alberta", minLng: -120.1, minLat: 48.9, maxLng: -109.9, maxLat: 60.1),
+    CanadianProvince(code: "SK", name: "Saskatchewan", minLng: -110.1, minLat: 48.9, maxLng: -101.2, maxLat: 60.1),
+    CanadianProvince(code: "MB", name: "Manitoba", minLng: -102.1, minLat: 48.9, maxLng: -88.8, maxLat: 60.1),
+    CanadianProvince(code: "NL", name: "Newfoundland and Labrador", minLng: -67.9, minLat: 46.5, maxLng: -52.0, maxLat: 60.6),
+    CanadianProvince(code: "ON", name: "Ontario", minLng: -95.3, minLat: 41.5, maxLng: -74.2, maxLat: 56.9),
+    CanadianProvince(code: "QC", name: "Quebec", minLng: -79.9, minLat: 44.8, maxLng: -57.0, maxLat: 62.7),
+    CanadianProvince(code: "NB", name: "New Brunswick", minLng: -69.2, minLat: 44.5, maxLng: -63.7, maxLat: 48.2),
+    CanadianProvince(code: "NS", name: "Nova Scotia", minLng: -66.6, minLat: 43.2, maxLng: -59.5, maxLat: 47.2),
+    CanadianProvince(code: "PE", name: "Prince Edward Island", minLng: -64.7, minLat: 45.8, maxLng: -61.8, maxLat: 47.1),
+  ]
 
   // Offline queue
   private let OFFLINE_QUEUE_KEY = "LocationTracker_offlineTripQueue"
@@ -1874,9 +1898,6 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     if geofencingCountry == "IN" {
       fileName = "india-states"
       ext = "geojson"
-    } else if geofencingCountry == "CA" {
-      fileName = "canada"
-      ext = "json"
     } else {
       fileName = "us-states"
       ext = "json"
@@ -1923,9 +1944,22 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     return false
   }
 
+  private func isNorthAmericaGeofencing() -> Bool {
+    return geofencingCountry == "US" || geofencingCountry == "CA" || geofencingCountry == "NA"
+  }
+
+  private func detectCanadianProvince(lat: Double, lng: Double) -> StateMatch? {
+    guard isNorthAmericaGeofencing() else { return nil }
+    guard let province = canadianProvinceBounds.first(where: {
+      lng >= $0.minLng && lng <= $0.maxLng && lat >= $0.minLat && lat <= $0.maxLat
+    }) else { return nil }
+    return StateMatch(fips: province.code, name: province.name, countryCode: "CA")
+  }
+
   private func detectStateFromGeoJSON(lat: Double, lng: Double) -> StateMatch? {
     let features = loadGeoJsonFeatures()
     let isIN = geofencingCountry == "IN"
+    let detectedCountry = isIN ? "IN" : "US"
 
     for feature in features {
       if bboxSkips(feature, lat: lat, lng: lng) { continue }
@@ -1937,9 +1971,9 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         : feature["name"] as? String
       let fips: String? = isIN ? nil : (feature["id"] as? String)
       guard let stateName = name else { return nil }
-      return StateMatch(fips: fips, name: stateName)
+      return StateMatch(fips: fips, name: stateName, countryCode: detectedCountry)
     }
-    return nil
+    return detectCanadianProvince(lat: lat, lng: lng)
   }
 
   // Loads counties for the given state FIPS (e.g. "06" for CA) from the bundle's
@@ -2113,6 +2147,7 @@ private func loadCityFeatures(stateName: String) -> [[String: Any]]? {
     // Name remains the key used throughout previousStateName comparisons.
     // match.fips is available here for Phase 3 county detection (unused in Phase 2).
     let detectedState = match.name
+    let detectedCountry = match.countryCode
     print("local_native: detected state", detectedState)
     print("👉 Detected state name:", match.name)
     print("👉 Detected state FIPS:", match.fips ?? "nil")
@@ -2151,7 +2186,7 @@ private func loadCityFeatures(stateName: String) -> [[String: Any]]? {
         if !cityChangeEventsEnabled {
             return
         }
-        if geofencingCountry != "US" {
+        if detectedCountry != "US" {
             return
         }
 
@@ -2263,6 +2298,11 @@ print("📍 county: \(county)")
         // RESET CITY TRACKING
         self.previousDetectedCity = ""
         self.previousCityEnterTime = 0
+        if detectedCountry != "US" {
+          self.previousCountyFips = ""
+          self.previousCountyName = ""
+          self.previousCountyEnterTime = 0
+        }
         self.previousEnterTime = currentTimeMs
         self.lastTripProcessedTime = currentTimeMs
         self.isTransitionInProgress = false
@@ -2288,6 +2328,11 @@ print("📍 county: \(county)")
       // RESET CITY TRACKING
       previousDetectedCity = ""
       previousCityEnterTime = 0
+      if detectedCountry != "US" {
+        previousCountyFips = ""
+        previousCountyName = ""
+        previousCountyEnterTime = 0
+      }
       previousStateName = detectedState
       previousEnterTime = currentTimeMs
       lastTripProcessedTime = currentTimeMs
