@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /Users/apple/Desktop/shantnu/shantnu/domiGo diff ios/canada.json)",
+      "Bash(git -C /Users/apple/Desktop/shantnu/shantnu/domiGo diff android/app/src/main/assets/canada.json)",
+      "Bash(python3 -c ' *)",
+      "Bash(python3)",
+      "Bash(wc -c /Users/apple/Desktop/shantnu/shantnu/domiGo/android/app/src/main/assets/us-states.json /Users/apple/Desktop/shantnu/shantnu/domiGo/src/geo/states.json && wc -c /tmp/canada-provinces.json)",
+      "Read(//private/tmp/**)",
+      "Bash(cp /tmp/canada-provinces.json /Users/apple/Desktop/shantnu/shantnu/domiGo/ios/canada.json)",
+      "Bash(cp /tmp/canada-provinces.json /Users/apple/Desktop/shantnu/shantnu/domiGo/android/app/src/main/assets/canada.json)",
+      "Bash(cp /tmp/canada-provinces.json /Users/apple/Desktop/shantnu/shantnu/domiGo/src/geo/canada.json)",
+      "Bash(git -C /Users/apple/Desktop/shantnu/shantnu/domiGo status --short)",
+      "Bash(git -C /Users/apple/Desktop/shantnu/shantnu/domiGo diff ios/locationModule.swift)"
+    ]
+  }
+}
