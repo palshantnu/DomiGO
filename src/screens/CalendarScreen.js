@@ -10,6 +10,7 @@ import {
   Animated,
   Dimensions,
   PanResponder,
+  InteractionManager,
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -21,6 +22,294 @@ import CustomScroll from '../components/CustomScroll';
 import { GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIMELINE, GET_YEAR_WISE_TIMELINE, GET_MISSING_ACTIVITY_LIST, GET_WEEK_WISE_LOCATION, GET_YEAR_WISE_LOCATION } from '../redux/actions/action-creator';
 import { connect } from 'react-redux';
 import { useFocusEffect } from '@react-navigation/native';
+
+
+
+  const parseLocalDate = (input) => {
+    if (!input) return new Date();
+
+    if (input instanceof Date) return input;
+
+    if (typeof input === "string") {
+      if (input.includes("T")) {
+        return new Date(input); // ISO safe
+      }
+
+      const [y, m, d] = input.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    return new Date(input);
+  };
+
+
+
+  const getAutoTypeOfDayName = (activity, date) => {
+    if (!activity) return "";
+
+    const isDefault = activity?.typeOfDay?.id === 1;
+    const isAuto = activity?.creationType === "automatic";
+
+    if (!isDefault || !isAuto) {
+      return activity?.typeOfDay?.name;
+    }
+
+    // const d = new Date(date);
+    const d = parseLocalDate(date);
+    const day = d.getDay();
+
+    if (day === 0 || day === 6) {
+      return "Weekend"; // id = 3
+    }
+
+    return "Working"; // id = 2
+  };
+
+  const YearWeekCard = React.memo(
+      ({ item, index, openIndex, setOpenIndex,selectedFilter,navigation
+ }) => {
+    const isOpen = openIndex === index;
+    // console.log('itemmdnfn', item);
+
+    return (
+      <View style={styles.cardWrapper}>
+
+        {/* ===== MAIN CARD ROW (UNCHANGED) ===== */}
+        <View style={styles.rowContainer}>
+          {/* Left color strip */}
+          <View
+            style={[
+              styles.colorStrip,
+              { backgroundColor: item.color },
+            ]}
+          />
+
+          {/* Card content */}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() =>
+              setOpenIndex(isOpen ? null : index)
+            }
+            style={styles.cardBody}
+          >
+            {/* Top row */}
+            <View style={styles.topRow}>
+              <Text style={styles.dateText}>{item.week}</Text>
+              {/* <Text style={styles.daysText}>{item.days}</Text> */}
+              <Text style={styles.daysText}>{'07 Days'}</Text>
+            </View>
+
+            {/* Bottom row */}
+            <View style={styles.bottomRow}>
+              <Text style={styles.locationText}>
+                {item.location}
+              </Text>
+
+              <View style={styles.rightIcons}>
+                {item.manual && (
+                  <View style={styles.manualTag}>
+                    <Text style={styles.manualText}>Manual</Text>
+                  </View>
+                )}
+                <Ionicons
+                  name="chatbubble-outline"
+                  size={16}
+                  color="#9E9E9E"
+                  style={{ marginLeft: 8 }}
+                />
+              </View>
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* {isOpen && (
+          <View style={styles.expandedContainer}>
+            {item.trips.map(trip => (
+              <TouchableOpacity
+                key={trip.id}
+                style={styles.tripRow}
+                onPress={() =>
+                  navigation.navigate('DayDetail', trip)
+                }
+              >
+                <View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'center'}}>
+               
+                <View>
+                  <View style={styles.tripLine}>
+                    <View style={styles.blueDot} />
+                    <Text style={styles.tripText}>
+                      {trip.originCity}, {trip.originState}
+                    </Text>
+                  </View>
+
+                  <View style={styles.tripLine}>
+                    <View style={styles.greenDot} />
+                    <Text style={styles.tripText}>
+                      {trip.destinationCity}, {trip.destinationState}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.typeRow}>
+                  <Ionicons
+                    name={
+                      trip.creationType === "Business" ? "briefcase-outline" : "leaf-outline"
+                    }
+                    size={15}
+                    color="#4CAF50"
+                    style={{ marginRight: 5 }}
+                  />
+                  <Text style={styles.typeText}>{trip.creationType}</Text>
+                </View>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )} */}
+        {isOpen && (
+          <View style={styles.expandedContainer}>
+
+            {item.days.map((day, idx) => {
+              // console.log('dayyyyy', day)
+              return (
+                <View key={idx} style={{ marginBottom: 12 }}>
+
+                  {/* DATE LABEL */}
+                  <Text style={{ fontSize: 13, fontWeight: "600", color: "#555" }}>
+                    {day.date}
+                  </Text>
+
+                  {/* 🚗 TRIPS */}
+                  {/* {day?.trips?.map(trip => ( */}
+                  {day?.trips
+                    ?.filter(trip => {
+                      if (selectedFilter === "TRIP") return trip.kind === "trip";
+                      if (selectedFilter === "CITY_CHANGE") return trip.kind === "city_change";
+                      if (selectedFilter === "COUNTY_CHANGE") return trip.kind === "county_change";
+                      if (selectedFilter === "LOCATIONS") return false;
+                      return true; // ALL
+                    })
+                    .map(trip => (
+                      <TouchableOpacity
+                        key={trip.id}
+                        style={styles.tripRow}
+                        onPress={() => navigation.navigate("DayDetail", trip)}
+                      >
+                        <View style={styles.tripLine}>
+                          <View style={styles.blueDot} />
+                          <Text style={styles.tripText}>
+                            {/* {trip.originCity}, {trip.originState} */}
+                            {trip.kind === "county_change"
+                              ? trip.originCounty
+                              : trip.originCity
+                            }, {trip.originState}
+                          </Text>
+                        </View>
+
+                        <View style={styles.tripLine}>
+                          <View style={styles.greenDot} />
+                          <Text style={styles.tripText}>
+                            {/* {trip.destinationCity}, {trip.destinationState} */}
+                            {trip.kind === "county_change"
+                              ? trip.destinationCounty
+                              : trip.destinationCity
+                            }, {trip.destinationState}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+
+                  {(selectedFilter === "LOCATIONS" ||
+                    selectedFilter === "ALL") &&
+                    day?.locations?.map(location => (
+                      <View
+                        key={location.id}
+                        style={{
+                          backgroundColor: "#F7F7F7",
+                          padding: 12,
+                          borderRadius: 10,
+                          marginTop: 8,
+                        }}
+                      >
+                        <Text style={{ fontWeight: "600", color: "#000" }}>
+                          {location.city}, {location.state}
+                        </Text>
+
+                        <Text
+                          style={{
+                            color: "#666",
+                            marginTop: 4,
+                          }}
+                        >
+                          {location.address}
+                        </Text>
+
+                        <Text
+                          style={{
+                            color: "#999",
+                            marginTop: 4,
+                            fontSize: 12,
+                          }}
+                        >
+                          {parseLocalDate(location.recordedAt)
+                            .toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                        </Text>
+                      </View>
+                    ))}
+
+                  {/* 🟠 ACTIVITY */}
+                  {day.activity && 
+                    selectedFilter !== "COUNTY_CHANGE" &&
+                    selectedFilter !== "CITY_CHANGE" && (
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: "#FFF3E0",
+                        borderRadius: 8,
+                        padding: 10,
+                        marginTop: 6,
+                      }}
+                      onPress={() =>
+                        // navigation.navigate("AddMissingDayScreen", {
+                        //   date: day.date,
+                        //   isEdit: true,
+                        //   data: day.activity,
+                        // })
+                        navigation.navigate('DayEntryScreen', {
+                          mode: "MISSING_DAY",
+                          date: day.date,
+                          isEdit: true,
+                          data: day.activity,
+                        })
+                      }
+                    >
+                      <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        <Ionicons
+                          name="alert-circle-outline"
+                          size={16}
+                          color="#FF9500"
+                        />
+                        <Text style={{ marginLeft: 6, fontWeight: "600" }}>
+                          {getAutoTypeOfDayName(day.activity, day.date)}
+                          {/* {day.activity.typeOfDay?.name} */}
+                        </Text>
+                      </View>
+
+                      <Text style={{ marginLeft: 22, color: "#666" }}>
+                        {day.activity.state}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )
+            })}
+          </View>
+        )}
+
+      </View>
+    );
+  });
 
 function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIMELINE, GET_YEAR_WISE_TIMELINE, GET_YEAR_WISE_LOCATION, GET_WEEK_WISE_LOCATION, GET_MISSING_ACTIVITY_LIST, missingActivityList, yearWiseTimeline, weekWiseTimeline, monthWiseTimeline, weekWiseLocation, yearWiseLocation }) {
   const [selectedTab, setSelectedTab] = useState('Month');
@@ -38,6 +327,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   const [showYearDropdown, setShowYearDropdown] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState("ALL")
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [loading, setLoading] = useState(true);
   const yearOptions = useMemo(() => {
     return [
       currentYear - 2,
@@ -102,10 +392,10 @@ const getLocalDateKey = (value) => {
 
   // console.log('yearWiseTimeline', yearWiseTimeline);
   // console.log('weekWiseTimeline', weekWiseTimeline);
-  console.log('yearWiseLocation', yearWiseLocation);
-  console.log('weekWiseLocation', weekWiseLocation);
-  console.log('monthWiseTimeline', monthWiseTimeline);
-  console.log('missingActivityList', missingActivityList);
+  // console.log('yearWiseLocation', yearWiseLocation);
+  // console.log('weekWiseLocation', weekWiseLocation);
+  // console.log('monthWiseTimeline', monthWiseTimeline);
+  // console.log('missingActivityList', missingActivityList);
 
   const getCurrentWeekDates = () => {
     const today = new Date();
@@ -145,34 +435,69 @@ const getLocalDateKey = (value) => {
 
 
 
+  // useEffect(() => {
+  //   const today = new Date();
+  //   const { start, end } = getCurrentWeekDates();
+
+  //   GET_WEEK_WISE_TIMELINE({ start, end });;
+  //   GET_WEEK_WISE_LOCATION({ start, end });;
+  //   GET_YEAR_WISE_TIMELINE({ year: selectedYear });
+  //   GET_YEAR_WISE_LOCATION({ year: selectedYear });
+  //   GET_MONTH_WISE_TIMELINE({
+  //     month: today.getMonth() + 1, // JS months 0-based
+  //     year: today.getFullYear(),
+  //   });
+  //   GET_MISSING_ACTIVITY_LIST()
+  // }, []);
+
+  //   useEffect(() => {
+
+  //   InteractionManager.runAfterInteractions(() => {
+
+  //       loadCalendarData();
+
+  //       setLoading(false);
+
+  //   });
+
+  // }, []);
+
   useEffect(() => {
     const today = new Date();
     const { start, end } = getCurrentWeekDates();
-
-    GET_WEEK_WISE_TIMELINE({ start, end });;
-    GET_WEEK_WISE_LOCATION({ start, end });;
-    GET_YEAR_WISE_TIMELINE({ year: selectedYear });
-    GET_YEAR_WISE_LOCATION({ year: selectedYear });
+    GET_MISSING_ACTIVITY_LIST()
+  if(selectedTab === 'Month'){
     GET_MONTH_WISE_TIMELINE({
       month: today.getMonth() + 1, // JS months 0-based
       year: today.getFullYear(),
     });
-    GET_MISSING_ACTIVITY_LIST()
-  }, []);
+  }
+
+  if(selectedTab === 'Week'){
+    GET_WEEK_WISE_TIMELINE({ start, end });
+    GET_WEEK_WISE_LOCATION({ start, end });
+  }
+
+  if(selectedTab === 'Year'){
+    GET_YEAR_WISE_TIMELINE({ year: selectedYear });
+    GET_YEAR_WISE_LOCATION({ year: selectedYear });
+  }
+
+}, [selectedTab,selectedYear]);
 
   useFocusEffect(
     React.useCallback(() => {
-      const today = new Date();
-      const { start, end } = getCurrentWeekDates();
+      // const today = new Date();
+      // const { start, end } = getCurrentWeekDates();
 
-      GET_WEEK_WISE_TIMELINE({ start, end });
-      GET_WEEK_WISE_LOCATION({ start, end });
-      GET_YEAR_WISE_TIMELINE({ year: selectedYear });
-      GET_YEAR_WISE_LOCATION({ year: selectedYear });
-      GET_MONTH_WISE_TIMELINE({
-        month: today.getMonth() + 1, // JS months 0-based
-        year: today.getFullYear(),
-      });
+      // GET_WEEK_WISE_TIMELINE({ start, end });
+      // GET_WEEK_WISE_LOCATION({ start, end });
+      // GET_YEAR_WISE_TIMELINE({ year: selectedYear });
+      // GET_YEAR_WISE_LOCATION({ year: selectedYear });
+      // GET_MONTH_WISE_TIMELINE({
+      //   month: today.getMonth() + 1, // JS months 0-based
+      //   year: today.getFullYear(),
+      // });
       GET_MISSING_ACTIVITY_LIST();
     }, [])
   );
@@ -323,7 +648,7 @@ const getLocalDateKey = (value) => {
       // 🔵 PRIORITY LOGIC
       // ===============================
 
-      console.log('missing>>>>', missing);
+      // console.log('missing>>>>', missing);
 
       if (trips.length > 0) {
         dots.push(TRIP_DOT);
@@ -366,7 +691,7 @@ const getLocalDateKey = (value) => {
 
   const missingDataForDay = missingMap[selectedDate];
 
-  console.log('missingDataForDay', missingDataForDay);
+  // console.log('missingDataForDay', missingDataForDay);
   // const isMissingAlreadyAdded = !!missingDataForDay;
   const isMissingAlreadyAdded = !!selectedMissingDate;
 
@@ -513,7 +838,12 @@ const getLocalDateKey = (value) => {
     return Array.from(stateSet);
   };
 
-  const legendStates = getLegendStates(monthWiseTimeline);
+  // const legendStates = getLegendStates(monthWiseTimeline);
+  const legendStates = useMemo(() => {
+  return getLegendStates(
+    monthWiseTimeline
+  );
+}, [monthWiseTimeline]);
 
   // const getWeekCalendarData = (weekResult = {}) => {
   //   return Object.keys(weekResult).map(date => {
@@ -762,7 +1092,13 @@ const getLocalDateKey = (value) => {
   //   return normalized;
   // };
 
-  const normalizeYearData = (yearWiseTimeline = {}, yearWiseLocation = {}) => {
+
+   const normalizedYearLocation = useMemo(() => {
+      return normalizeLocationData(yearWiseLocation);
+    }, [yearWiseLocation]);
+
+  // const normalizeYearData = (yearWiseTimeline = {}, yearWiseLocation = {}) => {
+  const normalizeYearData = (yearWiseTimeline = {}, normalizedYearLocation = {}) => {
     const normalized = {};
 
     Object.entries(yearWiseTimeline).forEach(([date, items]) => {
@@ -770,7 +1106,8 @@ const getLocalDateKey = (value) => {
         trips: [],
         activity: null,
         // locations: yearWiseLocation?.[date] || [],
-        locations: normalizeLocationData(yearWiseLocation)?.[date] || [],
+        // locations: normalizeLocationData(yearWiseLocation)?.[date] || [],
+        locations: normalizedYearLocation?.[date] || [],
       };
 
       if (!Array.isArray(items)) return;
@@ -850,8 +1187,9 @@ const getLocalDateKey = (value) => {
 
 
   const normalizedYearData = useMemo(
-    () => normalizeYearData(yearWiseTimeline, yearWiseLocation),
-    [yearWiseTimeline, yearWiseLocation]
+    // () => normalizeYearData(yearWiseTimeline, yearWiseLocation),
+    () => normalizeYearData(yearWiseTimeline, normalizedYearLocation),
+    [yearWiseTimeline, normalizedYearLocation]
   );
   const weeklyData = useMemo(
     () => getYearWeeklyData(normalizedYearData),
@@ -866,254 +1204,27 @@ const getLocalDateKey = (value) => {
   //   [normalizedYearData]
   // );
 
-  const YearWeekCard = ({ item, index }) => {
-    const isOpen = openIndex === index;
-    console.log('itemmdnfn', item);
-
-    return (
-      <View style={styles.cardWrapper}>
-
-        {/* ===== MAIN CARD ROW (UNCHANGED) ===== */}
-        <View style={styles.rowContainer}>
-          {/* Left color strip */}
-          <View
-            style={[
-              styles.colorStrip,
-              { backgroundColor: item.color },
-            ]}
-          />
-
-          {/* Card content */}
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() =>
-              setOpenIndex(isOpen ? null : index)
-            }
-            style={styles.cardBody}
-          >
-            {/* Top row */}
-            <View style={styles.topRow}>
-              <Text style={styles.dateText}>{item.week}</Text>
-              {/* <Text style={styles.daysText}>{item.days}</Text> */}
-              <Text style={styles.daysText}>{'07 Days'}</Text>
-            </View>
-
-            {/* Bottom row */}
-            <View style={styles.bottomRow}>
-              <Text style={styles.locationText}>
-                {item.location}
-              </Text>
-
-              <View style={styles.rightIcons}>
-                {item.manual && (
-                  <View style={styles.manualTag}>
-                    <Text style={styles.manualText}>Manual</Text>
-                  </View>
-                )}
-                <Ionicons
-                  name="chatbubble-outline"
-                  size={16}
-                  color="#9E9E9E"
-                  style={{ marginLeft: 8 }}
-                />
-              </View>
-            </View>
-          </TouchableOpacity>
-        </View>
-
-        {/* {isOpen && (
-          <View style={styles.expandedContainer}>
-            {item.trips.map(trip => (
-              <TouchableOpacity
-                key={trip.id}
-                style={styles.tripRow}
-                onPress={() =>
-                  navigation.navigate('DayDetail', trip)
-                }
-              >
-                <View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'center'}}>
-               
-                <View>
-                  <View style={styles.tripLine}>
-                    <View style={styles.blueDot} />
-                    <Text style={styles.tripText}>
-                      {trip.originCity}, {trip.originState}
-                    </Text>
-                  </View>
-
-                  <View style={styles.tripLine}>
-                    <View style={styles.greenDot} />
-                    <Text style={styles.tripText}>
-                      {trip.destinationCity}, {trip.destinationState}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.typeRow}>
-                  <Ionicons
-                    name={
-                      trip.creationType === "Business" ? "briefcase-outline" : "leaf-outline"
-                    }
-                    size={15}
-                    color="#4CAF50"
-                    style={{ marginRight: 5 }}
-                  />
-                  <Text style={styles.typeText}>{trip.creationType}</Text>
-                </View>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )} */}
-        {isOpen && (
-          <View style={styles.expandedContainer}>
-
-            {item.days.map((day, idx) => {
-              console.log('dayyyyy', day)
-              return (
-                <View key={idx} style={{ marginBottom: 12 }}>
-
-                  {/* DATE LABEL */}
-                  <Text style={{ fontSize: 13, fontWeight: "600", color: "#555" }}>
-                    {day.date}
-                  </Text>
-
-                  {/* 🚗 TRIPS */}
-                  {/* {day?.trips?.map(trip => ( */}
-                  {day?.trips
-                    ?.filter(trip => {
-                      if (selectedFilter === "TRIP") return trip.kind === "trip";
-                      if (selectedFilter === "CITY_CHANGE") return trip.kind === "city_change";
-                      if (selectedFilter === "COUNTY_CHANGE") return trip.kind === "county_change";
-                      if (selectedFilter === "LOCATIONS") return false;
-                      return true; // ALL
-                    })
-                    .map(trip => (
-                      <TouchableOpacity
-                        key={trip.id}
-                        style={styles.tripRow}
-                        onPress={() => navigation.navigate("DayDetail", trip)}
-                      >
-                        <View style={styles.tripLine}>
-                          <View style={styles.blueDot} />
-                          <Text style={styles.tripText}>
-                            {/* {trip.originCity}, {trip.originState} */}
-                            {trip.kind === "county_change"
-                              ? trip.originCounty
-                              : trip.originCity
-                            }, {trip.originState}
-                          </Text>
-                        </View>
-
-                        <View style={styles.tripLine}>
-                          <View style={styles.greenDot} />
-                          <Text style={styles.tripText}>
-                            {/* {trip.destinationCity}, {trip.destinationState} */}
-                            {trip.kind === "county_change"
-                              ? trip.destinationCounty
-                              : trip.destinationCity
-                            }, {trip.destinationState}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                    ))}
-
-                  {(selectedFilter === "LOCATIONS" ||
-                    selectedFilter === "ALL") &&
-                    day?.locations?.map(location => (
-                      <View
-                        key={location.id}
-                        style={{
-                          backgroundColor: "#F7F7F7",
-                          padding: 12,
-                          borderRadius: 10,
-                          marginTop: 8,
-                        }}
-                      >
-                        <Text style={{ fontWeight: "600", color: "#000" }}>
-                          {location.city}, {location.state}
-                        </Text>
-
-                        <Text
-                          style={{
-                            color: "#666",
-                            marginTop: 4,
-                          }}
-                        >
-                          {location.address}
-                        </Text>
-
-                        <Text
-                          style={{
-                            color: "#999",
-                            marginTop: 4,
-                            fontSize: 12,
-                          }}
-                        >
-                          {parseLocalDate(location.recordedAt)
-                            .toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                        </Text>
-                      </View>
-                    ))}
-
-                  {/* 🟠 ACTIVITY */}
-                  {day.activity && 
-                    selectedFilter !== "COUNTY_CHANGE" &&
-                    selectedFilter !== "CITY_CHANGE" && (
-                    <TouchableOpacity
-                      style={{
-                        backgroundColor: "#FFF3E0",
-                        borderRadius: 8,
-                        padding: 10,
-                        marginTop: 6,
-                      }}
-                      onPress={() =>
-                        // navigation.navigate("AddMissingDayScreen", {
-                        //   date: day.date,
-                        //   isEdit: true,
-                        //   data: day.activity,
-                        // })
-                        navigation.navigate('DayEntryScreen', {
-                          mode: "MISSING_DAY",
-                          date: day.date,
-                          isEdit: true,
-                          data: day.activity,
-                        })
-                      }
-                    >
-                      <View style={{ flexDirection: "row", alignItems: "center" }}>
-                        <Ionicons
-                          name="alert-circle-outline"
-                          size={16}
-                          color="#FF9500"
-                        />
-                        <Text style={{ marginLeft: 6, fontWeight: "600" }}>
-                          {getAutoTypeOfDayName(day.activity, day.date)}
-                          {/* {day.activity.typeOfDay?.name} */}
-                        </Text>
-                      </View>
-
-                      <Text style={{ marginLeft: 22, color: "#666" }}>
-                        {day.activity.state}
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              )
-            })}
-          </View>
-        )}
-
-      </View>
-    );
-  };
 
 
 
-  const regulatoryCalendar = getWeekCalendarData(weekWiseTimeline);
-  const weekLocationData = normalizeLocationData(weekWiseLocation);
+
+  // const regulatoryCalendar = getWeekCalendarData(weekWiseTimeline);
+  const regulatoryCalendar = useMemo(() => {
+   return getWeekCalendarData(
+      weekWiseTimeline
+   );
+}, [weekWiseTimeline, selectedFilter]);
+  // const weekLocationData = normalizeLocationData(weekWiseLocation);
+  const weekLocationData = useMemo(() => {
+  return normalizeLocationData(
+    weekWiseLocation
+  );
+}, [weekWiseLocation]);
+
+    // const normalizedYearLocation = useMemo(() => {
+    //   return normalizeLocationData(yearWiseLocation);
+    // }, [yearWiseLocation]);
+
   const getTimelineData = (dataObj = {}) => {
     const formatDate = (date) =>
       // new Date(date).toLocaleDateString('en-IN', {
@@ -1154,7 +1265,10 @@ const getLocalDateKey = (value) => {
       .filter(Boolean);
   };
 
-  const timelineData = getTimelineData(yearWiseTimeline);
+  // const timelineData = getTimelineData(yearWiseTimeline);
+  const timelineData = useMemo(() => {
+   return getTimelineData(yearWiseTimeline);
+}, [yearWiseTimeline]);
 
   const residenciesData = {
     past: [
@@ -1172,7 +1286,8 @@ const getLocalDateKey = (value) => {
   };
 
 
-  const renderRegulatoryEntry = (item, index) => (
+  const renderRegulatoryEntry = 
+    (item, index) => (
     <TouchableOpacity style={styles.regulatoryRow} key={index}
       onPress={() => navigation.navigate('AddTrip', { id: item._id })}>
 
@@ -1196,7 +1311,8 @@ const getLocalDateKey = (value) => {
   );
 
 
-  const renderRegulatorySection = (section, index) => (
+  const renderRegulatorySection = 
+            (section, index) => (
     <View key={index} style={styles.regulatorySection}>
       <View style={styles.rowContainer}>
 
@@ -1937,16 +2053,36 @@ const getLocalDateKey = (value) => {
               </View>
 
 
-              <ScrollView showsVerticalScrollIndicator={false}>
-                {/* {weeklyData.map(renderWeekCard)} */}
-                {weeklyData.map((item, index) => (
-                  <YearWeekCard
-                    key={index}
+              {/* <ScrollView showsVerticalScrollIndicator={false}> */}
+                {/* {weeklyData.map(renderWeekCard)} 
+                {
+                // weeklyData.map((item, index) => (
+                  // <YearWeekCard
+                    // key={index}
+                    // item={item}
+                    // index={index}
+                  // />
+                // ))}
+              // </ScrollView> */}
+              <FlatList
+              data={weeklyData}
+              keyExtractor={(item,index)=>index.toString()}
+              renderItem={({item,index})=>(
+                <YearWeekCard
+
                     item={item}
                     index={index}
-                  />
-                ))}
-              </ScrollView>
+                    openIndex={openIndex}
+                    setOpenIndex={setOpenIndex}
+                    selectedFilter={selectedFilter}
+                    navigation={navigation}
+                />
+              )}
+              removeClippedSubviews
+              initialNumToRender={10}
+              maxToRenderPerBatch={10}
+              windowSize={5}
+              />
             </>
           )}
         </View>
@@ -2170,6 +2306,7 @@ const mapDispatchToProps = {
   GET_MISSING_ACTIVITY_LIST,
 };
 
+// export default React.memo(connect(mapStateToProps, mapDispatchToProps)(CalendarScreen));
 export default connect(mapStateToProps, mapDispatchToProps)(CalendarScreen);
 
 

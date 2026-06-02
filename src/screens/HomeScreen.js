@@ -38,6 +38,7 @@ import TrialBanner from '../components/TrialBanner';
 import { FEATURES } from '../config/featureAccess';
 import Geolocation from '@react-native-community/geolocation';
 import { GOOGLE_KEY } from "../helpers/CommonHelpers"
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 
@@ -52,10 +53,17 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
     const [refreshing, setRefreshing] = React.useState(false)
     const [locationModal, setLocationModal] = React.useState(false);
     const [currentLocation, setCurrentLocation] = React.useState(null);
-    console.log('stateWiseResidency>>>>', stateWiseResidency);
-    console.log('complianceScore>>>>', complianceScore);
-    console.log('userData>>>>', userData);
-    console.log('userLocations>>>>', userLocations);
+    const MAX_DAILY_REFRESH = 10;
+
+    const REFRESH_COUNT_KEY =
+        "daily_location_refresh_count";
+
+    const REFRESH_DATE_KEY =
+        "daily_location_refresh_date";
+    // console.log('stateWiseResidency>>>>', stateWiseResidency);
+    // console.log('complianceScore>>>>', complianceScore);
+    // console.log('userData>>>>', userData);
+    // console.log('userLocations>>>>', userLocations);
 
     const dispatch = useDispatch();
 
@@ -82,6 +90,17 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
 
     const onRefresh = async () => {
         setRefreshing(true);
+        const allowed =
+            await canRefreshLocation();
+
+        if (!allowed) {
+            CustomToast.show(
+                "You have already completed your attempts for today"
+            );
+
+            setRefreshing(false);
+            return;
+        }
         if (!isGPSOn) {
             CustomToast.show("Please enable GPS");
             setRefreshing(false);
@@ -108,10 +127,21 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
 
             // 🔥 API me sab separate jaayega
             // await sendLocationAPI(finalLocation);
-            const response = await sendLocationAPI(finalLocation);
+            const locationResponse =
+                await sendLocationAPI(finalLocation);
 
-            if (!response) {
+            const hoursResponse =
+                await sendHoursLocationAPI(finalLocation);
+
+            if (hoursResponse) {
+                await increaseRefreshCount();
+            }
+
+            if (!locationResponse && !hoursResponse) {
                 CustomToast.show("Location not saved");
+
+                setRefreshing(false);
+                return;
             }
 
             setCurrentLocation(finalLocation);
@@ -186,6 +216,79 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
             );
         });
     };
+
+const canRefreshLocation = async () => {
+    try {
+        const today = new Date().toISOString().split("T")[0];
+
+        const storedDate = await AsyncStorage.getItem(
+            REFRESH_DATE_KEY
+        );
+
+        let count = parseInt(
+            (
+                await AsyncStorage.getItem(
+                    REFRESH_COUNT_KEY
+                )
+            ) || "0",
+            10
+        );
+
+        // New day => reset count
+        if (storedDate !== today) {
+            await AsyncStorage.setItem(
+                REFRESH_DATE_KEY,
+                today
+            );
+
+            await AsyncStorage.setItem(
+                REFRESH_COUNT_KEY,
+                "0"
+            );
+
+            count = 0;
+        }
+
+        if (count >= MAX_DAILY_REFRESH) {
+            return false;
+        }
+
+        return true;
+
+    } catch (error) {
+        console.log("canRefreshLocation error", error);
+        return false;
+    }
+};
+
+const increaseRefreshCount = async () => {
+    try {
+        const count = parseInt(
+            (
+                await AsyncStorage.getItem(
+                    REFRESH_COUNT_KEY
+                )
+            ) || "0",
+            10
+        );
+
+        await AsyncStorage.setItem(
+            REFRESH_COUNT_KEY,
+            String(count + 1)
+        );
+
+        console.log(
+            "Refresh Count Updated =>",
+            count + 1
+        );
+
+    } catch (error) {
+        console.log(
+            "increaseRefreshCount error",
+            error
+        );
+    }
+};
 
 
     const getAddressFromLatLong = async (lat, lng) => {
@@ -279,6 +382,32 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
 
         } catch (e) {
             console.log("API error", e);
+        }
+    };
+
+
+    const sendHoursLocationAPI = async (location) => {
+        try {
+            const res = await fetch(
+                "https://stage.mydomigo.com/api/locations/hours",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${loginToken}`,
+                    },
+                    body: JSON.stringify(location),
+                }
+            );
+
+            const data = await res.json();
+
+            console.log("HOURS API RESPONSE =>", data);
+
+            return data;
+        } catch (e) {
+            console.log("Hours API Error", e);
+            return null;
         }
     };
 

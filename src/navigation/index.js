@@ -38,6 +38,10 @@ function MainTabs() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: false,
+        lazy: true,
+        unmountOnBlur: false,
+        freezeOnBlur: true,
+        headerShown: false,
         tabBarStyle: {
           height: 70,
           paddingTop: 10,

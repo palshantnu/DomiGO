@@ -6,12 +6,13 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  FlatList,
 } from "react-native";
 import Header from "../components/Header";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import colors from "../theme/colors";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LinearGradient from "react-native-linear-gradient";
 import { connect, useDispatch } from "react-redux";
@@ -34,7 +35,7 @@ function getTodayDateYYYYMMDD() {
 
 const TripListScreen = ({ tripList }) => {
   const [refreshing, setRefreshing] = React.useState(false)
-  console.log('tripList==>', tripList);
+  // console.log('tripList==>', tripList);
   const dispatch = useDispatch();
 
   const navigation = useNavigation();
@@ -47,16 +48,22 @@ const TripListScreen = ({ tripList }) => {
       GET_TRIP_LIST_LIST,
     ],
   );
-  useEffect(() => {
-    API_Function();
-  }, [])
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      API_Function();
+  // useEffect(() => {
+  //   API_Function();
+  // }, [])
+  // useEffect(() => {
+  //   const unsubscribe = navigation.addListener('focus', () => {
+  //     API_Function();
 
-    });
-    return unsubscribe;
-  }, [navigation]);
+  //   });
+  //   return unsubscribe;
+  // }, [navigation]);
+
+  useFocusEffect(
+    useCallback(() => {
+      API_Function();
+    }, [])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -71,19 +78,129 @@ const TripListScreen = ({ tripList }) => {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
-  
+
     const cleanDate = dateStr.includes("T")
       ? dateStr.split("T")[0]
       : dateStr;
-  
+
     const [y, m, d] = cleanDate.split("-").map(Number);
     const dateObj = new Date(y, m - 1, d);
-  
+
     return dateObj.toDateString();
   };
 
-  const todayDate = getTodayDateYYYYMMDD();
-console.log(todayDate); // e.g. 2026-01-03
+  // const todayDate = getTodayDateYYYYMMDD();
+  // console.log(todayDate); // e.g. 2026-01-03
+  const filteredTrips = React.useMemo(() => {
+    return tripList.filter(
+      item => item.kind === "trip"
+    );
+  }, [tripList]);
+
+  const renderTripCard = ({ item: trip }) => (
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() =>
+        navigation.navigate('DayDetail', trip)
+      }
+    >
+      <View style={styles.topRow}>
+        <View style={styles.typeRow}>
+          <Ionicons
+            name={
+              trip.type === "Business"
+                ? "briefcase-outline"
+                : "leaf-outline"
+            }
+            size={15}
+            color="#4CAF50"
+            style={{ marginRight: 5 }}
+          />
+
+          <Text style={styles.typeText}>
+            {trip.creationType}
+          </Text>
+        </View>
+
+        <View
+          style={[
+            styles.impactBadge,
+            { backgroundColor: '#00d250' }
+          ]}
+        >
+          <Text
+            style={[
+              styles.impactText,
+              { color: '#fff' }
+            ]}
+          >
+            {trip.impactLevel}
+          </Text>
+        </View>
+      </View>
+
+      <Text style={styles.cityText}>
+        {trip.destinationCity},
+        {trip.destinationState}
+      </Text>
+
+      <Text style={styles.dateText}>
+        {formatDate(trip.date)}
+      </Text>
+
+      <View style={styles.divider} />
+
+      <View style={styles.bottomRow}>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            width: '100%',
+          }}
+        >
+          <Text style={styles.label}>
+            Days Spent
+          </Text>
+
+          <Text style={styles.daysText}>
+            {trip.daysSpent} Days
+          </Text>
+        </View>
+      </View>
+
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate(
+            "DayEntryScreen",
+            {
+              mode: "TRIP",
+              date: todayDate,
+              isEdit: true,
+              data: trip,
+            }
+          )
+        }
+        style={{
+          width: 36,
+          height: 36,
+          backgroundColor: colors.primary,
+          borderRadius: 18,
+          justifyContent: 'center',
+          alignItems: 'center',
+          alignSelf: 'flex-end',
+          bottom: -15,
+          right: 10,
+          position: 'absolute',
+        }}
+      >
+        <MaterialIcons
+          name="edit"
+          size={18}
+          color="#fff"
+        />
+      </TouchableOpacity>
+    </TouchableOpacity>
+  );
 
   return (
     <LinearGradient
@@ -118,7 +235,8 @@ console.log(todayDate); // e.g. 2026-01-03
                 date: todayDate,
                 isEdit: false,
                 // data: item
-              })}
+              })
+            }
             }
               style={styles.addTripButton}>
               <Ionicons style={{ backgroundColor: colors.primary, borderRadius: 40 }} name="add" size={20} color={colors.white} />
@@ -126,9 +244,33 @@ console.log(todayDate); // e.g. 2026-01-03
             </TouchableOpacity>
           </View>
 
+          <FlatList
+            data={filteredTrips}
+            keyExtractor={(item) =>
+              item.id.toString()
+            }
+            renderItem={renderTripCard}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={
+              styles.scrollContent
+            }
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
+              />
+            }
+            removeClippedSubviews
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            updateCellsBatchingPeriod={50}
+          />
 
-          {tripList.map((trip) => (
-              trip.kind == "trip" &&
+          {/* {tripList.map((trip) => (
+            trip.kind == "trip" &&
             <TouchableOpacity key={trip.id} style={styles.card}
               onPress={() => navigation.navigate('DayDetail', trip)}>
 
@@ -155,13 +297,13 @@ console.log(todayDate); // e.g. 2026-01-03
 
               {
                 trip.kind == "trip" ?
-              <Text style={styles.cityText}>{trip.destinationCity},{trip.destinationState}</Text>
-               :
-              <Text style={styles.cityText}>{trip.state}</Text>
+                  <Text style={styles.cityText}>{trip.destinationCity},{trip.destinationState}</Text>
+                  :
+                  <Text style={styles.cityText}>{trip.state}</Text>
 
               }
-              {/* <Text style={styles.dateText}>{new Date(trip.endDate).toDateString()}</Text> */}
-              {/* <Text style={styles.dateText}>{new Date(trip.date).toDateString()}</Text> */}
+              <Text style={styles.dateText}>{new Date(trip.endDate).toDateString()}</Text>
+              <Text style={styles.dateText}>{new Date(trip.date).toDateString()}</Text>
               <Text style={styles.dateText}>{formatDate(trip.date)}</Text>
 
               <View style={styles.divider} />
@@ -184,13 +326,14 @@ console.log(todayDate); // e.g. 2026-01-03
               </View>
               <TouchableOpacity
                 // onPress={() => navigation.navigate('AddTrip', { id: trip.id })}
-                onPress={() =>{
+                onPress={() => {
                   navigation.navigate("DayEntryScreen", {
                     mode: "TRIP", // or "TRIP"
                     date: todayDate,
                     isEdit: true,
                     data: trip
-                  })}
+                  })
+                }
                 }
                 style={{
                   width: 36,
@@ -209,7 +352,7 @@ console.log(todayDate); // e.g. 2026-01-03
               </TouchableOpacity>
 
             </TouchableOpacity>
-          ))}
+          ))} */}
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
@@ -232,7 +375,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 10,
     paddingBottom: 40,
   },
   sectionHeader: {
