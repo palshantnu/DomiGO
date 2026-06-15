@@ -2310,7 +2310,6 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
                     lng
                 )
             
-                // RESET CITY
                 val city = detectCityFromGeoJSON(
                     match.name,
                     lat,
@@ -2318,9 +2317,9 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
                 )
             
                 if (city != null) {
-                    previousCityFips = city.fips
-                    previousCityName = city.name
-                    previousCityEnterTime = System.currentTimeMillis()
+                    handleDetectedCityAfterCountyChange(match, county, city, lat, lng)
+                } else {
+                    reverseGeocodeCityAfterCountyChange(match, county, lat, lng)
                 }
             
                 return
@@ -2361,7 +2360,9 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
 
     // State changed → online: enrich city via Google (and let its success path post the trip + update state).
     if (isInternetAvailable()) {
-        if (detectedCountry != "US") {
+        if (detectedCountry == "US") {
+            sendUsBoundaryTripsForStateChange(match, lat, lng, System.currentTimeMillis())
+        } else {
             previousCountyFips = ""
             previousCountyName = ""
             previousCountyEnterTime = 0L
@@ -2412,6 +2413,11 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
     val originLngSafe = previousLng
     val originCitySafe = previousCity
     val originEnterTimeSafe = previousEnterTime
+    val stateTripEndTime = System.currentTimeMillis()
+
+    if (detectedCountry == "US") {
+        sendUsBoundaryTripsForStateChange(match, lat, lng, stateTripEndTime)
+    }
 
     // Commit new state before firing the trip API.
     previousStateName = newState
@@ -2470,10 +2476,287 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
         destinationLat = lat,
         destinationLng = lng,
         startDate = originEnterTimeSafe,
-        endDate = System.currentTimeMillis()
+        endDate = stateTripEndTime
     )
 
     isTransitionInProgress = false
+}
+
+private fun sendUsBoundaryTripsForStateChange(
+    state: StateMatch,
+    lat: Double,
+    lng: Double,
+    now: Long
+) {
+    if (!cityChangeEventsEnabled || state.countryCode != "US") return
+
+    val stateFips = state.fips ?: return
+    val newCounty = detectCountyFromGeoJSON(stateFips, lat, lng)
+    val newCity = detectCityFromGeoJSON(state.name, lat, lng)
+    val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+    val originLatSafe = previousLat
+    val originLngSafe = previousLng
+
+    if (newCounty != null && previousCountyFips.isNotEmpty() && newCounty.fips != previousCountyFips) {
+        val originCounty = previousCountyName
+        val originCountyStart = if (previousCountyEnterTime > 0L) previousCountyEnterTime else previousEnterTime
+        val countyKey = "state_${previousCountyFips}_${newCounty.fips}_$originCountyStart"
+
+        if (countyKey != lastCityChangeKey) {
+            lastCityChangeKey = countyKey
+            Log.d(TAG, "COUNTY CHANGED WITH STATE: $originCounty -> ${newCounty.name}")
+
+            sendEntryFormData(
+                kind = "county_change",
+                date = today,
+                typeOfDayId = null,
+                isCommissionDay = false,
+                isRemoteWork = false,
+                remoteHours = 0,
+                isTravelling = false,
+                tripTypeId = 1,
+                tripModeId = 1,
+                confirmationNo = "",
+                vendor = "",
+                hasProof = false,
+                proofType = "other",
+                notes = "",
+                creationType = "automatic",
+                remoteLocation = "",
+                state = state.name,
+                isUpdated = false,
+                originCounty = originCounty,
+                originState = previousStateName,
+                originLat = originLatSafe,
+                originLng = originLngSafe,
+                destinationCounty = newCounty.name,
+                destinationState = state.name,
+                destinationLat = lat,
+                destinationLng = lng,
+                startDate = originCountyStart,
+                endDate = now
+            )
+        }
+    }
+
+    if (newCity != null) {
+        sendCityChangeByName(
+            stateName = state.name,
+            destinationCityName = newCity.name,
+            destinationCityKey = newCity.fips,
+            lat = lat,
+            lng = lng,
+            now = now,
+            originStateName = previousStateName,
+            originLatSafe = originLatSafe,
+            originLngSafe = originLngSafe
+        )
+    } else {
+        reverseGeocodeCityForStateChange(state, lat, lng, now, originLatSafe, originLngSafe)
+    }
+
+    if (newCounty != null) {
+        previousCountyFips = newCounty.fips
+        previousCountyName = newCounty.name
+        previousCountyEnterTime = now
+    }
+
+    if (newCity != null) {
+        previousCityFips = newCity.fips
+        previousCityName = newCity.name
+        previousCityEnterTime = now
+    }
+}
+
+private fun handleDetectedCityAfterCountyChange(
+    state: StateMatch,
+    county: CountyMatch,
+    city: CityMatch,
+    lat: Double,
+    lng: Double
+) {
+    val originCity = previousCityName.ifBlank { previousCity }
+    if (previousCityFips.isEmpty()) {
+        if (originCity.isNotBlank() && !city.name.equals(originCity, ignoreCase = true)) {
+            handleCityTransition(state, county, city, lat, lng)
+        } else {
+            previousCityFips = city.fips
+            previousCityName = city.name
+            previousCityEnterTime = System.currentTimeMillis()
+        }
+    } else if (city.fips != previousCityFips) {
+        handleCityTransition(state, county, city, lat, lng)
+    }
+}
+
+private fun reverseGeocodeCityAfterCountyChange(
+    state: StateMatch,
+    county: CountyMatch,
+    lat: Double,
+    lng: Double
+) {
+    reverseGeocodeCityName(lat, lng) { cityName ->
+        if (cityName.isBlank()) return@reverseGeocodeCityName
+        handleDetectedCityAfterCountyChange(
+            state,
+            county,
+            CityMatch(cityName, cityName),
+            lat,
+            lng
+        )
+    }
+}
+
+private fun reverseGeocodeCityForStateChange(
+    state: StateMatch,
+    lat: Double,
+    lng: Double,
+    now: Long,
+    originLatSafe: Double?,
+    originLngSafe: Double?
+) {
+    reverseGeocodeCityName(lat, lng) { cityName ->
+        if (cityName.isBlank()) return@reverseGeocodeCityName
+        sendCityChangeByName(
+            stateName = state.name,
+            destinationCityName = cityName,
+            destinationCityKey = cityName,
+            lat = lat,
+            lng = lng,
+            now = now,
+            originStateName = previousStateName,
+            originLatSafe = originLatSafe,
+            originLngSafe = originLngSafe
+        )
+    }
+}
+
+private fun reverseGeocodeCityName(
+    lat: Double,
+    lng: Double,
+    onCity: (String) -> Unit
+) {
+    if (!isInternetAvailable() || googleApiKey.isBlank()) return
+
+    val url = "$GOOGLE_GEOCODING_URL?latlng=$lat,$lng&language=en&key=$googleApiKey"
+    val request = Request.Builder().url(url).build()
+
+    httpClient.newCall(request).enqueue(object : okhttp3.Callback {
+        override fun onFailure(call: Call, e: IOException) {
+            Log.w(TAG, "City fallback geocode failed: ${e.message}")
+        }
+
+        override fun onResponse(call: Call, response: Response) {
+            try {
+                val body = response.body?.string() ?: return
+                if (!response.isSuccessful) return
+
+                val json = JSONObject(body)
+                if (json.optString("status") != "OK") return
+
+                val results = json.optJSONArray("results") ?: return
+                for (i in 0 until results.length()) {
+                    val city = extractCityName(results.getJSONObject(i).getJSONArray("address_components"))
+                    if (city.isNotBlank()) {
+                        onCity(city)
+                        return
+                    }
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "City fallback parse failed: ${e.message}")
+            }
+        }
+    })
+}
+
+private fun extractCityName(components: JSONArray): String {
+    var locality = ""
+    var postalTown = ""
+    var sublocality = ""
+    var neighborhood = ""
+    var adminLevel3 = ""
+
+    for (i in 0 until components.length()) {
+        val component = components.getJSONObject(i)
+        val longName = component.optString("long_name", "")
+        val types = component.getJSONArray("types")
+        for (j in 0 until types.length()) {
+            when (types.getString(j)) {
+                "locality" -> locality = longName
+                "postal_town" -> postalTown = longName
+                "sublocality", "sublocality_level_1" -> sublocality = longName
+                "neighborhood" -> neighborhood = longName
+                "administrative_area_level_3" -> adminLevel3 = longName
+            }
+        }
+    }
+
+    return locality.ifBlank { postalTown.ifBlank { sublocality.ifBlank { neighborhood.ifBlank { adminLevel3 } } } }
+}
+
+private fun sendCityChangeByName(
+    stateName: String,
+    destinationCityName: String,
+    destinationCityKey: String,
+    lat: Double,
+    lng: Double,
+    now: Long,
+    originStateName: String,
+    originLatSafe: Double?,
+    originLngSafe: Double?
+) {
+    val originCity = previousCityName.ifBlank { previousCity }
+    val originCityStart = if (previousCityEnterTime > 0L) previousCityEnterTime else previousEnterTime
+    val originCityKey = previousCityFips.ifBlank { originCity }
+    val cityChanged = originCity.isNotBlank() && !destinationCityName.equals(originCity, ignoreCase = true)
+    val cityKey = "city_${originCityKey}_${destinationCityKey}_$originCityStart"
+
+    if (!cityChanged || cityKey == lastCityChangeKey) {
+        if (originCity.isBlank()) {
+            previousCityFips = destinationCityKey
+            previousCityName = destinationCityName
+            previousCityEnterTime = now
+        }
+        return
+    }
+
+    lastCityChangeKey = cityKey
+    Log.d(TAG, "CITY CHANGED: $originCity -> $destinationCityName")
+
+    sendEntryFormData(
+        kind = "city_change",
+        date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
+        typeOfDayId = null,
+        isCommissionDay = false,
+        isRemoteWork = false,
+        remoteHours = 0,
+        isTravelling = false,
+        tripTypeId = 1,
+        tripModeId = 1,
+        confirmationNo = "",
+        vendor = "",
+        hasProof = false,
+        proofType = "other",
+        notes = "",
+        creationType = "automatic",
+        remoteLocation = "",
+        state = stateName,
+        isUpdated = false,
+        originCity = originCity,
+        originState = originStateName,
+        originLat = originLatSafe,
+        originLng = originLngSafe,
+        destinationCity = destinationCityName,
+        destinationState = stateName,
+        destinationLat = lat,
+        destinationLng = lng,
+        startDate = originCityStart,
+        endDate = now
+    )
+
+    previousCityFips = destinationCityKey
+    previousCityName = destinationCityName
+    previousCityEnterTime = now
 }
 
 
@@ -2484,14 +2767,6 @@ private fun handleCountyTransition(
     lng: Double
 ) {
     val now = System.currentTimeMillis()
-
-    // debounce
-    if (countyChangeDetectedTime == 0L) {
-        countyChangeDetectedTime = now
-        return
-    }
-
-    // if (now - countyChangeDetectedTime < 3000) return
     countyChangeDetectedTime = 0L
 
     // // min stay
@@ -2578,7 +2853,7 @@ private fun handleCityTransition(
     val now = System.currentTimeMillis()
 
     val key =
-        "${previousCityFips}_${newCity.fips}_$previousCityEnterTime"
+        "${previousCityFips.ifBlank { previousCityName.ifBlank { previousCity } }}_${newCity.fips}_${if (previousCityEnterTime > 0L) previousCityEnterTime else previousEnterTime}"
 
     if (key == lastCityChangeKey) {
         return
@@ -2586,8 +2861,8 @@ private fun handleCityTransition(
 
     lastCityChangeKey = key
 
-    val originCity = previousCityName
-    val originEnterTime = previousCityEnterTime
+    val originCity = previousCityName.ifBlank { previousCity }
+    val originEnterTime = if (previousCityEnterTime > 0L) previousCityEnterTime else previousEnterTime
 
     Log.d(
         TAG,
