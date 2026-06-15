@@ -296,7 +296,7 @@ const signInWithApple = async () => {
       <SafeAreaView style={styles.innerContainer}>
         <Text style={styles.welcomeTitle}>Welcome to{"\n"}DomiGo</Text>
         <Text style={styles.subtitle}>
-          Your Journey to Smarter Property Management Starts Here.
+          Modern residency tracking for a multi-location lifestyle.
         </Text>
 
         {/* Email Input */}

@@ -87,8 +87,8 @@ export default function SettingsScreen() {
                 {/* <ICON_Language height={24} width={24} /> */}
                 <ICON_File_dock height={24} width={24} />
                 <View style={{ width: '100%' }}>
-                  <Text style={styles.title}>Documents</Text>
-                  <Text style={styles.subtitle}>Manage Documents</Text>
+                  <Text style={styles.title}>Residency Records</Text>
+                  <Text style={styles.subtitle}>Manage Residency Records</Text>
                 </View>
               </TouchableOpacity>
               <Ionicons name="chevron-forward" size={18} color="#999" />

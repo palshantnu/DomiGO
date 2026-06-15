@@ -140,8 +140,9 @@ const MetricsScreen = ({ GET_STATE_WISE_METRICS, loginToken, stateWiseMetrics })
             travelDays: item.travelDays,
             wages: item.estimatedWages,
             // progress: item.progressDays / 10, // example: assuming max = 10 days
+            // progress: daysLeft / item.threshold,
             progress: daysLeft / item.threshold,
-            progressColor: getBorderColorByDays(item.travelDays, item.threshold),
+            progressColor: getBorderColorByDays(item.daysIn, item.threshold),
             progressLabel: `${daysLeft} Days`,
             // progressLabel: `${item.progressDays} Days`,
             // bgColor: '#E6F0FF', // you can make this dynamic if needed
@@ -202,11 +203,14 @@ const MetricsScreen = ({ GET_STATE_WISE_METRICS, loginToken, stateWiseMetrics })
                         const stats = [
                             { label: 'Days in', value: item.daysIn },
                             { label: 'Travel Days', value: item.travelDays },
-                            { label: 'Days Worked', value: item.daysWorked },
+                            // { label: 'Days Worked', value: item.daysWorked },
+                            { label: 'Residency Days', value: item.daysWorked },
                             { label: 'Hours Worked', value: item.hoursWorked },
-                            { label: 'Est Taxable Days', value: item.taxDays },
+                            // { label: 'Est Taxable Days', value: item.taxDays },
+                            { label: 'Days Worked', value: item.taxDays },
                             // { label: 'Est Taxable Liability', value: canAccess(FEATURES.TAXABLE_LIABILITY) ? item.wages : '***' },
-                            { label: 'Est Taxable Liability', value: item.wages },
+                            // { label: 'Est Taxable Liability', value: item.wages },
+                            { label: 'Est Tax Liability', value: item.wages },
                         ];
 
                         return (

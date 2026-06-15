@@ -6,6 +6,8 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
+  Linking,
+  Platform,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -41,6 +43,20 @@ const MenuScreen = ({ userPersonalData, getPersonalProfileDataAction, GET_SUPPOR
     GET_SUPPORT_CONTACT()
   }, []);
   const navigation = useNavigation();
+
+
+const openLocationSettings = async () => {
+  try {
+    if (Platform.OS === 'android') {
+      Linking.sendIntent('android.settings.LOCATION_SOURCE_SETTINGS');
+    } else {
+      // iOS me app settings open hongi
+      await Linking.openSettings();
+    }
+  } catch (error) {
+    console.log('Error opening settings:', error);
+  }
+};
   return (
     <LinearGradient
       colors={["#9ab1fa", "#ffffff"]}
@@ -85,6 +101,7 @@ const MenuScreen = ({ userPersonalData, getPersonalProfileDataAction, GET_SUPPOR
               label="Location Tracking"
               status="Enabled"
               statusColor="#28a745"
+              onPress={openLocationSettings}
             />
             <MenuRow
               icon="dollar"

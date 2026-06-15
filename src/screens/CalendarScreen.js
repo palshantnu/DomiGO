@@ -397,41 +397,67 @@ const getLocalDateKey = (value) => {
   // console.log('monthWiseTimeline', monthWiseTimeline);
   // console.log('missingActivityList', missingActivityList);
 
+  // const getCurrentWeekDates = () => {
+  //   const today = new Date();
+
+  //   // Clone date to avoid mutation
+  //   const current = new Date(today);
+
+  //   // Get day (0 = Sunday, 1 = Monday ...)
+  //   const day = current.getDay();
+
+  //   // Monday as start of week
+  //   const diffToMonday = day === 0 ? -6 : 1 - day;
+
+  //   const startOfWeek = new Date(current);
+  //   startOfWeek.setDate(current.getDate() + diffToMonday);
+
+  //   const endOfWeek = new Date(startOfWeek);
+  //   endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+
+  //   const formatDate = (date) => {
+  //     const y = date.getFullYear();
+  //     const m = String(date.getMonth() + 1).padStart(2, '0');
+  //     const d = String(date.getDate()).padStart(2, '0');
+
+  //     return `${y}-${m}-${d}`;
+  //   };
+
+  //   // const formatDate = (date) =>
+  //   //   date.toLocaleDateString("en-CA").split('T')[0]; // YYYY-MM-DD
+
+  //   return {
+  //     start: formatDate(startOfWeek),
+  //     end: formatDate(endOfWeek),
+  //   };
+  // };
+
   const getCurrentWeekDates = () => {
-    const today = new Date();
+  const today = new Date();
 
-    // Clone date to avoid mutation
-    const current = new Date(today);
+  const day = today.getDay(); // 0 = Sunday
 
-    // Get day (0 = Sunday, 1 = Monday ...)
-    const day = current.getDay();
+  // Sunday as start of week
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - day);
 
-    // Monday as start of week
-    const diffToMonday = day === 0 ? -6 : 1 - day;
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
 
-    const startOfWeek = new Date(current);
-    startOfWeek.setDate(current.getDate() + diffToMonday);
+  const formatDate = (date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
 
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-
-
-    const formatDate = (date) => {
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, '0');
-      const d = String(date.getDate()).padStart(2, '0');
-
-      return `${y}-${m}-${d}`;
-    };
-
-    // const formatDate = (date) =>
-    //   date.toLocaleDateString("en-CA").split('T')[0]; // YYYY-MM-DD
-
-    return {
-      start: formatDate(startOfWeek),
-      end: formatDate(endOfWeek),
-    };
+    return `${y}-${m}-${d}`;
   };
+
+  return {
+    start: formatDate(startOfWeek),
+    end: formatDate(endOfWeek),
+  };
+};
 
 
 
@@ -1450,7 +1476,7 @@ const getLocalDateKey = (value) => {
               //   },]} />
               //   <Text style={styles.locationText}>
               //     {trip.originCity} → {trip.destinationCity}
-              //     {trip.kind === "city_change" && " (City Trips)"}
+              //     {trip.kind === "city_change" && " (City / Municipality Trips)"}
               //   </Text>
               // </TouchableOpacity>
               <TouchableOpacity
@@ -1718,11 +1744,11 @@ const getLocalDateKey = (value) => {
                       selectedFilter === "ALL"
                         ? "All"
                         : selectedFilter === "TRIP"
-                          ? "State Trips"
+                          ? "State / Region Trips"
                           : selectedFilter === "COUNTY_CHANGE"
                             ? "County Trips"
                             : selectedFilter === "CITY_CHANGE"
-                              ? "City Trips"
+                              ? "City / Municipality Trips"
                               : "Locations"
                     }
                   </Text>
@@ -1746,9 +1772,9 @@ const getLocalDateKey = (value) => {
                   >
                     {[
                       { label: "All", value: "ALL" },
-                      { label: "State Trips", value: "TRIP" },
+                      { label: "State / Region Trips", value: "TRIP" },
                       { label: "County Trips", value: "COUNTY_CHANGE" },
-                      { label: "City Trips", value: "CITY_CHANGE" },
+                      { label: "City / Municipality Trips", value: "CITY_CHANGE" },
                       { label: "Locations", value: "LOCATIONS" },
                     ].map(item => (
                       <TouchableOpacity
@@ -1986,11 +2012,11 @@ const getLocalDateKey = (value) => {
                       selectedFilter === "ALL"
                         ? "All"
                         : selectedFilter === "TRIP"
-                          ? "State Trips"
+                          ? "State / Region Trips"
                           : selectedFilter === "COUNTY_CHANGE"
                             ? "County Trips"
                             : selectedFilter === "CITY_CHANGE"
-                              ? "City Trips"
+                              ? "City / Municipality Trips"
                               : "Locations"
                     }
                   </Text>
@@ -2014,9 +2040,9 @@ const getLocalDateKey = (value) => {
                   >
                     {[
                       { label: "All", value: "ALL" },
-                      { label: "State Trips", value: "TRIP" },
+                      { label: "State / Region Trips", value: "TRIP" },
                       { label: "County Trips", value: "COUNTY_CHANGE" },
-                      { label: "City Trips", value: "CITY_CHANGE" },
+                      { label: "City / Municipality Trips", value: "CITY_CHANGE" },
                       { label: "Locations", value: "LOCATIONS" },
                     ].map(item => (
                       <TouchableOpacity

@@ -426,16 +426,37 @@ const increaseRefreshCount = async () => {
         dispatch(GET_STATE_WISE_RESIDENCY)
     };
 
-    const sortedStateResidency = React.useMemo(() => {
-        if (!stateWiseResidency || !userData?.state) return stateWiseResidency;
+    // const sortedStateResidency = React.useMemo(() => {
+    //     if (!stateWiseResidency || !userData?.state) return stateWiseResidency;
 
-        return [...stateWiseResidency].sort((a, b) => {
-            if (a.state === userData.state) return -1;
-            if (b.state === userData.state) return 1;
-            return 0;
-        });
-    }, [stateWiseResidency, userData]);
+    //     return [...stateWiseResidency].sort((a, b) => {
+    //         if (a.state === userData.state) return -1;
+    //         if (b.state === userData.state) return 1;
+    //         return 0;
+    //     });
+    // }, [stateWiseResidency, userData]);
+const sortedStateResidency = React.useMemo(() => {
+    if (!stateWiseResidency) return [];
 
+    return [...stateWiseResidency].sort((a, b) => {
+        const aType = locationMap[a.state];
+        const bType = locationMap[b.state];
+
+        // 1. Primary (blue home icon) first
+        if (aType === "primary" && bType !== "primary") return -1;
+        if (bType === "primary" && aType !== "primary") return 1;
+
+        // 2. Other home icon cards (secondary/other)
+        const aHome = !!aType;
+        const bHome = !!bType;
+
+        if (aHome && !bHome) return -1;
+        if (bHome && !aHome) return 1;
+
+        // 3. Remaining cards
+        return 0;
+    });
+}, [stateWiseResidency, userLocations]);
 
 
 

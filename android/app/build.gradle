@@ -118,6 +118,12 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            // outputFileName = "Domigo-v${variant.versionName}-${variant.buildType.name}.apk"
+            outputFileName = "Domigo-10-06-26-${variant.buildType.name}.apk"
+        }
+    }
 }
 
 dependencies {

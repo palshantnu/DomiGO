@@ -99699,6 +99699,10 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         return {
           headerShown: false,
           tabBarShowLabel: false,
+          lazy: true,
+          unmountOnBlur: false,
+          freezeOnBlur: true,
+          headerShown: false,
           tabBarStyle: {
             height: 70,
             paddingTop: 10,
@@ -137346,7 +137350,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   var _FeatureGateWrapper = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[13], "../components/FeatureGateWrapper"));
   var _TrialBanner = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[14], "../components/TrialBanner"));
   var _geolocation = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[15], "@react-native-community/geolocation"));
-  var _jsxRuntime = _$$_REQUIRE(_dependencyMap[16], "react/jsx-runtime");
+  var _asyncStorage = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[16], "@react-native-async-storage/async-storage"));
+  var _jsxRuntime = _$$_REQUIRE(_dependencyMap[17], "react/jsx-runtime");
   var _this = this,
     _jsxFileName = "D:\\Reactnativeprojects\\DomiGO\\src\\screens\\HomeScreen.js";
   function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function _interopRequireWildcard(e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (var _t in e) "default" !== _t && {}.hasOwnProperty.call(e, _t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, _t)) && (i.get || i.set) ? o(f, _t, i) : f[_t] = e[_t]); return f; })(e, t); }
@@ -137395,13 +137400,17 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       _React$useState14 = (0, _slicedToArray2.default)(_React$useState13, 2),
       currentLocation = _React$useState14[0],
       setCurrentLocation = _React$useState14[1];
-    console.log('stateWiseResidency>>>>', stateWiseResidency);
-    console.log('complianceScore>>>>', complianceScore);
-    console.log('userData>>>>', userData);
-    console.log('userLocations>>>>', userLocations);
-    var dispatch = (0, _$$_REQUIRE(_dependencyMap[17], "react-redux").useDispatch)();
+    var MAX_DAILY_REFRESH = 10;
+    var REFRESH_COUNT_KEY = "daily_location_refresh_count";
+    var REFRESH_DATE_KEY = "daily_location_refresh_date";
+    // console.log('stateWiseResidency>>>>', stateWiseResidency);
+    // console.log('complianceScore>>>>', complianceScore);
+    // console.log('userData>>>>', userData);
+    // console.log('userLocations>>>>', userLocations);
+
+    var dispatch = (0, _$$_REQUIRE(_dependencyMap[18], "react-redux").useDispatch)();
     var progress = 200 / 365;
-    var navigation = (0, _$$_REQUIRE(_dependencyMap[18], "@react-navigation/native").useNavigation)();
+    var navigation = (0, _$$_REQUIRE(_dependencyMap[19], "@react-navigation/native").useNavigation)();
     // useEffect(() => {
     //     DomigoTracker.startDomigoTracking();
 
@@ -137422,8 +137431,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     var onRefresh = /*#__PURE__*/function () {
       var _ref2 = (0, _asyncToGenerator2.default)(function* () {
         setRefreshing(true);
+        var allowed = yield canRefreshLocation();
+        if (!allowed) {
+          _$$_REQUIRE(_dependencyMap[20], "../helpers/CommonHelpers").CustomToast.show("You have already completed your attempts for today");
+          setRefreshing(false);
+          return;
+        }
         if (!isGPSOn) {
-          _$$_REQUIRE(_dependencyMap[19], "../helpers/CommonHelpers").CustomToast.show("Please enable GPS");
+          _$$_REQUIRE(_dependencyMap[20], "../helpers/CommonHelpers").CustomToast.show("Please enable GPS");
           setRefreshing(false);
           return;
         }
@@ -137441,9 +137456,15 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
 
           // 🔥 API me sab separate jaayega
           // await sendLocationAPI(finalLocation);
-          var response = yield sendLocationAPI(finalLocation);
-          if (!response) {
-            _$$_REQUIRE(_dependencyMap[19], "../helpers/CommonHelpers").CustomToast.show("Location not saved");
+          var locationResponse = yield sendLocationAPI(finalLocation);
+          var hoursResponse = yield sendHoursLocationAPI(finalLocation);
+          if (hoursResponse) {
+            yield increaseRefreshCount();
+          }
+          if (!locationResponse && !hoursResponse) {
+            _$$_REQUIRE(_dependencyMap[20], "../helpers/CommonHelpers").CustomToast.show("Location not saved");
+            setRefreshing(false);
+            return;
           }
           setCurrentLocation(finalLocation);
           setLocationModal(true);
@@ -137455,7 +137476,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           console.log('Refresh error', e);
         }
         setRefreshing(false);
-        _$$_REQUIRE(_dependencyMap[19], "../helpers/CommonHelpers").CustomToast.show("Dashboard refreshed");
+        _$$_REQUIRE(_dependencyMap[20], "../helpers/CommonHelpers").CustomToast.show("Dashboard refreshed");
       });
       return function onRefresh() {
         return _ref2.apply(this, arguments);
@@ -137468,7 +137489,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     }, [userData]);
 
     // useEffect(()=>{
-    (0, _$$_REQUIRE(_dependencyMap[20], "../hooks/useGPSListener").useGPSListener)(setIsGPSOn);
+    (0, _$$_REQUIRE(_dependencyMap[21], "../hooks/useGPSListener").useGPSListener)(setIsGPSOn);
     // },[])
 
     (0, _react.useEffect)(function () {
@@ -137480,7 +137501,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       //   stopDomigoTracking();
       // };
     }, []);
-    var isFocused = (0, _$$_REQUIRE(_dependencyMap[18], "@react-navigation/native").useIsFocused)();
+    var isFocused = (0, _$$_REQUIRE(_dependencyMap[19], "@react-navigation/native").useIsFocused)();
     var getCurrentLocation = /*#__PURE__*/function () {
       var _ref3 = (0, _asyncToGenerator2.default)(function* () {
         if (_reactNative.Platform.OS === 'android') {
@@ -137512,10 +137533,50 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         return _ref3.apply(this, arguments);
       };
     }();
-    var getAddressFromLatLong = /*#__PURE__*/function () {
-      var _ref4 = (0, _asyncToGenerator2.default)(function* (lat, lng) {
+    var canRefreshLocation = /*#__PURE__*/function () {
+      var _ref4 = (0, _asyncToGenerator2.default)(function* () {
         try {
-          var res = yield fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${_$$_REQUIRE(_dependencyMap[19], "../helpers/CommonHelpers").GOOGLE_KEY}`);
+          var today = new Date().toISOString().split("T")[0];
+          var storedDate = yield _asyncStorage.default.getItem(REFRESH_DATE_KEY);
+          var count = parseInt((yield _asyncStorage.default.getItem(REFRESH_COUNT_KEY)) || "0", 10);
+
+          // New day => reset count
+          if (storedDate !== today) {
+            yield _asyncStorage.default.setItem(REFRESH_DATE_KEY, today);
+            yield _asyncStorage.default.setItem(REFRESH_COUNT_KEY, "0");
+            count = 0;
+          }
+          if (count >= MAX_DAILY_REFRESH) {
+            return false;
+          }
+          return true;
+        } catch (error) {
+          console.log("canRefreshLocation error", error);
+          return false;
+        }
+      });
+      return function canRefreshLocation() {
+        return _ref4.apply(this, arguments);
+      };
+    }();
+    var increaseRefreshCount = /*#__PURE__*/function () {
+      var _ref5 = (0, _asyncToGenerator2.default)(function* () {
+        try {
+          var count = parseInt((yield _asyncStorage.default.getItem(REFRESH_COUNT_KEY)) || "0", 10);
+          yield _asyncStorage.default.setItem(REFRESH_COUNT_KEY, String(count + 1));
+          console.log("Refresh Count Updated =>", count + 1);
+        } catch (error) {
+          console.log("increaseRefreshCount error", error);
+        }
+      });
+      return function increaseRefreshCount() {
+        return _ref5.apply(this, arguments);
+      };
+    }();
+    var getAddressFromLatLong = /*#__PURE__*/function () {
+      var _ref6 = (0, _asyncToGenerator2.default)(function* (lat, lng) {
+        try {
+          var res = yield fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${_$$_REQUIRE(_dependencyMap[20], "../helpers/CommonHelpers").GOOGLE_KEY}`);
           var data = yield res.json();
           if (!data.results || data.results.length === 0) {
             return {
@@ -137557,7 +137618,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         }
       });
       return function getAddressFromLatLong(_x, _x2) {
-        return _ref4.apply(this, arguments);
+        return _ref6.apply(this, arguments);
       };
     }();
 
@@ -137579,7 +137640,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     // };
 
     var sendLocationAPI = /*#__PURE__*/function () {
-      var _ref5 = (0, _asyncToGenerator2.default)(function* (location) {
+      var _ref7 = (0, _asyncToGenerator2.default)(function* (location) {
         console.log("SENDING 👉", location);
         try {
           var res = yield fetch("https://stage.mydomigo.com/api/locations", {
@@ -137598,24 +137659,47 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         }
       });
       return function sendLocationAPI(_x3) {
-        return _ref5.apply(this, arguments);
+        return _ref7.apply(this, arguments);
+      };
+    }();
+    var sendHoursLocationAPI = /*#__PURE__*/function () {
+      var _ref8 = (0, _asyncToGenerator2.default)(function* (location) {
+        try {
+          var res = yield fetch("https://stage.mydomigo.com/api/locations/hours", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${loginToken}`
+            },
+            body: JSON.stringify(location)
+          });
+          var data = yield res.json();
+          console.log("HOURS API RESPONSE =>", data);
+          return data;
+        } catch (e) {
+          console.log("Hours API Error", e);
+          return null;
+        }
+      });
+      return function sendHoursLocationAPI(_x4) {
+        return _ref8.apply(this, arguments);
       };
     }();
     var handleThresholdUpdate = /*#__PURE__*/function () {
-      var _ref6 = (0, _asyncToGenerator2.default)(function* () {
+      var _ref9 = (0, _asyncToGenerator2.default)(function* () {
         var payload = {
           state: selectedState.state,
           threshold: Number(thresholdValue)
         };
         var res = yield UPDATE_STATE_THRESHOLD(payload);
         if (res.response.message === "Success") {
-          _$$_REQUIRE(_dependencyMap[19], "../helpers/CommonHelpers").CustomToast.show("Threshold Updated Successfully!");
+          _$$_REQUIRE(_dependencyMap[20], "../helpers/CommonHelpers").CustomToast.show("Threshold Updated Successfully!");
         }
         setThresholdModalVisible(false);
         dispatch(GET_STATE_WISE_RESIDENCY);
       });
       return function handleThresholdUpdate() {
-        return _ref6.apply(this, arguments);
+        return _ref9.apply(this, arguments);
       };
     }();
     var sortedStateResidency = _react.default.useMemo(function () {
@@ -137636,7 +137720,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       if (!stateName) return "";
 
       // 1️⃣ Try official mapping
-      var officialCode = (0, _$$_REQUIRE(_dependencyMap[21], "../utils/getStateShortCode").getStateShortCode)(stateName, country);
+      var officialCode = (0, _$$_REQUIRE(_dependencyMap[22], "../utils/getStateShortCode").getStateShortCode)(stateName, country);
 
       // 2️⃣ Agar mapping se actual short code mila (2 letters)
       if (officialCode && officialCode !== stateName && officialCode.length <= 3) {
@@ -137689,7 +137773,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       },
       locations: [0.05, 0.55],
       style: styles.container,
-      children: /*#__PURE__*/(0, _jsxRuntime.jsxs)(_$$_REQUIRE(_dependencyMap[22], "react-native-safe-area-context").SafeAreaView, {
+      children: /*#__PURE__*/(0, _jsxRuntime.jsxs)(_$$_REQUIRE(_dependencyMap[23], "react-native-safe-area-context").SafeAreaView, {
         edges: ['top', 'left', 'right'],
         style: {
           flex: 1,
@@ -137734,7 +137818,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 return navigation.navigate('ReportsExport');
               },
               children: /*#__PURE__*/(0, _jsxRuntime.jsxs)(_FeatureGateWrapper.default, {
-                feature: _$$_REQUIRE(_dependencyMap[23], "../config/featureAccess").FEATURES.READINESS_SCORE,
+                feature: _$$_REQUIRE(_dependencyMap[24], "../config/featureAccess").FEATURES.READINESS_SCORE,
                 featureName: "Readiness Score",
                 children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
                   style: styles.metricValue,
@@ -137755,7 +137839,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
             })]
           }), !isGPSOn && /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
             activeOpacity: 0.8,
-            onPress: _$$_REQUIRE(_dependencyMap[24], "../helpers/locationRedirect").openLocationSettings,
+            onPress: _$$_REQUIRE(_dependencyMap[25], "../helpers/locationRedirect").openLocationSettings,
             style: styles.locationBanner,
             children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
               style: styles.locationIcon,
@@ -138101,13 +138185,13 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     };
   }
   var mapDispatchToProps = {
-    GET_FINAL_YEAR_PROGRESS: _$$_REQUIRE(_dependencyMap[25], "../redux/actions/action-creator").GET_FINAL_YEAR_PROGRESS,
-    GET_STATE_WISE_RESIDENCY: _$$_REQUIRE(_dependencyMap[25], "../redux/actions/action-creator").GET_STATE_WISE_RESIDENCY,
-    GET_COMPLIANCE_SCORE: _$$_REQUIRE(_dependencyMap[25], "../redux/actions/action-creator").GET_COMPLIANCE_SCORE,
-    UPDATE_STATE_THRESHOLD: _$$_REQUIRE(_dependencyMap[25], "../redux/actions/action-creator").UPDATE_STATE_THRESHOLD,
-    GET_USER_LOCATIONS: _$$_REQUIRE(_dependencyMap[25], "../redux/actions/action-creator").GET_USER_LOCATIONS
+    GET_FINAL_YEAR_PROGRESS: _$$_REQUIRE(_dependencyMap[26], "../redux/actions/action-creator").GET_FINAL_YEAR_PROGRESS,
+    GET_STATE_WISE_RESIDENCY: _$$_REQUIRE(_dependencyMap[26], "../redux/actions/action-creator").GET_STATE_WISE_RESIDENCY,
+    GET_COMPLIANCE_SCORE: _$$_REQUIRE(_dependencyMap[26], "../redux/actions/action-creator").GET_COMPLIANCE_SCORE,
+    UPDATE_STATE_THRESHOLD: _$$_REQUIRE(_dependencyMap[26], "../redux/actions/action-creator").UPDATE_STATE_THRESHOLD,
+    GET_USER_LOCATIONS: _$$_REQUIRE(_dependencyMap[26], "../redux/actions/action-creator").GET_USER_LOCATIONS
   };
-  var _default = exports.default = (0, _$$_REQUIRE(_dependencyMap[17], "react-redux").connect)(mapStateToProps, mapDispatchToProps)(HomeScreen);
+  var _default = exports.default = (0, _$$_REQUIRE(_dependencyMap[18], "react-redux").connect)(mapStateToProps, mapDispatchToProps)(HomeScreen);
   var styles = _reactNative.StyleSheet.create({
     container: {
       flex: 1
@@ -138657,7 +138741,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       left: 10
     }
   });
-},888,[1,47,178,39,79,17,615,889,1013,1014,634,1135,648,1136,1140,883,182,847,1015,756,1141,1150,836,1139,1152,855],"src/screens/HomeScreen.js");
+},888,[1,47,178,39,79,17,615,889,1013,1014,634,1135,648,1136,1140,883,650,182,847,1015,756,1141,1150,836,1139,1152,855],"src/screens/HomeScreen.js");
 __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports, _dependencyMap) {
   var _interopRequireDefault = _$$_REQUIRE(_dependencyMap[0], "@babel/runtime/helpers/interopRequireDefault");
   Object.defineProperty(exports, "__esModule", {
@@ -163441,23 +163525,244 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   var _reactNativeLinearGradient = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[8], "react-native-linear-gradient"));
   var _CustomScroll = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[9], "../components/CustomScroll"));
   var _jsxRuntime = _$$_REQUIRE(_dependencyMap[10], "react/jsx-runtime");
-  var _jsxFileName = "D:\\Reactnativeprojects\\DomiGO\\src\\screens\\CalendarScreen.js";
+  var _this = this,
+    _jsxFileName = "D:\\Reactnativeprojects\\DomiGO\\src\\screens\\CalendarScreen.js";
   function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function _interopRequireWildcard(e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (var _t in e) "default" !== _t && {}.hasOwnProperty.call(e, _t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, _t)) && (i.get || i.set) ? o(f, _t, i) : f[_t] = e[_t]); return f; })(e, t); }
-  function CalendarScreen(_ref) {
-    var _this = this;
-    var navigation = _ref.navigation,
-      GET_MONTH_WISE_TIMELINE = _ref.GET_MONTH_WISE_TIMELINE,
-      GET_WEEK_WISE_TIMELINE = _ref.GET_WEEK_WISE_TIMELINE,
-      GET_YEAR_WISE_TIMELINE = _ref.GET_YEAR_WISE_TIMELINE,
-      GET_YEAR_WISE_LOCATION = _ref.GET_YEAR_WISE_LOCATION,
-      GET_WEEK_WISE_LOCATION = _ref.GET_WEEK_WISE_LOCATION,
-      GET_MISSING_ACTIVITY_LIST = _ref.GET_MISSING_ACTIVITY_LIST,
-      missingActivityList = _ref.missingActivityList,
-      yearWiseTimeline = _ref.yearWiseTimeline,
-      weekWiseTimeline = _ref.weekWiseTimeline,
-      monthWiseTimeline = _ref.monthWiseTimeline,
-      weekWiseLocation = _ref.weekWiseLocation,
-      yearWiseLocation = _ref.yearWiseLocation;
+  var parseLocalDate = function parseLocalDate(input) {
+    if (!input) return new Date();
+    if (input instanceof Date) return input;
+    if (typeof input === "string") {
+      if (input.includes("T")) {
+        return new Date(input); // ISO safe
+      }
+      var _input$split$map = input.split("-").map(Number),
+        _input$split$map2 = (0, _slicedToArray2.default)(_input$split$map, 3),
+        y = _input$split$map2[0],
+        m = _input$split$map2[1],
+        d = _input$split$map2[2];
+      return new Date(y, m - 1, d);
+    }
+    return new Date(input);
+  };
+  var getAutoTypeOfDayName = function getAutoTypeOfDayName(activity, date) {
+    var _activity$typeOfDay;
+    if (!activity) return "";
+    var isDefault = (activity == null || (_activity$typeOfDay = activity.typeOfDay) == null ? void 0 : _activity$typeOfDay.id) === 1;
+    var isAuto = (activity == null ? void 0 : activity.creationType) === "automatic";
+    if (!isDefault || !isAuto) {
+      var _activity$typeOfDay2;
+      return activity == null || (_activity$typeOfDay2 = activity.typeOfDay) == null ? void 0 : _activity$typeOfDay2.name;
+    }
+
+    // const d = new Date(date);
+    var d = parseLocalDate(date);
+    var day = d.getDay();
+    if (day === 0 || day === 6) {
+      return "Weekend"; // id = 3
+    }
+    return "Working"; // id = 2
+  };
+  var YearWeekCard = _react.default.memo(function (_ref) {
+    var item = _ref.item,
+      index = _ref.index,
+      openIndex = _ref.openIndex,
+      setOpenIndex = _ref.setOpenIndex,
+      selectedFilter = _ref.selectedFilter,
+      navigation = _ref.navigation;
+    var isOpen = openIndex === index;
+    // console.log('itemmdnfn', item);
+
+    return /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+      style: styles.cardWrapper,
+      children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+        style: styles.rowContainer,
+        children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
+          style: [styles.colorStrip, {
+            backgroundColor: item.color
+          }]
+        }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
+          activeOpacity: 0.85,
+          onPress: function onPress() {
+            return setOpenIndex(isOpen ? null : index);
+          },
+          style: styles.cardBody,
+          children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+            style: styles.topRow,
+            children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+              style: styles.dateText,
+              children: item.week
+            }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+              style: styles.daysText,
+              children: '07 Days'
+            })]
+          }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+            style: styles.bottomRow,
+            children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+              style: styles.locationText,
+              children: item.location
+            }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+              style: styles.rightIcons,
+              children: [item.manual && /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
+                style: styles.manualTag,
+                children: /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+                  style: styles.manualText,
+                  children: "Manual"
+                })
+              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_Ionicons.default, {
+                name: "chatbubble-outline",
+                size: 16,
+                color: "#9E9E9E",
+                style: {
+                  marginLeft: 8
+                }
+              })]
+            })]
+          })]
+        })]
+      }), isOpen && /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
+        style: styles.expandedContainer,
+        children: item.days.map(function (day, idx) {
+          var _day$trips, _day$locations;
+          // console.log('dayyyyy', day)
+          return /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+            style: {
+              marginBottom: 12
+            },
+            children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+              style: {
+                fontSize: 13,
+                fontWeight: "600",
+                color: "#555"
+              },
+              children: day.date
+            }), day == null || (_day$trips = day.trips) == null ? void 0 : _day$trips.filter(function (trip) {
+              if (selectedFilter === "TRIP") return trip.kind === "trip";
+              if (selectedFilter === "CITY_CHANGE") return trip.kind === "city_change";
+              if (selectedFilter === "COUNTY_CHANGE") return trip.kind === "county_change";
+              if (selectedFilter === "LOCATIONS") return false;
+              return true; // ALL
+            }).map(function (trip) {
+              return /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
+                style: styles.tripRow,
+                onPress: function onPress() {
+                  return navigation.navigate("DayDetail", trip);
+                },
+                children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+                  style: styles.tripLine,
+                  children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
+                    style: styles.blueDot
+                  }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
+                    style: styles.tripText,
+                    children: [trip.kind === "county_change" ? trip.originCounty : trip.originCity, ", ", trip.originState]
+                  })]
+                }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+                  style: styles.tripLine,
+                  children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
+                    style: styles.greenDot
+                  }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
+                    style: styles.tripText,
+                    children: [trip.kind === "county_change" ? trip.destinationCounty : trip.destinationCity, ", ", trip.destinationState]
+                  })]
+                })]
+              }, trip.id);
+            }), (selectedFilter === "LOCATIONS" || selectedFilter === "ALL") && (day == null || (_day$locations = day.locations) == null ? void 0 : _day$locations.map(function (location) {
+              return /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+                style: {
+                  backgroundColor: "#F7F7F7",
+                  padding: 12,
+                  borderRadius: 10,
+                  marginTop: 8
+                },
+                children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
+                  style: {
+                    fontWeight: "600",
+                    color: "#000"
+                  },
+                  children: [location.city, ", ", location.state]
+                }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+                  style: {
+                    color: "#666",
+                    marginTop: 4
+                  },
+                  children: location.address
+                }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+                  style: {
+                    color: "#999",
+                    marginTop: 4,
+                    fontSize: 12
+                  },
+                  children: parseLocalDate(location.recordedAt).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                  })
+                })]
+              }, location.id);
+            })), day.activity && selectedFilter !== "COUNTY_CHANGE" && selectedFilter !== "CITY_CHANGE" && /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
+              style: {
+                backgroundColor: "#FFF3E0",
+                borderRadius: 8,
+                padding: 10,
+                marginTop: 6
+              },
+              onPress: function onPress() {
+                return (
+                  // navigation.navigate("AddMissingDayScreen", {
+                  //   date: day.date,
+                  //   isEdit: true,
+                  //   data: day.activity,
+                  // })
+                  navigation.navigate('DayEntryScreen', {
+                    mode: "MISSING_DAY",
+                    date: day.date,
+                    isEdit: true,
+                    data: day.activity
+                  })
+                );
+              },
+              children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+                style: {
+                  flexDirection: "row",
+                  alignItems: "center"
+                },
+                children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_Ionicons.default, {
+                  name: "alert-circle-outline",
+                  size: 16,
+                  color: "#FF9500"
+                }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+                  style: {
+                    marginLeft: 6,
+                    fontWeight: "600"
+                  },
+                  children: getAutoTypeOfDayName(day.activity, day.date)
+                })]
+              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+                style: {
+                  marginLeft: 22,
+                  color: "#666"
+                },
+                children: day.activity.state
+              })]
+            })]
+          }, idx);
+        })
+      })]
+    });
+  });
+  function CalendarScreen(_ref2) {
+    var _this2 = this;
+    var navigation = _ref2.navigation,
+      GET_MONTH_WISE_TIMELINE = _ref2.GET_MONTH_WISE_TIMELINE,
+      GET_WEEK_WISE_TIMELINE = _ref2.GET_WEEK_WISE_TIMELINE,
+      GET_YEAR_WISE_TIMELINE = _ref2.GET_YEAR_WISE_TIMELINE,
+      GET_YEAR_WISE_LOCATION = _ref2.GET_YEAR_WISE_LOCATION,
+      GET_WEEK_WISE_LOCATION = _ref2.GET_WEEK_WISE_LOCATION,
+      GET_MISSING_ACTIVITY_LIST = _ref2.GET_MISSING_ACTIVITY_LIST,
+      missingActivityList = _ref2.missingActivityList,
+      yearWiseTimeline = _ref2.yearWiseTimeline,
+      weekWiseTimeline = _ref2.weekWiseTimeline,
+      monthWiseTimeline = _ref2.monthWiseTimeline,
+      weekWiseLocation = _ref2.weekWiseLocation,
+      yearWiseLocation = _ref2.yearWiseLocation;
     var _useState = (0, _react.useState)('Month'),
       _useState2 = (0, _slicedToArray2.default)(_useState, 2),
       selectedTab = _useState2[0],
@@ -163515,6 +163820,10 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       _useState26 = (0, _slicedToArray2.default)(_useState25, 2),
       showFilterDropdown = _useState26[0],
       setShowFilterDropdown = _useState26[1];
+    var _useState27 = (0, _react.useState)(true),
+      _useState28 = (0, _slicedToArray2.default)(_useState27, 2),
+      loading = _useState28[0],
+      setLoading = _useState28[1];
     var yearOptions = (0, _react.useMemo)(function () {
       return [currentYear - 2, currentYear - 1, currentYear];
     }, []);
@@ -163555,29 +163864,30 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         if (input.includes("T")) {
           return new Date(input); // ISO safe
         }
-        var _input$split$map = input.split("-").map(Number),
-          _input$split$map2 = (0, _slicedToArray2.default)(_input$split$map, 3),
-          y = _input$split$map2[0],
-          m = _input$split$map2[1],
-          d = _input$split$map2[2];
+        var _input$split$map3 = input.split("-").map(Number),
+          _input$split$map4 = (0, _slicedToArray2.default)(_input$split$map3, 3),
+          y = _input$split$map4[0],
+          m = _input$split$map4[1],
+          d = _input$split$map4[2];
         return new Date(y, m - 1, d);
       }
       return new Date(input);
     };
-    var _useState27 = (0, _react.useState)({
+    var _useState29 = (0, _react.useState)({
         month: today.getMonth() + 1,
         year: today.getFullYear()
       }),
-      _useState28 = (0, _slicedToArray2.default)(_useState27, 2),
-      visibleMonth = _useState28[0],
-      setVisibleMonth = _useState28[1];
+      _useState30 = (0, _slicedToArray2.default)(_useState29, 2),
+      visibleMonth = _useState30[0],
+      setVisibleMonth = _useState30[1];
 
     // console.log('yearWiseTimeline', yearWiseTimeline);
     // console.log('weekWiseTimeline', weekWiseTimeline);
-    console.log('yearWiseLocation', yearWiseLocation);
-    console.log('weekWiseLocation', weekWiseLocation);
-    console.log('monthWiseTimeline', monthWiseTimeline);
-    console.log('missingActivityList', missingActivityList);
+    // console.log('yearWiseLocation', yearWiseLocation);
+    // console.log('weekWiseLocation', weekWiseLocation);
+    // console.log('monthWiseTimeline', monthWiseTimeline);
+    // console.log('missingActivityList', missingActivityList);
+
     var getCurrentWeekDates = function getCurrentWeekDates() {
       var today = new Date();
 
@@ -163608,58 +163918,78 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         end: formatDate(endOfWeek)
       };
     };
+
+    // useEffect(() => {
+    //   const today = new Date();
+    //   const { start, end } = getCurrentWeekDates();
+
+    //   GET_WEEK_WISE_TIMELINE({ start, end });;
+    //   GET_WEEK_WISE_LOCATION({ start, end });;
+    //   GET_YEAR_WISE_TIMELINE({ year: selectedYear });
+    //   GET_YEAR_WISE_LOCATION({ year: selectedYear });
+    //   GET_MONTH_WISE_TIMELINE({
+    //     month: today.getMonth() + 1, // JS months 0-based
+    //     year: today.getFullYear(),
+    //   });
+    //   GET_MISSING_ACTIVITY_LIST()
+    // }, []);
+
+    //   useEffect(() => {
+
+    //   InteractionManager.runAfterInteractions(() => {
+
+    //       loadCalendarData();
+
+    //       setLoading(false);
+
+    //   });
+
+    // }, []);
+
     (0, _react.useEffect)(function () {
       var today = new Date();
       var _getCurrentWeekDates = getCurrentWeekDates(),
         start = _getCurrentWeekDates.start,
         end = _getCurrentWeekDates.end;
-      GET_WEEK_WISE_TIMELINE({
-        start: start,
-        end: end
-      });
-      ;
-      GET_WEEK_WISE_LOCATION({
-        start: start,
-        end: end
-      });
-      ;
-      GET_YEAR_WISE_TIMELINE({
-        year: selectedYear
-      });
-      GET_YEAR_WISE_LOCATION({
-        year: selectedYear
-      });
-      GET_MONTH_WISE_TIMELINE({
-        month: today.getMonth() + 1,
-        // JS months 0-based
-        year: today.getFullYear()
-      });
       GET_MISSING_ACTIVITY_LIST();
-    }, []);
+      if (selectedTab === 'Month') {
+        GET_MONTH_WISE_TIMELINE({
+          month: today.getMonth() + 1,
+          // JS months 0-based
+          year: today.getFullYear()
+        });
+      }
+      if (selectedTab === 'Week') {
+        GET_WEEK_WISE_TIMELINE({
+          start: start,
+          end: end
+        });
+        GET_WEEK_WISE_LOCATION({
+          start: start,
+          end: end
+        });
+      }
+      if (selectedTab === 'Year') {
+        GET_YEAR_WISE_TIMELINE({
+          year: selectedYear
+        });
+        GET_YEAR_WISE_LOCATION({
+          year: selectedYear
+        });
+      }
+    }, [selectedTab, selectedYear]);
     (0, _$$_REQUIRE(_dependencyMap[11], "@react-navigation/native").useFocusEffect)(_react.default.useCallback(function () {
-      var today = new Date();
-      var _getCurrentWeekDates2 = getCurrentWeekDates(),
-        start = _getCurrentWeekDates2.start,
-        end = _getCurrentWeekDates2.end;
-      GET_WEEK_WISE_TIMELINE({
-        start: start,
-        end: end
-      });
-      GET_WEEK_WISE_LOCATION({
-        start: start,
-        end: end
-      });
-      GET_YEAR_WISE_TIMELINE({
-        year: selectedYear
-      });
-      GET_YEAR_WISE_LOCATION({
-        year: selectedYear
-      });
-      GET_MONTH_WISE_TIMELINE({
-        month: today.getMonth() + 1,
-        // JS months 0-based
-        year: today.getFullYear()
-      });
+      // const today = new Date();
+      // const { start, end } = getCurrentWeekDates();
+
+      // GET_WEEK_WISE_TIMELINE({ start, end });
+      // GET_WEEK_WISE_LOCATION({ start, end });
+      // GET_YEAR_WISE_TIMELINE({ year: selectedYear });
+      // GET_YEAR_WISE_LOCATION({ year: selectedYear });
+      // GET_MONTH_WISE_TIMELINE({
+      //   month: today.getMonth() + 1, // JS months 0-based
+      //   year: today.getFullYear(),
+      // });
       GET_MISSING_ACTIVITY_LIST();
     }, []));
     var onYearSelect = function onYearSelect(year) {
@@ -163814,7 +164144,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         // 🔵 PRIORITY LOGIC
         // ===============================
 
-        console.log('missing>>>>', missing);
+        // console.log('missing>>>>', missing);
+
         if (trips.length > 0) {
           dots.push(TRIP_DOT);
         }
@@ -163853,7 +164184,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       return map;
     }, [missingActivityList]);
     var missingDataForDay = missingMap[selectedDate];
-    console.log('missingDataForDay', missingDataForDay);
+
+    // console.log('missingDataForDay', missingDataForDay);
     // const isMissingAlreadyAdded = !!missingDataForDay;
     var isMissingAlreadyAdded = !!selectedMissingDate;
     var screenHeight = _reactNative.Dimensions.get('window').height;
@@ -163981,7 +164313,11 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       });
       return Array.from(stateSet);
     };
-    var legendStates = getLegendStates(monthWiseTimeline);
+
+    // const legendStates = getLegendStates(monthWiseTimeline);
+    var legendStates = (0, _react.useMemo)(function () {
+      return getLegendStates(monthWiseTimeline);
+    }, [monthWiseTimeline]);
 
     // const getWeekCalendarData = (weekResult = {}) => {
     //   return Object.keys(weekResult).map(date => {
@@ -164215,20 +164551,25 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     //   return normalized;
     // };
 
+    var normalizedYearLocation = (0, _react.useMemo)(function () {
+      return normalizeLocationData(yearWiseLocation);
+    }, [yearWiseLocation]);
+
+    // const normalizeYearData = (yearWiseTimeline = {}, yearWiseLocation = {}) => {
     var normalizeYearData = function normalizeYearData() {
       var yearWiseTimeline = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      var yearWiseLocation = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      var normalizedYearLocation = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var normalized = {};
-      Object.entries(yearWiseTimeline).forEach(function (_ref2) {
-        var _normalizeLocationDat;
-        var _ref3 = (0, _slicedToArray2.default)(_ref2, 2),
-          date = _ref3[0],
-          items = _ref3[1];
+      Object.entries(yearWiseTimeline).forEach(function (_ref3) {
+        var _ref4 = (0, _slicedToArray2.default)(_ref3, 2),
+          date = _ref4[0],
+          items = _ref4[1];
         normalized[date] = {
           trips: [],
           activity: null,
           // locations: yearWiseLocation?.[date] || [],
-          locations: ((_normalizeLocationDat = normalizeLocationData(yearWiseLocation)) == null ? void 0 : _normalizeLocationDat[date]) || []
+          // locations: normalizeLocationData(yearWiseLocation)?.[date] || [],
+          locations: (normalizedYearLocation == null ? void 0 : normalizedYearLocation[date]) || []
         };
         if (!Array.isArray(items)) return;
         items.forEach(function (item) {
@@ -164245,10 +164586,10 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     var getYearWeeklyData = function getYearWeeklyData() {
       var normalizedData = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var weekMap = {};
-      Object.entries(normalizedData).forEach(function (_ref4) {
-        var _ref5 = (0, _slicedToArray2.default)(_ref4, 2),
-          date = _ref5[0],
-          dayData = _ref5[1];
+      Object.entries(normalizedData).forEach(function (_ref5) {
+        var _ref6 = (0, _slicedToArray2.default)(_ref5, 2),
+          date = _ref6[0],
+          dayData = _ref6[1];
         var weekKey = getWeekKey(date);
         if (!weekMap[weekKey]) {
           weekMap[weekKey] = [];
@@ -164292,9 +164633,11 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     //   }));
     // };
 
-    var normalizedYearData = (0, _react.useMemo)(function () {
-      return normalizeYearData(yearWiseTimeline, yearWiseLocation);
-    }, [yearWiseTimeline, yearWiseLocation]);
+    var normalizedYearData = (0, _react.useMemo)(
+    // () => normalizeYearData(yearWiseTimeline, yearWiseLocation),
+    function () {
+      return normalizeYearData(yearWiseTimeline, normalizedYearLocation);
+    }, [yearWiseTimeline, normalizedYearLocation]);
     var weeklyData = (0, _react.useMemo)(function () {
       return getYearWeeklyData(normalizedYearData);
     }, [normalizedYearData]);
@@ -164305,189 +164648,19 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     //   [normalizedYearData]
     // );
 
-    var YearWeekCard = function YearWeekCard(_ref6) {
-      var item = _ref6.item,
-        index = _ref6.index;
-      var isOpen = openIndex === index;
-      console.log('itemmdnfn', item);
-      return /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
-        style: styles.cardWrapper,
-        children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
-          style: styles.rowContainer,
-          children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
-            style: [styles.colorStrip, {
-              backgroundColor: item.color
-            }]
-          }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
-            activeOpacity: 0.85,
-            onPress: function onPress() {
-              return setOpenIndex(isOpen ? null : index);
-            },
-            style: styles.cardBody,
-            children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
-              style: styles.topRow,
-              children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
-                style: styles.dateText,
-                children: item.week
-              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
-                style: styles.daysText,
-                children: '07 Days'
-              })]
-            }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
-              style: styles.bottomRow,
-              children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
-                style: styles.locationText,
-                children: item.location
-              }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
-                style: styles.rightIcons,
-                children: [item.manual && /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
-                  style: styles.manualTag,
-                  children: /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
-                    style: styles.manualText,
-                    children: "Manual"
-                  })
-                }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_Ionicons.default, {
-                  name: "chatbubble-outline",
-                  size: 16,
-                  color: "#9E9E9E",
-                  style: {
-                    marginLeft: 8
-                  }
-                })]
-              })]
-            })]
-          })]
-        }), isOpen && /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
-          style: styles.expandedContainer,
-          children: item.days.map(function (day, idx) {
-            var _day$trips, _day$locations;
-            console.log('dayyyyy', day);
-            return /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
-              style: {
-                marginBottom: 12
-              },
-              children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
-                style: {
-                  fontSize: 13,
-                  fontWeight: "600",
-                  color: "#555"
-                },
-                children: day.date
-              }), day == null || (_day$trips = day.trips) == null ? void 0 : _day$trips.filter(function (trip) {
-                if (selectedFilter === "TRIP") return trip.kind === "trip";
-                if (selectedFilter === "CITY_CHANGE") return trip.kind === "city_change";
-                if (selectedFilter === "COUNTY_CHANGE") return trip.kind === "county_change";
-                if (selectedFilter === "LOCATIONS") return false;
-                return true; // ALL
-              }).map(function (trip) {
-                return /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
-                  style: styles.tripRow,
-                  onPress: function onPress() {
-                    return navigation.navigate("DayDetail", trip);
-                  },
-                  children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
-                    style: styles.tripLine,
-                    children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
-                      style: styles.blueDot
-                    }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
-                      style: styles.tripText,
-                      children: [trip.kind === "county_change" ? trip.originCounty : trip.originCity, ", ", trip.originState]
-                    })]
-                  }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
-                    style: styles.tripLine,
-                    children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
-                      style: styles.greenDot
-                    }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
-                      style: styles.tripText,
-                      children: [trip.kind === "county_change" ? trip.destinationCounty : trip.destinationCity, ", ", trip.destinationState]
-                    })]
-                  })]
-                }, trip.id);
-              }), (selectedFilter === "LOCATIONS" || selectedFilter === "ALL") && (day == null || (_day$locations = day.locations) == null ? void 0 : _day$locations.map(function (location) {
-                return /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
-                  style: {
-                    backgroundColor: "#F7F7F7",
-                    padding: 12,
-                    borderRadius: 10,
-                    marginTop: 8
-                  },
-                  children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
-                    style: {
-                      fontWeight: "600",
-                      color: "#000"
-                    },
-                    children: [location.city, ", ", location.state]
-                  }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
-                    style: {
-                      color: "#666",
-                      marginTop: 4
-                    },
-                    children: location.address
-                  }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
-                    style: {
-                      color: "#999",
-                      marginTop: 4,
-                      fontSize: 12
-                    },
-                    children: parseLocalDate(location.recordedAt).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit"
-                    })
-                  })]
-                }, location.id);
-              })), day.activity && selectedFilter !== "COUNTY_CHANGE" && selectedFilter !== "CITY_CHANGE" && /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
-                style: {
-                  backgroundColor: "#FFF3E0",
-                  borderRadius: 8,
-                  padding: 10,
-                  marginTop: 6
-                },
-                onPress: function onPress() {
-                  return (
-                    // navigation.navigate("AddMissingDayScreen", {
-                    //   date: day.date,
-                    //   isEdit: true,
-                    //   data: day.activity,
-                    // })
-                    navigation.navigate('DayEntryScreen', {
-                      mode: "MISSING_DAY",
-                      date: day.date,
-                      isEdit: true,
-                      data: day.activity
-                    })
-                  );
-                },
-                children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
-                  style: {
-                    flexDirection: "row",
-                    alignItems: "center"
-                  },
-                  children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_Ionicons.default, {
-                    name: "alert-circle-outline",
-                    size: 16,
-                    color: "#FF9500"
-                  }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
-                    style: {
-                      marginLeft: 6,
-                      fontWeight: "600"
-                    },
-                    children: getAutoTypeOfDayName(day.activity, day.date)
-                  })]
-                }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
-                  style: {
-                    marginLeft: 22,
-                    color: "#666"
-                  },
-                  children: day.activity.state
-                })]
-              })]
-            }, idx);
-          })
-        })]
-      });
-    };
-    var regulatoryCalendar = getWeekCalendarData(weekWiseTimeline);
-    var weekLocationData = normalizeLocationData(weekWiseLocation);
+    // const regulatoryCalendar = getWeekCalendarData(weekWiseTimeline);
+    var regulatoryCalendar = (0, _react.useMemo)(function () {
+      return getWeekCalendarData(weekWiseTimeline);
+    }, [weekWiseTimeline, selectedFilter]);
+    // const weekLocationData = normalizeLocationData(weekWiseLocation);
+    var weekLocationData = (0, _react.useMemo)(function () {
+      return normalizeLocationData(weekWiseLocation);
+    }, [weekWiseLocation]);
+
+    // const normalizedYearLocation = useMemo(() => {
+    //   return normalizeLocationData(yearWiseLocation);
+    // }, [yearWiseLocation]);
+
     var getTimelineData = function getTimelineData() {
       var dataObj = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var formatDate = function formatDate(date) {
@@ -164522,7 +164695,11 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         };
       }).filter(Boolean);
     };
-    var timelineData = getTimelineData(yearWiseTimeline);
+
+    // const timelineData = getTimelineData(yearWiseTimeline);
+    var timelineData = (0, _react.useMemo)(function () {
+      return getTimelineData(yearWiseTimeline);
+    }, [yearWiseTimeline]);
     var residenciesData = {
       past: [{
         id: 1,
@@ -164775,13 +164952,13 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       }, index);
     };
     var getAutoTypeOfDayName = function getAutoTypeOfDayName(activity, date) {
-      var _activity$typeOfDay;
+      var _activity$typeOfDay3;
       if (!activity) return "";
-      var isDefault = (activity == null || (_activity$typeOfDay = activity.typeOfDay) == null ? void 0 : _activity$typeOfDay.id) === 1;
+      var isDefault = (activity == null || (_activity$typeOfDay3 = activity.typeOfDay) == null ? void 0 : _activity$typeOfDay3.id) === 1;
       var isAuto = (activity == null ? void 0 : activity.creationType) === "automatic";
       if (!isDefault || !isAuto) {
-        var _activity$typeOfDay2;
-        return activity == null || (_activity$typeOfDay2 = activity.typeOfDay) == null ? void 0 : _activity$typeOfDay2.name;
+        var _activity$typeOfDay4;
+        return activity == null || (_activity$typeOfDay4 = activity.typeOfDay) == null ? void 0 : _activity$typeOfDay4.name;
       }
 
       // const d = new Date(date);
@@ -165235,14 +165412,27 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                   }, item.value);
                 })
               })]
-            }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.ScrollView, {
-              showsVerticalScrollIndicator: false,
-              children: weeklyData.map(function (item, index) {
+            }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.FlatList, {
+              data: weeklyData,
+              keyExtractor: function keyExtractor(item, index) {
+                return index.toString();
+              },
+              renderItem: function renderItem(_ref8) {
+                var item = _ref8.item,
+                  index = _ref8.index;
                 return /*#__PURE__*/(0, _jsxRuntime.jsx)(YearWeekCard, {
                   item: item,
-                  index: index
-                }, index);
-              })
+                  index: index,
+                  openIndex: openIndex,
+                  setOpenIndex: setOpenIndex,
+                  selectedFilter: selectedFilter,
+                  navigation: navigation
+                });
+              },
+              removeClippedSubviews: true,
+              initialNumToRender: 10,
+              maxToRenderPerBatch: 10,
+              windowSize: 5
             })]
           })]
         }), selectedTab == 'Year' && /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.TouchableOpacity, {
@@ -165291,8 +165481,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                     style: styles.tripDivider
                   });
                 },
-                renderItem: function renderItem(_ref8) {
-                  var item = _ref8.item;
+                renderItem: function renderItem(_ref9) {
+                  var item = _ref9.item;
                   return /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
                     style: styles.tripRow,
                     onPress: function onPress() {
@@ -165458,6 +165648,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     GET_YEAR_WISE_LOCATION: _$$_REQUIRE(_dependencyMap[14], "../redux/actions/action-creator").GET_YEAR_WISE_LOCATION,
     GET_MISSING_ACTIVITY_LIST: _$$_REQUIRE(_dependencyMap[14], "../redux/actions/action-creator").GET_MISSING_ACTIVITY_LIST
   };
+
+  // export default React.memo(connect(mapStateToProps, mapDispatchToProps)(CalendarScreen));
   var _default = exports.default = (0, _$$_REQUIRE(_dependencyMap[15], "react-redux").connect)(mapStateToProps, mapDispatchToProps)(CalendarScreen);
   var styles = _reactNative.StyleSheet.create({
     container: {
@@ -288700,7 +288892,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       _React$useState2 = (0, _slicedToArray2.default)(_React$useState, 2),
       refreshing = _React$useState2[0],
       setRefreshing = _React$useState2[1];
-    console.log('tripList==>', tripList);
+    // console.log('tripList==>', tripList);
     var dispatch = (0, _$$_REQUIRE(_dependencyMap[11], "react-redux").useDispatch)();
     var navigation = (0, _$$_REQUIRE(_dependencyMap[12], "@react-navigation/native").useNavigation)();
     var API_Function = (0, _react.useCallback)(function () {
@@ -288709,15 +288901,20 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         dispatch((0, _$$_REQUIRE(_dependencyMap[13], "../redux/actions/action-creator").GET_TRIP_LIST_LIST)()).then(resolve).catch(reject);
       });
     }, [_$$_REQUIRE(_dependencyMap[13], "../redux/actions/action-creator").GET_TRIP_LIST_LIST]);
-    (0, _react.useEffect)(function () {
+    // useEffect(() => {
+    //   API_Function();
+    // }, [])
+    // useEffect(() => {
+    //   const unsubscribe = navigation.addListener('focus', () => {
+    //     API_Function();
+
+    //   });
+    //   return unsubscribe;
+    // }, [navigation]);
+
+    (0, _$$_REQUIRE(_dependencyMap[12], "@react-navigation/native").useFocusEffect)((0, _react.useCallback)(function () {
       API_Function();
-    }, []);
-    (0, _react.useEffect)(function () {
-      var unsubscribe = navigation.addListener('focus', function () {
-        API_Function();
-      });
-      return unsubscribe;
-    }, [navigation]);
+    }, []));
     var onRefresh = /*#__PURE__*/function () {
       var _ref2 = (0, _asyncToGenerator2.default)(function* () {
         setRefreshing(true);
@@ -288744,9 +288941,100 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       var dateObj = new Date(y, m - 1, d);
       return dateObj.toDateString();
     };
-    var todayDate = getTodayDateYYYYMMDD();
-    console.log(todayDate); // e.g. 2026-01-03
 
+    // const todayDate = getTodayDateYYYYMMDD();
+    // console.log(todayDate); // e.g. 2026-01-03
+    var filteredTrips = _react.default.useMemo(function () {
+      return tripList.filter(function (item) {
+        return item.kind === "trip";
+      });
+    }, [tripList]);
+    var renderTripCard = function renderTripCard(_ref3) {
+      var trip = _ref3.item;
+      return /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
+        style: styles.card,
+        onPress: function onPress() {
+          return navigation.navigate('DayDetail', trip);
+        },
+        children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+          style: styles.topRow,
+          children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+            style: styles.typeRow,
+            children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_Ionicons.default, {
+              name: trip.type === "Business" ? "briefcase-outline" : "leaf-outline",
+              size: 15,
+              color: "#4CAF50",
+              style: {
+                marginRight: 5
+              }
+            }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+              style: styles.typeText,
+              children: trip.creationType
+            })]
+          }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
+            style: [styles.impactBadge, {
+              backgroundColor: '#00d250'
+            }],
+            children: /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+              style: [styles.impactText, {
+                color: '#fff'
+              }],
+              children: trip.impactLevel
+            })
+          })]
+        }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
+          style: styles.cityText,
+          children: [trip.destinationCity, ",", trip.destinationState]
+        }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+          style: styles.dateText,
+          children: formatDate(trip.date)
+        }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
+          style: styles.divider
+        }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
+          style: styles.bottomRow,
+          children: /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+            style: {
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              width: '100%'
+            },
+            children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+              style: styles.label,
+              children: "Days Spent"
+            }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
+              style: styles.daysText,
+              children: [trip.daysSpent, " Days"]
+            })]
+          })
+        }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.TouchableOpacity, {
+          onPress: function onPress() {
+            return navigation.navigate("DayEntryScreen", {
+              mode: "TRIP",
+              date: todayDate,
+              isEdit: true,
+              data: trip
+            });
+          },
+          style: {
+            width: 36,
+            height: 36,
+            backgroundColor: _colors.default.primary,
+            borderRadius: 18,
+            justifyContent: 'center',
+            alignItems: 'center',
+            alignSelf: 'flex-end',
+            bottom: -15,
+            right: 10,
+            position: 'absolute'
+          },
+          children: /*#__PURE__*/(0, _jsxRuntime.jsx)(_MaterialIcons.default, {
+            name: "edit",
+            size: 18,
+            color: "#fff"
+          })
+        })]
+      });
+    };
     return /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNativeLinearGradient.default, {
       colors: ["#9ab1fa", "#ffffff"],
       start: {
@@ -288804,115 +289092,25 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 children: "Add Trip"
               })]
             })]
-          }), tripList.map(function (trip) {
-            return trip.kind == "trip" && /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
-              style: styles.card,
-              onPress: function onPress() {
-                return navigation.navigate('DayDetail', trip);
-              },
-              children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
-                style: styles.topRow,
-                children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
-                  style: styles.typeRow,
-                  children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_Ionicons.default, {
-                    name: trip.type === "Business" ? "briefcase-outline" : "leaf-outline",
-                    size: 15,
-                    color: "#4CAF50",
-                    style: {
-                      marginRight: 5
-                    }
-                  }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
-                    style: styles.typeText,
-                    children: trip == null ? void 0 : trip.creationType
-                  })]
-                }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
-                  style: [styles.impactBadge, {
-                    backgroundColor: '#00d250'
-                  }],
-                  children: /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
-                    style: [styles.impactText, {
-                      color: '#fff'
-                    }],
-                    children: trip.impactLevel
-                  })
-                })]
-              }), trip.kind == "trip" ? /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
-                style: styles.cityText,
-                children: [trip.destinationCity, ",", trip.destinationState]
-              }) : /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
-                style: styles.cityText,
-                children: trip.state
-              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
-                style: styles.dateText,
-                children: formatDate(trip.date)
-              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
-                style: styles.divider
-              }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
-                style: styles.bottomRow,
-                children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
-                  style: {
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    width: '100%'
-                  },
-                  children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
-                    style: styles.label,
-                    children: "Days Spent"
-                  }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
-                    style: styles.daysText,
-                    children: [trip.daysSpent, " Days"]
-                  })]
-                }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
-                  style: {
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    width: '100%',
-                    marginTop: 10
-                  },
-                  children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
-                    style: styles.label,
-                    children: "Residency Impact"
-                  }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
-                    style: styles.riskBadge,
-                    children: /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
-                      style: styles.riskText,
-                      children: trip.residencyRisk
-                    })
-                  })]
-                })]
-              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.TouchableOpacity
-              // onPress={() => navigation.navigate('AddTrip', { id: trip.id })}
-              , {
-                onPress: function onPress() {
-                  navigation.navigate("DayEntryScreen", {
-                    mode: "TRIP",
-                    // or "TRIP"
-                    date: todayDate,
-                    isEdit: true,
-                    data: trip
-                  });
-                },
-                style: {
-                  width: 36,
-                  height: 36,
-                  backgroundColor: _colors.default.primary,
-                  borderRadius: 18,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  alignSelf: 'flex-end',
-                  bottom: -15,
-                  right: 10,
-                  position: 'absolute'
-                },
-                children: /*#__PURE__*/(0, _jsxRuntime.jsx)(_MaterialIcons.default, {
-                  name: "edit",
-                  size: 18,
-                  color: "#fff"
-                })
-              })]
-            }, trip.id);
+          }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.FlatList, {
+            data: filteredTrips,
+            keyExtractor: function keyExtractor(item) {
+              return item.id.toString();
+            },
+            renderItem: renderTripCard,
+            showsVerticalScrollIndicator: false,
+            contentContainerStyle: styles.scrollContent,
+            refreshControl: /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.RefreshControl, {
+              refreshing: refreshing,
+              onRefresh: onRefresh,
+              tintColor: _colors.default.primary,
+              colors: [_colors.default.primary]
+            }),
+            removeClippedSubviews: true,
+            initialNumToRender: 10,
+            maxToRenderPerBatch: 10,
+            windowSize: 5,
+            updateCellsBatchingPeriod: 50
           })]
         })]
       })
@@ -288934,7 +289132,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       flex: 1
     },
     scrollContent: {
-      paddingHorizontal: 16,
+      paddingHorizontal: 10,
       paddingBottom: 40
     },
     sectionHeader: {
