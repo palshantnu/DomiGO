@@ -128,7 +128,7 @@ const MetricsScreen = ({ GET_STATE_WISE_METRICS, loginToken, stateWiseMetrics })
 
 
     const metricsData = stateWiseMetrics.map((item, index) => {
-        const daysLeft = Math.max(item.threshold - item.travelDays, 0);
+        const daysLeft = Math.max(item.threshold - item.daysIn, 0);
         return ({
             id: index.toString(),
             state: item.state,
