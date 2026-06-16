@@ -36,6 +36,9 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
 
   private var previousDetectedCity: String = ""
   private var previousCityEnterTime: TimeInterval = 0
+  private var currentStateName: String = ""
+  private var lastLocationPingTime: TimeInterval = 0
+  private var lastSentState: String = ""
 
   private var lastCityChangeKey: String = ""
   private var countyChangeDetectedTime: TimeInterval = 0
@@ -74,6 +77,14 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   private let INITIAL_STATE_LOADED_KEY = "LocationTracker_initialStateLoaded"
   private let BACKGROUND_LOCATION_KEY = "LatestBackgroundLocation"
   private let CURRENT_STATE_NAME_KEY = "LocationTracker_currentStateName"
+  private let PREVIOUS_COUNTY_FIPS_KEY = "LocationTracker_previousCountyFips"
+  private let PREVIOUS_COUNTY_NAME_KEY = "LocationTracker_previousCountyName"
+  private let PREVIOUS_COUNTY_ENTER_TIME_KEY = "LocationTracker_previousCountyEnterTime"
+  private let PREVIOUS_DETECTED_CITY_KEY = "LocationTracker_previousDetectedCity"
+  private let PREVIOUS_CITY_ENTER_TIME_KEY = "LocationTracker_previousCityEnterTime"
+  private let LAST_LOCATION_PING_TIME_KEY = "LocationTracker_lastLocationPingTime"
+  private let LAST_SENT_STATE_KEY = "LocationTracker_lastSentState"
+  private let LOCATION_PING_INTERVAL_MS: TimeInterval = 15 * 60 * 1000
 
   private var lastGeocodeTime: TimeInterval = 0
   private let GEOCODE_INTERVAL: TimeInterval = 45 * 60  // 45 minutes
@@ -329,6 +340,14 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       self.defaults.set(self.previousStateName, forKey: self.PREVIOUS_STATE_KEY)
       self.defaults.set(self.previousEnterTime, forKey: self.PREVIOUS_ENTER_TIME_KEY)
       self.defaults.set(self.lastTripProcessedTime, forKey: self.LAST_TRIP_TIME_KEY)
+      self.defaults.set(self.currentStateName, forKey: self.CURRENT_STATE_NAME_KEY)
+      self.defaults.set(self.previousCountyFips, forKey: self.PREVIOUS_COUNTY_FIPS_KEY)
+      self.defaults.set(self.previousCountyName, forKey: self.PREVIOUS_COUNTY_NAME_KEY)
+      self.defaults.set(self.previousCountyEnterTime, forKey: self.PREVIOUS_COUNTY_ENTER_TIME_KEY)
+      self.defaults.set(self.previousDetectedCity, forKey: self.PREVIOUS_DETECTED_CITY_KEY)
+      self.defaults.set(self.previousCityEnterTime, forKey: self.PREVIOUS_CITY_ENTER_TIME_KEY)
+      self.defaults.set(self.lastLocationPingTime, forKey: self.LAST_LOCATION_PING_TIME_KEY)
+      self.defaults.set(self.lastSentState, forKey: self.LAST_SENT_STATE_KEY)
 
       let dateFormatter = DateFormatter()
       dateFormatter.dateFormat = "yyyy-MM-dd"
@@ -376,6 +395,14 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     previousCity = defaults.string(forKey: PREVIOUS_CITY_KEY) ?? ""
     previousStateName = defaults.string(forKey: PREVIOUS_STATE_KEY) ?? ""
     previousEnterTime = defaults.double(forKey: PREVIOUS_ENTER_TIME_KEY)
+    currentStateName = defaults.string(forKey: CURRENT_STATE_NAME_KEY) ?? previousStateName
+    previousCountyFips = defaults.string(forKey: PREVIOUS_COUNTY_FIPS_KEY) ?? ""
+    previousCountyName = defaults.string(forKey: PREVIOUS_COUNTY_NAME_KEY) ?? ""
+    previousCountyEnterTime = defaults.double(forKey: PREVIOUS_COUNTY_ENTER_TIME_KEY)
+    previousDetectedCity = defaults.string(forKey: PREVIOUS_DETECTED_CITY_KEY) ?? ""
+    previousCityEnterTime = defaults.double(forKey: PREVIOUS_CITY_ENTER_TIME_KEY)
+    lastLocationPingTime = defaults.double(forKey: LAST_LOCATION_PING_TIME_KEY)
+    lastSentState = defaults.string(forKey: LAST_SENT_STATE_KEY) ?? ""
 
     print("📦 Loaded persisted state:")
     print("   Initial State Loaded: \(isInitialStateLoaded)")
@@ -384,6 +411,8 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     print("   Last Trip Time: \(lastTripProcessedTime)")
     print("   Previous City: \(previousCity)")
     print("   Previous State: \(previousStateName)")
+    print("   Previous County: \(previousCountyName) (\(previousCountyFips))")
+    print("   Previous Boundary City: \(previousDetectedCity)")
     lastTripKey = defaults.string(forKey: LAST_TRIP_KEY) ?? ""
     lastHoursApiTime = UserDefaults.standard.double(forKey: "lastHoursApiTime")
     print("🕓 Loaded Hours API Time:\(lastHoursApiTime)")
@@ -1147,6 +1176,17 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
           .lowercased()
   }
 
+  private func displayStateName(_ state: String) -> String {
+    let trimmed = state.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmed.isEmpty else { return "" }
+
+    return normalizeState(trimmed)
+      .lowercased()
+      .split(separator: " ")
+      .map { $0.prefix(1).uppercased() + String($0.dropFirst()) }
+      .joined(separator: " ")
+  }
+
   private func checkAndSendToAPI(
     lat: Double, lng: Double, city: String, state: String, address: String,
     isBackground: Bool = false, geocodeFailed: Bool = false, skipTripCreation: Bool = false
@@ -1357,6 +1397,86 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     }
 
     task.resume()
+  }
+
+  private func sendLocationPing(
+    lat: Double,
+    lng: Double,
+    state: String,
+    stateCode: String,
+    countryCode: String
+  ) {
+    let currentTimeMs = Date().timeIntervalSince1970 * 1000
+    let stateKey = stateComparisonKey(state)
+    let lastSentKey = stateComparisonKey(lastSentState)
+    let isTimeBased = currentTimeMs - lastLocationPingTime >= LOCATION_PING_INTERVAL_MS
+    let isStateChanged = stateKey != lastSentKey
+
+    if !isTimeBased && !isStateChanged {
+      print("⏳ Location ping skipped (no 15min / no state change)")
+      return
+    }
+
+    guard let domigoToken = config["domigoToken"] as? String,
+      let apiUrl = config["apiUrl"] as? String,
+      let url = URL(string: apiUrl)
+    else {
+      print("❌ Domigo token or API URL not configured for location ping")
+      return
+    }
+
+    let body: [String: Any] = [
+      "latitude": lat,
+      "longitude": lng,
+      "state": state,
+      "city": state,
+      "address": state,
+      "stateCode": stateCode,
+      "countryCode": countryCode,
+    ]
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.setValue("Bearer \(domigoToken)", forHTTPHeaderField: "Authorization")
+
+    do {
+      request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
+    } catch {
+      print("❌ Error creating location ping body: \(error.localizedDescription)")
+      return
+    }
+
+    URLSession.shared.dataTask(with: request) { [weak self] _, response, error in
+      guard let self = self else { return }
+
+      if let error = error {
+        print("❌ Location ping failed: \(error.localizedDescription)")
+        return
+      }
+
+      let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+      guard status >= 200 && status < 300 else {
+        print("❌ Location ping error: \(status)")
+        return
+      }
+
+      print("✅ Location ping success")
+      self.lastLocationPingTime = currentTimeMs
+      self.lastSentState = state
+      self.lastState = state
+      self.lastApiTime = currentTimeMs
+      self.currentStateName = state
+      self.saveState()
+      self.safeSendEvent(
+        withName: "onApiSuccess",
+        body: [
+          "message": "Location sent to API successfully",
+          "state": state,
+          "city": state,
+          "timestamp": currentTimeMs,
+        ])
+    }.resume()
   }
 
   // MARK: - SIMPLIFIED Missing Day Functions
@@ -1692,10 +1812,12 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
           "kind": kind,
           "date": date ?? "",
           "originCity": originCity ?? "",
+          "originCounty": originCounty ?? "",
           "originState": originState ?? "",
           "originLat": originLat ?? 0,
           "originLng": originLng ?? 0,
           "destinationCity": destinationCity ?? "",
+          "destinationCounty": destinationCounty ?? "",
           "destinationState": destinationState ?? "",
           "destinationLat": destinationLat ?? 0,
           "destinationLng": destinationLng ?? 0,
@@ -1716,10 +1838,12 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
           "kind": kind,
           "date": date ?? "",
           "originCity": originCity ?? "",
+          "originCounty": originCounty ?? "",
           "originState": originState ?? "",
           "originLat": originLat ?? 0,
           "originLng": originLng ?? 0,
           "destinationCity": destinationCity ?? "",
+          "destinationCounty": destinationCounty ?? "",
           "destinationState": destinationState ?? "",
           "destinationLat": destinationLat ?? 0,
           "destinationLng": destinationLng ?? 0,
@@ -1859,6 +1983,35 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       addField("hasProof", "false")
       addField("proofType", "other")
       addField("notes", kind == "city_change" ? "" : "Offline trip sync")
+      addField("creationType", payload["creationType"] as? String ?? "automatic")
+      addField("attachments", "[]")
+    }
+
+    if kind == "county_change" {
+      addField("originCounty", payload["originCounty"] as? String ?? "")
+      addField("originState", payload["originState"] as? String ?? "")
+      addField("destinationCounty", payload["destinationCounty"] as? String ?? "")
+      addField("destinationState", payload["destinationState"] as? String ?? "")
+      addField("originLat", "\(payload["originLat"] ?? 0)")
+      addField("originLng", "\(payload["originLng"] ?? 0)")
+      addField("destinationLat", "\(payload["destinationLat"] ?? 0)")
+      addField("destinationLng", "\(payload["destinationLng"] ?? 0)")
+
+      if let start = payload["startDate"] as? Double {
+        addField("startDate", formatDate1(start))
+      }
+
+      if let end = payload["endDate"] as? Double {
+        addField("endDate", formatDate1(end))
+      }
+
+      addField("typeOfDayId", "1")
+      addField("isTravelling", "false")
+      addField("tripTypeId", "1")
+      addField("tripModeId", "1")
+      addField("hasProof", "false")
+      addField("proofType", "other")
+      addField("notes", "")
       addField("creationType", payload["creationType"] as? String ?? "automatic")
       addField("attachments", "[]")
     }
@@ -2106,6 +2259,38 @@ private func loadCityFeatures(stateName: String) -> [[String: Any]]? {
     return nil
 }
 
+  private func seedUsBoundaryState(
+    state: StateMatch,
+    lat: Double,
+    lng: Double,
+    now: TimeInterval
+  ) {
+    guard state.countryCode == "US", let stateFips = state.fips else {
+      previousCountyFips = ""
+      previousCountyName = ""
+      previousCountyEnterTime = 0
+      previousDetectedCity = ""
+      previousCityEnterTime = 0
+      return
+    }
+
+    if let county = detectCountyFromGeoJSON(stateFips: stateFips, lat: lat, lng: lng) {
+      previousCountyFips = county.fips
+      previousCountyName = county.name
+      previousCountyEnterTime = now
+      print("📍 County seeded: \(county.name)")
+    }
+
+    if let city = detectCityFromGeoJSON(stateName: state.name, lat: lat, lng: lng) {
+      previousDetectedCity = city
+      previousCityEnterTime = now
+      if previousCity.isEmpty {
+        previousCity = city
+      }
+      print("🏙️ City seeded: \(city)")
+    }
+  }
+
   private func pointInPolygonRings(lat: Double, lng: Double, rings: [[[Double]]]) -> Bool {
     guard !rings.isEmpty else { return false }
     if !pointInRing(lat: lat, lng: lng, ring: rings[0]) { return false }
@@ -2138,50 +2323,68 @@ private func loadCityFeatures(stateName: String) -> [[String: Any]]? {
       longitude: lng
       )
     checkAndSendHoursAPI(location: location)
-    guard let match = detectStateFromGeoJSON(lat: lat, lng: lng)
+    guard let detectedMatch = detectStateFromGeoJSON(lat: lat, lng: lng)
     else {
       print("local_native: no state detected", lat, lng)
       return
     }
 
-    // Name remains the key used throughout previousStateName comparisons.
-    // match.fips is available here for Phase 3 county detection (unused in Phase 2).
-    let detectedState = match.name
+    let detectedState = displayStateName(detectedMatch.name)
+    let match = StateMatch(
+      fips: detectedMatch.fips,
+      name: detectedState,
+      countryCode: detectedMatch.countryCode
+    )
     let detectedCountry = match.countryCode
     print("local_native: detected state", detectedState)
     print("👉 Detected state name:", match.name)
     print("👉 Detected state FIPS:", match.fips ?? "nil")
 
-    // Snapshot origin values BEFORE checkAndSendToAPI mutates them.
-    // The state-change branch below uses these for the trip's origin fields.
-    let snapshotState = previousStateName
+    if currentStateName.lowercased() != detectedState.lowercased() {
+      currentStateName = detectedState
+    }
+
+    // Snapshot origin values before sending any async heartbeat.
+    // State/county/city trips must use these, not the newly detected state.
+    let snapshotState = displayStateName(previousStateName)
     let snapshotCity = previousCity
     let snapshotLat = previousLat
     let snapshotLng = previousLng
     let snapshotEnterTime = previousEnterTime
+    let snapshotCountyFips = previousCountyFips
+    let snapshotCountyName = previousCountyName
+    let snapshotCountyEnterTime = previousCountyEnterTime
+    let snapshotDetectedCity = previousDetectedCity
+    let snapshotCityEnterTime = previousCityEnterTime
 
-    // Send location heartbeat and update state variables.
-    // skipTripCreation: true — trip creation (with geocoded city) is handled in the
-    // state-change branch below so the destinationCity is never the province name.
-    self.checkAndSendToAPI(
-        lat: lat,
-        lng: lng,
-        city: detectedState,
-        state: detectedState,
-        address: detectedState,
-        isBackground: false,
-        skipTripCreation: true
+    sendLocationPing(
+      lat: lat,
+      lng: lng,
+      state: detectedState,
+      stateCode: match.fips ?? detectedState,
+      countryCode: detectedCountry
     )
     let currentTimeMs = Date().timeIntervalSince1970 * 1000
 
     // First-time init: no previous state before this call.
     if snapshotState.isEmpty {
+      previousStateName = detectedState
+      previousLat = lat
+      previousLng = lng
+      previousEnterTime = currentTimeMs
+      seedUsBoundaryState(state: match, lat: lat, lng: lng, now: currentTimeMs)
+      saveState()
       print("Initialized first state: \(detectedState)")
       return
     }
 
-    // SAME STATE (case-insensitive, using snapshot before checkAndSendToAPI mutated previousStateName)
+    // SAME STATE (case-insensitive, using snapshot before any current tick update)
     if detectedState.lowercased() == snapshotState.lowercased() {
+        if previousStateName != detectedState {
+            previousStateName = detectedState
+            currentStateName = detectedState
+            saveState()
+        }
 
         if !cityChangeEventsEnabled {
             return
@@ -2212,6 +2415,7 @@ print("📍 county: \(county)")
                 previousCityEnterTime = Date().timeIntervalSince1970 * 1000
             }
             previousCountyEnterTime = Date().timeIntervalSince1970 * 1000
+            saveState()
             print("📍 Initial county: \(county.name)")
             return
         }
@@ -2233,6 +2437,7 @@ print("📍 county: \(county)")
                 previousCityEnterTime =
                     Date().timeIntervalSince1970 * 1000
 
+                saveState()
                 print("🏙️ Initial city: \(detectedCity)")
                 return
             }
@@ -2267,6 +2472,7 @@ print("📍 county: \(county)")
             if oldCity.isEmpty {
                 previousDetectedCity = detectedCity
                 previousCityEnterTime = Date().timeIntervalSince1970 * 1000
+                saveState()
             } else if detectedCity.lowercased() != oldCity.lowercased() {
                 handleCityTransition(
                     state: detectedState,
@@ -2301,7 +2507,9 @@ print("📍 county: \(county)")
     let originState = snapshotState
     let originLat = snapshotLat
     let originLng = snapshotLng
-    let originCity = snapshotCity
+    let originCity = snapshotCity.isEmpty ? snapshotDetectedCity : snapshotCity
+    let originBoundaryCity = snapshotDetectedCity.isEmpty ? snapshotCity : snapshotDetectedCity
+    let originBoundaryCityStart = snapshotCityEnterTime > 0 ? snapshotCityEnterTime : snapshotEnterTime
     let startTime = snapshotEnterTime
     let stateTripEndTime = currentTimeMs
 
@@ -2310,7 +2518,15 @@ print("📍 county: \(county)")
         state: match,
         lat: lat,
         lng: lng,
-        now: stateTripEndTime
+        now: stateTripEndTime,
+        originState: originState,
+        originLat: originLat,
+        originLng: originLng,
+        originCountyFips: snapshotCountyFips,
+        originCountyName: snapshotCountyName,
+        originCountyEnterTime: snapshotCountyEnterTime,
+        originCity: originBoundaryCity,
+        originCityEnterTime: originBoundaryCityStart
       )
     }
 
@@ -2321,14 +2537,18 @@ print("📍 county: \(county)")
 
       geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
         guard let self = self else { return }
-        let city = placemarks?.first?.locality ?? ""
+        let geocodedCity = placemarks?.first?.locality ?? ""
+        let destinationCity =
+          geocodedCity.isEmpty
+          ? (self.previousDetectedCity.isEmpty ? detectedState : self.previousDetectedCity)
+          : geocodedCity
 
         self.createTrip(
           originCity: originCity,
           originState: originState,
           originLat: originLat,
           originLng: originLng,
-          destinationCity: city,
+          destinationCity: destinationCity,
           destinationState: detectedState,
           destinationLat: lat,
           destinationLng: lng,
@@ -2338,10 +2558,13 @@ print("📍 county: \(county)")
 
         self.previousLat = lat
         self.previousLng = lng
-        self.previousCity = city
+        self.previousCity = destinationCity
         self.previousStateName = detectedState
+        self.currentStateName = detectedState
         // RESET CITY TRACKING
-        if detectedCountry != "US" {
+        if detectedCountry == "US" {
+          self.seedUsBoundaryState(state: match, lat: lat, lng: lng, now: stateTripEndTime)
+        } else {
           self.previousDetectedCity = ""
           self.previousCityEnterTime = 0
           self.previousCountyFips = ""
@@ -2355,7 +2578,7 @@ print("📍 county: \(county)")
       }
     } else {
       createTrip(
-        originCity: originCity ?? originState,
+        originCity: originCity.isEmpty ? originState : originCity,
         originState: originState,
         originLat: originLat,
         originLng: originLng,
@@ -2369,9 +2592,12 @@ print("📍 county: \(county)")
 
       previousLat = lat
       previousLng = lng
-      previousCity = ""
       // RESET CITY TRACKING
-      if detectedCountry != "US" {
+      if detectedCountry == "US" {
+        seedUsBoundaryState(state: match, lat: lat, lng: lng, now: stateTripEndTime)
+        previousCity = previousDetectedCity.isEmpty ? detectedState : previousDetectedCity
+      } else {
+        previousCity = ""
         previousDetectedCity = ""
         previousCityEnterTime = 0
         previousCountyFips = ""
@@ -2379,6 +2605,7 @@ print("📍 county: \(county)")
         previousCountyEnterTime = 0
       }
       previousStateName = detectedState
+      currentStateName = detectedState
       previousEnterTime = stateTripEndTime
       lastTripProcessedTime = stateTripEndTime
       isTransitionInProgress = false
@@ -2390,7 +2617,15 @@ print("📍 county: \(county)")
     state: StateMatch,
     lat: Double,
     lng: Double,
-    now: TimeInterval
+    now: TimeInterval,
+    originState: String,
+    originLat: Double?,
+    originLng: Double?,
+    originCountyFips: String,
+    originCountyName: String,
+    originCountyEnterTime: TimeInterval,
+    originCity: String,
+    originCityEnterTime: TimeInterval
   ) {
     guard cityChangeEventsEnabled, state.countryCode == "US", let stateFips = state.fips else {
       return
@@ -2401,20 +2636,17 @@ print("📍 county: \(county)")
     let formatter = DateFormatter()
     formatter.dateFormat = "yyyy-MM-dd"
     let today = formatter.string(from: Date())
-    let originLat = previousLat
-    let originLng = previousLng
 
     if let county = newCounty,
-      !previousCountyFips.isEmpty,
-      county.fips != previousCountyFips
+      !originCountyFips.isEmpty,
+      county.fips != originCountyFips
     {
-      let originCounty = previousCountyName
-      let originCountyStart = previousCountyEnterTime > 0 ? previousCountyEnterTime : previousEnterTime
-      let countyKey = "state_\(previousCountyFips)_\(county.fips)_\(originCountyStart)"
+      let originCountyStart = originCountyEnterTime > 0 ? originCountyEnterTime : previousEnterTime
+      let countyKey = "state_\(originCountyFips)_\(county.fips)_\(originCountyStart)"
 
       if countyKey != lastCityChangeKey {
         lastCityChangeKey = countyKey
-        print("COUNTY CHANGED WITH STATE: \(originCounty) -> \(county.name)")
+        print("COUNTY CHANGED WITH STATE: \(originCountyName) -> \(county.name)")
 
         sendTripFormData(
           kind: "county_change",
@@ -2436,8 +2668,8 @@ print("📍 county: \(county)")
           stateId: state.name,
           isUpdated: false,
           originCity: nil,
-          originCounty: originCounty,
-          originState: previousStateName,
+          originCounty: originCountyName,
+          originState: originState,
           originLat: originLat,
           originLng: originLng,
           destinationCity: nil,
@@ -2458,9 +2690,11 @@ print("📍 county: \(county)")
         lat: lat,
         lng: lng,
         now: now,
-        originState: previousStateName,
+        originState: originState,
         originLat: originLat,
-        originLng: originLng
+        originLng: originLng,
+        originCity: originCity,
+        originCityStart: originCityEnterTime
       )
     } else {
       reverseGeocodeCityForStateChange(
@@ -2468,9 +2702,11 @@ print("📍 county: \(county)")
         lat: lat,
         lng: lng,
         now: now,
-        originState: previousStateName,
+        originState: originState,
         originLat: originLat,
-        originLng: originLng
+        originLng: originLng,
+        originCity: originCity,
+        originCityStart: originCityEnterTime
       )
     }
 
@@ -2498,6 +2734,7 @@ print("📍 county: \(county)")
       if oldCity.isEmpty {
         self.previousDetectedCity = city
         self.previousCityEnterTime = Date().timeIntervalSince1970 * 1000
+        self.saveState()
       } else if city.lowercased() != oldCity.lowercased() {
         self.handleCityTransition(
           state: state,
@@ -2517,7 +2754,9 @@ print("📍 county: \(county)")
     now: TimeInterval,
     originState: String,
     originLat: Double?,
-    originLng: Double?
+    originLng: Double?,
+    originCity: String,
+    originCityStart: TimeInterval
   ) {
     reverseGeocodeCityName(lat: lat, lng: lng) { [weak self] city in
       guard let self = self, !city.isEmpty else { return }
@@ -2530,7 +2769,9 @@ print("📍 county: \(county)")
         now: now,
         originState: originState,
         originLat: originLat,
-        originLng: originLng
+        originLng: originLng,
+        originCity: originCity,
+        originCityStart: originCityStart
       )
     }
   }
@@ -2570,17 +2811,24 @@ print("📍 county: \(county)")
     now: TimeInterval,
     originState: String,
     originLat: Double?,
-    originLng: Double?
+    originLng: Double?,
+    originCity: String? = nil,
+    originCityStart: TimeInterval? = nil
   ) {
-    let originCity = previousDetectedCity.isEmpty ? previousCity : previousDetectedCity
-    let originCityStart = previousCityEnterTime > 0 ? previousCityEnterTime : previousEnterTime
-    let cityKey = "city_\(originCity)_\(destinationCity)_\(originCityStart)"
-    let cityChanged = !originCity.isEmpty && destinationCity.lowercased() != originCity.lowercased()
+    let resolvedOriginCity = (originCity ?? (previousDetectedCity.isEmpty ? previousCity : previousDetectedCity))
+      .trimmingCharacters(in: .whitespacesAndNewlines)
+    let resolvedOriginCityStart =
+      originCityStart ?? (previousCityEnterTime > 0 ? previousCityEnterTime : previousEnterTime)
+    let cityKey = "city_\(resolvedOriginCity)_\(destinationCity)_\(resolvedOriginCityStart)"
+    let cityChanged =
+      !resolvedOriginCity.isEmpty
+      && destinationCity.lowercased() != resolvedOriginCity.lowercased()
 
     if !cityChanged || cityKey == lastCityChangeKey {
-      if originCity.isEmpty {
+      if resolvedOriginCity.isEmpty {
         previousDetectedCity = destinationCity
         previousCityEnterTime = now
+        saveState()
       }
       return
     }
@@ -2610,7 +2858,7 @@ print("📍 county: \(county)")
       remoteLocation: "",
       stateId: state,
       isUpdated: false,
-      originCity: originCity,
+      originCity: resolvedOriginCity,
       originCounty: nil,
       originState: originState,
       originLat: originLat,
@@ -2620,12 +2868,13 @@ print("📍 county: \(county)")
       destinationState: state,
       destinationLat: lat,
       destinationLng: lng,
-      startDate: originCityStart,
+      startDate: resolvedOriginCityStart,
       endDate: now
     )
 
     previousDetectedCity = destinationCity
     previousCityEnterTime = now
+    saveState()
   }
 
   private func handleCountyTransition(
@@ -2674,6 +2923,7 @@ print("📍 county: \(county)")
     previousCountyEnterTime = now
     previousCountyFips = newCounty.fips
     previousCountyName = newCounty.name
+    saveState()
 
     let formatter = DateFormatter()
     formatter.dateFormat = "yyyy-MM-dd"
@@ -2740,6 +2990,7 @@ private func handleCityTransition(
 
             previousDetectedCity = newCity
             previousCityEnterTime = now
+            saveState()
             return
         }
 
@@ -2810,6 +3061,7 @@ private func handleCityTransition(
 
     previousDetectedCity = newCity
     previousCityEnterTime = now
+    saveState()
 }
 
   private func createTrip(
