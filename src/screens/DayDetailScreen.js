@@ -105,6 +105,12 @@ function DayDetailScreen({
               {TripSummaryDetails?.tripDay?.kind == 'trip' ?
                 <Text style={styles.tripTitle}>{TripSummaryDetails?.tripDay?.originState} to {TripSummaryDetails?.tripDay?.destinationState}</Text>
                 :
+                TripSummaryDetails?.tripDay?.kind == 'city_change' ?
+                <Text style={styles.tripTitle}>{TripSummaryDetails?.tripDay?.originCity} to {TripSummaryDetails?.tripDay?.destinationCity}</Text>
+                :
+                TripSummaryDetails?.tripDay?.kind == 'county_change' ?
+                <Text style={styles.tripTitle}>{TripSummaryDetails?.tripDay?.originCounty} to {TripSummaryDetails?.tripDay?.destinationCounty}</Text>
+                :
                 <Text style={styles.tripTitle}>{TripSummaryDetails?.tripDay?.state} </Text>
               }
             </View>
@@ -114,6 +120,12 @@ function DayDetailScreen({
               <View style={styles.creationTypeBadge}>
                 {TripSummaryDetails?.tripDay?.kind == 'trip' ?
                   <Text style={styles.creationTypeText}>Trip Type: {TripSummaryDetails?.tripDay?.creationType.toUpperCase()}</Text>
+                  :
+                  TripSummaryDetails?.tripDay?.kind == 'city_change' ?
+                  <Text style={styles.creationTypeText}>City Change Type: {TripSummaryDetails?.tripDay?.creationType.toUpperCase()}</Text>
+                  :
+                  TripSummaryDetails?.tripDay?.kind == 'county_change' ?
+                  <Text style={styles.creationTypeText}>County Change Type: {TripSummaryDetails?.tripDay?.creationType.toUpperCase()}</Text>
                   :
                   <Text style={styles.creationTypeText}>Missing Day Type: {TripSummaryDetails?.tripDay?.creationType.toUpperCase()}</Text>
                 }
@@ -129,7 +141,7 @@ function DayDetailScreen({
           </View>
 
 
-          {TripSummaryDetails?.tripDay?.kind == 'trip' ?
+          {TripSummaryDetails?.tripDay?.kind == 'trip' || TripSummaryDetails?.tripDay?.kind == 'city_change' || TripSummaryDetails?.tripDay?.kind == 'county_change' ?
             <View style={styles.card}>
               <Text style={styles.sectionTitle}>Trip Summary</Text>
               <View style={styles.summaryRow}>
@@ -223,8 +235,8 @@ function DayDetailScreen({
             </View>}
 
 
-          {
-            TripSummaryDetails?.tripDay?.kind == 'trip' &&
+          
+                      {TripSummaryDetails?.tripDay?.kind == 'trip' || TripSummaryDetails?.tripDay?.kind == 'city_change' || TripSummaryDetails?.tripDay?.kind == 'county_change' &&
             <View style={styles.card}>
               <Text style={styles.sectionTitle}>Timeline of Events</Text>
 
@@ -251,7 +263,7 @@ function DayDetailScreen({
 
           {/* <TouchableOpacity onPress={() => navigation.navigate('AddTrip', {  id: trip.id })} style={styles.editButton}> */}
           <TouchableOpacity onPress={() =>
-          {TripSummaryDetails?.tripDay?.kind == 'trip' ?
+          {TripSummaryDetails?.tripDay?.kind == 'trip' || TripSummaryDetails?.tripDay?.kind == 'city_change' || TripSummaryDetails?.tripDay?.kind == 'county_change' ?
            navigation.navigate("DayEntryScreen", {
             mode: "TRIP", // or "TRIP"
             date: "2026-01-03",

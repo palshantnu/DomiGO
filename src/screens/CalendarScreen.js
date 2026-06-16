@@ -25,49 +25,49 @@ import { useFocusEffect } from '@react-navigation/native';
 
 
 
-  const parseLocalDate = (input) => {
-    if (!input) return new Date();
+const parseLocalDate = (input) => {
+  if (!input) return new Date();
 
-    if (input instanceof Date) return input;
+  if (input instanceof Date) return input;
 
-    if (typeof input === "string") {
-      if (input.includes("T")) {
-        return new Date(input); // ISO safe
-      }
-
-      const [y, m, d] = input.split("-").map(Number);
-      return new Date(y, m - 1, d);
+  if (typeof input === "string") {
+    if (input.includes("T")) {
+      return new Date(input); // ISO safe
     }
 
-    return new Date(input);
-  };
+    const [y, m, d] = input.split("-").map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  return new Date(input);
+};
 
 
 
-  const getAutoTypeOfDayName = (activity, date) => {
-    if (!activity) return "";
+const getAutoTypeOfDayName = (activity, date) => {
+  if (!activity) return "";
 
-    const isDefault = activity?.typeOfDay?.id === 1;
-    const isAuto = activity?.creationType === "automatic";
+  const isDefault = activity?.typeOfDay?.id === 1;
+  const isAuto = activity?.creationType === "automatic";
 
-    if (!isDefault || !isAuto) {
-      return activity?.typeOfDay?.name;
-    }
+  if (!isDefault || !isAuto) {
+    return activity?.typeOfDay?.name;
+  }
 
-    // const d = new Date(date);
-    const d = parseLocalDate(date);
-    const day = d.getDay();
+  // const d = new Date(date);
+  const d = parseLocalDate(date);
+  const day = d.getDay();
 
-    if (day === 0 || day === 6) {
-      return "Weekend"; // id = 3
-    }
+  if (day === 0 || day === 6) {
+    return "Weekend"; // id = 3
+  }
 
-    return "Working"; // id = 2
-  };
+  return "Working"; // id = 2
+};
 
-  const YearWeekCard = React.memo(
-      ({ item, index, openIndex, setOpenIndex,selectedFilter,navigation
- }) => {
+const YearWeekCard = React.memo(
+  ({ item, index, openIndex, setOpenIndex, selectedFilter, navigation
+  }) => {
     const isOpen = openIndex === index;
     // console.log('itemmdnfn', item);
 
@@ -260,47 +260,47 @@ import { useFocusEffect } from '@react-navigation/native';
                     ))}
 
                   {/* 🟠 ACTIVITY */}
-                  {day.activity && 
+                  {day.activity &&
                     selectedFilter !== "COUNTY_CHANGE" &&
                     selectedFilter !== "CITY_CHANGE" && (
-                    <TouchableOpacity
-                      style={{
-                        backgroundColor: "#FFF3E0",
-                        borderRadius: 8,
-                        padding: 10,
-                        marginTop: 6,
-                      }}
-                      onPress={() =>
-                        // navigation.navigate("AddMissingDayScreen", {
-                        //   date: day.date,
-                        //   isEdit: true,
-                        //   data: day.activity,
-                        // })
-                        navigation.navigate('DayEntryScreen', {
-                          mode: "MISSING_DAY",
-                          date: day.date,
-                          isEdit: true,
-                          data: day.activity,
-                        })
-                      }
-                    >
-                      <View style={{ flexDirection: "row", alignItems: "center" }}>
-                        <Ionicons
-                          name="alert-circle-outline"
-                          size={16}
-                          color="#FF9500"
-                        />
-                        <Text style={{ marginLeft: 6, fontWeight: "600" }}>
-                          {getAutoTypeOfDayName(day.activity, day.date)}
-                          {/* {day.activity.typeOfDay?.name} */}
-                        </Text>
-                      </View>
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: "#FFF3E0",
+                          borderRadius: 8,
+                          padding: 10,
+                          marginTop: 6,
+                        }}
+                        onPress={() =>
+                          // navigation.navigate("AddMissingDayScreen", {
+                          //   date: day.date,
+                          //   isEdit: true,
+                          //   data: day.activity,
+                          // })
+                          navigation.navigate('DayEntryScreen', {
+                            mode: "MISSING_DAY",
+                            date: day.date,
+                            isEdit: true,
+                            data: day.activity,
+                          })
+                        }
+                      >
+                        <View style={{ flexDirection: "row", alignItems: "center" }}>
+                          <Ionicons
+                            name="alert-circle-outline"
+                            size={16}
+                            color="#FF9500"
+                          />
+                          <Text style={{ marginLeft: 6, fontWeight: "600" }}>
+                            {getAutoTypeOfDayName(day.activity, day.date)}
+                            {/* {day.activity.typeOfDay?.name} */}
+                          </Text>
+                        </View>
 
-                      <Text style={{ marginLeft: 22, color: "#666" }}>
-                        {day.activity.state}
-                      </Text>
-                    </TouchableOpacity>
-                  )}
+                        <Text style={{ marginLeft: 22, color: "#666" }}>
+                          {day.activity.state}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
                 </View>
               )
             })}
@@ -337,13 +337,13 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   }, []);
   const today = new Date();
 
-const getLocalDateKey = (value) => {
-  if (!value) return "";
+  const getLocalDateKey = (value) => {
+    if (!value) return "";
 
-  const date = new Date(value);
+    const date = new Date(value);
 
-  return date.toLocaleDateString("en-CA");
-};
+    return date.toLocaleDateString("en-CA");
+  };
 
   // const parseLocalDate = (dateStr) => {
   //   const [y, m, d] = dateStr.split('-').map(Number);
@@ -434,30 +434,30 @@ const getLocalDateKey = (value) => {
   // };
 
   const getCurrentWeekDates = () => {
-  const today = new Date();
+    const today = new Date();
 
-  const day = today.getDay(); // 0 = Sunday
+    const day = today.getDay(); // 0 = Sunday
 
-  // Sunday as start of week
-  const startOfWeek = new Date(today);
-  startOfWeek.setDate(today.getDate() - day);
+    // Sunday as start of week
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - day);
 
-  const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(startOfWeek.getDate() + 6);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
 
-  const formatDate = (date) => {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
+    const formatDate = (date) => {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
 
-    return `${y}-${m}-${d}`;
+      return `${y}-${m}-${d}`;
+    };
+
+    return {
+      start: formatDate(startOfWeek),
+      end: formatDate(endOfWeek),
+    };
   };
-
-  return {
-    start: formatDate(startOfWeek),
-    end: formatDate(endOfWeek),
-  };
-};
 
 
 
@@ -492,24 +492,24 @@ const getLocalDateKey = (value) => {
     const today = new Date();
     const { start, end } = getCurrentWeekDates();
     GET_MISSING_ACTIVITY_LIST()
-  if(selectedTab === 'Month'){
-    GET_MONTH_WISE_TIMELINE({
-      month: today.getMonth() + 1, // JS months 0-based
-      year: today.getFullYear(),
-    });
-  }
+    if (selectedTab === 'Month') {
+      GET_MONTH_WISE_TIMELINE({
+        month: today.getMonth() + 1, // JS months 0-based
+        year: today.getFullYear(),
+      });
+    }
 
-  if(selectedTab === 'Week'){
-    GET_WEEK_WISE_TIMELINE({ start, end });
-    GET_WEEK_WISE_LOCATION({ start, end });
-  }
+    if (selectedTab === 'Week') {
+      GET_WEEK_WISE_TIMELINE({ start, end });
+      GET_WEEK_WISE_LOCATION({ start, end });
+    }
 
-  if(selectedTab === 'Year'){
-    GET_YEAR_WISE_TIMELINE({ year: selectedYear });
-    GET_YEAR_WISE_LOCATION({ year: selectedYear });
-  }
+    if (selectedTab === 'Year') {
+      GET_YEAR_WISE_TIMELINE({ year: selectedYear });
+      GET_YEAR_WISE_LOCATION({ year: selectedYear });
+    }
 
-}, [selectedTab,selectedYear]);
+  }, [selectedTab, selectedYear]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -866,10 +866,10 @@ const getLocalDateKey = (value) => {
 
   // const legendStates = getLegendStates(monthWiseTimeline);
   const legendStates = useMemo(() => {
-  return getLegendStates(
-    monthWiseTimeline
-  );
-}, [monthWiseTimeline]);
+    return getLegendStates(
+      monthWiseTimeline
+    );
+  }, [monthWiseTimeline]);
 
   // const getWeekCalendarData = (weekResult = {}) => {
   //   return Object.keys(weekResult).map(date => {
@@ -960,24 +960,24 @@ const getLocalDateKey = (value) => {
 
   const normalizeLocationData = (data = {}) => {
 
-  const grouped = {};
+    const grouped = {};
 
-  Object.values(data).forEach(locationArray => {
+    Object.values(data).forEach(locationArray => {
 
-    locationArray.forEach(location => {
+      locationArray.forEach(location => {
 
-      const localKey = getLocalDateKey(location.recordedAt);
+        const localKey = getLocalDateKey(location.recordedAt);
 
-      if (!grouped[localKey]) {
-        grouped[localKey] = [];
-      }
+        if (!grouped[localKey]) {
+          grouped[localKey] = [];
+        }
 
-      grouped[localKey].push(location);
+        grouped[localKey].push(location);
+      });
     });
-  });
 
-  return grouped;
-};
+    return grouped;
+  };
 
   const getWeekCalendarData = (weekResult = {}) => {
     return Object.keys(weekResult)
@@ -1119,9 +1119,9 @@ const getLocalDateKey = (value) => {
   // };
 
 
-   const normalizedYearLocation = useMemo(() => {
-      return normalizeLocationData(yearWiseLocation);
-    }, [yearWiseLocation]);
+  const normalizedYearLocation = useMemo(() => {
+    return normalizeLocationData(yearWiseLocation);
+  }, [yearWiseLocation]);
 
   // const normalizeYearData = (yearWiseTimeline = {}, yearWiseLocation = {}) => {
   const normalizeYearData = (yearWiseTimeline = {}, normalizedYearLocation = {}) => {
@@ -1236,20 +1236,20 @@ const getLocalDateKey = (value) => {
 
   // const regulatoryCalendar = getWeekCalendarData(weekWiseTimeline);
   const regulatoryCalendar = useMemo(() => {
-   return getWeekCalendarData(
+    return getWeekCalendarData(
       weekWiseTimeline
-   );
-}, [weekWiseTimeline, selectedFilter]);
+    );
+  }, [weekWiseTimeline, selectedFilter]);
   // const weekLocationData = normalizeLocationData(weekWiseLocation);
   const weekLocationData = useMemo(() => {
-  return normalizeLocationData(
-    weekWiseLocation
-  );
-}, [weekWiseLocation]);
+    return normalizeLocationData(
+      weekWiseLocation
+    );
+  }, [weekWiseLocation]);
 
-    // const normalizedYearLocation = useMemo(() => {
-    //   return normalizeLocationData(yearWiseLocation);
-    // }, [yearWiseLocation]);
+  // const normalizedYearLocation = useMemo(() => {
+  //   return normalizeLocationData(yearWiseLocation);
+  // }, [yearWiseLocation]);
 
   const getTimelineData = (dataObj = {}) => {
     const formatDate = (date) =>
@@ -1293,8 +1293,8 @@ const getLocalDateKey = (value) => {
 
   // const timelineData = getTimelineData(yearWiseTimeline);
   const timelineData = useMemo(() => {
-   return getTimelineData(yearWiseTimeline);
-}, [yearWiseTimeline]);
+    return getTimelineData(yearWiseTimeline);
+  }, [yearWiseTimeline]);
 
   const residenciesData = {
     past: [
@@ -1312,50 +1312,50 @@ const getLocalDateKey = (value) => {
   };
 
 
-  const renderRegulatoryEntry = 
+  const renderRegulatoryEntry =
     (item, index) => (
-    <TouchableOpacity style={styles.regulatoryRow} key={index}
-      onPress={() => navigation.navigate('AddTrip', { id: item._id })}>
+      <TouchableOpacity style={styles.regulatoryRow} key={index}
+        onPress={() => navigation.navigate('AddTrip', { id: item._id })}>
 
-      <View style={{ backgroundColor: '#F1F1F1', borderRadius: 50, height: 50, width: 50, justifyContent: 'center', alignItems: 'center', marginRight: 15, }}>
-        <Text style={styles.regulatoryId}>{item.id}</Text>
-        <Text style={styles.regulatoryId2}>{item.day}</Text>
-      </View>
-
-      <View style={styles.nameLocationContainer}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View style={styles.dot1} />
-          <Text style={styles.regulatoryName}>{item.name}</Text>
-        </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View style={styles.dot2} />
-          <Text style={styles.regulatoryLocation}>{item.location}</Text>
+        <View style={{ backgroundColor: '#F1F1F1', borderRadius: 50, height: 50, width: 50, justifyContent: 'center', alignItems: 'center', marginRight: 15, }}>
+          <Text style={styles.regulatoryId}>{item.id}</Text>
+          <Text style={styles.regulatoryId2}>{item.day}</Text>
         </View>
 
-      </View>
-    </TouchableOpacity>
-  );
-
-
-  const renderRegulatorySection = 
-            (section, index) => (
-    <View key={index} style={styles.regulatorySection}>
-      <View style={styles.rowContainer}>
-
-        {/* Date Bubble */}
-        <View style={styles.dateColumn}>
-          <View style={styles.dateCircle}>
-            <Text style={styles.dateText}>{section.formattedDate}</Text>
-            <Text style={styles.dayText}>{section.day}</Text>
+        <View style={styles.nameLocationContainer}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={styles.dot1} />
+            <Text style={styles.regulatoryName}>{item.name}</Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={styles.dot2} />
+            <Text style={styles.regulatoryLocation}>{item.location}</Text>
           </View>
 
-          {/* Vertical timeline */}
-          {/* <View style={styles.verticalLine} /> */}
         </View>
+      </TouchableOpacity>
+    );
 
-        {/* Locations */}
-        <View style={{ flex: 1 }}>
-          {/* {section.locations.map((item, idx) => {
+
+  const renderRegulatorySection =
+    (section, index) => (
+      <View key={index} style={styles.regulatorySection}>
+        <View style={styles.rowContainer}>
+
+          {/* Date Bubble */}
+          <View style={styles.dateColumn}>
+            <View style={styles.dateCircle}>
+              <Text style={styles.dateText}>{section.formattedDate}</Text>
+              <Text style={styles.dayText}>{section.day}</Text>
+            </View>
+
+            {/* Vertical timeline */}
+            {/* <View style={styles.verticalLine} /> */}
+          </View>
+
+          {/* Locations */}
+          <View style={{ flex: 1 }}>
+            {/* {section.locations.map((item, idx) => {
             if (item.type === 'separator') {
               return <View key={idx} style={styles.tripSeparator} />;
             }
@@ -1388,31 +1388,31 @@ const getLocalDateKey = (value) => {
               </Wrapper>
             );
           })} */}
-          {(selectedFilter === "LOCATIONS" ||
-            selectedFilter === "ALL") && (
+            {(selectedFilter === "LOCATIONS" ||
+              selectedFilter === "ALL") && (
 
 
 
-                  <View style={{ flex: 1 }}>
-                    {/* {(weekWiseLocation?.[section.date] || []).map(location => ( */}
-                    {(weekLocationData?.[section.date] || []).map(location => (
+                <View style={{ flex: 1 }}>
+                  {/* {(weekWiseLocation?.[section.date] || []).map(location => ( */}
+                  {(weekLocationData?.[section.date] || []).map(location => (
+                    <View
+                      key={location.id}
+                      style={{
+                        backgroundColor: "#F7F7F7",
+                        padding: 12,
+                        borderRadius: 10,
+                        marginBottom: 10,
+                      }}
+                    >
                       <View
-                        key={location.id}
                         style={{
-                          backgroundColor: "#F7F7F7",
-                          padding: 12,
-                          borderRadius: 10,
-                          marginBottom: 10,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          marginBottom: 6,
                         }}
                       >
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            marginBottom: 6,
-                          }}
-                        >
-                          {/* <View
+                        {/* <View
                             style={{
                               width: 8,
                               height: 8,
@@ -1422,130 +1422,130 @@ const getLocalDateKey = (value) => {
                             }}
                           /> */}
 
-                          <Text
-                            style={{
-                              fontWeight: "600",
-                              fontSize: 14,
-                              color: "#000",
-                            }}
-                          >
-                            {location.city}, {location.state}
-                          </Text>
-                        </View>
-
                         <Text
                           style={{
-                            color: "#666",
-                            fontSize: 13,
-                            marginLeft: 0,
+                            fontWeight: "600",
+                            fontSize: 14,
+                            color: "#000",
                           }}
                         >
-                          {location.address}
-                        </Text>
-
-                        <Text
-                          style={{
-                            color: "#999",
-                            fontSize: 12,
-                            marginTop: 4,
-                            marginLeft: 0,
-                          }}
-                        >
-                          {parseLocalDate(location.recordedAt)
-                            .toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
+                          {location.city}, {location.state}
                         </Text>
                       </View>
-                    ))}
+
+                      <Text
+                        style={{
+                          color: "#666",
+                          fontSize: 13,
+                          marginLeft: 0,
+                        }}
+                      >
+                        {location.address}
+                      </Text>
+
+                      <Text
+                        style={{
+                          color: "#999",
+                          fontSize: 12,
+                          marginTop: 4,
+                          marginLeft: 0,
+                        }}
+                      >
+                        {parseLocalDate(location.recordedAt)
+                          .toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+
+
+              )}
+            {selectedFilter !== "LOCATIONS" &&
+              section.trips.map(trip => (
+                // <TouchableOpacity
+                //   key={trip.id}
+                //   style={styles.locationRow}
+                //   onPress={() => navigation.navigate("DayDetail", trip)}
+                // >
+                //   <View style={[styles.dot, {
+                //     backgroundColor:
+                //       trip.kind === "city_change" ? "#FF9500" : "#2F80ED",
+                //   },]} />
+                //   <Text style={styles.locationText}>
+                //     {trip.originCity} → {trip.destinationCity}
+                //     {trip.kind === "city_change" && " (City / Municipality Trips)"}
+                //   </Text>
+                // </TouchableOpacity>
+                <TouchableOpacity
+                  key={trip.id}
+                  style={styles.tripRow}
+                  onPress={() => navigation.navigate("DayDetail", trip)}
+                >
+                  <View style={styles.tripLine}>
+                    <View style={styles.blueDot} />
+                    <Text style={styles.tripText}>
+                      {/* {trip.originCity}, {trip.originState} */}
+                      {trip.kind === "county_change"
+                        ? trip.originCounty
+                        : trip.originCity
+                      }, {trip.originState}
+                    </Text>
                   </View>
 
-
-            )}
-          {selectedFilter !== "LOCATIONS" &&
-            section.trips.map(trip => (
-              // <TouchableOpacity
-              //   key={trip.id}
-              //   style={styles.locationRow}
-              //   onPress={() => navigation.navigate("DayDetail", trip)}
-              // >
-              //   <View style={[styles.dot, {
-              //     backgroundColor:
-              //       trip.kind === "city_change" ? "#FF9500" : "#2F80ED",
-              //   },]} />
-              //   <Text style={styles.locationText}>
-              //     {trip.originCity} → {trip.destinationCity}
-              //     {trip.kind === "city_change" && " (City / Municipality Trips)"}
-              //   </Text>
-              // </TouchableOpacity>
-              <TouchableOpacity
-                key={trip.id}
-                style={styles.tripRow}
-                onPress={() => navigation.navigate("DayDetail", trip)}
-              >
-                <View style={styles.tripLine}>
-                  <View style={styles.blueDot} />
-                  <Text style={styles.tripText}>
-                    {/* {trip.originCity}, {trip.originState} */}
-                    {trip.kind === "county_change"
-                      ? trip.originCounty
-                      : trip.originCity
-                    }, {trip.originState}
+                  <View style={styles.tripLine}>
+                    <View style={styles.greenDot} />
+                    <Text style={styles.tripText}>
+                      {/* {trip.destinationCity}, {trip.destinationState}*/}
+                      {trip.kind === "county_change"
+                        ? trip.destinationCounty
+                        : trip.destinationCity
+                      }, {trip.destinationState}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))
+            }
+            {section.missing &&
+              selectedFilter !== "COUNTY_CHANGE" &&
+              selectedFilter !== "CITY_CHANGE" && (
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: "#FFF3E0",
+                    padding: 10,
+                    borderRadius: 8,
+                    marginTop: 6,
+                  }}
+                  onPress={() =>
+                    navigation.navigate("DayEntryScreen", {
+                      mode: "MISSING_DAY",
+                      date: section.date,
+                      isEdit: true,
+                      data: section.missing,
+                    })
+                  }
+                >
+                  <Text style={{ fontWeight: "600", color: "#FF9500" }}>
+                    {/* Missing Day: {section.missing.typeOfDay?.name} */}
+                    Missing Day: {getAutoTypeOfDayName(section.missing, section.date)}
                   </Text>
-                </View>
-
-                <View style={styles.tripLine}>
-                  <View style={styles.greenDot} />
-                  <Text style={styles.tripText}>
-                    {/* {trip.destinationCity}, {trip.destinationState}*/}
-                    {trip.kind === "county_change"
-                      ? trip.destinationCounty
-                      : trip.destinationCity
-                    }, {trip.destinationState}
+                  <Text style={{ color: "#666" }}>
+                    State: {section.missing.state}
                   </Text>
-                </View>
-              </TouchableOpacity>
-            ))
-          }
-          {section.missing && 
-            selectedFilter !== "COUNTY_CHANGE" &&
-            selectedFilter !== "CITY_CHANGE" && (
-            <TouchableOpacity
-              style={{
-                backgroundColor: "#FFF3E0",
-                padding: 10,
-                borderRadius: 8,
-                marginTop: 6,
-              }}
-              onPress={() =>
-                navigation.navigate("DayEntryScreen", {
-                  mode: "MISSING_DAY",
-                  date: section.date,
-                  isEdit: true,
-                  data: section.missing,
-                })
-              }
-            >
-              <Text style={{ fontWeight: "600", color: "#FF9500" }}>
-                {/* Missing Day: {section.missing.typeOfDay?.name} */}
-                Missing Day: {getAutoTypeOfDayName(section.missing, section.date)}
-              </Text>
-              <Text style={{ color: "#666" }}>
-                State: {section.missing.state}
-              </Text>
-            </TouchableOpacity>
-          )}
+                </TouchableOpacity>
+              )}
 
 
+          </View>
         </View>
-      </View>
 
-      {index < regulatoryCalendar.length - 1 && (
-        <View style={styles.sectionSeparator} />
-      )}
-    </View>
-  );
+        {index < regulatoryCalendar.length - 1 && (
+          <View style={styles.sectionSeparator} />
+        )}
+      </View>
+    );
 
   const getAutoTypeOfDayName = (activity, date) => {
     if (!activity) return "";
@@ -2080,7 +2080,7 @@ const getLocalDateKey = (value) => {
 
 
               {/* <ScrollView showsVerticalScrollIndicator={false}> */}
-                {/* {weeklyData.map(renderWeekCard)} 
+              {/* {weeklyData.map(renderWeekCard)} 
                 {
                 // weeklyData.map((item, index) => (
                   // <YearWeekCard
@@ -2091,10 +2091,10 @@ const getLocalDateKey = (value) => {
                 // ))}
               // </ScrollView> */}
               <FlatList
-              data={weeklyData}
-              keyExtractor={(item,index)=>index.toString()}
-              renderItem={({item,index})=>(
-                <YearWeekCard
+                data={weeklyData}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item, index }) => (
+                  <YearWeekCard
 
                     item={item}
                     index={index}
@@ -2102,12 +2102,12 @@ const getLocalDateKey = (value) => {
                     setOpenIndex={setOpenIndex}
                     selectedFilter={selectedFilter}
                     navigation={navigation}
-                />
-              )}
-              removeClippedSubviews
-              initialNumToRender={10}
-              maxToRenderPerBatch={10}
-              windowSize={5}
+                  />
+                )}
+                removeClippedSubviews
+                initialNumToRender={10}
+                maxToRenderPerBatch={10}
+                windowSize={5}
               />
             </>
           )}

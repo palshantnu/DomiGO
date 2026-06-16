@@ -332,26 +332,57 @@ const DayEntryScreen = ({
 
         // ✅ TRIP
         if (isTrip) {
+            const isCountyChange = editData?.kind === "county_change";
+
+            const originName = isCountyChange
+                ? editData.originCounty
+                : editData.originCity;
+
+            const destinationName = isCountyChange
+                ? editData.destinationCounty
+                : editData.destinationCity;
+
             setStartLocation(
-                `${editData.originCity}, ${editData.originState}`
+                `${originName}, ${editData.originState}`
             );
+
             setEndLocation(
-                `${editData.destinationCity}, ${editData.destinationState}`
+                `${destinationName}, ${editData.destinationState}`
             );
 
             setStartData({
-                city: editData.originCity,
+                city: originName,
                 state: editData.originState,
                 lat: editData.originLat,
                 lng: editData.originLng,
             });
 
             setEndData({
-                city: editData.destinationCity,
+                city: destinationName,
                 state: editData.destinationState,
                 lat: editData.destinationLat,
                 lng: editData.destinationLng,
             });
+            // setStartLocation(
+            //     `${editData.originCity}, ${editData.originState}`
+            // );
+            // setEndLocation(
+            //     `${editData.destinationCity}, ${editData.destinationState}`
+            // );
+
+            // setStartData({
+            //     city: editData.originCity,
+            //     state: editData.originState,
+            //     lat: editData.originLat,
+            //     lng: editData.originLng,
+            // });
+
+            // setEndData({
+            //     city: editData.destinationCity,
+            //     state: editData.destinationState,
+            //     lat: editData.destinationLat,
+            //     lng: editData.destinationLng,
+            // });
             if (editData.startDate) {
                 setStartDate(new Date(editData.startDate + ""));
             }
