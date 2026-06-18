@@ -103096,7 +103096,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           children: ["Welcome to", "\n", "DomiGo"]
         }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
           style: styles.subtitle,
-          children: "Your Journey to Smarter Property Management Starts Here."
+          children: "Modern residency tracking for a multi-location lifestyle."
         }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
           style: styles.inputWrapper,
           children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_Ionicons.default, {
@@ -137702,14 +137702,36 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         return _ref9.apply(this, arguments);
       };
     }();
+
+    // const sortedStateResidency = React.useMemo(() => {
+    //     if (!stateWiseResidency || !userData?.state) return stateWiseResidency;
+
+    //     return [...stateWiseResidency].sort((a, b) => {
+    //         if (a.state === userData.state) return -1;
+    //         if (b.state === userData.state) return 1;
+    //         return 0;
+    //     });
+    // }, [stateWiseResidency, userData]);
     var sortedStateResidency = _react.default.useMemo(function () {
-      if (!stateWiseResidency || !(userData != null && userData.state)) return stateWiseResidency;
+      if (!stateWiseResidency) return [];
       return (0, _toConsumableArray2.default)(stateWiseResidency).sort(function (a, b) {
-        if (a.state === userData.state) return -1;
-        if (b.state === userData.state) return 1;
+        var aType = locationMap[a.state];
+        var bType = locationMap[b.state];
+
+        // 1. Primary (blue home icon) first
+        if (aType === "primary" && bType !== "primary") return -1;
+        if (bType === "primary" && aType !== "primary") return 1;
+
+        // 2. Other home icon cards (secondary/other)
+        var aHome = !!aType;
+        var bHome = !!bType;
+        if (aHome && !bHome) return -1;
+        if (bHome && !aHome) return 1;
+
+        // 3. Remaining cards
         return 0;
       });
-    }, [stateWiseResidency, userData]);
+    }, [stateWiseResidency, userLocations]);
     console.log('loginToken', loginToken);
     function getStateCodeSafe(state) {
       return state.toLowerCase().replace(/[^a-z\s]/g, "").split(/\s+/).map(function (w) {
@@ -163888,31 +163910,56 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     // console.log('monthWiseTimeline', monthWiseTimeline);
     // console.log('missingActivityList', missingActivityList);
 
+    // const getCurrentWeekDates = () => {
+    //   const today = new Date();
+
+    //   // Clone date to avoid mutation
+    //   const current = new Date(today);
+
+    //   // Get day (0 = Sunday, 1 = Monday ...)
+    //   const day = current.getDay();
+
+    //   // Monday as start of week
+    //   const diffToMonday = day === 0 ? -6 : 1 - day;
+
+    //   const startOfWeek = new Date(current);
+    //   startOfWeek.setDate(current.getDate() + diffToMonday);
+
+    //   const endOfWeek = new Date(startOfWeek);
+    //   endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+    //   const formatDate = (date) => {
+    //     const y = date.getFullYear();
+    //     const m = String(date.getMonth() + 1).padStart(2, '0');
+    //     const d = String(date.getDate()).padStart(2, '0');
+
+    //     return `${y}-${m}-${d}`;
+    //   };
+
+    //   // const formatDate = (date) =>
+    //   //   date.toLocaleDateString("en-CA").split('T')[0]; // YYYY-MM-DD
+
+    //   return {
+    //     start: formatDate(startOfWeek),
+    //     end: formatDate(endOfWeek),
+    //   };
+    // };
+
     var getCurrentWeekDates = function getCurrentWeekDates() {
       var today = new Date();
+      var day = today.getDay(); // 0 = Sunday
 
-      // Clone date to avoid mutation
-      var current = new Date(today);
-
-      // Get day (0 = Sunday, 1 = Monday ...)
-      var day = current.getDay();
-
-      // Monday as start of week
-      var diffToMonday = day === 0 ? -6 : 1 - day;
-      var startOfWeek = new Date(current);
-      startOfWeek.setDate(current.getDate() + diffToMonday);
+      // Sunday as start of week
+      var startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - day);
       var endOfWeek = new Date(startOfWeek);
       endOfWeek.setDate(startOfWeek.getDate() + 6);
       var formatDate = function formatDate(date) {
         var y = date.getFullYear();
-        var m = String(date.getMonth() + 1).padStart(2, '0');
-        var d = String(date.getDate()).padStart(2, '0');
+        var m = String(date.getMonth() + 1).padStart(2, "0");
+        var d = String(date.getDate()).padStart(2, "0");
         return `${y}-${m}-${d}`;
       };
-
-      // const formatDate = (date) =>
-      //   date.toLocaleDateString("en-CA").split('T')[0]; // YYYY-MM-DD
-
       return {
         start: formatDate(startOfWeek),
         end: formatDate(endOfWeek)
@@ -164890,7 +164937,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 //   },]} />
                 //   <Text style={styles.locationText}>
                 //     {trip.originCity} → {trip.destinationCity}
-                //     {trip.kind === "city_change" && " (City Trips)"}
+                //     {trip.kind === "city_change" && " (City / Municipality Trips)"}
                 //   </Text>
                 // </TouchableOpacity>
                 (0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
@@ -165149,7 +165196,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                     fontSize: 14,
                     color: "#000"
                   },
-                  children: selectedFilter === "ALL" ? "All" : selectedFilter === "TRIP" ? "State Trips" : selectedFilter === "COUNTY_CHANGE" ? "County Trips" : selectedFilter === "CITY_CHANGE" ? "City Trips" : "Locations"
+                  children: selectedFilter === "ALL" ? "All" : selectedFilter === "TRIP" ? "State / Region Trips" : selectedFilter === "COUNTY_CHANGE" ? "County Trips" : selectedFilter === "CITY_CHANGE" ? "City / Municipality Trips" : "Locations"
                 }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_Ionicons.default, {
                   name: showFilterDropdown ? "chevron-up" : "chevron-down",
                   size: 18,
@@ -165167,13 +165214,13 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                   label: "All",
                   value: "ALL"
                 }, {
-                  label: "State Trips",
+                  label: "State / Region Trips",
                   value: "TRIP"
                 }, {
                   label: "County Trips",
                   value: "COUNTY_CHANGE"
                 }, {
-                  label: "City Trips",
+                  label: "City / Municipality Trips",
                   value: "CITY_CHANGE"
                 }, {
                   label: "Locations",
@@ -165361,7 +165408,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                     fontSize: 14,
                     color: "#000"
                   },
-                  children: selectedFilter === "ALL" ? "All" : selectedFilter === "TRIP" ? "State Trips" : selectedFilter === "COUNTY_CHANGE" ? "County Trips" : selectedFilter === "CITY_CHANGE" ? "City Trips" : "Locations"
+                  children: selectedFilter === "ALL" ? "All" : selectedFilter === "TRIP" ? "State / Region Trips" : selectedFilter === "COUNTY_CHANGE" ? "County Trips" : selectedFilter === "CITY_CHANGE" ? "City / Municipality Trips" : "Locations"
                 }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_Ionicons.default, {
                   name: showFilterDropdown ? "chevron-up" : "chevron-down",
                   size: 18,
@@ -165379,13 +165426,13 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                   label: "All",
                   value: "ALL"
                 }, {
-                  label: "State Trips",
+                  label: "State / Region Trips",
                   value: "TRIP"
                 }, {
                   label: "County Trips",
                   value: "COUNTY_CHANGE"
                 }, {
-                  label: "City Trips",
+                  label: "City / Municipality Trips",
                   value: "CITY_CHANGE"
                 }, {
                   label: "Locations",
@@ -209912,10 +209959,10 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                   },
                   children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
                     style: styles.title,
-                    children: "Documents"
+                    children: "Residency Records"
                   }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
                     style: styles.subtitle,
-                    children: "Manage Documents"
+                    children: "Manage Residency Records"
                   })]
                 })]
               }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_Ionicons.default, {
@@ -219551,6 +219598,23 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       GET_SUPPORT_CONTACT();
     }, []);
     var navigation = (0, _$$_REQUIRE(_dependencyMap[8], "@react-navigation/native").useNavigation)();
+    var openLocationSettings = /*#__PURE__*/function () {
+      var _ref3 = (0, _asyncToGenerator2.default)(function* () {
+        try {
+          if (_reactNative.Platform.OS === 'android') {
+            _reactNative.Linking.sendIntent('android.settings.LOCATION_SOURCE_SETTINGS');
+          } else {
+            // iOS me app settings open hongi
+            yield _reactNative.Linking.openSettings();
+          }
+        } catch (error) {
+          console.log('Error opening settings:', error);
+        }
+      });
+      return function openLocationSettings() {
+        return _ref3.apply(this, arguments);
+      };
+    }();
     return /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNativeLinearGradient.default, {
       colors: ["#9ab1fa", "#ffffff"],
       start: {
@@ -219624,7 +219688,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
               icon: "location-outline",
               label: "Location Tracking",
               status: "Enabled",
-              statusColor: "#28a745"
+              statusColor: "#28a745",
+              onPress: openLocationSettings
             }), /*#__PURE__*/(0, _jsxRuntime.jsx)(MenuRow, {
               icon: "dollar",
               label: "Subscription Status",
@@ -219647,13 +219712,13 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       })
     });
   };
-  var MenuRow = function MenuRow(_ref3) {
-    var icon = _ref3.icon,
-      label = _ref3.label,
-      status = _ref3.status,
-      isLast = _ref3.isLast,
-      statusColor = _ref3.statusColor,
-      onPress = _ref3.onPress;
+  var MenuRow = function MenuRow(_ref4) {
+    var icon = _ref4.icon,
+      label = _ref4.label,
+      status = _ref4.status,
+      isLast = _ref4.isLast,
+      statusColor = _ref4.statusColor,
+      onPress = _ref4.onPress;
     return /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
       style: [styles.row, !isLast && styles.rowBorder],
       onPress: onPress,
@@ -287736,7 +287801,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       }
     };
     var metricsData = stateWiseMetrics.map(function (item, index) {
-      var daysLeft = Math.max(item.threshold - item.travelDays, 0);
+      var daysLeft = Math.max(item.threshold - item.daysIn, 0);
       return {
         id: index.toString(),
         state: item.state,
@@ -287748,8 +287813,9 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         travelDays: item.travelDays,
         wages: item.estimatedWages,
         // progress: item.progressDays / 10, // example: assuming max = 10 days
+        // progress: daysLeft / item.threshold,
         progress: daysLeft / item.threshold,
-        progressColor: getBorderColorByDays(item.travelDays, item.threshold),
+        progressColor: getBorderColorByDays(item.daysIn, item.threshold),
         progressLabel: `${daysLeft} Days`,
         // progressLabel: `${item.progressDays} Days`,
         // bgColor: '#E6F0FF', // you can make this dynamic if needed
@@ -287805,19 +287871,24 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
             }, {
               label: 'Travel Days',
               value: item.travelDays
-            }, {
-              label: 'Days Worked',
+            },
+            // { label: 'Days Worked', value: item.daysWorked },
+            {
+              label: 'Residency Days',
               value: item.daysWorked
             }, {
               label: 'Hours Worked',
               value: item.hoursWorked
-            }, {
-              label: 'Est Taxable Days',
+            },
+            // { label: 'Est Taxable Days', value: item.taxDays },
+            {
+              label: 'Days Worked',
               value: item.taxDays
             },
             // { label: 'Est Taxable Liability', value: canAccess(FEATURES.TAXABLE_LIABILITY) ? item.wages : '***' },
+            // { label: 'Est Taxable Liability', value: item.wages },
             {
-              label: 'Est Taxable Liability',
+              label: 'Est Tax Liability',
               value: item.wages
             }];
             return /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
@@ -289563,14 +289634,28 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       _TripSummaryDetails$t9,
       _TripSummaryDetails$t0,
       _TripSummaryDetails$t1,
-      _TripSummaryDetails$s,
-      _TripSummaryDetails$s2,
-      _TripSummaryDetails$s3,
       _TripSummaryDetails$t10,
       _TripSummaryDetails$t11,
       _TripSummaryDetails$t12,
       _TripSummaryDetails$t13,
       _TripSummaryDetails$t14,
+      _TripSummaryDetails$t15,
+      _TripSummaryDetails$t16,
+      _TripSummaryDetails$t17,
+      _TripSummaryDetails$t18,
+      _TripSummaryDetails$t19,
+      _TripSummaryDetails$t20,
+      _TripSummaryDetails$t21,
+      _TripSummaryDetails$s,
+      _TripSummaryDetails$s2,
+      _TripSummaryDetails$s3,
+      _TripSummaryDetails$t22,
+      _TripSummaryDetails$t23,
+      _TripSummaryDetails$t24,
+      _TripSummaryDetails$t25,
+      _TripSummaryDetails$t26,
+      _TripSummaryDetails$t27,
+      _TripSummaryDetails$t28,
       _this = this;
     var GET_TRIP_SUMMARY_DETAILS = _ref.GET_TRIP_SUMMARY_DETAILS,
       route = _ref.route,
@@ -289686,21 +289771,33 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
               }), (TripSummaryDetails == null || (_TripSummaryDetails$t = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t.kind) == 'trip' ? /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
                 style: styles.tripTitle,
                 children: [TripSummaryDetails == null || (_TripSummaryDetails$t2 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t2.originState, " to ", TripSummaryDetails == null || (_TripSummaryDetails$t3 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t3.destinationState]
+              }) : (TripSummaryDetails == null || (_TripSummaryDetails$t4 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t4.kind) == 'city_change' ? /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
+                style: styles.tripTitle,
+                children: [TripSummaryDetails == null || (_TripSummaryDetails$t5 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t5.originCity, " to ", TripSummaryDetails == null || (_TripSummaryDetails$t6 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t6.destinationCity]
+              }) : (TripSummaryDetails == null || (_TripSummaryDetails$t7 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t7.kind) == 'county_change' ? /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
+                style: styles.tripTitle,
+                children: [TripSummaryDetails == null || (_TripSummaryDetails$t8 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t8.originCounty, " to ", TripSummaryDetails == null || (_TripSummaryDetails$t9 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t9.destinationCounty]
               }) : /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
                 style: styles.tripTitle,
-                children: [TripSummaryDetails == null || (_TripSummaryDetails$t4 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t4.state, " "]
+                children: [TripSummaryDetails == null || (_TripSummaryDetails$t0 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t0.state, " "]
               })]
             }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
               style: styles.tripDate,
-              children: [new Date(TripSummaryDetails == null || (_TripSummaryDetails$t5 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t5.startDate).toDateString(), " - ", new Date(TripSummaryDetails == null || (_TripSummaryDetails$t6 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t6.endDate).toDateString()]
-            }), (TripSummaryDetails == null || (_TripSummaryDetails$t7 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t7.creationType) && /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
+              children: [new Date(TripSummaryDetails == null || (_TripSummaryDetails$t1 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t1.startDate).toDateString(), " - ", new Date(TripSummaryDetails == null || (_TripSummaryDetails$t10 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t10.endDate).toDateString()]
+            }), (TripSummaryDetails == null || (_TripSummaryDetails$t11 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t11.creationType) && /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
               style: styles.creationTypeBadge,
-              children: (TripSummaryDetails == null || (_TripSummaryDetails$t8 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t8.kind) == 'trip' ? /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
+              children: (TripSummaryDetails == null || (_TripSummaryDetails$t12 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t12.kind) == 'trip' ? /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
                 style: styles.creationTypeText,
-                children: ["Trip Type: ", TripSummaryDetails == null || (_TripSummaryDetails$t9 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t9.creationType.toUpperCase()]
+                children: ["Trip Type: ", TripSummaryDetails == null || (_TripSummaryDetails$t13 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t13.creationType.toUpperCase()]
+              }) : (TripSummaryDetails == null || (_TripSummaryDetails$t14 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t14.kind) == 'city_change' ? /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
+                style: styles.creationTypeText,
+                children: ["City Change Type: ", TripSummaryDetails == null || (_TripSummaryDetails$t15 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t15.creationType.toUpperCase()]
+              }) : (TripSummaryDetails == null || (_TripSummaryDetails$t16 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t16.kind) == 'county_change' ? /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
+                style: styles.creationTypeText,
+                children: ["County Change Type: ", TripSummaryDetails == null || (_TripSummaryDetails$t17 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t17.creationType.toUpperCase()]
               }) : /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
                 style: styles.creationTypeText,
-                children: ["Missing Day Type: ", TripSummaryDetails == null || (_TripSummaryDetails$t0 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t0.creationType.toUpperCase()]
+                children: ["Missing Day Type: ", TripSummaryDetails == null || (_TripSummaryDetails$t18 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t18.creationType.toUpperCase()]
               })
             }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Image, {
               source: {
@@ -289708,7 +289805,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
               },
               style: styles.mapImage
             })]
-          }), (TripSummaryDetails == null || (_TripSummaryDetails$t1 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t1.kind) == 'trip' ? /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+          }), (TripSummaryDetails == null || (_TripSummaryDetails$t19 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t19.kind) == 'trip' || (TripSummaryDetails == null || (_TripSummaryDetails$t20 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t20.kind) == 'city_change' || (TripSummaryDetails == null || (_TripSummaryDetails$t21 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t21.kind) == 'county_change' ? /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
             style: styles.card,
             children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
               style: styles.sectionTitle,
@@ -289790,7 +289887,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                       color: "#34C759",
                       textTransform: 'capitalize'
                     }],
-                    children: TripSummaryDetails == null || (_TripSummaryDetails$t10 = TripSummaryDetails.trip) == null ? void 0 : _TripSummaryDetails$t10.status
+                    children: TripSummaryDetails == null || (_TripSummaryDetails$t22 = TripSummaryDetails.trip) == null ? void 0 : _TripSummaryDetails$t22.status
                   })]
                 })]
               })]
@@ -289835,7 +289932,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                     children: "Comission"
                   }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
                     style: styles.summaryValue,
-                    children: TripSummaryDetails != null && (_TripSummaryDetails$t11 = TripSummaryDetails.tripDay) != null && _TripSummaryDetails$t11.isCommissionDay ? 'Yes' : 'No'
+                    children: TripSummaryDetails != null && (_TripSummaryDetails$t23 = TripSummaryDetails.tripDay) != null && _TripSummaryDetails$t23.isCommissionDay ? 'Yes' : 'No'
                   })]
                 })]
               })]
@@ -289856,7 +289953,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                     children: "Remote Work"
                   }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
                     style: styles.summaryValue,
-                    children: TripSummaryDetails != null && (_TripSummaryDetails$t12 = TripSummaryDetails.tripDay) != null && _TripSummaryDetails$t12.isRemoteWork ? 'Yes' : 'No'
+                    children: TripSummaryDetails != null && (_TripSummaryDetails$t24 = TripSummaryDetails.tripDay) != null && _TripSummaryDetails$t24.isRemoteWork ? 'Yes' : 'No'
                   })]
                 })]
               }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
@@ -289877,12 +289974,12 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                       color: "#111",
                       textTransform: 'capitalize'
                     }],
-                    children: TripSummaryDetails != null && (_TripSummaryDetails$t13 = TripSummaryDetails.tripDay) != null && _TripSummaryDetails$t13.isTraveling ? 'Yes' : 'No'
+                    children: TripSummaryDetails != null && (_TripSummaryDetails$t25 = TripSummaryDetails.tripDay) != null && _TripSummaryDetails$t25.isTraveling ? 'Yes' : 'No'
                   })]
                 })]
               })]
             })]
-          }), (TripSummaryDetails == null || (_TripSummaryDetails$t14 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t14.kind) == 'trip' && /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+          }), (TripSummaryDetails == null || (_TripSummaryDetails$t26 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t26.kind) == 'trip' || (TripSummaryDetails == null || (_TripSummaryDetails$t27 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t27.kind) == 'city_change' || (TripSummaryDetails == null || (_TripSummaryDetails$t28 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t28.kind) == 'county_change' && /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
             style: styles.card,
             children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
               style: styles.sectionTitle,
@@ -289919,8 +290016,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
             })]
           }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
             onPress: function onPress() {
-              var _TripSummaryDetails$t15;
-              (TripSummaryDetails == null || (_TripSummaryDetails$t15 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t15.kind) == 'trip' ? navigation.navigate("DayEntryScreen", {
+              var _TripSummaryDetails$t29, _TripSummaryDetails$t30, _TripSummaryDetails$t31;
+              (TripSummaryDetails == null || (_TripSummaryDetails$t29 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t29.kind) == 'trip' || (TripSummaryDetails == null || (_TripSummaryDetails$t30 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t30.kind) == 'city_change' || (TripSummaryDetails == null || (_TripSummaryDetails$t31 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t31.kind) == 'county_change' ? navigation.navigate("DayEntryScreen", {
                 mode: "TRIP",
                 // or "TRIP"
                 date: "2026-01-03",
@@ -290585,20 +290682,43 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
 
       // ✅ TRIP
       if (isTrip) {
-        setStartLocation(`${editData.originCity}, ${editData.originState}`);
-        setEndLocation(`${editData.destinationCity}, ${editData.destinationState}`);
+        var isCountyChange = (editData == null ? void 0 : editData.kind) === "county_change";
+        var originName = isCountyChange ? editData.originCounty : editData.originCity;
+        var destinationName = isCountyChange ? editData.destinationCounty : editData.destinationCity;
+        setStartLocation(`${originName}, ${editData.originState}`);
+        setEndLocation(`${destinationName}, ${editData.destinationState}`);
         setStartData({
-          city: editData.originCity,
+          city: originName,
           state: editData.originState,
           lat: editData.originLat,
           lng: editData.originLng
         });
         setEndData({
-          city: editData.destinationCity,
+          city: destinationName,
           state: editData.destinationState,
           lat: editData.destinationLat,
           lng: editData.destinationLng
         });
+        // setStartLocation(
+        //     `${editData.originCity}, ${editData.originState}`
+        // );
+        // setEndLocation(
+        //     `${editData.destinationCity}, ${editData.destinationState}`
+        // );
+
+        // setStartData({
+        //     city: editData.originCity,
+        //     state: editData.originState,
+        //     lat: editData.originLat,
+        //     lng: editData.originLng,
+        // });
+
+        // setEndData({
+        //     city: editData.destinationCity,
+        //     state: editData.destinationState,
+        //     lat: editData.destinationLat,
+        //     lng: editData.destinationLng,
+        // });
         if (editData.startDate) {
           setStartDate(new Date(editData.startDate + ""));
         }

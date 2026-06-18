@@ -43,6 +43,60 @@ const parseLocalDate = (input) => {
 };
 
 
+// const getBusinessDateKey = (item) => {
+//   // Backend ki business date ko priority do
+//   if (item?.date) {
+//     return item.date.split("T")[0];
+//   }
+
+//   // fallback
+//   if (item?.startDate) {
+//     return new Intl.DateTimeFormat("en-CA", {
+//       timeZone: "America/New_York",
+//       year: "numeric",
+//       month: "2-digit",
+//       day: "2-digit",
+//     }).format(new Date(item.startDate));
+//   }
+
+//   return "";
+// };
+
+const getBusinessDateKey = (item) => {
+  if (item?.date) {
+    return item.date.split("T")[0];
+  }
+
+  const sourceDate =
+    item?.startDate ||
+    item?.recordedAt;
+
+  if (!sourceDate) return "";
+
+  return new Date(sourceDate)
+    .toLocaleDateString("en-CA");
+};
+
+const regroupByBusinessDate = (data = {}) => {
+  const grouped = {};
+
+  Object.values(data).forEach(dayItems => {
+    if (!Array.isArray(dayItems)) return;
+
+    dayItems.forEach(item => {
+      const key = getBusinessDateKey(item);
+
+      if (!grouped[key]) {
+        grouped[key] = [];
+      }
+
+      grouped[key].push(item);
+    });
+  });
+
+  return grouped;
+};
+
 
 const getAutoTypeOfDayName = (activity, date) => {
   if (!activity) return "";
@@ -311,6 +365,9 @@ const YearWeekCard = React.memo(
     );
   });
 
+
+
+
 function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIMELINE, GET_YEAR_WISE_TIMELINE, GET_YEAR_WISE_LOCATION, GET_WEEK_WISE_LOCATION, GET_MISSING_ACTIVITY_LIST, missingActivityList, yearWiseTimeline, weekWiseTimeline, monthWiseTimeline, weekWiseLocation, yearWiseLocation }) {
   const [selectedTab, setSelectedTab] = useState('Month');
   const [selectedResidencyType, setSelectedResidencyType] = useState('past');
@@ -432,6 +489,19 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   //     end: formatDate(endOfWeek),
   //   };
   // };
+
+
+  const fixedWeekWiseTimeline = useMemo(() => {
+  return regroupByBusinessDate(weekWiseTimeline);
+}, [weekWiseTimeline]);
+
+const fixedMonthWiseTimeline = useMemo(() => {
+  return regroupByBusinessDate(monthWiseTimeline);
+}, [monthWiseTimeline])
+
+const fixedYearWiseTimeline = useMemo(() => {
+  return regroupByBusinessDate(yearWiseTimeline);
+}, [yearWiseTimeline]);
 
   const getCurrentWeekDates = () => {
     const today = new Date();
@@ -639,7 +709,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     return diffInSeconds > 12000; // 2 minute se zyada ho toh edited
   };
 
-  const getMarkedDates = (monthWiseTimeline, year, month) => {
+  const getMarkedDates = (fixedMonthWiseTimeline, year, month) => {
     const marked = {};
 
     const today = new Date();
@@ -649,7 +719,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const dayData = monthWiseTimeline?.[dateStr] || [];
+      const dayData = fixedMonthWiseTimeline?.[dateStr] || [];
 
       // const currentDate = new Date(dateStr);
       const currentDate = parseLocalDate(dateStr);
@@ -780,7 +850,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   const markedDates = useMemo(
     () =>
       getMarkedDates(
-        monthWiseTimeline,
+        fixedMonthWiseTimeline,
         visibleMonth.year,
         visibleMonth.month
       ),
@@ -812,7 +882,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
   const handleDayPress = (day) => {
     const dateKey = day.dateString;
-    const dayData = monthWiseTimeline?.[dateKey] || [];
+    const dayData = fixedMonthWiseTimeline?.[dateKey] || [];
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -849,8 +919,8 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   }, [tripModalVisible])
 
 
-  const getLegendStates = (monthWiseTimeline) => {
-    const result = monthWiseTimeline || {};
+  const getLegendStates = (fixedMonthWiseTimeline) => {
+    const result = fixedMonthWiseTimeline || {};
     const stateSet = new Set();
 
     Object.values(result).forEach(dayArray => {
@@ -867,7 +937,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   // const legendStates = getLegendStates(monthWiseTimeline);
   const legendStates = useMemo(() => {
     return getLegendStates(
-      monthWiseTimeline
+      fixedMonthWiseTimeline
     );
   }, [monthWiseTimeline]);
 
@@ -1124,10 +1194,10 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   }, [yearWiseLocation]);
 
   // const normalizeYearData = (yearWiseTimeline = {}, yearWiseLocation = {}) => {
-  const normalizeYearData = (yearWiseTimeline = {}, normalizedYearLocation = {}) => {
+  const normalizeYearData = (fixedYearWiseTimeline = {}, normalizedYearLocation = {}) => {
     const normalized = {};
 
-    Object.entries(yearWiseTimeline).forEach(([date, items]) => {
+    Object.entries(fixedYearWiseTimeline).forEach(([date, items]) => {
       normalized[date] = {
         trips: [],
         activity: null,
@@ -1214,7 +1284,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
   const normalizedYearData = useMemo(
     // () => normalizeYearData(yearWiseTimeline, yearWiseLocation),
-    () => normalizeYearData(yearWiseTimeline, normalizedYearLocation),
+    () => normalizeYearData(fixedYearWiseTimeline, normalizedYearLocation),
     [yearWiseTimeline, normalizedYearLocation]
   );
   const weeklyData = useMemo(
@@ -1237,7 +1307,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   // const regulatoryCalendar = getWeekCalendarData(weekWiseTimeline);
   const regulatoryCalendar = useMemo(() => {
     return getWeekCalendarData(
-      weekWiseTimeline
+      fixedWeekWiseTimeline
     );
   }, [weekWiseTimeline, selectedFilter]);
   // const weekLocationData = normalizeLocationData(weekWiseLocation);

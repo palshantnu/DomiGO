@@ -1160,6 +1160,22 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         "WV": "WEST VIRGINIA",
         "WI": "WISCONSIN",
         "WY": "WYOMING"
+
+
+        // Canada Provinces
+        "ON": "ONTARIO",
+        "QC": "QUEBEC",
+        "BC": "BRITISH COLUMBIA",
+        "AB": "ALBERTA",
+        "MB": "MANITOBA",
+        "SK": "SASKATCHEWAN",
+        "NB": "NEW BRUNSWICK",
+        "NS": "NOVA SCOTIA",
+        "PE": "PRINCE EDWARD ISLAND",
+        "NL": "NEWFOUNDLAND AND LABRADOR",
+        "YT": "YUKON",
+        "NT": "NORTHWEST TERRITORIES",
+        "NU": "NUNAVUT",
     ]
 
     if let fullName = stateMap[trimmed] {
