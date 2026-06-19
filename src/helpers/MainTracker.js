@@ -1,4 +1,4 @@
-import { NativeModules, NativeEventEmitter, Platform, Alert } from 'react-native';
+import { NativeModules, NativeEventEmitter, Platform, Alert, BackHandler } from 'react-native';
 import { GOOGLE_KEY } from './CommonHelpers';
 import store from '../redux/store';
 import { GEOFENCING_MODE, GEOFENCING_COUNTRY, CITY_CHANGE_EVENTS_ENABLED } from '../config/featureFlags';
@@ -505,6 +505,44 @@ class DomigoTracker {
         console.log('🐛 CITY CHANGE DEBUG BODY:', JSON.stringify(data, null, 2));
       })
     );
+
+
+    this.subscriptions.push(
+  locationEventEmitter.addListener(
+    'onFakeGpsDetected',
+    () => {
+
+      console.log("🚨 FAKE GPS DETECTED");
+
+      Alert.alert(
+        'Fake GPS Detected',
+        'Please disable Fake GPS applications to continue using Domigo.',
+        [
+          {
+            text: 'Exit App',
+            onPress: async () => {
+
+              try {
+
+                // stop native tracking
+                await NativeModules.LocationTracker.stopLocationTracking();
+
+              } catch (e) {
+                console.log(e);
+              }
+
+              // app close
+              BackHandler.exitApp();
+            }
+          }
+        ],
+        {
+          cancelable: false
+        }
+      );
+    }
+  )
+);
 
 
 

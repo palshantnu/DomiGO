@@ -28,6 +28,18 @@ function DayDetailScreen({
   console.log('trip', TripSummaryDetails);
   // console.log("DATE TEST => ", new Date().toString());
 
+
+  const formatLocalDate = (dateStr) => {
+  if (!dateStr) return "";
+
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
   const timelineData = [
     { icon: "home-outline", time: "08:00 AM", place: "Los Angeles, CA", desc: "Departed from home" },
     { icon: "restaurant-outline", time: "12:30 PM", place: "Barstow, CA", desc: "Lunch break at roadside diner" },
@@ -85,6 +97,12 @@ function DayDetailScreen({
     return "Working"; // id = 2
   };
 
+    console.log("TZ", Intl.DateTimeFormat().resolvedOptions().timeZone);
+
+console.log("OFFSET", new Date().getTimezoneOffset());
+
+console.log("NOW", new Date().toString());
+
   return (
     <LinearGradient
       colors={["#9ab1fa", "#ffffff"]}
@@ -114,7 +132,12 @@ function DayDetailScreen({
                 <Text style={styles.tripTitle}>{TripSummaryDetails?.tripDay?.state} </Text>
               }
             </View>
-            <Text style={styles.tripDate}>{new Date(TripSummaryDetails?.tripDay?.startDate).toDateString()} - {new Date(TripSummaryDetails?.tripDay?.endDate).toDateString()}</Text>
+            {/* <Text style={styles.tripDate}>{new Date(TripSummaryDetails?.tripDay?.startDate).toDateString()} - {new Date(TripSummaryDetails?.tripDay?.endDate).toDateString()}</Text> */}
+            <Text style={styles.tripDate}>
+              {formatLocalDate(TripSummaryDetails?.tripDay?.startDate)}
+              {" - "}
+              {formatLocalDate(TripSummaryDetails?.tripDay?.endDate)}
+            </Text>
             {/* <Text style={styles.tripDate}>{new Date(TripSummaryDetails?.tripDay?.date).toDateString()}</Text> */}
             {TripSummaryDetails?.tripDay?.creationType && (
               <View style={styles.creationTypeBadge}>

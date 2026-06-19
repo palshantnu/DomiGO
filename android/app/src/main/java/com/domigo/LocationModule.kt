@@ -28,6 +28,8 @@ import java.util.Locale
 import java.util.TimeZone
 import java.util.Calendar
 import org.json.JSONArray
+import androidx.core.location.LocationCompat
+// import android.os.Build
 
 
 class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
@@ -269,12 +271,42 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         promise.resolve(isTracking)
     }
 
+
+    private fun isLocationMocked(location: Location): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            location.isMock
+        } else {
+            LocationCompat.isMock(location)
+        }
+    }
+
+    private fun sendFakeGpsDetectedEvent() {
+    try {
+        reactApplicationContext
+            .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+            .emit("onFakeGpsDetected", null)
+    } catch (e: Exception) {
+        Log.e(TAG, "Error sending fake GPS event", e)
+    }
+   }
+
     private fun setupLocationListener() {
         locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         locationListener = object : LocationListener {
             override fun onLocationChanged(location: Location) {
                 Log.d(TAG, "New location: ${location.latitude}, ${location.longitude}, Accuracy: ${location.accuracy}")
-                
+
+                if (isLocationMocked(location)) {
+
+                    Log.e(TAG, "🚨 FAKE GPS DETECTED")
+
+                    sendFakeGpsDetectedEvent()
+
+                    stopLocationTracking()
+
+                    return
+                }
+                                
                 // Send basic location data to JS
                 val locationData = Arguments.createMap().apply {
                     putDouble("latitude", location.latitude)

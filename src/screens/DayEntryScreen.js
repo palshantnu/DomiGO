@@ -301,24 +301,42 @@ const DayEntryScreen = ({
     //     }
     // }, [isEdit, editData, isTrip]);
 
+    // const formatDateTime = (dateStr) => {
+    //     if (!dateStr) return "";
+
+    //     const d = new Date(dateStr);
+
+    //     if (isNaN(d)) return "Invalid Date";
+
+    //     const day = d.toLocaleDateString("en-US", { weekday: "long" });
+    //     const date = d.getDate();
+    //     const month = d.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
+    //     const year = d.getFullYear();
+
+    //     const time = d.toLocaleTimeString("en-US", {
+    //         hour: "2-digit",
+    //         minute: "2-digit",
+    //     });
+
+    //     return `${day} ${date}-${month}-${year} | ${time}`;
+    // };
+
     const formatDateTime = (dateStr) => {
         if (!dateStr) return "";
-    
-        const d = new Date(dateStr);
-    
-        if (isNaN(d)) return "Invalid Date";
-    
-        const day = d.toLocaleDateString("en-US", { weekday: "long" });
-        const date = d.getDate();
-        const month = d.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
-        const year = d.getFullYear();
-    
-        const time = d.toLocaleTimeString("en-US", {
-            hour: "2-digit",
+
+        const timezone =
+            Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+        return new Date(dateStr).toLocaleString("en-US", {
+            timeZone: timezone,
+            weekday: "long",
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+            hour: "numeric",
             minute: "2-digit",
-        });
-    
-        return `${day} ${date}-${month}-${year} | ${time}`;
+            hour12: true,
+        }).replace(",", "").replace(",", " |");
     };
 
 
@@ -483,9 +501,9 @@ const DayEntryScreen = ({
         const payload = {
             // date: editData?.date || date || new Date().toLocaleDateString("en-CA"),
             date:
-            !editData && creationType === "manual" && isTrip
-                ? startDate
-                : editData?.date || date || new Date().toLocaleDateString("en-CA"),
+                !editData && creationType === "manual" && isTrip
+                    ? startDate
+                    : editData?.date || date || new Date().toLocaleDateString("en-CA"),
             typeOfDayId: Number(typeOfDay),
             isCommissionDay,
             kind: isTrip ? "trip" : "missing",
@@ -617,6 +635,37 @@ const DayEntryScreen = ({
     // };
 
 
+    console.log(
+        "TZ",
+        Intl.DateTimeFormat().resolvedOptions().timeZone
+    );
+
+    console.log(
+        "START",
+        new Date(editData?.startDate).toString()
+    );
+
+    console.log("RAW START", editData?.startDate);
+
+    const d = new Date(editData?.startDate);
+
+    console.log("DATE OBJECT", d);
+
+    console.log(
+        "LOCAL STRING",
+        d.toLocaleString("en-US", {
+            timeZone: "America/New_York",
+            weekday: "short",
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+        })
+    );
+
+
     return (
         <LinearGradient
             colors={["#9ab1fa", "#ffffff"]}
@@ -631,7 +680,12 @@ const DayEntryScreen = ({
                 <ScrollView showsVerticalScrollIndicator={false}>
                     <View style={styles.card}>
                         {isTrip && isEdit ?
-                            <Text style={styles.dateTitle}>{new Date(startDate).toDateString()} - {new Date(endDate).toDateString()}</Text>
+                            // <Text style={styles.dateTitle}>{new Date(startDate).toDateString()} - {new Date(endDate).toDateString()}</Text>
+                            <Text style={styles.dateTitle}>
+                                {formatHeaderDate(startDate)}
+                                {" - "}
+                                {formatHeaderDate(endDate)}
+                            </Text>
                             :
                             <Text style={styles.dateTitle}>{formatDate(editData?.date || date || new Date().toLocaleDateString("en-CA"))}</Text>
                         }
@@ -879,7 +933,10 @@ const DayEntryScreen = ({
                                 <View style={styles.dateRow}>
                                     <FieldLabel title="Start Date" />
                                     <TouchableOpacity
-                                        style={styles.dateBox}
+                                        style={[styles.dateBox,
+                                        editData?.creationType === "automatic" && { opacity: 0.6 }
+                                        ]}
+                                        disabled={editData?.creationType === "automatic"}
                                         onPress={() => setOpenStartPicker(true)}
                                     >
                                         <Ionicons name="calendar-outline" size={18} color="#777" />
@@ -890,7 +947,10 @@ const DayEntryScreen = ({
                                     </TouchableOpacity>
                                     <FieldLabel title="End Date" />
                                     <TouchableOpacity
-                                        style={styles.dateBox}
+                                        style={[styles.dateBox,
+                                        editData?.creationType === "automatic" && { opacity: 0.6 }
+                                        ]}
+                                        disabled={editData?.creationType === "automatic"}
                                         onPress={() => setOpenEndPicker(true)}
                                     >
                                         <Ionicons name="calendar-outline" size={18} color="#777" />
@@ -1108,6 +1168,19 @@ const DayEntryScreen = ({
             </SafeAreaView>
         </LinearGradient>
     );
+};
+
+
+
+const formatHeaderDate = (date) => {
+    if (!date) return "";
+
+    return new Date(date).toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    });
 };
 
 /* ---------------- REDUX ---------------- */

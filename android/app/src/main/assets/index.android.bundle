@@ -104473,6 +104473,31 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         this.subscriptions.push(locationEventEmitter.addListener('onCityChangeDebug', function (data) {
           console.log('🐛 CITY CHANGE DEBUG BODY:', JSON.stringify(data, null, 2));
         }));
+        this.subscriptions.push(locationEventEmitter.addListener('onFakeGpsDetected', function () {
+          console.log("🚨 FAKE GPS DETECTED");
+          _reactNative.Alert.alert('Fake GPS Detected', 'Please disable Fake GPS applications to continue using Domigo.', [{
+            text: 'Exit App',
+            onPress: function () {
+              var _onPress = (0, _asyncToGenerator2.default)(function* () {
+                try {
+                  // stop native tracking
+                  yield _reactNative.NativeModules.LocationTracker.stopLocationTracking();
+                } catch (e) {
+                  console.log(e);
+                }
+
+                // app close
+                _reactNative.BackHandler.exitApp();
+              });
+              function onPress() {
+                return _onPress.apply(this, arguments);
+              }
+              return onPress;
+            }()
+          }], {
+            cancelable: false
+          });
+        }));
 
         //new changes
         this.subscriptions.push(locationEventEmitter.addListener('onTripApiResponse', function (data) {
@@ -163566,6 +163591,79 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     }
     return new Date(input);
   };
+
+  // const getBusinessDateKey = (item) => {
+  //   // Backend ki business date ko priority do
+  //   if (item?.date) {
+  //     return item.date.split("T")[0];
+  //   }
+
+  //   // fallback
+  //   if (item?.startDate) {
+  //     return new Intl.DateTimeFormat("en-CA", {
+  //       timeZone: "America/New_York",
+  //       year: "numeric",
+  //       month: "2-digit",
+  //       day: "2-digit",
+  //     }).format(new Date(item.startDate));
+  //   }
+
+  //   return "";
+  // };
+
+  var getBusinessDateKey = function getBusinessDateKey(item) {
+    // TRIPS ONLY
+    if ((item == null ? void 0 : item.kind) === "trip" || (item == null ? void 0 : item.kind) === "city_change" || (item == null ? void 0 : item.kind) === "county_change") {
+      if (!(item != null && item.startDate)) return "";
+      return new Intl.DateTimeFormat("en-CA", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).format(new Date(item.startDate));
+    }
+
+    // LOCATIONS
+    if (item != null && item.recordedAt) {
+      return new Intl.DateTimeFormat("en-CA", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).format(new Date(item.recordedAt));
+    }
+
+    // MISSING
+    if (item != null && item.date) {
+      return item.date.split("T")[0];
+    }
+    return "";
+  };
+  var formatDateLabel = function formatDateLabel(dateStr) {
+    var _dateStr$split$map = dateStr.split("-").map(Number),
+      _dateStr$split$map2 = (0, _slicedToArray2.default)(_dateStr$split$map, 3),
+      y = _dateStr$split$map2[0],
+      m = _dateStr$split$map2[1],
+      d = _dateStr$split$map2[2];
+    return {
+      formattedDate: `${String(d).padStart(2, "0")} ${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m - 1]}`,
+      day: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][new Date(y, m - 1, d).getDay()]
+    };
+  };
+  var regroupByBusinessDate = function regroupByBusinessDate() {
+    var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    var grouped = {};
+    Object.values(data).forEach(function (dayItems) {
+      if (!Array.isArray(dayItems)) return;
+      dayItems.forEach(function (item) {
+        console.log("kind:", item.kind, "startDate:", item.startDate, "grouped:", getBusinessDateKey(item));
+        var key = getBusinessDateKey(item);
+        if (!grouped[key]) {
+          grouped[key] = [];
+        }
+        grouped[key].push(item);
+      });
+    });
+    return grouped;
+  };
   var getAutoTypeOfDayName = function getAutoTypeOfDayName(activity, date) {
     var _activity$typeOfDay;
     if (!activity) return "";
@@ -163850,10 +163948,18 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       return [currentYear - 2, currentYear - 1, currentYear];
     }, []);
     var today = new Date();
-    var getLocalDateKey = function getLocalDateKey(value) {
-      if (!value) return "";
-      var date = new Date(value);
-      return date.toLocaleDateString("en-CA");
+
+    // const getLocalDateKey = (value) => {
+    //   if (!value) return "";
+
+    //   const date = new Date(value);
+
+    //   return date.toLocaleDateString("en-CA");
+    // };
+
+    var getLocalDateKey = function getLocalDateKey(utcDateString) {
+      var d = new Date(utcDateString);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     };
 
     // const parseLocalDate = (dateStr) => {
@@ -163945,26 +164051,68 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     //   };
     // };
 
+    var fixedWeekWiseTimeline = (0, _react.useMemo)(function () {
+      return regroupByBusinessDate(weekWiseTimeline);
+    }, [weekWiseTimeline]);
+    var fixedMonthWiseTimeline = (0, _react.useMemo)(function () {
+      return regroupByBusinessDate(monthWiseTimeline);
+    }, [monthWiseTimeline]);
+    var fixedYearWiseTimeline = (0, _react.useMemo)(function () {
+      return regroupByBusinessDate(yearWiseTimeline);
+    }, [yearWiseTimeline]);
+    console.log(fixedWeekWiseTimeline);
+    // console.log(fixedYearWiseTimeline)
+
+    // const getCurrentWeekDates = () => {
+    //   const today = new Date();
+
+    //   const day = today.getDay(); // 0 = Sunday
+
+    //   // Sunday as start of week
+    //   const startOfWeek = new Date(today);
+    //   startOfWeek.setDate(today.getDate() - day);
+
+    //   console.log("today", today);
+    //   console.log("day index", today.getDay());
+    //   console.log("timezone", Intl.DateTimeFormat().resolvedOptions().timeZone);
+
+    //   const endOfWeek = new Date(startOfWeek);
+    //   endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+    //   const formatDate = (date) => {
+    //     const y = date.getFullYear();
+    //     const m = String(date.getMonth() + 1).padStart(2, "0");
+    //     const d = String(date.getDate()).padStart(2, "0");
+
+    //     return `${y}-${m}-${d}`;
+    //   };
+
+    //   return {
+    //     start: formatDate(startOfWeek),
+    //     end: formatDate(endOfWeek),
+    //   };
+    // };
+
     var getCurrentWeekDates = function getCurrentWeekDates() {
       var today = new Date();
-      var day = today.getDay(); // 0 = Sunday
 
-      // Sunday as start of week
-      var startOfWeek = new Date(today);
-      startOfWeek.setDate(today.getDate() - day);
-      var endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(startOfWeek.getDate() + 6);
-      var formatDate = function formatDate(date) {
-        var y = date.getFullYear();
-        var m = String(date.getMonth() + 1).padStart(2, "0");
-        var d = String(date.getDate()).padStart(2, "0");
-        return `${y}-${m}-${d}`;
+      // local date only
+      var localToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      var day = localToday.getDay(); // Sunday = 0
+
+      var startOfWeek = new Date(localToday.getFullYear(), localToday.getMonth(), localToday.getDate() - day);
+      var endOfWeek = new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate() + 6);
+      var format = function format(d) {
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       };
+      console.log("Current week =>", format(startOfWeek), format(endOfWeek));
       return {
-        start: formatDate(startOfWeek),
-        end: formatDate(endOfWeek)
+        start: format(startOfWeek),
+        end: format(endOfWeek)
       };
     };
+    console.log("API week range", getCurrentWeekDates());
+    console.log("Device timezone", Intl.DateTimeFormat().resolvedOptions().timeZone);
 
     // useEffect(() => {
     //   const today = new Date();
@@ -164155,14 +164303,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       var diffInSeconds = (updated - created) / 1000;
       return diffInSeconds > 12000; // 2 minute se zyada ho toh edited
     };
-    var getMarkedDates = function getMarkedDates(monthWiseTimeline, year, month) {
+    var getMarkedDates = function getMarkedDates(fixedMonthWiseTimeline, year, month) {
       var marked = {};
       var today = new Date();
       today.setHours(0, 0, 0, 0);
       var daysInMonth = new Date(year, month, 0).getDate();
       for (var day = 1; day <= daysInMonth; day++) {
         var dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        var dayData = (monthWiseTimeline == null ? void 0 : monthWiseTimeline[dateStr]) || [];
+        var dayData = (fixedMonthWiseTimeline == null ? void 0 : fixedMonthWiseTimeline[dateStr]) || [];
 
         // const currentDate = new Date(dateStr);
         var currentDate = parseLocalDate(dateStr);
@@ -164288,7 +164436,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     //   [monthWiseTimeline]
     // );
     var markedDates = (0, _react.useMemo)(function () {
-      return getMarkedDates(monthWiseTimeline, visibleMonth.year, visibleMonth.month);
+      return getMarkedDates(fixedMonthWiseTimeline, visibleMonth.year, visibleMonth.month);
     }, [monthWiseTimeline, visibleMonth]);
 
     // const handleDayPress = (day) => {
@@ -164314,7 +164462,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
 
     var handleDayPress = function handleDayPress(day) {
       var dateKey = day.dateString;
-      var dayData = (monthWiseTimeline == null ? void 0 : monthWiseTimeline[dateKey]) || [];
+      var dayData = (fixedMonthWiseTimeline == null ? void 0 : fixedMonthWiseTimeline[dateKey]) || [];
       var today = new Date();
       today.setHours(0, 0, 0, 0);
 
@@ -164348,8 +164496,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     (0, _react.useEffect)(function () {
       console.log('Modal visible changed 👉', tripModalVisible);
     }, [tripModalVisible]);
-    var getLegendStates = function getLegendStates(monthWiseTimeline) {
-      var result = monthWiseTimeline || {};
+    var getLegendStates = function getLegendStates(fixedMonthWiseTimeline) {
+      var result = fixedMonthWiseTimeline || {};
       var stateSet = new Set();
       Object.values(result).forEach(function (dayArray) {
         dayArray.forEach(function (item) {
@@ -164363,7 +164511,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
 
     // const legendStates = getLegendStates(monthWiseTimeline);
     var legendStates = (0, _react.useMemo)(function () {
-      return getLegendStates(monthWiseTimeline);
+      return getLegendStates(fixedMonthWiseTimeline);
     }, [monthWiseTimeline]);
 
     // const getWeekCalendarData = (weekResult = {}) => {
@@ -164490,40 +164638,42 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         // 🔥 agar na trip hai na missing → skip
         // if (trips.length === 0 && !latestMissing) return null;
         if (filteredTrips.length === 0 && !latestMissing) return null;
+        var labels = formatDateLabel(date);
         return {
           date: date,
-          // formattedDate: new Date(date).toLocaleDateString('en-IN', {
-          formattedDate: parseLocalDate(date).toLocaleDateString('en-IN', {
-            day: '2-digit',
-            month: 'short'
-          }),
-          // day: new Date(date).toLocaleDateString('en-US', {
-          day: parseLocalDate(date).toLocaleDateString('en-US', {
-            weekday: 'short'
-          }),
-          // trips,
+          formattedDate: labels.formattedDate,
+          day: labels.day,
           trips: filteredTrips,
           missing: latestMissing
         };
       }).filter(Boolean);
     };
-    var getWeekKey = function getWeekKey(dateStr) {
-      // const date = new Date(dateStr);
-      var date = parseLocalDate(dateStr);
-      var start = new Date(date);
-      // const start = parseLocalDate(date);
-      start.setDate(date.getDate() - date.getDay()); // Sunday
-      var end = new Date(start);
-      // const end = parseLocalDate(date);
-      end.setDate(start.getDate() + 6);
-      var format = function format(d) {
-        return d.toLocaleDateString('en-IN', {
-          day: '2-digit',
-          month: 'short'
-        });
-      };
-      return `${format(start)} - ${format(end)}`;
-    };
+
+    // const getWeekKey = (dateStr) => {
+    //   // const date = new Date(dateStr);
+
+    //     console.log("API date:", dateStr);
+    // console.log("Parsed:", parseLocalDate(dateStr));
+    // console.log("Day:", parseLocalDate(dateStr).getDay());
+    //   const date = parseLocalDate(dateStr);
+    //   const start = new Date(date);
+    //   // const start = parseLocalDate(date);
+    //   start.setDate(date.getDate() - date.getDay()); // Sunday
+
+    //    console.log(
+    //   "Date:", dateStr,
+    //   "Week Start:",
+    //   start.toLocaleDateString("en-US")
+    // );
+    //   const end = new Date(start);
+    //   // const end = parseLocalDate(date);
+    //   end.setDate(start.getDate() + 6);
+
+    //   const format = d =>
+    //     d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+
+    //   return `${format(start)} - ${format(end)}`;
+    // };
 
     // const getWeekKey = (dateStr) => {
     //   const date = parseLocalDate(dateStr);
@@ -164598,16 +164748,34 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     //   return normalized;
     // };
 
+    var getWeekKey = function getWeekKey(dateStr) {
+      var date = parseLocalDate(dateStr);
+
+      // Sunday start
+      var start = new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay());
+
+      // Midnight fix
+      start.setHours(12, 0, 0, 0);
+      var end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      var format = function format(d) {
+        return `${String(d.getDate()).padStart(2, "0")} ${d.toLocaleString("en-US", {
+          month: "short"
+        })}`;
+      };
+      console.log("date:", dateStr, "day:", date.getDay(), "week:", format(start), "-", format(end));
+      return `${format(start)} - ${format(end)}`;
+    };
     var normalizedYearLocation = (0, _react.useMemo)(function () {
       return normalizeLocationData(yearWiseLocation);
     }, [yearWiseLocation]);
 
     // const normalizeYearData = (yearWiseTimeline = {}, yearWiseLocation = {}) => {
     var normalizeYearData = function normalizeYearData() {
-      var yearWiseTimeline = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      var fixedYearWiseTimeline = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var normalizedYearLocation = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var normalized = {};
-      Object.entries(yearWiseTimeline).forEach(function (_ref3) {
+      Object.entries(fixedYearWiseTimeline).forEach(function (_ref3) {
         var _ref4 = (0, _slicedToArray2.default)(_ref3, 2),
           date = _ref4[0],
           items = _ref4[1];
@@ -164633,10 +164801,16 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     var getYearWeeklyData = function getYearWeeklyData() {
       var normalizedData = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var weekMap = {};
-      Object.entries(normalizedData).forEach(function (_ref5) {
-        var _ref6 = (0, _slicedToArray2.default)(_ref5, 2),
-          date = _ref6[0],
-          dayData = _ref6[1];
+      Object.entries(normalizedData).sort(function (_ref5, _ref6) {
+        var _ref7 = (0, _slicedToArray2.default)(_ref5, 1),
+          a = _ref7[0];
+        var _ref8 = (0, _slicedToArray2.default)(_ref6, 1),
+          b = _ref8[0];
+        return parseLocalDate(a) - parseLocalDate(b);
+      }).forEach(function (_ref9) {
+        var _ref0 = (0, _slicedToArray2.default)(_ref9, 2),
+          date = _ref0[0],
+          dayData = _ref0[1];
         var weekKey = getWeekKey(date);
         if (!weekMap[weekKey]) {
           weekMap[weekKey] = [];
@@ -164683,7 +164857,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     var normalizedYearData = (0, _react.useMemo)(
     // () => normalizeYearData(yearWiseTimeline, yearWiseLocation),
     function () {
-      return normalizeYearData(yearWiseTimeline, normalizedYearLocation);
+      return normalizeYearData(fixedYearWiseTimeline, normalizedYearLocation);
     }, [yearWiseTimeline, normalizedYearLocation]);
     var weeklyData = (0, _react.useMemo)(function () {
       return getYearWeeklyData(normalizedYearData);
@@ -164697,8 +164871,10 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
 
     // const regulatoryCalendar = getWeekCalendarData(weekWiseTimeline);
     var regulatoryCalendar = (0, _react.useMemo)(function () {
-      return getWeekCalendarData(weekWiseTimeline);
+      return getWeekCalendarData(fixedWeekWiseTimeline);
     }, [weekWiseTimeline, selectedFilter]);
+    console.log("Week Keys =>", Object.keys(fixedWeekWiseTimeline));
+    console.log('regulatoryCalendar', regulatoryCalendar);
     // const weekLocationData = normalizeLocationData(weekWiseLocation);
     var weekLocationData = (0, _react.useMemo)(function () {
       return normalizeLocationData(weekWiseLocation);
@@ -165085,10 +165261,10 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 ,
                 markedDates: markedDates,
                 onDayPress: handleDayPress,
-                dayComponent: function dayComponent(_ref7) {
-                  var date = _ref7.date,
-                    state = _ref7.state,
-                    marking = _ref7.marking;
+                dayComponent: function dayComponent(_ref1) {
+                  var date = _ref1.date,
+                    state = _ref1.state,
+                    marking = _ref1.marking;
                   var weekend = isWeekend(date.dateString);
                   return /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
                     onPress: function onPress() {
@@ -165464,9 +165640,9 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
               keyExtractor: function keyExtractor(item, index) {
                 return index.toString();
               },
-              renderItem: function renderItem(_ref8) {
-                var item = _ref8.item,
-                  index = _ref8.index;
+              renderItem: function renderItem(_ref10) {
+                var item = _ref10.item,
+                  index = _ref10.index;
                 return /*#__PURE__*/(0, _jsxRuntime.jsx)(YearWeekCard, {
                   item: item,
                   index: index,
@@ -165528,8 +165704,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                     style: styles.tripDivider
                   });
                 },
-                renderItem: function renderItem(_ref9) {
-                  var item = _ref9.item;
+                renderItem: function renderItem(_ref11) {
+                  var item = _ref11.item;
                   return /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
                     style: styles.tripRow,
                     onPress: function onPress() {
@@ -289666,6 +289842,15 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     console.log('trip', TripSummaryDetails);
     // console.log("DATE TEST => ", new Date().toString());
 
+    var formatLocalDate = function formatLocalDate(dateStr) {
+      if (!dateStr) return "";
+      return new Date(dateStr).toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      });
+    };
     var timelineData = [{
       icon: "home-outline",
       time: "08:00 AM",
@@ -289741,6 +289926,9 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       // ✅ Weekday
       return "Working"; // id = 2
     };
+    console.log("TZ", Intl.DateTimeFormat().resolvedOptions().timeZone);
+    console.log("OFFSET", new Date().getTimezoneOffset());
+    console.log("NOW", new Date().toString());
     return /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNativeLinearGradient.default, {
       colors: ["#9ab1fa", "#ffffff"],
       start: {
@@ -289783,7 +289971,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
               })]
             }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
               style: styles.tripDate,
-              children: [new Date(TripSummaryDetails == null || (_TripSummaryDetails$t1 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t1.startDate).toDateString(), " - ", new Date(TripSummaryDetails == null || (_TripSummaryDetails$t10 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t10.endDate).toDateString()]
+              children: [formatLocalDate(TripSummaryDetails == null || (_TripSummaryDetails$t1 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t1.startDate), " - ", formatLocalDate(TripSummaryDetails == null || (_TripSummaryDetails$t10 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t10.endDate)]
             }), (TripSummaryDetails == null || (_TripSummaryDetails$t11 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t11.creationType) && /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
               style: styles.creationTypeBadge,
               children: (TripSummaryDetails == null || (_TripSummaryDetails$t12 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t12.kind) == 'trip' ? /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
@@ -290653,23 +290841,39 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     //     }
     // }, [isEdit, editData, isTrip]);
 
+    // const formatDateTime = (dateStr) => {
+    //     if (!dateStr) return "";
+
+    //     const d = new Date(dateStr);
+
+    //     if (isNaN(d)) return "Invalid Date";
+
+    //     const day = d.toLocaleDateString("en-US", { weekday: "long" });
+    //     const date = d.getDate();
+    //     const month = d.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
+    //     const year = d.getFullYear();
+
+    //     const time = d.toLocaleTimeString("en-US", {
+    //         hour: "2-digit",
+    //         minute: "2-digit",
+    //     });
+
+    //     return `${day} ${date}-${month}-${year} | ${time}`;
+    // };
+
     var formatDateTime = function formatDateTime(dateStr) {
       if (!dateStr) return "";
-      var d = new Date(dateStr);
-      if (isNaN(d)) return "Invalid Date";
-      var day = d.toLocaleDateString("en-US", {
-        weekday: "long"
-      });
-      var date = d.getDate();
-      var month = d.toLocaleDateString("en-US", {
-        month: "short"
-      }).toUpperCase();
-      var year = d.getFullYear();
-      var time = d.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-      return `${day} ${date}-${month}-${year} | ${time}`;
+      var timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      return new Date(dateStr).toLocaleString("en-US", {
+        timeZone: timezone,
+        weekday: "long",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true
+      }).replace(",", "").replace(",", " |");
     };
     (0, _react.useEffect)(function () {
       var _editData$attachments;
@@ -290938,6 +291142,21 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     //         });
     // };
 
+    console.log("TZ", Intl.DateTimeFormat().resolvedOptions().timeZone);
+    console.log("START", new Date(editData == null ? void 0 : editData.startDate).toString());
+    console.log("RAW START", editData == null ? void 0 : editData.startDate);
+    var d = new Date(editData == null ? void 0 : editData.startDate);
+    console.log("DATE OBJECT", d);
+    console.log("LOCAL STRING", d.toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true
+    }));
     return /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNativeLinearGradient.default, {
       colors: ["#9ab1fa", "#ffffff"],
       start: {
@@ -290963,9 +291182,12 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           showsVerticalScrollIndicator: false,
           children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
             style: styles.card,
-            children: [isTrip && isEdit ? /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
+            children: [isTrip && isEdit ?
+            /*#__PURE__*/
+            // <Text style={styles.dateTitle}>{new Date(startDate).toDateString()} - {new Date(endDate).toDateString()}</Text>
+            (0, _jsxRuntime.jsxs)(_reactNative.Text, {
               style: styles.dateTitle,
-              children: [new Date(startDate).toDateString(), " - ", new Date(endDate).toDateString()]
+              children: [formatHeaderDate(startDate), " - ", formatHeaderDate(endDate)]
             }) : /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
               style: styles.dateTitle,
               children: formatDate((editData == null ? void 0 : editData.date) || date || new Date().toLocaleDateString("en-CA"))
@@ -291118,7 +291340,10 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
                   title: "Start Date"
                 }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
-                  style: styles.dateBox,
+                  style: [styles.dateBox, (editData == null ? void 0 : editData.creationType) === "automatic" && {
+                    opacity: 0.6
+                  }],
+                  disabled: (editData == null ? void 0 : editData.creationType) === "automatic",
                   onPress: function onPress() {
                     return setOpenStartPicker(true);
                   },
@@ -291133,7 +291358,10 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 }), /*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
                   title: "End Date"
                 }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
-                  style: styles.dateBox,
+                  style: [styles.dateBox, (editData == null ? void 0 : editData.creationType) === "automatic" && {
+                    opacity: 0.6
+                  }],
+                  disabled: (editData == null ? void 0 : editData.creationType) === "automatic",
                   onPress: function onPress() {
                     return setOpenEndPicker(true);
                   },
@@ -291376,6 +291604,15 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           })]
         })]
       })
+    });
+  };
+  var formatHeaderDate = function formatHeaderDate(date) {
+    if (!date) return "";
+    return new Date(date).toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric"
     });
   };
 

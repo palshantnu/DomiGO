@@ -63,18 +63,52 @@ const parseLocalDate = (input) => {
 // };
 
 const getBusinessDateKey = (item) => {
+
+  // TRIPS ONLY
+  if (
+    item?.kind === "trip" ||
+    item?.kind === "city_change" ||
+    item?.kind === "county_change"
+  ) {
+
+    if (!item?.startDate) return "";
+
+    return new Intl.DateTimeFormat("en-CA", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date(item.startDate));
+  }
+
+  // LOCATIONS
+  if (item?.recordedAt) {
+
+    return new Intl.DateTimeFormat("en-CA", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date(item.recordedAt));
+  }
+
+  // MISSING
   if (item?.date) {
     return item.date.split("T")[0];
   }
 
-  const sourceDate =
-    item?.startDate ||
-    item?.recordedAt;
+  return "";
+};
 
-  if (!sourceDate) return "";
+const formatDateLabel = (dateStr) => {
+  const [y, m, d] = dateStr.split("-").map(Number);
 
-  return new Date(sourceDate)
-    .toLocaleDateString("en-CA");
+  return {
+    formattedDate: `${String(d).padStart(2, "0")} ${["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m - 1]
+      }`,
+    day: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][
+      new Date(y, m - 1, d).getDay()
+    ]
+  };
 };
 
 const regroupByBusinessDate = (data = {}) => {
@@ -84,6 +118,15 @@ const regroupByBusinessDate = (data = {}) => {
     if (!Array.isArray(dayItems)) return;
 
     dayItems.forEach(item => {
+
+      console.log(
+        "kind:",
+        item.kind,
+        "startDate:",
+        item.startDate,
+        "grouped:",
+        getBusinessDateKey(item)
+      );
       const key = getBusinessDateKey(item);
 
       if (!grouped[key]) {
@@ -394,12 +437,22 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   }, []);
   const today = new Date();
 
-  const getLocalDateKey = (value) => {
-    if (!value) return "";
+  // const getLocalDateKey = (value) => {
+  //   if (!value) return "";
 
-    const date = new Date(value);
+  //   const date = new Date(value);
 
-    return date.toLocaleDateString("en-CA");
+  //   return date.toLocaleDateString("en-CA");
+  // };
+
+  const getLocalDateKey = (utcDateString) => {
+    const d = new Date(utcDateString);
+
+    return `${d.getFullYear()}-${String(
+      d.getMonth() + 1
+    ).padStart(2, "0")}-${String(
+      d.getDate()
+    ).padStart(2, "0")}`;
   };
 
   // const parseLocalDate = (dateStr) => {
@@ -492,42 +545,99 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
 
   const fixedWeekWiseTimeline = useMemo(() => {
-  return regroupByBusinessDate(weekWiseTimeline);
-}, [weekWiseTimeline]);
+    return regroupByBusinessDate(weekWiseTimeline);
+  }, [weekWiseTimeline]);
 
-const fixedMonthWiseTimeline = useMemo(() => {
-  return regroupByBusinessDate(monthWiseTimeline);
-}, [monthWiseTimeline])
+  const fixedMonthWiseTimeline = useMemo(() => {
+    return regroupByBusinessDate(monthWiseTimeline);
+  }, [monthWiseTimeline])
 
-const fixedYearWiseTimeline = useMemo(() => {
-  return regroupByBusinessDate(yearWiseTimeline);
-}, [yearWiseTimeline]);
+  const fixedYearWiseTimeline = useMemo(() => {
+    return regroupByBusinessDate(yearWiseTimeline);
+  }, [yearWiseTimeline]);
+
+
+  console.log(fixedWeekWiseTimeline)
+  // console.log(fixedYearWiseTimeline)
+
+  // const getCurrentWeekDates = () => {
+  //   const today = new Date();
+
+  //   const day = today.getDay(); // 0 = Sunday
+
+  //   // Sunday as start of week
+  //   const startOfWeek = new Date(today);
+  //   startOfWeek.setDate(today.getDate() - day);
+
+
+  //   console.log("today", today);
+  //   console.log("day index", today.getDay());
+  //   console.log("timezone", Intl.DateTimeFormat().resolvedOptions().timeZone);
+
+  //   const endOfWeek = new Date(startOfWeek);
+  //   endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+  //   const formatDate = (date) => {
+  //     const y = date.getFullYear();
+  //     const m = String(date.getMonth() + 1).padStart(2, "0");
+  //     const d = String(date.getDate()).padStart(2, "0");
+
+  //     return `${y}-${m}-${d}`;
+  //   };
+
+  //   return {
+  //     start: formatDate(startOfWeek),
+  //     end: formatDate(endOfWeek),
+  //   };
+  // };
 
   const getCurrentWeekDates = () => {
     const today = new Date();
 
-    const day = today.getDay(); // 0 = Sunday
+    // local date only
+    const localToday = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
 
-    // Sunday as start of week
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - day);
+    const day = localToday.getDay(); // Sunday = 0
 
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    const startOfWeek = new Date(
+      localToday.getFullYear(),
+      localToday.getMonth(),
+      localToday.getDate() - day
+    );
 
-    const formatDate = (date) => {
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, "0");
-      const d = String(date.getDate()).padStart(2, "0");
+    const endOfWeek = new Date(
+      startOfWeek.getFullYear(),
+      startOfWeek.getMonth(),
+      startOfWeek.getDate() + 6
+    );
 
-      return `${y}-${m}-${d}`;
-    };
+    const format = d =>
+      `${d.getFullYear()}-${String(
+        d.getMonth() + 1
+      ).padStart(2, "0")}-${String(
+        d.getDate()
+      ).padStart(2, "0")}`;
+
+    console.log(
+      "Current week =>",
+      format(startOfWeek),
+      format(endOfWeek)
+    );
 
     return {
-      start: formatDate(startOfWeek),
-      end: formatDate(endOfWeek),
+      start: format(startOfWeek),
+      end: format(endOfWeek),
     };
   };
+
+  console.log("API week range", getCurrentWeekDates());
+  console.log("Device timezone",
+    Intl.DateTimeFormat().resolvedOptions().timeZone
+  );
 
 
 
@@ -1072,18 +1182,12 @@ const fixedYearWiseTimeline = useMemo(() => {
         if (filteredTrips.length === 0 && !latestMissing) return null;
 
 
+        const labels = formatDateLabel(date);
+
         return {
           date,
-          // formattedDate: new Date(date).toLocaleDateString('en-IN', {
-          formattedDate: parseLocalDate(date).toLocaleDateString('en-IN', {
-            day: '2-digit',
-            month: 'short',
-          }),
-          // day: new Date(date).toLocaleDateString('en-US', {
-          day: parseLocalDate(date).toLocaleDateString('en-US', {
-            weekday: 'short',
-          }),
-          // trips,
+          formattedDate: labels.formattedDate,
+          day: labels.day,
           trips: filteredTrips,
           missing: latestMissing,
         };
@@ -1096,21 +1200,32 @@ const fixedYearWiseTimeline = useMemo(() => {
 
 
 
-  const getWeekKey = (dateStr) => {
-    // const date = new Date(dateStr);
-    const date = parseLocalDate(dateStr);
-    const start = new Date(date);
-    // const start = parseLocalDate(date);
-    start.setDate(date.getDate() - date.getDay()); // Sunday
-    const end = new Date(start);
-    // const end = parseLocalDate(date);
-    end.setDate(start.getDate() + 6);
+  // const getWeekKey = (dateStr) => {
+  //   // const date = new Date(dateStr);
 
-    const format = d =>
-      d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
 
-    return `${format(start)} - ${format(end)}`;
-  };
+  //     console.log("API date:", dateStr);
+  // console.log("Parsed:", parseLocalDate(dateStr));
+  // console.log("Day:", parseLocalDate(dateStr).getDay());
+  //   const date = parseLocalDate(dateStr);
+  //   const start = new Date(date);
+  //   // const start = parseLocalDate(date);
+  //   start.setDate(date.getDate() - date.getDay()); // Sunday
+
+  //    console.log(
+  //   "Date:", dateStr,
+  //   "Week Start:",
+  //   start.toLocaleDateString("en-US")
+  // );
+  //   const end = new Date(start);
+  //   // const end = parseLocalDate(date);
+  //   end.setDate(start.getDate() + 6);
+
+  //   const format = d =>
+  //     d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+
+  //   return `${format(start)} - ${format(end)}`;
+  // };
 
   // const getWeekKey = (dateStr) => {
   //   const date = parseLocalDate(dateStr);
@@ -1189,6 +1304,42 @@ const fixedYearWiseTimeline = useMemo(() => {
   // };
 
 
+  const getWeekKey = (dateStr) => {
+    const date = parseLocalDate(dateStr);
+
+    // Sunday start
+    const start = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate() - date.getDay()
+    );
+
+    // Midnight fix
+    start.setHours(12, 0, 0, 0);
+
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+
+    const format = d =>
+      `${String(d.getDate()).padStart(2, "0")} ${d.toLocaleString(
+        "en-US",
+        { month: "short" }
+      )}`;
+
+    console.log(
+      "date:",
+      dateStr,
+      "day:",
+      date.getDay(),
+      "week:",
+      format(start),
+      "-",
+      format(end)
+    );
+
+    return `${format(start)} - ${format(end)}`;
+  };
+
   const normalizedYearLocation = useMemo(() => {
     return normalizeLocationData(yearWiseLocation);
   }, [yearWiseLocation]);
@@ -1234,7 +1385,10 @@ const fixedYearWiseTimeline = useMemo(() => {
   const getYearWeeklyData = (normalizedData = {}) => {
     const weekMap = {};
 
-    Object.entries(normalizedData).forEach(([date, dayData]) => {
+    Object.entries(normalizedData).sort(
+      ([a], [b]) =>
+        parseLocalDate(a) - parseLocalDate(b)
+    ).forEach(([date, dayData]) => {
       const weekKey = getWeekKey(date);
 
       if (!weekMap[weekKey]) {
@@ -1310,6 +1464,13 @@ const fixedYearWiseTimeline = useMemo(() => {
       fixedWeekWiseTimeline
     );
   }, [weekWiseTimeline, selectedFilter]);
+
+  console.log(
+    "Week Keys =>",
+    Object.keys(fixedWeekWiseTimeline)
+  );
+
+  console.log('regulatoryCalendar', regulatoryCalendar);
   // const weekLocationData = normalizeLocationData(weekWiseLocation);
   const weekLocationData = useMemo(() => {
     return normalizeLocationData(
