@@ -1159,7 +1159,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         "WA": "WASHINGTON",
         "WV": "WEST VIRGINIA",
         "WI": "WISCONSIN",
-        "WY": "WYOMING"
+        "WY": "WYOMING",
 
 
         // Canada Provinces
@@ -2527,10 +2527,11 @@ print("📍 county: \(county)")
     let originState = snapshotState
     let originLat = snapshotLat
     let originLng = snapshotLng
-    let originCity = snapshotCity.isEmpty ? snapshotDetectedCity : snapshotCity
     let originBoundaryCity = snapshotDetectedCity.isEmpty ? snapshotCity : snapshotDetectedCity
+    // let originCity = originBoundaryCity.isEmpty ? snapshotCity : originBoundaryCity
+    let originCity = snapshotCity.isEmpty ? snapshotDetectedCity : snapshotCity
     let originBoundaryCityStart = snapshotCityEnterTime > 0 ? snapshotCityEnterTime : snapshotEnterTime
-    let startTime = snapshotEnterTime
+    let startTime = originBoundaryCityStart
     let stateTripEndTime = currentTimeMs
 
     if detectedCountry == "US" {
@@ -2602,7 +2603,7 @@ print("📍 county: \(county)")
         originState: originState,
         originLat: originLat,
         originLng: originLng,
-        destinationCity: detectedState, // ✅ FIX
+        destinationCity: previousDetectedCity.isEmpty ? detectedState : previousDetectedCity,
         destinationState: detectedState,
         destinationLat: lat,
         destinationLng: lng,
@@ -3133,7 +3134,7 @@ private func handleCityTransition(
       destinationState: destinationState,
       destinationLat: destinationLat,
       destinationLng: destinationLng,
-      startDate: tripStartTime,
+      startDate: startDate ?? tripStartTime,
       endDate: endDate
     )
   }

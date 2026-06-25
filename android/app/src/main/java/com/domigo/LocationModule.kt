@@ -532,7 +532,13 @@ private fun scheduleMidnightMissingDay() {
             }
         }
 
-    private fun reverseGeocodeInBackground(lat: Double, lng: Double) {
+    private fun reverseGeocodeInBackground(
+        lat: Double,
+        lng: Double,
+        stateTripOriginCity: String? = null,
+        stateTripStartTime: Long? = null,
+        stateTripEndTime: Long? = null
+    ) {
         val url = "$GOOGLE_GEOCODING_URL?latlng=$lat,$lng&language=en&key=$googleApiKey"
         
         val request = Request.Builder()
@@ -629,7 +635,18 @@ private fun scheduleMidnightMissingDay() {
                                 }
                                 
                                 // Send to Domigo API with conditions
-                                sendToDomigoAPI(lat, lng, city, state,stateCode,countryCode, fullAddress)
+                                sendToDomigoAPI(
+                                    lat,
+                                    lng,
+                                    city,
+                                    state,
+                                    stateCode,
+                                    countryCode,
+                                    fullAddress,
+                                    stateTripOriginCity,
+                                    stateTripStartTime,
+                                    stateTripEndTime
+                                )
                                 // if (geofencingMode == "local_native") {
 
                                 //     // if (state.equals(previousStateName, ignoreCase = true)) {
@@ -710,7 +727,18 @@ private fun scheduleMidnightMissingDay() {
 
 
 
-    private fun sendToDomigoAPI(lat: Double, lng: Double, city: String, state: String, stateCode: String, countryCode: String, address: String) {
+    private fun sendToDomigoAPI(
+        lat: Double,
+        lng: Double,
+        city: String,
+        state: String,
+        stateCode: String,
+        countryCode: String,
+        address: String,
+        stateTripOriginCity: String? = null,
+        stateTripStartTime: Long? = null,
+        stateTripEndTime: Long? = null
+    ) {
        
 
         val currentTime = System.currentTimeMillis()
@@ -720,10 +748,16 @@ private fun scheduleMidnightMissingDay() {
         val sameCountry = countryCode == previousCountryCode
         val timePassed = timeDifference >= FOUR_HOURS_MS
         val tripStartTime =
-            if (previousCityEnterTime > 0L)
-                previousCityEnterTime
-            else
-                previousEnterTime
+            stateTripStartTime?.takeIf { it > 0L }
+                ?: if (previousCityEnterTime > 0L)
+                    previousCityEnterTime
+                else
+                    previousEnterTime
+        val tripEndTime =
+            stateTripEndTime?.takeIf { it > 0L } ?: currentTime
+        val originCityForStateTrip =
+            stateTripOriginCity?.takeIf { it.isNotBlank() }
+                ?: previousCityName.ifBlank { previousCity }
 
         // if (previousStateCode.isEmpty()) {
         //     previousStateCode = stateCode
@@ -856,7 +890,7 @@ private fun scheduleMidnightMissingDay() {
             state = null,
             isUpdated = false,
     
-            originCity = toEnglishSafe(previousCity),
+            originCity = toEnglishSafe(originCityForStateTrip),
             originState = toEnglishSafe(previousStateName),
             originLat = previousLat,
             originLng = previousLng,
@@ -867,7 +901,7 @@ private fun scheduleMidnightMissingDay() {
             destinationLng = lng,
     
             startDate = tripStartTime,
-            endDate = System.currentTimeMillis()
+            endDate = tripEndTime
         )
     
         previousStateCode = stateCode
@@ -876,7 +910,7 @@ private fun scheduleMidnightMissingDay() {
         previousLat = lat
         previousLng = lng
         previousCity = city
-        previousEnterTime = System.currentTimeMillis()
+        previousEnterTime = tripEndTime
         saveStateToPrefs()
     
     } else {
@@ -2278,12 +2312,33 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
 
     // First-time init.
     if (previousStateName.isEmpty()) {
+        val now = System.currentTimeMillis()
         previousStateName = detectedState
         previousStateCode = match.fips ?: detectedState
         previousCountryCode = detectedCountry
         previousLat = lat
         previousLng = lng
-        previousEnterTime = System.currentTimeMillis()
+        previousEnterTime = now
+
+        if (detectedCountry == "US") {
+            match.fips?.let { stateFips ->
+                detectCountyFromGeoJSON(stateFips, lat, lng)?.let { county ->
+                    previousCountyFips = county.fips
+                    previousCountyName = county.name
+                    previousCountyEnterTime = now
+                }
+            }
+
+            detectCityFromGeoJSON(match.name, lat, lng)?.let { city ->
+                previousCityFips = city.fips
+                previousCityName = city.name
+                previousCityEnterTime = now
+                if (previousCity.isBlank()) {
+                    previousCity = city.name
+                }
+            }
+        }
+
         saveStateToPrefs()
         Log.d(TAG, "📍 Initial state set: $detectedState")
         return
@@ -2399,8 +2454,16 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
 
     // State changed → online: enrich city via Google (and let its success path post the trip + update state).
     if (isInternetAvailable()) {
+        val stateTripStartTime =
+            if (previousCityEnterTime > 0L)
+                previousCityEnterTime
+            else
+                previousEnterTime
+        val stateTripOriginCity = previousCityName.ifBlank { previousCity }
+        val stateTripEndTime = System.currentTimeMillis()
+
         if (detectedCountry == "US") {
-            sendUsBoundaryTripsForStateChange(match, lat, lng, System.currentTimeMillis())
+            sendUsBoundaryTripsForStateChange(match, lat, lng, stateTripEndTime)
         } else {
             previousCountyFips = ""
             previousCountyName = ""
@@ -2409,7 +2472,7 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
             previousCityName = ""
             previousCityEnterTime = 0L
         }
-        reverseGeocodeInBackground(lat, lng)
+        reverseGeocodeInBackground(lat, lng, stateTripOriginCity, stateTripStartTime, stateTripEndTime)
         return
     }
 
@@ -2450,7 +2513,7 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
     val originStateSafe = previousStateName
     val originLatSafe = previousLat
     val originLngSafe = previousLng
-    val originCitySafe = previousCity
+    val originCitySafe = previousCityName.ifBlank { previousCity }
     val originEnterTimeSafe = previousEnterTime
     val tripStartTime =
     if (previousCityEnterTime > 0L)
@@ -2469,7 +2532,7 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
     previousCountryCode = detectedCountry
     previousLat = lat
     previousLng = lng
-    previousEnterTime = System.currentTimeMillis()
+    previousEnterTime = stateTripEndTime
     saveStateToPrefs()
     if (detectedCountry == "US") {
         match.fips?.let { fips ->
@@ -2477,7 +2540,7 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
             if (county != null) {
                 previousCountyFips = county.fips
                 previousCountyName = county.name
-                previousCountyEnterTime = System.currentTimeMillis()
+                previousCountyEnterTime = stateTripEndTime
 
                 Log.d(TAG, "County seeded after state change: ${county.name}")
             }
