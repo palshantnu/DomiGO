@@ -507,42 +507,42 @@ class DomigoTracker {
     );
 
 
-    this.subscriptions.push(
-  locationEventEmitter.addListener(
-    'onFakeGpsDetected',
-    () => {
+//     this.subscriptions.push(
+//   locationEventEmitter.addListener(
+//     'onFakeGpsDetected',
+//     () => {
 
-      console.log("🚨 FAKE GPS DETECTED");
+//       console.log("🚨 FAKE GPS DETECTED");
 
-      Alert.alert(
-        'Fake GPS Detected',
-        'Please disable Fake GPS applications to continue using Domigo.',
-        [
-          {
-            text: 'Exit App',
-            onPress: async () => {
+//       Alert.alert(
+//         'Fake GPS Detected',
+//         'Please disable Fake GPS applications to continue using Domigo.',
+//         [
+//           {
+//             text: 'Exit App',
+//             onPress: async () => {
 
-              try {
+//               try {
 
-                // stop native tracking
-                await NativeModules.LocationTracker.stopLocationTracking();
+//                 // stop native tracking
+//                 await NativeModules.LocationTracker.stopLocationTracking();
 
-              } catch (e) {
-                console.log(e);
-              }
+//               } catch (e) {
+//                 console.log(e);
+//               }
 
-              // app close
-              BackHandler.exitApp();
-            }
-          }
-        ],
-        {
-          cancelable: false
-        }
-      );
-    }
-  )
-);
+//               // app close
+//               BackHandler.exitApp();
+//             }
+//           }
+//         ],
+//         {
+//           cancelable: false
+//         }
+//       );
+//     }
+//   )
+// );
 
 
 

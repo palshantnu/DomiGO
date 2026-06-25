@@ -1248,7 +1248,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     previousCountyEnterTime = Date().timeIntervalSince1970 * 1000
 
     print("📍 County seeded after state change: \(county.name)")
-}
+     }
       let tripKey = "\(previousStateName)-\(state)-\(Int(previousEnterTime))"
 
       if tripKey == lastTripKey {
@@ -1273,6 +1273,10 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         let today = dateFormatter.string(from: Date())
+        let tripStartTime =
+        previousCityEnterTime > 0
+        ? previousCityEnterTime
+        : previousEnterTime
 
         sendTripFormData(
           kind: "trip",
@@ -1303,7 +1307,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
           destinationState: state,
           destinationLat: lat,
           destinationLng: lng,
-          startDate: previousEnterTime,
+          startDate: tripStartTime,
           endDate: currentTimeMs
         )
       }
@@ -3095,6 +3099,10 @@ private func handleCityTransition(
     let formatter = DateFormatter()
     formatter.dateFormat = "yyyy-MM-dd"
     let today = formatter.string(from: Date())
+    let tripStartTime =
+    previousCityEnterTime > 0
+        ? previousCityEnterTime
+        : previousEnterTime
 
     sendTripFormData(
       kind: "trip",
@@ -3125,7 +3133,7 @@ private func handleCityTransition(
       destinationState: destinationState,
       destinationLat: destinationLat,
       destinationLng: destinationLng,
-      startDate: startDate,
+      startDate: tripStartTime,
       endDate: endDate
     )
   }

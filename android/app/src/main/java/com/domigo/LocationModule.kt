@@ -105,6 +105,8 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     private var lastCityChangeKey: String = ""
     private var countyChangeDetectedTime: Long = 0L
 
+    private var lastBoundaryStartTime: Long = 0L
+
     // private val MIN_COUNTY_STAY_MS = 1 * 60 * 1000 // 3 min
     // private val MIN_COUNTY_STAY_MS = 20 * 1000 // 3 min
     private val MIN_COUNTY_STAY_MS =  3000 // 3 min
@@ -272,23 +274,23 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     }
 
 
-    private fun isLocationMocked(location: Location): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            location.isMock
-        } else {
-            LocationCompat.isMock(location)
-        }
-    }
+    // private fun isLocationMocked(location: Location): Boolean {
+    //     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+    //         location.isMock
+    //     } else {
+    //         LocationCompat.isMock(location)
+    //     }
+    // }
 
-    private fun sendFakeGpsDetectedEvent() {
-    try {
-        reactApplicationContext
-            .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-            .emit("onFakeGpsDetected", null)
-    } catch (e: Exception) {
-        Log.e(TAG, "Error sending fake GPS event", e)
-    }
-   }
+//     private fun sendFakeGpsDetectedEvent() {
+//     try {
+//         reactApplicationContext
+//             .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+//             .emit("onFakeGpsDetected", null)
+//     } catch (e: Exception) {
+//         Log.e(TAG, "Error sending fake GPS event", e)
+//     }
+//    }
 
     private fun setupLocationListener() {
         locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -296,16 +298,16 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
             override fun onLocationChanged(location: Location) {
                 Log.d(TAG, "New location: ${location.latitude}, ${location.longitude}, Accuracy: ${location.accuracy}")
 
-                if (isLocationMocked(location)) {
+                // if (isLocationMocked(location)) {
 
-                    Log.e(TAG, "🚨 FAKE GPS DETECTED")
+                //     Log.e(TAG, "🚨 FAKE GPS DETECTED")
 
-                    sendFakeGpsDetectedEvent()
+                //     sendFakeGpsDetectedEvent()
 
-                    stopLocationTracking()
+                //     stopLocationTracking()
 
-                    return
-                }
+                //     return
+                // }
                                 
                 // Send basic location data to JS
                 val locationData = Arguments.createMap().apply {
@@ -717,6 +719,11 @@ private fun scheduleMidnightMissingDay() {
         val sameState = stateCode == previousStateCode
         val sameCountry = countryCode == previousCountryCode
         val timePassed = timeDifference >= FOUR_HOURS_MS
+        val tripStartTime =
+            if (previousCityEnterTime > 0L)
+                previousCityEnterTime
+            else
+                previousEnterTime
 
         // if (previousStateCode.isEmpty()) {
         //     previousStateCode = stateCode
@@ -859,7 +866,7 @@ private fun scheduleMidnightMissingDay() {
             destinationLat = lat,
             destinationLng = lng,
     
-            startDate = previousEnterTime,
+            startDate = tripStartTime,
             endDate = System.currentTimeMillis()
         )
     
@@ -2445,6 +2452,11 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
     val originLngSafe = previousLng
     val originCitySafe = previousCity
     val originEnterTimeSafe = previousEnterTime
+    val tripStartTime =
+    if (previousCityEnterTime > 0L)
+        previousCityEnterTime
+    else
+        previousEnterTime
     val stateTripEndTime = System.currentTimeMillis()
 
     if (detectedCountry == "US") {
@@ -2507,7 +2519,7 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
         destinationState = newState,
         destinationLat = lat,
         destinationLng = lng,
-        startDate = originEnterTimeSafe,
+        startDate = tripStartTime,
         endDate = stateTripEndTime
     )
 

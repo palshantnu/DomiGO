@@ -119,14 +119,14 @@ const regroupByBusinessDate = (data = {}) => {
 
     dayItems.forEach(item => {
 
-      console.log(
-        "kind:",
-        item.kind,
-        "startDate:",
-        item.startDate,
-        "grouped:",
-        getBusinessDateKey(item)
-      );
+      // console.log(
+      //   "kind:",
+      //   item.kind,
+      //   "startDate:",
+      //   item.startDate,
+      //   "grouped:",
+      //   getBusinessDateKey(item)
+      // );
       const key = getBusinessDateKey(item);
 
       if (!grouped[key]) {
@@ -557,7 +557,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   }, [yearWiseTimeline]);
 
 
-  console.log(fixedWeekWiseTimeline)
+  // console.log(fixedWeekWiseTimeline)
   // console.log(fixedYearWiseTimeline)
 
   // const getCurrentWeekDates = () => {
@@ -622,11 +622,11 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
         d.getDate()
       ).padStart(2, "0")}`;
 
-    console.log(
-      "Current week =>",
-      format(startOfWeek),
-      format(endOfWeek)
-    );
+    // console.log(
+    //   "Current week =>",
+    //   format(startOfWeek),
+    //   format(endOfWeek)
+    // );
 
     return {
       start: format(startOfWeek),
@@ -634,7 +634,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     };
   };
 
-  console.log("API week range", getCurrentWeekDates());
+  // console.log("API week range", getCurrentWeekDates());
   console.log("Device timezone",
     Intl.DateTimeFormat().resolvedOptions().timeZone
   );
@@ -1326,16 +1326,16 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
         { month: "short" }
       )}`;
 
-    console.log(
-      "date:",
-      dateStr,
-      "day:",
-      date.getDay(),
-      "week:",
-      format(start),
-      "-",
-      format(end)
-    );
+    // console.log(
+    //   "date:",
+    //   dateStr,
+    //   "day:",
+    //   date.getDay(),
+    //   "week:",
+    //   format(start),
+    //   "-",
+    //   format(end)
+    // );
 
     return `${format(start)} - ${format(end)}`;
   };
@@ -1465,10 +1465,10 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     );
   }, [weekWiseTimeline, selectedFilter]);
 
-  console.log(
-    "Week Keys =>",
-    Object.keys(fixedWeekWiseTimeline)
-  );
+  // console.log(
+  //   "Week Keys =>",
+  //   Object.keys(fixedWeekWiseTimeline)
+  // );
 
   console.log('regulatoryCalendar', regulatoryCalendar);
   // const weekLocationData = normalizeLocationData(weekWiseLocation);
