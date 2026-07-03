@@ -89,7 +89,7 @@ const TripListScreen = ({ tripList }) => {
     return dateObj.toDateString();
   };
 
-  // const todayDate = getTodayDateYYYYMMDD();
+  const todayDate = getTodayDateYYYYMMDD();
   // console.log(todayDate); // e.g. 2026-01-03
   const filteredTrips = React.useMemo(() => {
     return tripList.filter(
@@ -174,7 +174,7 @@ const TripListScreen = ({ tripList }) => {
             "DayEntryScreen",
             {
               mode: "TRIP",
-              date: todayDate,
+              date: trip.date,
               isEdit: true,
               data: trip,
             }

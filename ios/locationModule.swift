@@ -911,6 +911,9 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
           let city =
               placemark.locality ?? ""
 
+          let county = 
+              placemark.subAdministrativeArea ?? ""
+
           let state =
               placemark.administrativeArea ?? ""
 
@@ -928,6 +931,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
               latitude: location.coordinate.latitude,
               longitude: location.coordinate.longitude,
               city: city,
+              county: county,
               state: state,
               address: address
           )
@@ -937,6 +941,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       latitude: Double,
       longitude: Double,
       city: String,
+      county: String,
       state: String,
       address: String
   ) {
@@ -959,6 +964,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
           "latitude": latitude,
           "longitude": longitude,
           "city": city,
+          "county": county,
           "state": state,
           "address": address
       ]
@@ -1010,6 +1016,7 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
                   ✅ Hours API success
 
                   City: \(city)
+                  County: \(county)
                   State: \(state)
                   Address: \(address)
                   """)
@@ -1595,13 +1602,13 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         remoteLocation: "",
         stateId: state,
         isUpdated:false,
-        originCity: nil,
-        originCounty: nil,
+        originCity: previousCity,
+        originCounty: previousCountyName,
         originState: nil,
         originLat: nil,
         originLng: nil,
-        destinationCity: nil,
-        destinationCounty: nil,
+        destinationCity: previousCity,
+        destinationCounty: previousCountyName,
         destinationState: nil,
         destinationLat: nil,
         destinationLng: nil
@@ -1613,7 +1620,13 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         "kind": "missing",
         "date": today,
         "state": state,
-        "creationType": "automatic"
+        "originCity": previousCity,
+        "originCounty": previousCountyName,
+
+        "destinationCity": previousCity,
+        "destinationCounty": previousCountyName,
+
+        "creationType": "automatic",
       ]
       enqueueToOfflineQueue(payload)
     }
@@ -1744,6 +1757,11 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
 
     if kind == "missing" {
       addOptionalField("state", stateId)
+      addOptionalField("originCity", originCity)
+      addOptionalField("originCounty", originCounty)
+
+      addOptionalField("destinationCity", destinationCity)
+      addOptionalField("destinationCounty", destinationCounty)
     }
 
       if kind == "trip" || kind == "city_change" {
@@ -1966,6 +1984,11 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     
     if kind == "missing" {
       addField("state", payload["state"] as? String ?? "")
+      addField("originCity", payload["originCity"] as? String ?? "")
+      addField("originCounty", payload["originCounty"] as? String ?? "")
+
+      addField("destinationCity", payload["destinationCity"] as? String ?? "")
+      addField("destinationCounty", payload["destinationCounty"] as? String ?? "")
       addField("typeOfDayId", "1")
       addField("isCommissionDay", "false")
       addField("isRemoteWork", "false")
@@ -2528,8 +2551,8 @@ print("📍 county: \(county)")
     let originLat = snapshotLat
     let originLng = snapshotLng
     let originBoundaryCity = snapshotDetectedCity.isEmpty ? snapshotCity : snapshotDetectedCity
-    // let originCity = originBoundaryCity.isEmpty ? snapshotCity : originBoundaryCity
-    let originCity = snapshotCity.isEmpty ? snapshotDetectedCity : snapshotCity
+    let originCity = originBoundaryCity.isEmpty ? snapshotCity : originBoundaryCity
+    // let originCity = snapshotCity.isEmpty ? snapshotDetectedCity : snapshotCity
     let originBoundaryCityStart = snapshotCityEnterTime > 0 ? snapshotCityEnterTime : snapshotEnterTime
     let startTime = originBoundaryCityStart
     let stateTripEndTime = currentTimeMs

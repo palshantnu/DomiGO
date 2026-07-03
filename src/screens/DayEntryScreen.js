@@ -6,6 +6,7 @@ import {
     TextInput,
     TouchableOpacity,
     ScrollView,
+    Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LinearGradient from "react-native-linear-gradient";
@@ -122,6 +123,7 @@ const DayEntryScreen = ({
     console.log('isTrip', isTrip);
     console.log('date', date);
     console.log('editData', editData);
+    // console.log('data>>>>', route.params?.data.attachments);
 
 
     console.log('isTravelling', isTravelling);
@@ -190,6 +192,9 @@ const DayEntryScreen = ({
 
     const [openStartPicker, setOpenStartPicker] = useState(false);
     const [openEndPicker, setOpenEndPicker] = useState(false);
+    const [isPicking, setIsPicking] = useState(false);
+    const [city, setCity] = useState("");
+    const [county, setCounty] = useState("");
 
     /* ---------------- MASTER DATA ---------------- */
     const searchPlaces = async (text, setter) => {
@@ -346,6 +351,9 @@ const DayEntryScreen = ({
         // ✅ NON-TRIP (Missing day)
         if (!isTrip) {
             setStateId(editData.state || "");
+            setCity(editData?.originCity || "");
+            setCounty(editData?.originCounty || "");
+
         }
 
         // ✅ TRIP
@@ -470,8 +478,24 @@ const DayEntryScreen = ({
     /* ---------------- ATTACHMENT ---------------- */
 
     const pickDocument = async () => {
-        const res = await pick({ allowMultiSelection: false });
-        setAttachment(res[0]);
+        console.log("pickDocument called");
+        if (isPicking) return;
+
+        try {
+            setIsPicking(true);
+
+            const res = await pick({
+                allowMultiSelection: false,
+            });
+
+            if (res?.length) {
+                setAttachment(res[0]);
+            }
+        } catch (e) {
+            console.log(e);
+        } finally {
+            setIsPicking(false);
+        }
     };
 
     /* ---------------- SAVE ---------------- */
@@ -502,7 +526,7 @@ const DayEntryScreen = ({
             // date: editData?.date || date || new Date().toLocaleDateString("en-CA"),
             date:
                 !editData && creationType === "manual" && isTrip
-                    ? startDate
+                    ? startDate.toLocaleDateString("en-CA")
                     : editData?.date || date || new Date().toLocaleDateString("en-CA"),
             typeOfDayId: Number(typeOfDay),
             isCommissionDay,
@@ -525,6 +549,8 @@ const DayEntryScreen = ({
 
         if (!isTrip) {
             payload.state = stateId;
+            payload.originCity = city;
+            payload.originCounty = county;
             // payload.date = new Date(date).toLocaleDateString("en-CA");
             // payload.date = new Date(date).toLocaleDateString("en-CA").split("T")[0];
         }
@@ -691,6 +717,32 @@ const DayEntryScreen = ({
                         }
                         {!isTrip && (
                             <>
+                                <FieldLabel title="Location (City)" />
+
+                                <TextInput
+                                    placeholder="Enter City"
+                                    value={city}
+                                    onChangeText={(text) => {
+                                        setCity(text);
+                                        searchPlaces(text, setEndSuggestions);
+                                    }}
+                                    style={styles.input}
+                                    placeholderTextColor="#777"
+                                    editable={editData?.creationType !== "automatic"}
+                                />
+                                <FieldLabel title="Location (County)" />
+
+                                <TextInput
+                                    placeholder="Enter County"
+                                    value={county}
+                                    onChangeText={(text) => {
+                                        setCounty(text);
+                                        searchPlaces(text, setEndSuggestions);
+                                    }}
+                                    style={styles.input}
+                                    placeholderTextColor="#777"
+                                    editable={editData?.creationType !== "automatic"}
+                                />
                                 <FieldLabel title="Location (State)" />
 
                                 <TextInput
@@ -713,12 +765,25 @@ const DayEntryScreen = ({
                                                 onPress={async () => {
                                                     const details = await getPlaceDetails(item.place_id);
 
-                                                    const state =
-                                                        details.address_components.find((c) =>
-                                                            c.types.includes("administrative_area_level_1")
-                                                        )?.long_name || item.description;
+                                                    const city =
+                                                        details.address_components.find(c =>
+                                                            c.types.includes("locality")
+                                                        )?.long_name || "";
 
-                                                    setStateId(state);      // ✅ MAIN FIX
+                                                    const county =
+                                                        details.address_components.find(c =>
+                                                            c.types.includes("administrative_area_level_2")
+                                                        )?.long_name || "";
+
+                                                    const state =
+                                                        details.address_components.find(c =>
+                                                            c.types.includes("administrative_area_level_1")
+                                                        )?.long_name || "";
+
+                                                    setCity(city);
+                                                    setCounty(county);
+                                                    setStateId(state);
+
                                                     setEndSuggestions([]);
                                                 }}
                                                 style={styles.suggestionItem}
@@ -1146,13 +1211,31 @@ const DayEntryScreen = ({
                         />
 
                         <FieldLabel title="Attachment" />
-                        <TouchableOpacity style={styles.attachBtn} onPress={pickDocument}>
+                        <TouchableOpacity disabled={isPicking} style={styles.attachBtn} onPress={pickDocument}>
                             <Text style={{ color: colors.primary }}>Add Attachment</Text>
                         </TouchableOpacity>
 
                         {attachment && (
-                            <Text style={styles.fileName}>{attachment.name}</Text>
+                            <>
+                                <Image
+                                    source={{ uri: attachment.uri || attachment.signedUrl }}
+                                    style={{
+                                        width: 80,
+                                        height: 80,
+                                        borderRadius: 8,
+                                        marginTop: 10,
+                                    }}
+                                />
+
+                                <Text style={styles.fileName}>
+                                    {attachment.name || attachment.fileName}
+                                </Text>
+                            </>
                         )}
+
+                        {/* // {attachment && (
+                        //     <Text style={styles.fileName}>{attachment.name}</Text>
+                        // )} */}
                     </View>
 
                     <TouchableOpacity

@@ -889,7 +889,7 @@ private fun scheduleMidnightMissingDay() {
             remoteLocation = "",
             state = null,
             isUpdated = false,
-    
+            // originCity = toEnglishSafe(previousCity),
             originCity = toEnglishSafe(originCityForStateTrip),
             originState = toEnglishSafe(previousStateName),
             originLat = previousLat,
@@ -1184,6 +1184,7 @@ if (!stateChanged && !timePassed) {
                             result.getJSONArray("address_components")
 
                         var city = ""
+                        var county = ""
                         var state = ""
 
                         for (i in 0 until components.length()) {
@@ -1201,6 +1202,10 @@ if (!stateChanged && !timePassed) {
                                     "locality" -> {
                                         city =
                                             component.getString("long_name")
+                                    }
+
+                                    "administrative_area_level_2" -> {
+                                        county = component.getString("long_name")
                                     }
 
                                     "administrative_area_level_1" -> {
@@ -1221,6 +1226,7 @@ if (!stateChanged && !timePassed) {
                             lat,
                             lng,
                             city,
+                            county,
                             state,
                             address
                         )
@@ -1237,6 +1243,7 @@ if (!stateChanged && !timePassed) {
     lat: Double,
     lng: Double,
     city: String,
+    county: String,
     state: String,
     address: String
     ) 
@@ -1248,6 +1255,7 @@ if (!stateChanged && !timePassed) {
             put("longitude", lng)
             put("state", state)
             put("city", city)
+            put("county", county)
             put("address", address)
         }
 
@@ -1554,6 +1562,11 @@ private fun sendEntryFormData(
     // ===== MISSING DAY =====
     if (kind == "missing") {
         body.addFormDataPart("state", s(state))
+        body.addFormDataPart("originCity", s(originCity))
+        body.addFormDataPart("destinationCity", s(destinationCity))
+
+        body.addFormDataPart("originCounty", s(originCounty))
+        body.addFormDataPart("destinationCounty", s(destinationCounty))
     }
 
     // ===== TRIP =====
@@ -1784,13 +1797,13 @@ fun createMissingDay() {
         state = currentStateName,
 
         // trip fields empty
-        originCity = null,
+        originCity = previousCity,
         originState = null,
         originLat = null,
         originLng = null,
-        originCounty = null,
-        destinationCounty = null,
-        destinationCity = null,
+        originCounty = previousCountyName,
+        destinationCounty = previousCountyName,
+        destinationCity = previousCity,
         destinationState = null,
         destinationLat = null,
         destinationLng = null
@@ -2514,6 +2527,7 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
     val originLatSafe = previousLat
     val originLngSafe = previousLng
     val originCitySafe = previousCityName.ifBlank { previousCity }
+    // val originCitySafe = previousCity
     val originEnterTimeSafe = previousEnterTime
     val tripStartTime =
     if (previousCityEnterTime > 0L)

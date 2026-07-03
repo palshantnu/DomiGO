@@ -104473,31 +104473,43 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         this.subscriptions.push(locationEventEmitter.addListener('onCityChangeDebug', function (data) {
           console.log('🐛 CITY CHANGE DEBUG BODY:', JSON.stringify(data, null, 2));
         }));
-        this.subscriptions.push(locationEventEmitter.addListener('onFakeGpsDetected', function () {
-          console.log("🚨 FAKE GPS DETECTED");
-          _reactNative.Alert.alert('Fake GPS Detected', 'Please disable Fake GPS applications to continue using Domigo.', [{
-            text: 'Exit App',
-            onPress: function () {
-              var _onPress = (0, _asyncToGenerator2.default)(function* () {
-                try {
-                  // stop native tracking
-                  yield _reactNative.NativeModules.LocationTracker.stopLocationTracking();
-                } catch (e) {
-                  console.log(e);
-                }
 
-                // app close
-                _reactNative.BackHandler.exitApp();
-              });
-              function onPress() {
-                return _onPress.apply(this, arguments);
-              }
-              return onPress;
-            }()
-          }], {
-            cancelable: false
-          });
-        }));
+        //     this.subscriptions.push(
+        //   locationEventEmitter.addListener(
+        //     'onFakeGpsDetected',
+        //     () => {
+
+        //       console.log("🚨 FAKE GPS DETECTED");
+
+        //       Alert.alert(
+        //         'Fake GPS Detected',
+        //         'Please disable Fake GPS applications to continue using Domigo.',
+        //         [
+        //           {
+        //             text: 'Exit App',
+        //             onPress: async () => {
+
+        //               try {
+
+        //                 // stop native tracking
+        //                 await NativeModules.LocationTracker.stopLocationTracking();
+
+        //               } catch (e) {
+        //                 console.log(e);
+        //               }
+
+        //               // app close
+        //               BackHandler.exitApp();
+        //             }
+        //           }
+        //         ],
+        //         {
+        //           cancelable: false
+        //         }
+        //       );
+        //     }
+        //   )
+        // );
 
         //new changes
         this.subscriptions.push(locationEventEmitter.addListener('onTripApiResponse', function (data) {
@@ -163654,7 +163666,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     Object.values(data).forEach(function (dayItems) {
       if (!Array.isArray(dayItems)) return;
       dayItems.forEach(function (item) {
-        console.log("kind:", item.kind, "startDate:", item.startDate, "grouped:", getBusinessDateKey(item));
+        // console.log(
+        //   "kind:",
+        //   item.kind,
+        //   "startDate:",
+        //   item.startDate,
+        //   "grouped:",
+        //   getBusinessDateKey(item)
+        // );
         var key = getBusinessDateKey(item);
         if (!grouped[key]) {
           grouped[key] = [];
@@ -164060,7 +164079,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     var fixedYearWiseTimeline = (0, _react.useMemo)(function () {
       return regroupByBusinessDate(yearWiseTimeline);
     }, [yearWiseTimeline]);
-    console.log(fixedWeekWiseTimeline);
+
+    // console.log(fixedWeekWiseTimeline)
     // console.log(fixedYearWiseTimeline)
 
     // const getCurrentWeekDates = () => {
@@ -164105,13 +164125,20 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       var format = function format(d) {
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       };
-      console.log("Current week =>", format(startOfWeek), format(endOfWeek));
+
+      // console.log(
+      //   "Current week =>",
+      //   format(startOfWeek),
+      //   format(endOfWeek)
+      // );
+
       return {
         start: format(startOfWeek),
         end: format(endOfWeek)
       };
     };
-    console.log("API week range", getCurrentWeekDates());
+
+    // console.log("API week range", getCurrentWeekDates());
     console.log("Device timezone", Intl.DateTimeFormat().resolvedOptions().timeZone);
 
     // useEffect(() => {
@@ -164763,7 +164790,18 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           month: "short"
         })}`;
       };
-      console.log("date:", dateStr, "day:", date.getDay(), "week:", format(start), "-", format(end));
+
+      // console.log(
+      //   "date:",
+      //   dateStr,
+      //   "day:",
+      //   date.getDay(),
+      //   "week:",
+      //   format(start),
+      //   "-",
+      //   format(end)
+      // );
+
       return `${format(start)} - ${format(end)}`;
     };
     var normalizedYearLocation = (0, _react.useMemo)(function () {
@@ -164873,7 +164911,12 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     var regulatoryCalendar = (0, _react.useMemo)(function () {
       return getWeekCalendarData(fixedWeekWiseTimeline);
     }, [weekWiseTimeline, selectedFilter]);
-    console.log("Week Keys =>", Object.keys(fixedWeekWiseTimeline));
+
+    // console.log(
+    //   "Week Keys =>",
+    //   Object.keys(fixedWeekWiseTimeline)
+    // );
+
     console.log('regulatoryCalendar', regulatoryCalendar);
     // const weekLocationData = normalizeLocationData(weekWiseLocation);
     var weekLocationData = (0, _react.useMemo)(function () {

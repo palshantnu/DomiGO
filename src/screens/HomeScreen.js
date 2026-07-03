@@ -120,6 +120,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                 longitude: coords.longitude,
                 state: locationDetails.state,
                 city: locationDetails.city,
+                county: locationDetails.county,
                 address: locationDetails.address,
             };
 
@@ -217,78 +218,78 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
         });
     };
 
-const canRefreshLocation = async () => {
-    try {
-        const today = new Date().toISOString().split("T")[0];
+    const canRefreshLocation = async () => {
+        try {
+            const today = new Date().toISOString().split("T")[0];
 
-        const storedDate = await AsyncStorage.getItem(
-            REFRESH_DATE_KEY
-        );
+            const storedDate = await AsyncStorage.getItem(
+                REFRESH_DATE_KEY
+            );
 
-        let count = parseInt(
-            (
-                await AsyncStorage.getItem(
-                    REFRESH_COUNT_KEY
-                )
-            ) || "0",
-            10
-        );
+            let count = parseInt(
+                (
+                    await AsyncStorage.getItem(
+                        REFRESH_COUNT_KEY
+                    )
+                ) || "0",
+                10
+            );
 
-        // New day => reset count
-        if (storedDate !== today) {
-            await AsyncStorage.setItem(
-                REFRESH_DATE_KEY,
-                today
+            // New day => reset count
+            if (storedDate !== today) {
+                await AsyncStorage.setItem(
+                    REFRESH_DATE_KEY,
+                    today
+                );
+
+                await AsyncStorage.setItem(
+                    REFRESH_COUNT_KEY,
+                    "0"
+                );
+
+                count = 0;
+            }
+
+            if (count >= MAX_DAILY_REFRESH) {
+                return false;
+            }
+
+            return true;
+
+        } catch (error) {
+            console.log("canRefreshLocation error", error);
+            return false;
+        }
+    };
+
+    const increaseRefreshCount = async () => {
+        try {
+            const count = parseInt(
+                (
+                    await AsyncStorage.getItem(
+                        REFRESH_COUNT_KEY
+                    )
+                ) || "0",
+                10
             );
 
             await AsyncStorage.setItem(
                 REFRESH_COUNT_KEY,
-                "0"
+                String(count + 1)
             );
 
-            count = 0;
+            console.log(
+                "Refresh Count Updated =>",
+                count + 1
+            );
+
+        } catch (error) {
+            console.log(
+                "increaseRefreshCount error",
+                error
+            );
         }
-
-        if (count >= MAX_DAILY_REFRESH) {
-            return false;
-        }
-
-        return true;
-
-    } catch (error) {
-        console.log("canRefreshLocation error", error);
-        return false;
-    }
-};
-
-const increaseRefreshCount = async () => {
-    try {
-        const count = parseInt(
-            (
-                await AsyncStorage.getItem(
-                    REFRESH_COUNT_KEY
-                )
-            ) || "0",
-            10
-        );
-
-        await AsyncStorage.setItem(
-            REFRESH_COUNT_KEY,
-            String(count + 1)
-        );
-
-        console.log(
-            "Refresh Count Updated =>",
-            count + 1
-        );
-
-    } catch (error) {
-        console.log(
-            "increaseRefreshCount error",
-            error
-        );
-    }
-};
+    };
 
 
     const getAddressFromLatLong = async (lat, lng) => {
@@ -302,6 +303,7 @@ const increaseRefreshCount = async () => {
                 return {
                     address: "Unknown",
                     city: "",
+                    county: "",
                     state: "",
                 };
             }
@@ -309,11 +311,16 @@ const increaseRefreshCount = async () => {
 
             let city = "";
             let state = "";
+            let county = "";
             let address = result?.formatted_address || "";
 
             result.address_components.forEach(component => {
                 if (component.types.includes("locality")) {
                     city = component.long_name;
+                }
+
+                if (component.types.includes("administrative_area_level_2")) {
+                    county = component.long_name;
                 }
 
                 if (component.types.includes("administrative_area_level_1")) {
@@ -332,6 +339,7 @@ const increaseRefreshCount = async () => {
             return {
                 address,
                 city,
+                county,
                 state,
             };
 
@@ -340,6 +348,7 @@ const increaseRefreshCount = async () => {
             return {
                 address: "Unknown",
                 city: "",
+                county:"",
                 state: "",
             };
         }
@@ -435,28 +444,28 @@ const increaseRefreshCount = async () => {
     //         return 0;
     //     });
     // }, [stateWiseResidency, userData]);
-const sortedStateResidency = React.useMemo(() => {
-    if (!stateWiseResidency) return [];
+    const sortedStateResidency = React.useMemo(() => {
+        if (!stateWiseResidency) return [];
 
-    return [...stateWiseResidency].sort((a, b) => {
-        const aType = locationMap[a.state];
-        const bType = locationMap[b.state];
+        return [...stateWiseResidency].sort((a, b) => {
+            const aType = locationMap[a.state];
+            const bType = locationMap[b.state];
 
-        // 1. Primary (blue home icon) first
-        if (aType === "primary" && bType !== "primary") return -1;
-        if (bType === "primary" && aType !== "primary") return 1;
+            // 1. Primary (blue home icon) first
+            if (aType === "primary" && bType !== "primary") return -1;
+            if (bType === "primary" && aType !== "primary") return 1;
 
-        // 2. Other home icon cards (secondary/other)
-        const aHome = !!aType;
-        const bHome = !!bType;
+            // 2. Other home icon cards (secondary/other)
+            const aHome = !!aType;
+            const bHome = !!bType;
 
-        if (aHome && !bHome) return -1;
-        if (bHome && !aHome) return 1;
+            if (aHome && !bHome) return -1;
+            if (bHome && !aHome) return 1;
 
-        // 3. Remaining cards
-        return 0;
-    });
-}, [stateWiseResidency, userLocations]);
+            // 3. Remaining cards
+            return 0;
+        });
+    }, [stateWiseResidency, userLocations]);
 
 
 

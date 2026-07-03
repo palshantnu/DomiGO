@@ -189,6 +189,8 @@ export const updatePersonalInfoAction = (data) => (dispatch, getState) => new Pr
 
 export const ADDTRIP = (formData) => {
   console.log('FormData>>>>>>>>', formData);
+  console.log(typeof formData.date);
+  console.log(formData.date);
   return async (dispatch) => {
     dispatch({
       type: ADD_TRIP_REQUEST,
@@ -197,7 +199,45 @@ export const ADDTRIP = (formData) => {
     try {
       // console.log('hellooooo')
       // const response = await axiosinstance.post(EndPoints.addTrip, formData)
-      const response = await axiosinstance.post('trip-days', formData)
+      // const response = await axiosinstance.post('trip-days', formData)
+      const form = new FormData();
+
+      Object.keys(formData).forEach(key => {
+
+        if (key === "attachments") {
+
+          if (formData.attachments?.length) {
+
+            formData.attachments.forEach(file => {
+
+              form.append("attachments", {
+                uri: file.uri,
+                name: file.name,
+                type: file.type || "image/jpeg",
+              });
+
+            });
+
+          }
+
+        } else {
+
+          form.append(key, formData[key]);
+
+        }
+
+      });
+
+      const response = await axiosinstance.post(
+        "trip-days",
+        form,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Accept: "application/json",
+          },
+        }
+      );
       console.log('response', response);
       // console.log('hello')
       const responseJson = response.data;
@@ -240,6 +280,8 @@ export const ADDTRIP = (formData) => {
 }
 export const UPDATETRIP = (formData) => {
   console.log('FormData>>>>>>>>', formData);
+  // console.log(formData);
+  console.log('FormData>>>>>>>>,', formData.attachments);
   return async (dispatch) => {
     dispatch({
       type: UPDATE_TRIP_REQUEST,
@@ -248,8 +290,50 @@ export const UPDATETRIP = (formData) => {
     try {
       // const response = await axiosinstance.put(`${EndPoints.UpdateTrip}/${formData.id}`, formData)
       // const response = await axiosinstance.post('trip-days', formData)
-      console.log('helloooo');
-      const response = await axiosinstance.put(`${'trip-days'}/${formData.id}`, formData)
+      // console.log('helloooo');
+      // const response = await axiosinstance.put(`${'trip-days'}/${formData.id}`, formData)
+      const form = new FormData();
+
+      Object.keys(formData).forEach(key => {
+
+        if (key === "attachments") {
+
+          if (formData.attachments?.length) {
+
+            formData.attachments.forEach(file => {
+
+              if (file.uri) {
+
+                form.append("attachments", {
+                  uri: file.uri,
+                  name: file.name,
+                  type: file.type || "image/jpeg",
+                });
+
+              }
+
+            });
+
+          }
+
+        } else {
+
+          form.append(key, formData[key]);
+
+        }
+
+      });
+
+      const response = await axiosinstance.put(
+        `trip-days/${formData.id}`,
+        form,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Accept: "application/json"
+          }
+        }
+      );
       console.log('helloooo', response);
 
       const responseJson = response.data;
@@ -619,7 +703,7 @@ export function UPDATE_RESIDENCY_RECORD(id, payload) {
             type: payload.attachment.type || "image/jpeg",
             name: payload.attachment.name || "file.jpg"
           });
-        }  if (key !== "attachment") {
+        } if (key !== "attachment") {
           formData.append(key, payload[key]);
         }
         // else {
@@ -1540,8 +1624,8 @@ export const ADDUSERLOCATIONS = (formData) => {
   }
 }
 
-export const UPDATEUSERLOCATIONS = (formData,id) => {
-  console.log('formData',formData);
+export const UPDATEUSERLOCATIONS = (formData, id) => {
+  console.log('formData', formData);
   console.log("ID going:", id);
   return async (dispatch) => {
     dispatch({
