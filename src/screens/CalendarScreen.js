@@ -103,7 +103,7 @@ const formatDateLabel = (dateStr) => {
 
   return {
     formattedDate: `${String(d).padStart(2, "0")} ${["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m - 1]
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m - 1]
       }`,
     day: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][
       new Date(y, m - 1, d).getDay()
@@ -1930,6 +1930,28 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
               </View>
 
               <View style={styles.legendContainer}>
+
+                <View style={styles.rowContainer}>
+
+                  <View style={styles.legendItem}>
+                    <View style={[styles.dot, { backgroundColor: "#FF3B30" }]} />
+                    <Text style={styles.legendText}>Missing Location</Text>
+                  </View>
+
+                  <View style={styles.legendItem}>
+                    <View style={[styles.dot, { backgroundColor: "#FFCC00" }]} />
+                    <Text style={styles.legendText}>Missing Information</Text>
+                  </View>
+                </View>
+                <View style={styles.legendItem}>
+                  <View style={[styles.dot, { backgroundColor: "#007AFF" }]} />
+                  <Text style={styles.legendText}>Updated Information</Text>
+                </View>
+
+                <View style={styles.legendItem}>
+                  <View style={[styles.dot, { backgroundColor: "#9E9E9E" }]} />
+                  <Text style={styles.legendText}>Trips</Text>
+                </View>
                 {legendStates.map((state) => (
                   <View key={state} style={styles.legendItem}>
                     <View
@@ -1980,7 +2002,9 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                             ? "County Trips"
                             : selectedFilter === "CITY_CHANGE"
                               ? "City / Municipality Trips"
-                              : "Locations"
+                              : selectedFilter === "LOCATIONS"
+                                ? "Verified Locations"
+                                : "Alert Locations"
                     }
                   </Text>
 
@@ -2006,7 +2030,8 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                       { label: "State / Region Trips", value: "TRIP" },
                       { label: "County Trips", value: "COUNTY_CHANGE" },
                       { label: "City / Municipality Trips", value: "CITY_CHANGE" },
-                      { label: "Locations", value: "LOCATIONS" },
+                      { label: "Verified Locations", value: "LOCATIONS" },
+                      { label: "Alert Locations", value: "ALERT_LOCATIONS" },
                     ].map(item => (
                       <TouchableOpacity
                         key={item.value}
@@ -2248,7 +2273,9 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                             ? "County Trips"
                             : selectedFilter === "CITY_CHANGE"
                               ? "City / Municipality Trips"
-                              : "Locations"
+                              : selectedFilter === "LOCATIONS"
+                                ? "Verified Locations"
+                                : "Alert Locations"
                     }
                   </Text>
 
@@ -2274,7 +2301,8 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                       { label: "State / Region Trips", value: "TRIP" },
                       { label: "County Trips", value: "COUNTY_CHANGE" },
                       { label: "City / Municipality Trips", value: "CITY_CHANGE" },
-                      { label: "Locations", value: "LOCATIONS" },
+                      { label: "Verified Locations", value: "LOCATIONS" },
+                      { label: "Alert Locations", value: "ALERT_LOCATIONS" },
                     ].map(item => (
                       <TouchableOpacity
                         key={item.value}
@@ -2618,7 +2646,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',  // allows items to go to next line
     width: '100%',
     justifyContent: 'flex-start',
-    columnGap: 15,     // adds horizontal spacing between items
+    columnGap: 10,     // adds horizontal spacing between items
     rowGap: 10,        // adds vertical spacing between rows
   },
 

@@ -151,6 +151,13 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         private const val HOURS_API_INTERVAL = 4 * 60 * 60 * 1000L
         // private const val HOURS_API_INTERVAL = 30 * 60 * 1000L
         private const val PREF_LAST_HOURS_API_TIME = "pref_last_hours_api_time"
+        private const val PREF_PREV_COUNTY_NAME = "pref_prev_county_name"
+        private const val PREF_PREV_COUNTY_FIPS = "pref_prev_county_fips"
+        private const val PREF_PREV_COUNTY_ENTER = "pref_prev_county_enter"
+
+        private const val PREF_PREV_CITY_NAME = "pref_prev_city_name"
+        private const val PREF_PREV_CITY_FIPS = "pref_prev_city_fips"
+        private const val PREF_PREV_CITY_ENTER = "pref_prev_city_enter"
         
     }
 
@@ -1825,6 +1832,13 @@ private fun saveStateToPrefs() {
         putFloat(PREF_PREV_LNG, (previousLng ?: 0.0).toFloat())
         putLong(PREF_PREV_ENTER_TIME, previousEnterTime)
         putString(PREF_CURRENT_STATE, currentStateName)
+        putString(PREF_PREV_COUNTY_NAME, previousCountyName)
+        putString(PREF_PREV_COUNTY_FIPS, previousCountyFips)
+        putLong(PREF_PREV_COUNTY_ENTER, previousCountyEnterTime)
+
+        putString(PREF_PREV_CITY_NAME, previousCityName)
+        putString(PREF_PREV_CITY_FIPS, previousCityFips)
+        putLong(PREF_PREV_CITY_ENTER, previousCityEnterTime)
         putString(PREF_LAST_TRACKED_DATE,
             SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()))
         apply()
@@ -1843,6 +1857,13 @@ private fun loadStateFromPrefs() {
     previousEnterTime = prefs.getLong(PREF_PREV_ENTER_TIME, 0L)
     currentStateName = prefs.getString(PREF_CURRENT_STATE, "") ?: ""
     lastHoursApiTime = prefs.getLong(PREF_LAST_HOURS_API_TIME, 0L)
+    previousCountyName = prefs.getString(PREF_PREV_COUNTY_NAME, "") ?: ""
+    previousCountyFips = prefs.getString(PREF_PREV_COUNTY_FIPS, "") ?: ""
+    previousCountyEnterTime = prefs.getLong(PREF_PREV_COUNTY_ENTER, 0L)
+
+    previousCityName = prefs.getString(PREF_PREV_CITY_NAME, "") ?: ""
+    previousCityFips = prefs.getString(PREF_PREV_CITY_FIPS, "") ?: ""
+    previousCityEnterTime = prefs.getLong(PREF_PREV_CITY_ENTER, 0L)
     Log.d(TAG, "Loaded persisted state: code=$previousStateCode name=$previousStateName")
 }
 
@@ -2016,10 +2037,10 @@ private fun backfillMissingDays() {
                 notes = "", creationType = "automatic", remoteLocation = "",
                 isUpdated = false,
                 state = stateForBackfill,
-                originCity = null, originState = null, originLat = null, originLng = null,
-                destinationCity = null, destinationState = null, destinationLat = null, destinationLng = null,
-                originCounty = null,
-                destinationCounty = null,
+                originCity = previousCity, originState = null, originLat = null, originLng = null,
+                destinationCity = previousCity, destinationState = null, destinationLat = null, destinationLng = null,
+                originCounty = previousCountyName,
+                destinationCounty = previousCountyName,
             )
             cal.add(Calendar.DAY_OF_MONTH, 1)
         }

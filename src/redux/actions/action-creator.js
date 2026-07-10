@@ -86,7 +86,12 @@ import {
   GET_WEEK_WISE_LOCATION_SUCCESS,
   YEAR_WISE_LOCATION_FAILURE,
   GET_YEAR_WISE_LOCATION_SUCCESS,
-  WEEK_WISE_LOCATION_FAILURE
+  WEEK_WISE_LOCATION_FAILURE,
+  GET_WORK_LOCATION_TYPE_LIST_SUCCESS,
+  WORK_LOCATION_TYPE_LIST_FAILURE,
+  NATURE_OF_WORK_TYPE_LIST_FAILURE,
+  GET_NATURE_OF_WORK_TYPE_LIST_SUCCESS,
+  GET_WORK_ACTIVITY_TYPE_LIST_SUCCESS
 
 } from './action-types';
 import axiosinstance from '../../axios/axiosinstance';
@@ -665,6 +670,93 @@ export function GET_TRIP_TYPE_LIST() {
         payload: 'TRIP_TYPE_LIST_FAILURE',
       })
       console.log('catch error API TRIP_TYPE_LIST_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+export function GET_WORK_LOCATION_TYPE_LIST() {
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.get('type-of-work-location')
+      const responseJson = response.data;
+      // console.log('responseJson-=>', responseJson);
+
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_WORK_LOCATION_TYPE_LIST_SUCCESS,
+          payload: responseJson,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: WORK_LOCATION_TYPE_LIST_FAILURE,
+        payload: 'WORK_LOCATION_TYPE_LIST_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: WORK_LOCATION_TYPE_LIST_FAILURE,
+        payload: 'WORK_LOCATION_TYPE_LIST_FAILURE',
+      })
+      console.log('catch error API WORK_LOCATION_TYPE_LIST_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+export function GET_NATURE_OF_WORK_TYPE_LIST() {
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.get('nature-of-work')
+      const responseJson = response.data;
+      // console.log('responseJson-=>', responseJson);
+
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_NATURE_OF_WORK_TYPE_LIST_SUCCESS,
+          payload: responseJson,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: NATURE_OF_WORK_TYPE_LIST_FAILURE,
+        payload: 'NATURE_OF_WORK_TYPE_LIST_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: NATURE_OF_WORK_TYPE_LIST_FAILURE,
+        payload: 'NATURE_OF_WORK_TYPE_LIST_FAILURE',
+      })
+      console.log('catch error API NATURE_OF_WORK_TYPE_LIST_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+export function GET_WORK_ACTIVITY_TYPE_LIST() {
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.get('work-activity')
+      const responseJson = response.data;
+      // console.log('responseJson-=>', responseJson);
+
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_WORK_ACTIVITY_TYPE_LIST_SUCCESS,
+          payload: responseJson,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: WORK_ACTIVITY_TYPE_LIST_FAILURE,
+        payload: 'WORK_ACTIVITY_TYPE_LIST_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: WORK_ACTIVITY_TYPE_LIST_FAILURE,
+        payload: 'WORK_ACTIVITY_TYPE_LIST_FAILURE',
+      })
+      console.log('catch error API WORK_ACTIVITY_TYPE_LIST_FAILURE', e)
       return Promise.reject(CommonError)
     }
   }

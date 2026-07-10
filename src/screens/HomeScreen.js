@@ -444,28 +444,51 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
     //         return 0;
     //     });
     // }, [stateWiseResidency, userData]);
+    // const sortedStateResidency = React.useMemo(() => {
+    //     if (!stateWiseResidency) return [];
+
+    //     return [...stateWiseResidency].sort((a, b) => {
+    //         const aType = locationMap[a.state];
+    //         const bType = locationMap[b.state];
+
+    //         // 1. Primary (blue home icon) first
+    //         if (aType === "primary" && bType !== "primary") return -1;
+    //         if (bType === "primary" && aType !== "primary") return 1;
+
+    //         // 2. Other home icon cards (secondary/other)
+    //         const aHome = !!aType;
+    //         const bHome = !!bType;
+
+    //         if (aHome && !bHome) return -1;
+    //         if (bHome && !aHome) return 1;
+
+    //         // 3. Remaining cards
+    //         return 0;
+    //     });
+    // }, [stateWiseResidency, userLocations]);
+
     const sortedStateResidency = React.useMemo(() => {
-        if (!stateWiseResidency) return [];
+    if (!stateWiseResidency) return [];
 
-        return [...stateWiseResidency].sort((a, b) => {
-            const aType = locationMap[a.state];
-            const bType = locationMap[b.state];
+    return [...stateWiseResidency].sort((a, b) => {
+        const aType = locationMap[a.state];
+        const bType = locationMap[b.state];
 
-            // 1. Primary (blue home icon) first
-            if (aType === "primary" && bType !== "primary") return -1;
-            if (bType === "primary" && aType !== "primary") return 1;
+        // 1. Domicile (blue home)
+        if (aType === "primary" && bType !== "primary") return -1;
+        if (bType === "primary" && aType !== "primary") return 1;
 
-            // 2. Other home icon cards (secondary/other)
-            const aHome = !!aType;
-            const bHome = !!bType;
+        // 2. Abodes (black home)
+        const aAbode = aType && aType !== "primary";
+        const bAbode = bType && bType !== "primary";
 
-            if (aHome && !bHome) return -1;
-            if (bHome && !aHome) return 1;
+        if (aAbode && !bAbode) return -1;
+        if (bAbode && !aAbode) return 1;
 
-            // 3. Remaining cards
-            return 0;
-        });
-    }, [stateWiseResidency, userLocations]);
+        // 3. Remaining locations -> highest days first
+        return b.days - a.days;
+    });
+}, [stateWiseResidency, userLocations]);
 
 
 

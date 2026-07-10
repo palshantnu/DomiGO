@@ -28,6 +28,9 @@ import {
     GET_TRIP_TYPE_LIST,
     GET_TYPE_OF_DAY_LIST,
     GET_STATES_LIST,
+    GET_WORK_LOCATION_TYPE_LIST,
+    GET_NATURE_OF_WORK_TYPE_LIST,
+    GET_WORK_ACTIVITY_TYPE_LIST,
 } from "../redux/actions/action-creator";
 import DatePicker from "react-native-date-picker";
 
@@ -106,6 +109,9 @@ const getDefaultOption = (list, selectedId) => {
 const DayEntryScreen = ({
     tripModeList,
     tripTypeList,
+    workLocationTypeList,
+    natureOfWorkTypeList,
+    workActivityTypeList,
     typeOfDayList,
     statesList,
 }) => {
@@ -153,6 +159,10 @@ const DayEntryScreen = ({
 
     // 7️⃣ Trip Type
     const [tripType, setTripType] = useState(1);
+
+    const [workLocationType, setWorkLocationType] = useState(1);
+    const [natureOfWorkType, setNatureOfWorkType] = useState(1);
+    const [workActivityType, setWorkActivityType] = useState(1);
 
     const [creationType, setCreationType] = useState("manual");
 
@@ -219,6 +229,10 @@ const DayEntryScreen = ({
     useEffect(() => {
         dispatch(GET_TRIP_MODE_LIST());
         dispatch(GET_TRIP_TYPE_LIST());
+        dispatch(GET_TRIP_TYPE_LIST());
+        dispatch(GET_WORK_LOCATION_TYPE_LIST());
+        dispatch(GET_NATURE_OF_WORK_TYPE_LIST());
+        dispatch(GET_WORK_ACTIVITY_TYPE_LIST());
         dispatch(GET_TYPE_OF_DAY_LIST());
         dispatch(GET_STATES_LIST());
     }, []);
@@ -424,6 +438,9 @@ const DayEntryScreen = ({
         setHoursWorked(editData.remoteHours ? String(editData.remoteHours) : "");
         setTripType(editData.tripTypeId || 1);
         setTripMode(editData.tripModeId || 1);
+        setWorkLocationType(editData.typeOfWorkLocationId || 1);
+        setNatureOfWorkType(editData.natureOfWorkId || 1);
+        setWorkActivityType(editData.workActivityId || 1);
         setConfirmationNo(editData.confirmationNo || "");
         setVendor(editData.vendor || "");
         setHasProof(!!editData.hasProof);
@@ -501,6 +518,12 @@ const DayEntryScreen = ({
     /* ---------------- SAVE ---------------- */
 
     const handleSave = () => {
+
+        console.log({
+            workLocationType,
+            natureOfWorkType,
+            workActivityType,
+        });
         if (!typeOfDay) {
             CustomToast.show("Please select Type of Day");
             return;
@@ -536,6 +559,9 @@ const DayEntryScreen = ({
             isTravelling,
             tripTypeId: tripType,
             tripModeId: tripMode,
+            typeOfWorkLocationId: workLocationType,
+            natureOfWorkId: natureOfWorkType,
+            workActivityId: workActivityType,
             confirmationNo,
             vendor,
             hasProof,
@@ -1155,6 +1181,53 @@ const DayEntryScreen = ({
                                     boxStyles={styles.dropdownBox}
                                     inputStyles={styles.dropdownInput}
                                 />
+                                <FieldLabel title="Work Location Type" />
+                                <SelectList
+                                    data={workLocationTypeList?.map(i => ({
+                                        key: i.id,
+                                        value: i.name,
+                                    }))}
+                                    setSelected={setWorkLocationType}
+                                    save="key"
+                                    defaultOption={getDefaultOption(
+                                        workLocationTypeList,
+                                        workLocationType
+                                    )}
+                                    boxStyles={styles.dropdownBox}
+                                    inputStyles={styles.dropdownInput}
+                                />
+
+                                <FieldLabel title="Nature of Work" />
+                                <SelectList
+                                    data={natureOfWorkTypeList?.map(i => ({
+                                        key: i.id,
+                                        value: i.name,
+                                    }))}
+                                    setSelected={setNatureOfWorkType}
+                                    save="key"
+                                    defaultOption={getDefaultOption(
+                                        natureOfWorkTypeList,
+                                        natureOfWorkType
+                                    )}
+                                    boxStyles={styles.dropdownBox}
+                                    inputStyles={styles.dropdownInput}
+                                />
+
+                                <FieldLabel title="Work Activity Type" />
+                                <SelectList
+                                    data={workActivityTypeList?.map(i => ({
+                                        key: i.id,
+                                        value: i.name,
+                                    }))}
+                                    setSelected={setWorkActivityType}
+                                    save="key"
+                                    defaultOption={getDefaultOption(
+                                        workActivityTypeList,
+                                        workActivityType
+                                    )}
+                                    boxStyles={styles.dropdownBox}
+                                    inputStyles={styles.dropdownInput}
+                                />
                             </>
                         )}
 
@@ -1271,6 +1344,9 @@ const formatHeaderDate = (date) => {
 const mapStateToProps = (state) => ({
     tripModeList: state.common.tripModeList,
     tripTypeList: state.common.tripTypeList,
+    workLocationTypeList: state.common.workLocationTypeList,
+    natureOfWorkTypeList: state.common.natureOfWorkTypeList,
+    workActivityTypeList: state.common.workActivityTypeList,
     typeOfDayList: state.common.typeOfDayList,
     statesList: state.common.statesList,
 });
