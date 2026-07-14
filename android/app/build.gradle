@@ -86,7 +86,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 2
-        versionName "1.0.1"
+        versionName "1.1.1"
 
         missingDimensionStrategy "store", "play"
     }
@@ -121,7 +121,7 @@ android {
     applicationVariants.all { variant ->
         variant.outputs.all {
             // outputFileName = "Domigo-v${variant.versionName}-${variant.buildType.name}.apk"
-            outputFileName = "Domigo-27-06-26-${variant.buildType.name}.apk"
+            outputFileName = "Domigo-10-07-26-${variant.buildType.name}.apk"
         }
     }
 }

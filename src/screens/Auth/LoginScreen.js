@@ -82,7 +82,7 @@ const LoginScreen = ({ navigation, signIn }) => {
 
           CustomToast.show(response?.message ?? response?.error);
         } else {
-          console.log('response',response.token);
+          console.log('response', response.token);
           await AsyncStorage.setItem('DOMIGO_TRACKING_ENABLED', '1');
           DomigoTracker.startDomigoTracking(response.token);
           // const { started } = await DomigoTracker.startDomigoTracking();
@@ -100,12 +100,181 @@ const LoginScreen = ({ navigation, signIn }) => {
       });
   }
 
+  const signInWithGoogle = async () => {
+    try {
+      if (!netInfo) {
+        CustomToast.show("No internet connection");
+        return;
+      }
+
+      setButtonLoader(true);
+
+      // Check Play Services
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
+
+      // Google Sign In
+      const userInfo = await GoogleSignin.signIn();
+
+      console.log("Google UserInfo => ", userInfo);
+
+      if (!userInfo?.data?.idToken) {
+        throw new Error("Google idToken not found");
+      }
+
+      // Firebase Login
+      const googleCredential = auth.GoogleAuthProvider.credential(
+        userInfo.data.idToken
+      );
+
+      const userCredential = await auth().signInWithCredential(
+        googleCredential
+      );
+
+      const user = userCredential.user;
+
+      console.log("Firebase User => ", user);
+
+      // Backend Payload
+      const payload = {
+        email: user.email,
+        type: "social",
+        provider: "google",
+        providerId: user.uid, // <-- Backend se confirm kar lena
+        name: user.displayName || "",
+        deviceType: Platform.OS,
+        deviceToken: fcmtoken || "123456",
+      };
+
+      console.log("Social Login Payload => ", payload);
+
+      // Backend API
+      const response = await callLoginApi(signIn(payload));
+
+      console.log("Social Login Response => ", response);
+
+      if (response.message !== "Success") {
+        CustomToast.show(response?.message || "Login Failed");
+        return;
+      }
+
+      await AsyncStorage.setItem(
+        "DOMIGO_TRACKING_ENABLED",
+        "1"
+      );
+
+      DomigoTracker.startDomigoTracking(response.token);
+
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Main" }],
+      });
+
+      CustomToast.show("Login Successfully");
+
+    } catch (error) {
+      console.log("Google Login Error => ", error);
+
+      CustomToast.show(
+        error?.message || "Google Sign-In failed"
+      );
+    } finally {
+      setButtonLoader(false);
+    }
+  };
+
+  const signInWithApple = async () => {
+    try {
+
+      if (!netInfo) {
+        CustomToast.show("No internet connection");
+        return;
+      }
+
+      setButtonLoader(true);
+
+      const appleAuthRequestResponse =
+        await appleAuth.performRequest({
+          requestedOperation: appleAuth.Operation.LOGIN,
+          requestedScopes: [
+            appleAuth.Scope.EMAIL,
+            appleAuth.Scope.FULL_NAME,
+          ],
+        });
+
+      const { identityToken, nonce } =
+        appleAuthRequestResponse;
+
+      if (!identityToken) {
+        throw new Error("No Apple identity token");
+      }
+
+      const appleCredential =
+        auth.AppleAuthProvider.credential(
+          identityToken,
+          nonce
+        );
+
+      const userCredential =
+        await auth().signInWithCredential(
+          appleCredential
+        );
+
+      const user = userCredential.user;
+
+      const payload = {
+        email: user.email,
+        type: "social",
+        provider: "apple",
+        providerId: user.uid,
+        name: user.displayName || "",
+        deviceType: Platform.OS,
+        deviceToken: fcmtoken || "123456",
+      };
+
+      const response = await callLoginApi(signIn(payload));
+
+      if (response.message !== "Success") {
+        CustomToast.show(response.message);
+        return;
+      }
+
+      await AsyncStorage.setItem(
+        "DOMIGO_TRACKING_ENABLED",
+        "1"
+      );
+
+      DomigoTracker.startDomigoTracking(response.token);
+
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Main" }],
+      });
+
+      CustomToast.show("Login Successfully");
+
+    } catch (error) {
+
+      console.log(error);
+
+      CustomToast.show(
+        error?.message || "Apple Login Failed"
+      );
+
+    } finally {
+
+      setButtonLoader(false);
+
+    }
+  };
+
 
   React.useEffect(() => {
     requestPermission()
     getToken()
   }, []);
-  
+
   async function requestPermission() {
     const authStatus = await messaging().requestPermission();
     console.log('Permission status:', authStatus);
@@ -126,153 +295,153 @@ const LoginScreen = ({ navigation, signIn }) => {
   }, []);
 
 
-  const signInWithGoogle = async () => {
-    try {
-      if (!netInfo) {
-        CustomToast.show("No internet connection");
-        return;
-      }
-  
-      setButtonLoader(true);
-  
-      await GoogleSignin.hasPlayServices({
-        showPlayServicesUpdateDialog: true,
-      });
-  
-      const userInfo = await GoogleSignin.signIn();
-  
-      console.log('Google userInfo 👉', userInfo);
-  
-      if (!userInfo.data.idToken) {
-        throw new Error('idToken not received from Google');
-      }
-  
-      const googleCredential =
-        auth.GoogleAuthProvider.credential(userInfo.data.idToken);
-  
-      const userCredential =
-        await auth().signInWithCredential(googleCredential);
-  
-      const firebaseToken = await userCredential.user.getIdToken();
-  
-      // await AsyncStorage.setItem('DOMIGO_TRACKING_ENABLED', '1');
-      // DomigoTracker.startDomigoTracking(firebaseToken);
-  
-      // navigation.reset({
-      //   index: 0,
-      //   routes: [{ name: "Main" }],
-      // });
-  
-      CustomToast.show("Google Login Success");
-    } catch (error) {
-      console.log("Google SignIn Error ❌", error);
-      CustomToast.show(error.message || "Google Sign-In failed");
-    } finally {
-      setButtonLoader(false);
-    }
-  };
-const signInWithApple = async () => {
-  try {
-    if (!netInfo) {
-      CustomToast.show("No internet connection");
-      return;
-    }
+  // const signInWithGoogle = async () => {
+  //   try {
+  //     if (!netInfo) {
+  //       CustomToast.show("No internet connection");
+  //       return;
+  //     }
 
-    setButtonLoader(true);
+  //     setButtonLoader(true);
 
-    // Perform Apple sign-in request
-    const appleAuthRequestResponse = await appleAuth.performRequest({
-      requestedOperation: appleAuth.Operation.LOGIN,
-      requestedScopes: [
-        appleAuth.Scope.EMAIL,
-        appleAuth.Scope.FULL_NAME,
-      ],
-    });
+  //     await GoogleSignin.hasPlayServices({
+  //       showPlayServicesUpdateDialog: true,
+  //     });
 
-    const { identityToken, nonce } = appleAuthRequestResponse;
+  //     const userInfo = await GoogleSignin.signIn();
 
-    if (!identityToken) {
-      throw new Error("Apple Sign-In failed - no identity token");
-    }
+  //     console.log('Google userInfo 👉', userInfo);
 
-    // Create Firebase credential with the nonce
-    const appleCredential = auth.AppleAuthProvider.credential(
-      identityToken,
-      nonce
-    );
+  //     if (!userInfo.data.idToken) {
+  //       throw new Error('idToken not received from Google');
+  //     }
 
-    // Sign in to Firebase
-    const userCredential = await auth().signInWithCredential(appleCredential);
-    const firebaseToken = await userCredential.user.getIdToken();
+  //     const googleCredential =
+  //       auth.GoogleAuthProvider.credential(userInfo.data.idToken);
 
-    console.log("Apple User:", userCredential.user);
+  //     const userCredential =
+  //       await auth().signInWithCredential(googleCredential);
 
-    // Here you can call your backend API with the firebaseToken
-    // For example:
-    // const response = await callLoginApi(signIn({ token: firebaseToken, provider: 'apple' }));
-    
-    // await AsyncStorage.setItem('DOMIGO_TRACKING_ENABLED', '1');
-    // DomigoTracker.startDomigoTracking(firebaseToken);
+  //     const firebaseToken = await userCredential.user.getIdToken();
 
-    // navigation.reset({
-    //   index: 0,
-    //   routes: [{ name: "Main" }],
-    // });
+  //     // await AsyncStorage.setItem('DOMIGO_TRACKING_ENABLED', '1');
+  //     // DomigoTracker.startDomigoTracking(firebaseToken);
 
-    CustomToast.show("Apple Login Success");
+  //     // navigation.reset({
+  //     //   index: 0,
+  //     //   routes: [{ name: "Main" }],
+  //     // });
 
-  } catch (error) {
-    console.log("Apple SignIn Error ❌", error);
-    
-    if (error.code === 'auth/unknown') {
-      CustomToast.show("Apple Sign-In configuration issue");
-    } else {
-      CustomToast.show(error.message || "Apple Sign-In failed");
-    }
-  } finally {
-    setButtonLoader(false);
-  }
-};
+  //     CustomToast.show("Google Login Success");
+  //   } catch (error) {
+  //     console.log("Google SignIn Error ❌", error);
+  //     CustomToast.show(error.message || "Google Sign-In failed");
+  //   } finally {
+  //     setButtonLoader(false);
+  //   }
+  // };
+  // const signInWithApple = async () => {
+  //   try {
+  //     if (!netInfo) {
+  //       CustomToast.show("No internet connection");
+  //       return;
+  //     }
+
+  //     setButtonLoader(true);
+
+  //     // Perform Apple sign-in request
+  //     const appleAuthRequestResponse = await appleAuth.performRequest({
+  //       requestedOperation: appleAuth.Operation.LOGIN,
+  //       requestedScopes: [
+  //         appleAuth.Scope.EMAIL,
+  //         appleAuth.Scope.FULL_NAME,
+  //       ],
+  //     });
+
+  //     const { identityToken, nonce } = appleAuthRequestResponse;
+
+  //     if (!identityToken) {
+  //       throw new Error("Apple Sign-In failed - no identity token");
+  //     }
+
+  //     // Create Firebase credential with the nonce
+  //     const appleCredential = auth.AppleAuthProvider.credential(
+  //       identityToken,
+  //       nonce
+  //     );
+
+  //     // Sign in to Firebase
+  //     const userCredential = await auth().signInWithCredential(appleCredential);
+  //     const firebaseToken = await userCredential.user.getIdToken();
+
+  //     console.log("Apple User:", userCredential.user);
+
+  //     // Here you can call your backend API with the firebaseToken
+  //     // For example:
+  //     // const response = await callLoginApi(signIn({ token: firebaseToken, provider: 'apple' }));
+
+  //     // await AsyncStorage.setItem('DOMIGO_TRACKING_ENABLED', '1');
+  //     // DomigoTracker.startDomigoTracking(firebaseToken);
+
+  //     // navigation.reset({
+  //     //   index: 0,
+  //     //   routes: [{ name: "Main" }],
+  //     // });
+
+  //     CustomToast.show("Apple Login Success");
+
+  //   } catch (error) {
+  //     console.log("Apple SignIn Error ❌", error);
+
+  //     if (error.code === 'auth/unknown') {
+  //       CustomToast.show("Apple Sign-In configuration issue");
+  //     } else {
+  //       CustomToast.show(error.message || "Apple Sign-In failed");
+  //     }
+  //   } finally {
+  //     setButtonLoader(false);
+  //   }
+  // };
 
   // const signInWithGoogle = async () => {
   //   if (!netInfo) {
   //     CustomToast.show("No internet connection");
   //     return;
   //   }
-  
+
   //   try {
   //     setButtonLoader(true);
-  
+
   //     // Android play services check
   //     await GoogleSignin.hasPlayServices({
   //       showPlayServicesUpdateDialog: true,
   //     });
-  
+
   //     // Google sign-in
   //     const { idToken } = await GoogleSignin.signIn();
-  
+
   //     // Firebase credential
   //     const googleCredential =
   //       auth.GoogleAuthProvider.credential(idToken);
-  
+
   //     // Firebase login
   //     const userCredential = await auth().signInWithCredential(
   //       googleCredential
   //     );
-  
+
   //     console.log('Google User:', userCredential.user);
-  
+
   //     // OPTIONAL: token agar backend chahiye
   //     const firebaseToken = await userCredential.user.getIdToken();
-  
+
   //     await AsyncStorage.setItem('DOMIGO_TRACKING_ENABLED', '1');
   //     DomigoTracker.startDomigoTracking(firebaseToken);
-  
+
   //     navigation.reset({
   //       index: 0,
   //       routes: [{ name: "Main" }],
   //     });
-  
+
   //     CustomToast.show("Login Successfully");
   //   } catch (error) {
   //     console.log('Google SignIn Error:', error);
@@ -281,7 +450,7 @@ const signInWithApple = async () => {
   //     setButtonLoader(false);
   //   }
   // };
-  
+
 
   return (
     <LinearGradient

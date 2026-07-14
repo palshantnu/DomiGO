@@ -62,7 +62,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
         "daily_location_refresh_date";
     // console.log('stateWiseResidency>>>>', stateWiseResidency);
     // console.log('complianceScore>>>>', complianceScore);
-    // console.log('userData>>>>', userData);
+    console.log('userData>>>>', userData);
     // console.log('userLocations>>>>', userLocations);
 
     const dispatch = useDispatch();
@@ -348,7 +348,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
             return {
                 address: "Unknown",
                 city: "",
-                county:"",
+                county: "",
                 state: "",
             };
         }
@@ -468,27 +468,27 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
     // }, [stateWiseResidency, userLocations]);
 
     const sortedStateResidency = React.useMemo(() => {
-    if (!stateWiseResidency) return [];
+        if (!stateWiseResidency) return [];
 
-    return [...stateWiseResidency].sort((a, b) => {
-        const aType = locationMap[a.state];
-        const bType = locationMap[b.state];
+        return [...stateWiseResidency].sort((a, b) => {
+            const aType = locationMap[a.state];
+            const bType = locationMap[b.state];
 
-        // 1. Domicile (blue home)
-        if (aType === "primary" && bType !== "primary") return -1;
-        if (bType === "primary" && aType !== "primary") return 1;
+            // 1. Domicile (blue home)
+            if (aType === "primary" && bType !== "primary") return -1;
+            if (bType === "primary" && aType !== "primary") return 1;
 
-        // 2. Abodes (black home)
-        const aAbode = aType && aType !== "primary";
-        const bAbode = bType && bType !== "primary";
+            // 2. Abodes (black home)
+            const aAbode = aType && aType !== "primary";
+            const bAbode = bType && bType !== "primary";
 
-        if (aAbode && !bAbode) return -1;
-        if (bAbode && !aAbode) return 1;
+            if (aAbode && !bAbode) return -1;
+            if (bAbode && !aAbode) return 1;
 
-        // 3. Remaining locations -> highest days first
-        return b.days - a.days;
-    });
-}, [stateWiseResidency, userLocations]);
+            // 3. Remaining locations -> highest days first
+            return b.days - a.days;
+        });
+    }, [stateWiseResidency, userLocations]);
 
 
 
@@ -919,6 +919,15 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                                             screen: 'ProfileManagement',
                                         });
                                     }}
+                                    // onPress={() => {
+                                    //     navigation.navigate("Settings", {
+                                    //         screen: "AddTertiaryLocation",
+                                    //         params: {
+                                    //             mode: "add",
+                                    //             type: "primary",
+                                    //         },
+                                    //     });
+                                    // }}
                                 >
                                     <Text style={styles.modalButtonText}>
                                         Add Now

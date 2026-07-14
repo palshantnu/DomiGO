@@ -73,7 +73,7 @@ function MainTabs() {
               {route.name == 'Dashboard' ? <ICON_HOME height={24} width={24} />
                 : route.name == 'Calendar' ? <ICON_CALENDAR height={24} width={24} />
                   : route.name == 'AddTripNavigation' ? <ICON_ADD height={30} width={30} />
-                  // : route.name == 'AddTripNavigation' ? <Icon name='arrow-back-circle-outline' size={32} color="#29A0DD" />
+                    // : route.name == 'AddTripNavigation' ? <Icon name='arrow-back-circle-outline' size={32} color="#29A0DD" />
                     : route.name == 'Alerts' ? <ICON_NOTIFICATION height={24} width={24} />
                       : route.name == 'Settings' ? <ICON_SETTINGS height={24} width={24} />
                         : null}
@@ -106,7 +106,17 @@ function MainTabs() {
       /> */}
 
       <Tab.Screen name="Alerts" component={AlertsScreen} />
-      <Tab.Screen name="Settings" component={SettingsNavigation} />
+      <Tab.Screen name="Settings" component={SettingsNavigation}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+
+            navigation.navigate("Settings", {
+              screen: "SettingsScreen", // <-- SettingsNavigation ki initial screen
+            });
+          },
+        })}
+      />
     </Tab.Navigator>
   );
 }
@@ -185,15 +195,15 @@ const RootNavigator = (props) => {
         options={{ headerShown: false }}
       />
       <Stack.Screen
-                name="ReportsExport"
-                component={ReportsExportScreen}
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="DayEntryScreen"
-                component={DayEntryScreen}
-                options={{ headerShown: false }}
-              />
+        name="ReportsExport"
+        component={ReportsExportScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="DayEntryScreen"
+        component={DayEntryScreen}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 }

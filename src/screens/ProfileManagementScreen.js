@@ -389,6 +389,17 @@ const ProfileManagementScreen = ({
                   setValue={setAddress}
                 />
 
+                {/* <AddressAutoFill
+                  apiKey={GOOGLE_KEY}
+                  value={address}
+                  onSelect={(data) => {
+                    setAddress(data.address);
+                    setCity(data.city);
+                    setStateName(data.state);
+                    setCountry(data.country);
+                  }}
+                /> */}
+
                 {/* <GoogleAutoComplete
                 placeholder="Select Country"
                 apiKey={GOOGLE_KEY}

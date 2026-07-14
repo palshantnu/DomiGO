@@ -405,7 +405,7 @@ const SignupScreen = ({ navigation, signUp }) => {
         <Text style={styles.orText}>or Sign in with</Text>
 
 
-        <View style={styles.socialContainer}>
+        {/* <View style={styles.socialContainer}>
           <TouchableOpacity>
             <Image
               source={require("../../assets/image/google.png")}
@@ -424,7 +424,7 @@ const SignupScreen = ({ navigation, signUp }) => {
               style={styles.socialIcon}
             />
           </TouchableOpacity>
-        </View>
+        </View> */}
 
 
         <Text style={styles.footerText}>

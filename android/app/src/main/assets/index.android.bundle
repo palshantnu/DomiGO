@@ -110852,8 +110852,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.UPDATE_STATE_THRESHOLD_FAILURE = exports.UPDATE_PERSONAL_DATA = exports.UPDATE_MISSINGDAY_SUCCESS = exports.UPDATE_MISSINGDAY_REQUEST = exports.UPDATE_MISSINGDAY_FAILURE = exports.TYPE_OF_DAY_LIST_REQUEST = exports.TYPE_OF_DAY_LIST_FAILURE = exports.TRIP_TYPE_LIST_FAILURE = exports.TRIP_SUMMARY_DETAILS_FAILURE = exports.TRIP_MODE_LIST_SUCCESS = exports.TRIP_MODE_LIST_REQUEST = exports.TRIP_MODE_LIST_FAILURE = exports.TRIP_LIST_SUCCESS = exports.TRIP_LIST_REQUEST = exports.TRIP_LIST_FAILURE = exports.TRIP_DETAILS_FAILURE = exports.SUPPORT_CONTACT_REQUEST = exports.SUPPORT_CONTACT_FAILURE = exports.STATE_WISE_TRIPS_FAILURE = exports.STATE_WISE_RESIDENCY_FAILURE = exports.STATE_WISE_METRICS_FAILURE = exports.STATES_LIST_REQUEST = exports.STATES_LIST_FAILURE = exports.SIGN_UP_SUCCESS = exports.SIGN_UP_REQUEST = exports.SIGN_UP_FAILURE = exports.SIGN_IN_SUCCESS = exports.SIGN_IN_REQUEST = exports.SIGN_IN_FAILURE = exports.SET_TRIAL_START = exports.SET_SUBSCRIPTION_PRODUCTS = exports.SET_SUBSCRIPTION_PLAN = exports.SET_SUBSCRIPTION_LOADING = exports.SET_SUBSCRIPTION_ERROR = exports.SET_APP_LANGUAGE = exports.RESIDENCY_DOC_LIST_SUCCESS = exports.RESIDENCY_DOC_LIST_REQUEST = exports.RESIDENCY_DOC_LIST_FAILURE = exports.RESIDENCY_DOC_DETAILS_FAILURE = exports.REPORTS_REQUEST = exports.REPORTS_FAILURE = exports.PRIVACY_POLICY_REQUEST = exports.PRIVACY_POLICY_FAILURE = exports.NOTIFICATION_FAILURE = exports.MONTH_WISE_TIMELINE_FAILURE = exports.MISSING_ACTIVITY_LIST_REQUEST = exports.MISSING_ACTIVITY_LIST_FAILURE = exports.LOGOUT_SUCCESS = exports.LOGOUT_REQUEST = exports.LOGOUT_FAILURE = exports.GET_YEAR_WISE_TIMELINE_SUCCESS = exports.GET_YEAR_WISE_LOCATION_SUCCESS = exports.GET_WEEK_WISE_TIMELINE_SUCCESS = exports.GET_WEEK_WISE_LOCATION_SUCCESS = exports.GET_USER_LOCATIONS_SUCCESS = exports.GET_TYPE_OF_DAY_LIST_SUCCESS = exports.GET_TRIP_TYPE_LIST_SUCCESS = exports.GET_TRIP_SUMMARY_DETAILS_SUCCESS = exports.GET_TRIP_MODE_LIST_SUCCESS = exports.GET_TRIP_LIST_SUCCESS = exports.GET_TRIP_DETAILS_SUCCESS = exports.GET_SUPPORT_CONTACT_SUCCESS = exports.GET_STATE_WISE_TRIPS_SUCCESS = exports.GET_STATE_WISE_RESIDENCY_SUCCESS = exports.GET_STATE_WISE_METRICS_SUCCESS = exports.GET_STATES_LIST_SUCCESS = exports.GET_RESIDENCY_DOC_LIST_SUCCESS = exports.GET_RESIDENCY_DOC_DETAILS_SUCCESS = exports.GET_REPORTS_SUCCESS = exports.GET_PRIVACY_POLICY_SUCCESS = exports.GET_NOTIFICATION_SUCCESS = exports.GET_MONTH_WISE_TIMELINE_SUCCESS = exports.GET_MISSING_ACTIVITY_LIST_SUCCESS = exports.GET_FINAL_YEAR_PROGRESS_SUCCESS = exports.GET_FAQS_SUCCESS = exports.GET_DOCUMENT_CATEGORY_LIST_SUCCESS = exports.GET_COMPLIANCE_SCORE_SUCCESS = exports.GET_ABOUT_APP_SUCCESS = exports.FINAL_YEAR_PROGRESS_FAILURE = exports.FAQS_REQUEST = exports.FAQS_FAILURE = exports.DOCUMENT_CATEGORY_LIST_SUCCESS = exports.DOCUMENT_CATEGORY_LIST_REQUEST = exports.DOCUMENT_CATEGORY_LIST_FAILURE = exports.COMPLIANCE_SCORE_FAILURE = exports.CLEAR_SUBSCRIPTION = exports.ADD_USER_LOCATIONS_SUCCESS = exports.ADD_USER_LOCATIONS_REQUEST = exports.ADD_USER_LOCATIONS_FAILURE = exports.ADD_TRIP_SUCCESS = exports.ADD_TRIP_REQUEST = exports.ADD_TRIP_FAILURE = exports.ADD_MISSINGDAY_SUCCESS = exports.ADD_MISSINGDAY_REQUEST = exports.ADD_MISSINGDAY_FAILURE = exports.ADD_DOCUMENT_RECORD_SUCCESS = exports.ADD_DOCUMENT_RECORD_REQUEST = exports.ADD_DOCUMENT_RECORD_FAILURE = exports.ABOUT_APP_REQUEST = exports.ABOUT_APP_FAILURE = void 0;
-  exports.YEAR_WISE_TIMELINE_FAILURE = exports.YEAR_WISE_LOCATION_FAILURE = exports.WEEK_WISE_TIMELINE_FAILURE = exports.WEEK_WISE_LOCATION_FAILURE = exports.USER_LOCATIONS_REQUEST = exports.USER_LOCATIONS_FAILURE = exports.UPDATE_USER_LOCATIONS_SUCCESS = exports.UPDATE_USER_LOCATIONS_REQUEST = exports.UPDATE_USER_LOCATIONS_FAILURE = exports.UPDATE_TRIP_SUCCESS = exports.UPDATE_TRIP_REQUEST = exports.UPDATE_TRIP_FAILURE = exports.UPDATE_STATE_THRESHOLD_SUCCESS = exports.UPDATE_STATE_THRESHOLD_REQUEST = void 0;
+  exports.UPDATE_MISSINGDAY_FAILURE = exports.TYPE_OF_DAY_LIST_REQUEST = exports.TYPE_OF_DAY_LIST_FAILURE = exports.TRIP_TYPE_LIST_FAILURE = exports.TRIP_SUMMARY_DETAILS_FAILURE = exports.TRIP_MODE_LIST_SUCCESS = exports.TRIP_MODE_LIST_REQUEST = exports.TRIP_MODE_LIST_FAILURE = exports.TRIP_LIST_SUCCESS = exports.TRIP_LIST_REQUEST = exports.TRIP_LIST_FAILURE = exports.TRIP_DETAILS_FAILURE = exports.SUPPORT_CONTACT_REQUEST = exports.SUPPORT_CONTACT_FAILURE = exports.STATE_WISE_TRIPS_FAILURE = exports.STATE_WISE_RESIDENCY_FAILURE = exports.STATE_WISE_METRICS_FAILURE = exports.STATES_LIST_REQUEST = exports.STATES_LIST_FAILURE = exports.SIGN_UP_SUCCESS = exports.SIGN_UP_REQUEST = exports.SIGN_UP_FAILURE = exports.SIGN_IN_SUCCESS = exports.SIGN_IN_REQUEST = exports.SIGN_IN_FAILURE = exports.SET_TRIAL_START = exports.SET_SUBSCRIPTION_PRODUCTS = exports.SET_SUBSCRIPTION_PLAN = exports.SET_SUBSCRIPTION_LOADING = exports.SET_SUBSCRIPTION_ERROR = exports.SET_APP_LANGUAGE = exports.RESIDENCY_DOC_LIST_SUCCESS = exports.RESIDENCY_DOC_LIST_REQUEST = exports.RESIDENCY_DOC_LIST_FAILURE = exports.RESIDENCY_DOC_DETAILS_FAILURE = exports.REPORTS_REQUEST = exports.REPORTS_FAILURE = exports.PRIVACY_POLICY_REQUEST = exports.PRIVACY_POLICY_FAILURE = exports.NOTIFICATION_FAILURE = exports.NATURE_OF_WORK_TYPE_LIST_FAILURE = exports.MONTH_WISE_TIMELINE_FAILURE = exports.MISSING_ACTIVITY_LIST_REQUEST = exports.MISSING_ACTIVITY_LIST_FAILURE = exports.LOGOUT_SUCCESS = exports.LOGOUT_REQUEST = exports.LOGOUT_FAILURE = exports.GET_YEAR_WISE_TIMELINE_SUCCESS = exports.GET_YEAR_WISE_LOCATION_SUCCESS = exports.GET_WORK_LOCATION_TYPE_LIST_SUCCESS = exports.GET_WORK_ACTIVITY_TYPE_LIST_SUCCESS = exports.GET_WEEK_WISE_TIMELINE_SUCCESS = exports.GET_WEEK_WISE_LOCATION_SUCCESS = exports.GET_USER_LOCATIONS_SUCCESS = exports.GET_TYPE_OF_DAY_LIST_SUCCESS = exports.GET_TRIP_TYPE_LIST_SUCCESS = exports.GET_TRIP_SUMMARY_DETAILS_SUCCESS = exports.GET_TRIP_MODE_LIST_SUCCESS = exports.GET_TRIP_LIST_SUCCESS = exports.GET_TRIP_DETAILS_SUCCESS = exports.GET_SUPPORT_CONTACT_SUCCESS = exports.GET_STATE_WISE_TRIPS_SUCCESS = exports.GET_STATE_WISE_RESIDENCY_SUCCESS = exports.GET_STATE_WISE_METRICS_SUCCESS = exports.GET_STATES_LIST_SUCCESS = exports.GET_RESIDENCY_DOC_LIST_SUCCESS = exports.GET_RESIDENCY_DOC_DETAILS_SUCCESS = exports.GET_REPORTS_SUCCESS = exports.GET_PRIVACY_POLICY_SUCCESS = exports.GET_NOTIFICATION_SUCCESS = exports.GET_NATURE_OF_WORK_TYPE_LIST_SUCCESS = exports.GET_MONTH_WISE_TIMELINE_SUCCESS = exports.GET_MISSING_ACTIVITY_LIST_SUCCESS = exports.GET_FINAL_YEAR_PROGRESS_SUCCESS = exports.GET_FAQS_SUCCESS = exports.GET_DOCUMENT_CATEGORY_LIST_SUCCESS = exports.GET_COMPLIANCE_SCORE_SUCCESS = exports.GET_ABOUT_APP_SUCCESS = exports.FINAL_YEAR_PROGRESS_FAILURE = exports.FAQS_REQUEST = exports.FAQS_FAILURE = exports.DOCUMENT_CATEGORY_LIST_SUCCESS = exports.DOCUMENT_CATEGORY_LIST_REQUEST = exports.DOCUMENT_CATEGORY_LIST_FAILURE = exports.COMPLIANCE_SCORE_FAILURE = exports.CLEAR_SUBSCRIPTION = exports.ADD_USER_LOCATIONS_SUCCESS = exports.ADD_USER_LOCATIONS_REQUEST = exports.ADD_USER_LOCATIONS_FAILURE = exports.ADD_TRIP_SUCCESS = exports.ADD_TRIP_REQUEST = exports.ADD_TRIP_FAILURE = exports.ADD_MISSINGDAY_SUCCESS = exports.ADD_MISSINGDAY_REQUEST = exports.ADD_MISSINGDAY_FAILURE = exports.ADD_DOCUMENT_RECORD_SUCCESS = exports.ADD_DOCUMENT_RECORD_REQUEST = exports.ADD_DOCUMENT_RECORD_FAILURE = exports.ABOUT_APP_REQUEST = exports.ABOUT_APP_FAILURE = void 0;
+  exports.YEAR_WISE_TIMELINE_FAILURE = exports.YEAR_WISE_LOCATION_FAILURE = exports.WORK_LOCATION_TYPE_LIST_FAILURE = exports.WORK_ACTIVITY_TYPE_LIST_FAILURE = exports.WEEK_WISE_TIMELINE_FAILURE = exports.WEEK_WISE_LOCATION_FAILURE = exports.USER_LOCATIONS_REQUEST = exports.USER_LOCATIONS_FAILURE = exports.UPDATE_USER_LOCATIONS_SUCCESS = exports.UPDATE_USER_LOCATIONS_REQUEST = exports.UPDATE_USER_LOCATIONS_FAILURE = exports.UPDATE_TRIP_SUCCESS = exports.UPDATE_TRIP_REQUEST = exports.UPDATE_TRIP_FAILURE = exports.UPDATE_STATE_THRESHOLD_SUCCESS = exports.UPDATE_STATE_THRESHOLD_REQUEST = exports.UPDATE_STATE_THRESHOLD_FAILURE = exports.UPDATE_PERSONAL_DATA = exports.UPDATE_MISSINGDAY_SUCCESS = exports.UPDATE_MISSINGDAY_REQUEST = void 0;
   var SIGN_IN_REQUEST = exports.SIGN_IN_REQUEST = 'SIGN_IN_REQUEST';
   var SIGN_IN_SUCCESS = exports.SIGN_IN_SUCCESS = 'SIGN_IN_SUCCESS';
   var SIGN_IN_FAILURE = exports.SIGN_IN_FAILURE = 'SIGN_IN_FAILURE';
@@ -110891,6 +110891,12 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   var GET_TRIP_MODE_LIST_SUCCESS = exports.GET_TRIP_MODE_LIST_SUCCESS = 'GET_TRIP_MODE_LIST_SUCCESS';
   var TRIP_TYPE_LIST_FAILURE = exports.TRIP_TYPE_LIST_FAILURE = 'TRIP_TYPE_LIST_FAILURE';
   var GET_TRIP_TYPE_LIST_SUCCESS = exports.GET_TRIP_TYPE_LIST_SUCCESS = 'GET_TRIP_TYPE_LIST_SUCCESS';
+  var WORK_LOCATION_TYPE_LIST_FAILURE = exports.WORK_LOCATION_TYPE_LIST_FAILURE = 'WORK_LOCATION_TYPE_LIST_FAILURE';
+  var GET_WORK_LOCATION_TYPE_LIST_SUCCESS = exports.GET_WORK_LOCATION_TYPE_LIST_SUCCESS = 'GET_WORK_LOCATION_TYPE_LIST_SUCCESS';
+  var NATURE_OF_WORK_TYPE_LIST_FAILURE = exports.NATURE_OF_WORK_TYPE_LIST_FAILURE = 'NATURE_OF_WORK_TYPE_LIST_FAILURE';
+  var GET_NATURE_OF_WORK_TYPE_LIST_SUCCESS = exports.GET_NATURE_OF_WORK_TYPE_LIST_SUCCESS = 'GET_NATURE_OF_WORK_TYPE_LIST_SUCCESS';
+  var WORK_ACTIVITY_TYPE_LIST_FAILURE = exports.WORK_ACTIVITY_TYPE_LIST_FAILURE = 'WORK_ACTIVITY_TYPE_LIST_FAILURE';
+  var GET_WORK_ACTIVITY_TYPE_LIST_SUCCESS = exports.GET_WORK_ACTIVITY_TYPE_LIST_SUCCESS = 'GET_WORK_ACTIVITY_TYPE_LIST_SUCCESS';
   var GET_TRIP_SUMMARY_DETAILS_SUCCESS = exports.GET_TRIP_SUMMARY_DETAILS_SUCCESS = 'GET_TRIP_SUMMARY_DETAILS_SUCCESS';
   var TRIP_SUMMARY_DETAILS_FAILURE = exports.TRIP_SUMMARY_DETAILS_FAILURE = 'TRIP_SUMMARY_DETAILS_FAILURE';
   var GET_TRIP_DETAILS_SUCCESS = exports.GET_TRIP_DETAILS_SUCCESS = 'GET_TRIP_DETAILS_SUCCESS';
@@ -110986,6 +110992,9 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     ResidencydocumentList: [],
     tripModeList: [],
     tripTypeList: [],
+    natureOfWorkTypeList: [],
+    workLocationTypeList: [],
+    workActivityTypeList: [],
     ResidencyRecordDetails: null,
     TripSummaryDetails: null,
     TripDetails: null,
@@ -111040,6 +111049,18 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       case _$$_REQUIRE(_dependencyMap[0], "../../actions/action-types").GET_TRIP_TYPE_LIST_SUCCESS:
         return Object.assign({}, state, {
           tripTypeList: (payload == null ? void 0 : payload.result) || []
+        });
+      case _$$_REQUIRE(_dependencyMap[0], "../../actions/action-types").GET_WORK_LOCATION_TYPE_LIST_SUCCESS:
+        return Object.assign({}, state, {
+          workLocationTypeList: (payload == null ? void 0 : payload.result) || []
+        });
+      case _$$_REQUIRE(_dependencyMap[0], "../../actions/action-types").GET_NATURE_OF_WORK_TYPE_LIST_SUCCESS:
+        return Object.assign({}, state, {
+          natureOfWorkTypeList: (payload == null ? void 0 : payload.result) || []
+        });
+      case _$$_REQUIRE(_dependencyMap[0], "../../actions/action-types").GET_WORK_ACTIVITY_TYPE_LIST_SUCCESS:
+        return Object.assign({}, state, {
+          workActivityTypeList: (payload == null ? void 0 : payload.result) || []
         });
       case _$$_REQUIRE(_dependencyMap[0], "../../actions/action-types").GET_RESIDENCY_DOC_DETAILS_SUCCESS:
         return Object.assign({}, state, {
@@ -131377,6 +131398,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   exports.GET_FINAL_YEAR_PROGRESS = GET_FINAL_YEAR_PROGRESS;
   exports.GET_MISSING_ACTIVITY_LIST = GET_MISSING_ACTIVITY_LIST;
   exports.GET_MONTH_WISE_TIMELINE = void 0;
+  exports.GET_NATURE_OF_WORK_TYPE_LIST = GET_NATURE_OF_WORK_TYPE_LIST;
   exports.GET_NOTIFICATION = GET_NOTIFICATION;
   exports.GET_PRIVACY_POLICY = GET_PRIVACY_POLICY;
   exports.GET_REPORTS = GET_REPORTS;
@@ -131396,6 +131418,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   exports.GET_USER_LOCATIONS = GET_USER_LOCATIONS;
   exports.GET_WEEK_WISE_LOCATION = GET_WEEK_WISE_LOCATION;
   exports.GET_WEEK_WISE_TIMELINE = GET_WEEK_WISE_TIMELINE;
+  exports.GET_WORK_ACTIVITY_TYPE_LIST = GET_WORK_ACTIVITY_TYPE_LIST;
+  exports.GET_WORK_LOCATION_TYPE_LIST = GET_WORK_LOCATION_TYPE_LIST;
   exports.GET_YEAR_WISE_LOCATION = GET_YEAR_WISE_LOCATION;
   exports.GET_YEAR_WISE_TIMELINE = GET_YEAR_WISE_TIMELINE;
   exports.UPDATEUSERLOCATIONS = exports.UPDATETRIP = exports.UPDATEMISSINGDAY = exports.SIGNUP = exports.SIGNIN = exports.SET_PLAN_FROM_PURCHASE = exports.RESTORE_SUBSCRIPTION = exports.PURCHASE_SUBSCRIPTION = exports.LOGOUT = exports.INIT_TRIAL = void 0;
@@ -131516,6 +131540,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
 
   var ADDTRIP = exports.ADDTRIP = function ADDTRIP(formData) {
     console.log('FormData>>>>>>>>', formData);
+    console.log(typeof formData.date);
+    console.log(formData.date);
     return /*#__PURE__*/function () {
       var _ref2 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         dispatch({
@@ -131525,7 +131551,30 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         try {
           // console.log('hellooooo')
           // const response = await axiosinstance.post(EndPoints.addTrip, formData)
-          var response = yield _axiosinstance.default.post('trip-days', formData);
+          // const response = await axiosinstance.post('trip-days', formData)
+          var form = new FormData();
+          Object.keys(formData).forEach(function (key) {
+            if (key === "attachments") {
+              var _formData$attachments;
+              if ((_formData$attachments = formData.attachments) != null && _formData$attachments.length) {
+                formData.attachments.forEach(function (file) {
+                  form.append("attachments", {
+                    uri: file.uri,
+                    name: file.name,
+                    type: file.type || "image/jpeg"
+                  });
+                });
+              }
+            } else {
+              form.append(key, formData[key]);
+            }
+          });
+          var response = yield _axiosinstance.default.post("trip-days", form, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Accept: "application/json"
+            }
+          });
           console.log('response', response);
           // console.log('hello')
           var responseJson = response.data;
@@ -131577,6 +131626,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   };
   var UPDATETRIP = exports.UPDATETRIP = function UPDATETRIP(formData) {
     console.log('FormData>>>>>>>>', formData);
+    // console.log(formData);
+    console.log('FormData>>>>>>>>,', formData.attachments);
     return /*#__PURE__*/function () {
       var _ref3 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         dispatch({
@@ -131586,8 +131637,33 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         try {
           // const response = await axiosinstance.put(`${EndPoints.UpdateTrip}/${formData.id}`, formData)
           // const response = await axiosinstance.post('trip-days', formData)
-          console.log('helloooo');
-          var response = yield _axiosinstance.default.put(`${'trip-days'}/${formData.id}`, formData);
+          // console.log('helloooo');
+          // const response = await axiosinstance.put(`${'trip-days'}/${formData.id}`, formData)
+          var form = new FormData();
+          Object.keys(formData).forEach(function (key) {
+            if (key === "attachments") {
+              var _formData$attachments2;
+              if ((_formData$attachments2 = formData.attachments) != null && _formData$attachments2.length) {
+                formData.attachments.forEach(function (file) {
+                  if (file.uri) {
+                    form.append("attachments", {
+                      uri: file.uri,
+                      name: file.name,
+                      type: file.type || "image/jpeg"
+                    });
+                  }
+                });
+              }
+            } else {
+              form.append(key, formData[key]);
+            }
+          });
+          var response = yield _axiosinstance.default.put(`trip-days/${formData.id}`, form, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Accept: "application/json"
+            }
+          });
           console.log('helloooo', response);
           var responseJson = response.data;
           console.log('responseJson==>', responseJson);
@@ -131954,9 +132030,111 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       };
     }();
   }
-  function DELETE_RESIDENCY_RECORD(id) {
+  function GET_WORK_LOCATION_TYPE_LIST() {
     return /*#__PURE__*/function () {
       var _ref10 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+        try {
+          var response = yield _axiosinstance.default.get('type-of-work-location');
+          var responseJson = response.data;
+          // console.log('responseJson-=>', responseJson);
+
+          if (responseJson.message == 'Success') {
+            dispatch({
+              type: _$$_REQUIRE(_dependencyMap[6], "./action-types").GET_WORK_LOCATION_TYPE_LIST_SUCCESS,
+              payload: responseJson
+            });
+            return Promise.resolve(responseJson);
+          }
+          dispatch({
+            type: _$$_REQUIRE(_dependencyMap[6], "./action-types").WORK_LOCATION_TYPE_LIST_FAILURE,
+            payload: 'WORK_LOCATION_TYPE_LIST_FAILURE'
+          });
+          return Promise.reject(responseJson);
+        } catch (e) {
+          dispatch({
+            type: _$$_REQUIRE(_dependencyMap[6], "./action-types").WORK_LOCATION_TYPE_LIST_FAILURE,
+            payload: 'WORK_LOCATION_TYPE_LIST_FAILURE'
+          });
+          console.log('catch error API WORK_LOCATION_TYPE_LIST_FAILURE', e);
+          return Promise.reject(CommonError);
+        }
+      });
+      return function (_x10) {
+        return _ref10.apply(this, arguments);
+      };
+    }();
+  }
+  function GET_NATURE_OF_WORK_TYPE_LIST() {
+    return /*#__PURE__*/function () {
+      var _ref11 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+        try {
+          var response = yield _axiosinstance.default.get('nature-of-work');
+          var responseJson = response.data;
+          // console.log('responseJson-=>', responseJson);
+
+          if (responseJson.message == 'Success') {
+            dispatch({
+              type: _$$_REQUIRE(_dependencyMap[6], "./action-types").GET_NATURE_OF_WORK_TYPE_LIST_SUCCESS,
+              payload: responseJson
+            });
+            return Promise.resolve(responseJson);
+          }
+          dispatch({
+            type: _$$_REQUIRE(_dependencyMap[6], "./action-types").NATURE_OF_WORK_TYPE_LIST_FAILURE,
+            payload: 'NATURE_OF_WORK_TYPE_LIST_FAILURE'
+          });
+          return Promise.reject(responseJson);
+        } catch (e) {
+          dispatch({
+            type: _$$_REQUIRE(_dependencyMap[6], "./action-types").NATURE_OF_WORK_TYPE_LIST_FAILURE,
+            payload: 'NATURE_OF_WORK_TYPE_LIST_FAILURE'
+          });
+          console.log('catch error API NATURE_OF_WORK_TYPE_LIST_FAILURE', e);
+          return Promise.reject(CommonError);
+        }
+      });
+      return function (_x11) {
+        return _ref11.apply(this, arguments);
+      };
+    }();
+  }
+  function GET_WORK_ACTIVITY_TYPE_LIST() {
+    return /*#__PURE__*/function () {
+      var _ref12 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+        try {
+          var response = yield _axiosinstance.default.get('work-activity');
+          var responseJson = response.data;
+          // console.log('responseJson-=>', responseJson);
+
+          if (responseJson.message == 'Success') {
+            dispatch({
+              type: _$$_REQUIRE(_dependencyMap[6], "./action-types").GET_WORK_ACTIVITY_TYPE_LIST_SUCCESS,
+              payload: responseJson
+            });
+            return Promise.resolve(responseJson);
+          }
+          dispatch({
+            type: WORK_ACTIVITY_TYPE_LIST_FAILURE,
+            payload: 'WORK_ACTIVITY_TYPE_LIST_FAILURE'
+          });
+          return Promise.reject(responseJson);
+        } catch (e) {
+          dispatch({
+            type: WORK_ACTIVITY_TYPE_LIST_FAILURE,
+            payload: 'WORK_ACTIVITY_TYPE_LIST_FAILURE'
+          });
+          console.log('catch error API WORK_ACTIVITY_TYPE_LIST_FAILURE', e);
+          return Promise.reject(CommonError);
+        }
+      });
+      return function (_x12) {
+        return _ref12.apply(this, arguments);
+      };
+    }();
+  }
+  function DELETE_RESIDENCY_RECORD(id) {
+    return /*#__PURE__*/function () {
+      var _ref13 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           var response = yield _axiosinstance.default.delete(`residency-doc/${id}`);
           var responseJson = response.data;
@@ -131971,15 +132149,15 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x10) {
-        return _ref10.apply(this, arguments);
+      return function (_x13) {
+        return _ref13.apply(this, arguments);
       };
     }();
   }
   function UPDATE_RESIDENCY_RECORD(id, payload) {
     console.log('calling update API');
     return /*#__PURE__*/function () {
-      var _ref11 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref14 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           var formData = new FormData();
           Object.keys(payload).forEach(function (key) {
@@ -132019,14 +132197,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           throw error;
         }
       });
-      return function (_x11) {
-        return _ref11.apply(this, arguments);
+      return function (_x14) {
+        return _ref14.apply(this, arguments);
       };
     }();
   }
   function GET_RESIDENCY_RECORD_DETAILS(id) {
     return /*#__PURE__*/function () {
-      var _ref12 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref15 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           var response = yield _axiosinstance.default.get(`residency-doc/${id}`);
           var responseJson = response.data;
@@ -132052,14 +132230,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x12) {
-        return _ref12.apply(this, arguments);
+      return function (_x15) {
+        return _ref15.apply(this, arguments);
       };
     }();
   }
   function GET_FINAL_YEAR_PROGRESS() {
     return /*#__PURE__*/function () {
-      var _ref13 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref16 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           var response = yield _axiosinstance.default.get('dashboard/fy-progress');
           var responseJson = response.data;
@@ -132086,14 +132264,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x13) {
-        return _ref13.apply(this, arguments);
+      return function (_x16) {
+        return _ref16.apply(this, arguments);
       };
     }();
   }
   function GET_STATE_WISE_RESIDENCY() {
     return /*#__PURE__*/function () {
-      var _ref14 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref17 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           // const response = await axiosinstance.get('dashboard/state-days')
           var response = yield _axiosinstance.default.get('dashboard/v2/state-days');
@@ -132121,14 +132299,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x14) {
-        return _ref14.apply(this, arguments);
+      return function (_x17) {
+        return _ref17.apply(this, arguments);
       };
     }();
   }
   function GET_COMPLIANCE_SCORE() {
     return /*#__PURE__*/function () {
-      var _ref15 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref18 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           // const response = await axiosinstance.get('dashboard/compliance-score')
           var response = yield _axiosinstance.default.get('dashboard/v2/compliance-score');
@@ -132156,14 +132334,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x15) {
-        return _ref15.apply(this, arguments);
+      return function (_x18) {
+        return _ref18.apply(this, arguments);
       };
     }();
   }
   function GET_NOTIFICATION() {
     return /*#__PURE__*/function () {
-      var _ref16 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref19 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           var response = yield _axiosinstance.default.get('notifications');
           var responseJson = response.data;
@@ -132190,14 +132368,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x16) {
-        return _ref16.apply(this, arguments);
+      return function (_x19) {
+        return _ref19.apply(this, arguments);
       };
     }();
   }
   function GET_STATE_WISE_METRICS() {
     return /*#__PURE__*/function () {
-      var _ref17 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref20 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           // const response = await axiosinstance.get('dashboard/metrics')
           var response = yield _axiosinstance.default.get('dashboard/v2/metrics');
@@ -132225,8 +132403,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x17) {
-        return _ref17.apply(this, arguments);
+      return function (_x20) {
+        return _ref20.apply(this, arguments);
       };
     }();
   }
@@ -132260,10 +132438,10 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   //     }
   //   }
   // }
-  function GET_YEAR_WISE_TIMELINE(_ref18) {
-    var year = _ref18.year;
+  function GET_YEAR_WISE_TIMELINE(_ref21) {
+    var year = _ref21.year;
     return /*#__PURE__*/function () {
-      var _ref19 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref22 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
           // const response = await axiosinstance.get(`dashboard/v1/timeline/year?year=${year}`)
@@ -132292,16 +132470,16 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x18) {
-        return _ref19.apply(this, arguments);
+      return function (_x21) {
+        return _ref22.apply(this, arguments);
       };
     }();
   }
-  function GET_WEEK_WISE_TIMELINE(_ref20) {
-    var start = _ref20.start,
-      end = _ref20.end;
+  function GET_WEEK_WISE_TIMELINE(_ref23) {
+    var start = _ref23.start,
+      end = _ref23.end;
     return /*#__PURE__*/function () {
-      var _ref21 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref24 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           // const response = await axiosinstance.get(`https://stage.mydomigo.com/api/dashboard/calendar/week?end=${end}&start=${start}`)
           var response = yield _axiosinstance.default.get(`https://stage.mydomigo.com/api/dashboard/v2/calendar/week?end=${end}&start=${start}`);
@@ -132331,8 +132509,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x19) {
-        return _ref21.apply(this, arguments);
+      return function (_x22) {
+        return _ref24.apply(this, arguments);
       };
     }();
   }
@@ -132381,13 +132559,13 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   //   })
   // })
 
-  var GET_MONTH_WISE_TIMELINE = exports.GET_MONTH_WISE_TIMELINE = function GET_MONTH_WISE_TIMELINE(_ref22) {
-    var month = _ref22.month,
-      year = _ref22.year;
+  var GET_MONTH_WISE_TIMELINE = exports.GET_MONTH_WISE_TIMELINE = function GET_MONTH_WISE_TIMELINE(_ref25) {
+    var month = _ref25.month,
+      year = _ref25.year;
     // console.log('fbfsvbv',month,year);
 
     return /*#__PURE__*/function () {
-      var _ref23 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref26 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           dispatch({
             type: 'GET_MONTH_WISE_TIMELINE'
@@ -132424,15 +132602,15 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(e);
         }
       });
-      return function (_x20) {
-        return _ref23.apply(this, arguments);
+      return function (_x23) {
+        return _ref26.apply(this, arguments);
       };
     }();
   };
-  function GET_YEAR_WISE_LOCATION(_ref24) {
-    var year = _ref24.year;
+  function GET_YEAR_WISE_LOCATION(_ref27) {
+    var year = _ref27.year;
     return /*#__PURE__*/function () {
-      var _ref25 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref28 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
           // const response = await axiosinstance.get(`dashboard/v1/timeline/year?year=${year}`)
@@ -132461,16 +132639,16 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x21) {
-        return _ref25.apply(this, arguments);
+      return function (_x24) {
+        return _ref28.apply(this, arguments);
       };
     }();
   }
-  function GET_WEEK_WISE_LOCATION(_ref26) {
-    var start = _ref26.start,
-      end = _ref26.end;
+  function GET_WEEK_WISE_LOCATION(_ref29) {
+    var start = _ref29.start,
+      end = _ref29.end;
     return /*#__PURE__*/function () {
-      var _ref27 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref30 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           // const response = await axiosinstance.get(`https://stage.mydomigo.com/api/dashboard/calendar/week?end=${end}&start=${start}`)
           var response = yield _axiosinstance.default.get(`https://stage.mydomigo.com/api/locations/location/week?end=${end}&start=${start}`);
@@ -132500,15 +132678,15 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x22) {
-        return _ref27.apply(this, arguments);
+      return function (_x25) {
+        return _ref30.apply(this, arguments);
       };
     }();
   }
-  function GET_STATE_WISE_TRIPS(_ref28) {
-    var state = _ref28.state;
+  function GET_STATE_WISE_TRIPS(_ref31) {
+    var state = _ref31.state;
     return /*#__PURE__*/function () {
-      var _ref29 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref32 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           // const response = await axiosinstance.get(`trips/state/${state}`)
           var response = yield _axiosinstance.default.get(`trip-days/state/${state}`);
@@ -132536,8 +132714,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x23) {
-        return _ref29.apply(this, arguments);
+      return function (_x26) {
+        return _ref32.apply(this, arguments);
       };
     }();
   }
@@ -132545,7 +132723,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     // console.log('formData', formData);
 
     return /*#__PURE__*/function () {
-      var _ref30 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref33 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         dispatch({
           type: _$$_REQUIRE(_dependencyMap[6], "./action-types").UPDATE_STATE_THRESHOLD_REQUEST,
           payload: 'UPDATE_STATE_THRESHOLD_REQUEST'
@@ -132581,14 +132759,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           };
         }
       });
-      return function (_x24) {
-        return _ref30.apply(this, arguments);
+      return function (_x27) {
+        return _ref33.apply(this, arguments);
       };
     }();
   };
   function GET_TYPE_OF_DAY_LIST() {
     return /*#__PURE__*/function () {
-      var _ref31 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref34 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           var response = yield _axiosinstance.default.get('type-of-day');
           var responseJson = response.data;
@@ -132615,14 +132793,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x25) {
-        return _ref31.apply(this, arguments);
+      return function (_x28) {
+        return _ref34.apply(this, arguments);
       };
     }();
   }
   function GET_STATES_LIST() {
     return /*#__PURE__*/function () {
-      var _ref32 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref35 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           var response = yield _axiosinstance.default.get('states');
           var responseJson = response.data;
@@ -132649,14 +132827,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x26) {
-        return _ref32.apply(this, arguments);
+      return function (_x29) {
+        return _ref35.apply(this, arguments);
       };
     }();
   }
   var ADDMISSINGDAY = exports.ADDMISSINGDAY = function ADDMISSINGDAY(formData) {
     return /*#__PURE__*/function () {
-      var _ref33 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref36 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         dispatch({
           type: _$$_REQUIRE(_dependencyMap[6], "./action-types").ADD_MISSINGDAY_REQUEST,
           payload: 'ADD_MISSINGDAY_REQUEST'
@@ -132691,14 +132869,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           };
         }
       });
-      return function (_x27) {
-        return _ref33.apply(this, arguments);
+      return function (_x30) {
+        return _ref36.apply(this, arguments);
       };
     }();
   };
   var UPDATEMISSINGDAY = exports.UPDATEMISSINGDAY = function UPDATEMISSINGDAY(formData) {
     return /*#__PURE__*/function () {
-      var _ref34 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref37 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         dispatch({
           type: _$$_REQUIRE(_dependencyMap[6], "./action-types").UPDATE_MISSINGDAY_REQUEST,
           payload: 'UPDATE_MISSINGDAY_REQUEST'
@@ -132734,14 +132912,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           };
         }
       });
-      return function (_x28) {
-        return _ref34.apply(this, arguments);
+      return function (_x31) {
+        return _ref37.apply(this, arguments);
       };
     }();
   };
   function GET_MISSING_ACTIVITY_LIST() {
     return /*#__PURE__*/function () {
-      var _ref35 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref38 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           var response = yield _axiosinstance.default.get('activity');
           var responseJson = response.data;
@@ -132768,17 +132946,17 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x29) {
-        return _ref35.apply(this, arguments);
+      return function (_x32) {
+        return _ref38.apply(this, arguments);
       };
     }();
   }
-  function GET_REPORTS(_ref36) {
-    var type = _ref36.type,
-      date = _ref36.date;
+  function GET_REPORTS(_ref39) {
+    var type = _ref39.type,
+      date = _ref39.date;
     console.log('type', 'date', type, date);
     return /*#__PURE__*/function () {
-      var _ref37 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref40 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
           // const response = await axiosinstance.get(`dashboard/reports?type=${type}&date=2026-02-01`)
@@ -132806,14 +132984,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x30) {
-        return _ref37.apply(this, arguments);
+      return function (_x33) {
+        return _ref40.apply(this, arguments);
       };
     }();
   }
   function GET_FAQS() {
     return /*#__PURE__*/function () {
-      var _ref38 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref41 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
           var response = yield _axiosinstance.default.get(`faqs`);
@@ -132840,14 +133018,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x31) {
-        return _ref38.apply(this, arguments);
+      return function (_x34) {
+        return _ref41.apply(this, arguments);
       };
     }();
   }
   function GET_SUPPORT_CONTACT() {
     return /*#__PURE__*/function () {
-      var _ref39 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref42 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
           var response = yield _axiosinstance.default.get(`support-contact`);
@@ -132874,14 +133052,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x32) {
-        return _ref39.apply(this, arguments);
+      return function (_x35) {
+        return _ref42.apply(this, arguments);
       };
     }();
   }
   function GET_ABOUT_APP() {
     return /*#__PURE__*/function () {
-      var _ref40 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref43 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
           var response = yield _axiosinstance.default.get(`app-about`);
@@ -132908,14 +133086,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x33) {
-        return _ref40.apply(this, arguments);
+      return function (_x36) {
+        return _ref43.apply(this, arguments);
       };
     }();
   }
   function GET_PRIVACY_POLICY() {
     return /*#__PURE__*/function () {
-      var _ref41 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref44 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
           var response = yield _axiosinstance.default.get(`privacy-policy`);
@@ -132942,14 +133120,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x34) {
-        return _ref41.apply(this, arguments);
+      return function (_x37) {
+        return _ref44.apply(this, arguments);
       };
     }();
   }
   function GET_USER_LOCATIONS() {
     return /*#__PURE__*/function () {
-      var _ref42 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref45 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         try {
           // const response = await axiosinstance.get(`dashboard//v1/timeline/year?year=${year}`)
           var response = yield _axiosinstance.default.get(`user-locations`);
@@ -132976,14 +133154,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return Promise.reject(CommonError);
         }
       });
-      return function (_x35) {
-        return _ref42.apply(this, arguments);
+      return function (_x38) {
+        return _ref45.apply(this, arguments);
       };
     }();
   }
   var ADDUSERLOCATIONS = exports.ADDUSERLOCATIONS = function ADDUSERLOCATIONS(formData) {
     return /*#__PURE__*/function () {
-      var _ref43 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref46 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         dispatch({
           type: _$$_REQUIRE(_dependencyMap[6], "./action-types").ADD_USER_LOCATIONS_REQUEST,
           payload: 'ADD_USER_LOCATIONS_REQUEST'
@@ -133018,8 +133196,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           };
         }
       });
-      return function (_x36) {
-        return _ref43.apply(this, arguments);
+      return function (_x39) {
+        return _ref46.apply(this, arguments);
       };
     }();
   };
@@ -133027,7 +133205,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     console.log('formData', formData);
     console.log("ID going:", id);
     return /*#__PURE__*/function () {
-      var _ref44 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref47 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         dispatch({
           type: _$$_REQUIRE(_dependencyMap[6], "./action-types").UPDATE_USER_LOCATIONS_REQUEST,
           payload: 'UPDATE_USER_LOCATIONS_REQUEST'
@@ -133075,8 +133253,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           };
         }
       });
-      return function (_x37) {
-        return _ref44.apply(this, arguments);
+      return function (_x40) {
+        return _ref47.apply(this, arguments);
       };
     }();
   };
@@ -133100,7 +133278,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
 
   var FETCH_SUBSCRIPTION_PRODUCTS = exports.FETCH_SUBSCRIPTION_PRODUCTS = function FETCH_SUBSCRIPTION_PRODUCTS() {
     return /*#__PURE__*/function () {
-      var _ref45 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref48 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         dispatch({
           type: _$$_REQUIRE(_dependencyMap[6], "./action-types").SET_SUBSCRIPTION_LOADING,
           payload: true
@@ -133118,14 +133296,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           });
         }
       });
-      return function (_x38) {
-        return _ref45.apply(this, arguments);
+      return function (_x41) {
+        return _ref48.apply(this, arguments);
       };
     }();
   };
   var PURCHASE_SUBSCRIPTION = exports.PURCHASE_SUBSCRIPTION = function PURCHASE_SUBSCRIPTION(sku) {
     return /*#__PURE__*/function () {
-      var _ref46 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref49 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         console.log('internal', sku);
         dispatch({
           type: _$$_REQUIRE(_dependencyMap[6], "./action-types").SET_SUBSCRIPTION_LOADING,
@@ -133141,14 +133319,14 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           });
         }
       });
-      return function (_x39) {
-        return _ref46.apply(this, arguments);
+      return function (_x42) {
+        return _ref49.apply(this, arguments);
       };
     }();
   };
   var RESTORE_SUBSCRIPTION = exports.RESTORE_SUBSCRIPTION = function RESTORE_SUBSCRIPTION() {
     return /*#__PURE__*/function () {
-      var _ref47 = (0, _asyncToGenerator2.default)(function* (dispatch) {
+      var _ref50 = (0, _asyncToGenerator2.default)(function* (dispatch) {
         dispatch({
           type: _$$_REQUIRE(_dependencyMap[6], "./action-types").SET_SUBSCRIPTION_LOADING,
           payload: true
@@ -133196,8 +133374,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           };
         }
       });
-      return function (_x40) {
-        return _ref47.apply(this, arguments);
+      return function (_x43) {
+        return _ref50.apply(this, arguments);
       };
     }();
   };
@@ -137487,6 +137665,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
             longitude: coords.longitude,
             state: locationDetails.state,
             city: locationDetails.city,
+            county: locationDetails.county,
             address: locationDetails.address
           };
           console.log("FINAL LOCATION 👉", finalLocation);
@@ -137619,16 +137798,21 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
             return {
               address: "Unknown",
               city: "",
+              county: "",
               state: ""
             };
           }
           var result = data.results[0];
           var city = "";
           var state = "";
+          var county = "";
           var address = (result == null ? void 0 : result.formatted_address) || "";
           result.address_components.forEach(function (component) {
             if (component.types.includes("locality")) {
               city = component.long_name;
+            }
+            if (component.types.includes("administrative_area_level_2")) {
+              county = component.long_name;
             }
             if (component.types.includes("administrative_area_level_1")) {
               state = component.long_name;
@@ -137643,6 +137827,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return {
             address: address,
             city: city,
+            county: county,
             state: state
           };
         } catch (e) {
@@ -137650,6 +137835,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           return {
             address: "Unknown",
             city: "",
+            county: "",
             state: ""
           };
         }
@@ -137749,24 +137935,47 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     //         return 0;
     //     });
     // }, [stateWiseResidency, userData]);
+    // const sortedStateResidency = React.useMemo(() => {
+    //     if (!stateWiseResidency) return [];
+
+    //     return [...stateWiseResidency].sort((a, b) => {
+    //         const aType = locationMap[a.state];
+    //         const bType = locationMap[b.state];
+
+    //         // 1. Primary (blue home icon) first
+    //         if (aType === "primary" && bType !== "primary") return -1;
+    //         if (bType === "primary" && aType !== "primary") return 1;
+
+    //         // 2. Other home icon cards (secondary/other)
+    //         const aHome = !!aType;
+    //         const bHome = !!bType;
+
+    //         if (aHome && !bHome) return -1;
+    //         if (bHome && !aHome) return 1;
+
+    //         // 3. Remaining cards
+    //         return 0;
+    //     });
+    // }, [stateWiseResidency, userLocations]);
+
     var sortedStateResidency = _react.default.useMemo(function () {
       if (!stateWiseResidency) return [];
       return (0, _toConsumableArray2.default)(stateWiseResidency).sort(function (a, b) {
         var aType = locationMap[a.state];
         var bType = locationMap[b.state];
 
-        // 1. Primary (blue home icon) first
+        // 1. Domicile (blue home)
         if (aType === "primary" && bType !== "primary") return -1;
         if (bType === "primary" && aType !== "primary") return 1;
 
-        // 2. Other home icon cards (secondary/other)
-        var aHome = !!aType;
-        var bHome = !!bType;
-        if (aHome && !bHome) return -1;
-        if (bHome && !aHome) return 1;
+        // 2. Abodes (black home)
+        var aAbode = aType && aType !== "primary";
+        var bAbode = bType && bType !== "primary";
+        if (aAbode && !bAbode) return -1;
+        if (bAbode && !aAbode) return 1;
 
-        // 3. Remaining cards
-        return 0;
+        // 3. Remaining locations -> highest days first
+        return b.days - a.days;
       });
     }, [stateWiseResidency, userLocations]);
     console.log('loginToken', loginToken);
@@ -165366,9 +165575,52 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                   textDayHeaderFontSize: 16
                 }
               })
-            }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
+            }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
               style: styles.legendContainer,
-              children: legendStates.map(function (state) {
+              children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+                style: styles.rowContainer,
+                children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+                  style: styles.legendItem,
+                  children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
+                    style: [styles.dot, {
+                      backgroundColor: "#FF3B30"
+                    }]
+                  }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+                    style: styles.legendText,
+                    children: "Missing Location"
+                  })]
+                }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+                  style: styles.legendItem,
+                  children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
+                    style: [styles.dot, {
+                      backgroundColor: "#FFCC00"
+                    }]
+                  }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+                    style: styles.legendText,
+                    children: "Missing Information"
+                  })]
+                })]
+              }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+                style: styles.legendItem,
+                children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
+                  style: [styles.dot, {
+                    backgroundColor: "#007AFF"
+                  }]
+                }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+                  style: styles.legendText,
+                  children: "Updated Information"
+                })]
+              }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+                style: styles.legendItem,
+                children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
+                  style: [styles.dot, {
+                    backgroundColor: "#9E9E9E"
+                  }]
+                }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+                  style: styles.legendText,
+                  children: "Trips"
+                })]
+              }), legendStates.map(function (state) {
                 return /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
                   style: styles.legendItem,
                   children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
@@ -165382,7 +165634,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                     children: state
                   })]
                 }, state);
-              })
+              })]
             })]
           }), selectedTab === 'Week' && /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
             style: {
@@ -165415,7 +165667,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                     fontSize: 14,
                     color: "#000"
                   },
-                  children: selectedFilter === "ALL" ? "All" : selectedFilter === "TRIP" ? "State / Region Trips" : selectedFilter === "COUNTY_CHANGE" ? "County Trips" : selectedFilter === "CITY_CHANGE" ? "City / Municipality Trips" : "Locations"
+                  children: selectedFilter === "ALL" ? "All" : selectedFilter === "TRIP" ? "State / Region Trips" : selectedFilter === "COUNTY_CHANGE" ? "County Trips" : selectedFilter === "CITY_CHANGE" ? "City / Municipality Trips" : selectedFilter === "LOCATIONS" ? "Verified Locations" : "Alert Locations"
                 }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_Ionicons.default, {
                   name: showFilterDropdown ? "chevron-up" : "chevron-down",
                   size: 18,
@@ -165442,8 +165694,11 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                   label: "City / Municipality Trips",
                   value: "CITY_CHANGE"
                 }, {
-                  label: "Locations",
+                  label: "Verified Locations",
                   value: "LOCATIONS"
+                }, {
+                  label: "Alert Locations",
+                  value: "ALERT_LOCATIONS"
                 }].map(function (item) {
                   return /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.TouchableOpacity, {
                     onPress: function onPress() {
@@ -165627,7 +165882,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                     fontSize: 14,
                     color: "#000"
                   },
-                  children: selectedFilter === "ALL" ? "All" : selectedFilter === "TRIP" ? "State / Region Trips" : selectedFilter === "COUNTY_CHANGE" ? "County Trips" : selectedFilter === "CITY_CHANGE" ? "City / Municipality Trips" : "Locations"
+                  children: selectedFilter === "ALL" ? "All" : selectedFilter === "TRIP" ? "State / Region Trips" : selectedFilter === "COUNTY_CHANGE" ? "County Trips" : selectedFilter === "CITY_CHANGE" ? "City / Municipality Trips" : selectedFilter === "LOCATIONS" ? "Verified Locations" : "Alert Locations"
                 }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_Ionicons.default, {
                   name: showFilterDropdown ? "chevron-up" : "chevron-down",
                   size: 18,
@@ -165654,8 +165909,11 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                   label: "City / Municipality Trips",
                   value: "CITY_CHANGE"
                 }, {
-                  label: "Locations",
+                  label: "Verified Locations",
                   value: "LOCATIONS"
+                }, {
+                  label: "Alert Locations",
+                  value: "ALERT_LOCATIONS"
                 }].map(function (item) {
                   return /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.TouchableOpacity, {
                     onPress: function onPress() {
@@ -165968,7 +166226,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       // allows items to go to next line
       width: '100%',
       justifyContent: 'flex-start',
-      columnGap: 15,
+      columnGap: 10,
       // adds horizontal spacing between items
       rowGap: 10 // adds vertical spacing between rows
     },
@@ -289231,8 +289489,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       var dateObj = new Date(y, m - 1, d);
       return dateObj.toDateString();
     };
-
-    // const todayDate = getTodayDateYYYYMMDD();
+    var todayDate = getTodayDateYYYYMMDD();
     // console.log(todayDate); // e.g. 2026-01-03
     var filteredTrips = _react.default.useMemo(function () {
       return tripList.filter(function (item) {
@@ -289300,7 +289557,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           onPress: function onPress() {
             return navigation.navigate("DayEntryScreen", {
               mode: "TRIP",
-              date: todayDate,
+              date: trip.date,
               isEdit: true,
               data: trip
             });
@@ -290626,6 +290883,9 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     var _route$params, _route$params$isEdit, _route$params2, _route$params$data, _route$params3, _route$params4, _editData$typeOfDay;
     var tripModeList = _ref3.tripModeList,
       tripTypeList = _ref3.tripTypeList,
+      workLocationTypeList = _ref3.workLocationTypeList,
+      natureOfWorkTypeList = _ref3.natureOfWorkTypeList,
+      workActivityTypeList = _ref3.workActivityTypeList,
       typeOfDayList = _ref3.typeOfDayList,
       statesList = _ref3.statesList;
     var navigation = (0, _$$_REQUIRE(_dependencyMap[12], "@react-navigation/native").useNavigation)();
@@ -290638,6 +290898,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     console.log('isTrip', isTrip);
     console.log('date', date);
     console.log('editData', editData);
+    // console.log('data>>>>', route.params?.data.attachments);
+
     console.log('isTravelling', isTravelling);
 
     /* ---------------- STATE ---------------- */
@@ -290689,96 +290951,120 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       _useState14 = (0, _slicedToArray2.default)(_useState13, 2),
       tripType = _useState14[0],
       setTripType = _useState14[1];
-    var _useState15 = (0, _react.useState)("manual"),
+    var _useState15 = (0, _react.useState)(1),
       _useState16 = (0, _slicedToArray2.default)(_useState15, 2),
-      creationType = _useState16[0],
-      setCreationType = _useState16[1];
-
-    // 8️⃣ Mode of travel
+      workLocationType = _useState16[0],
+      setWorkLocationType = _useState16[1];
     var _useState17 = (0, _react.useState)(1),
       _useState18 = (0, _slicedToArray2.default)(_useState17, 2),
-      tripMode = _useState18[0],
-      setTripMode = _useState18[1];
+      natureOfWorkType = _useState18[0],
+      setNatureOfWorkType = _useState18[1];
+    var _useState19 = (0, _react.useState)(1),
+      _useState20 = (0, _slicedToArray2.default)(_useState19, 2),
+      workActivityType = _useState20[0],
+      setWorkActivityType = _useState20[1];
+    var _useState21 = (0, _react.useState)("manual"),
+      _useState22 = (0, _slicedToArray2.default)(_useState21, 2),
+      creationType = _useState22[0],
+      setCreationType = _useState22[1];
+
+    // 8️⃣ Mode of travel
+    var _useState23 = (0, _react.useState)(1),
+      _useState24 = (0, _slicedToArray2.default)(_useState23, 2),
+      tripMode = _useState24[0],
+      setTripMode = _useState24[1];
 
     // 9️⃣ Confirmation no
-    var _useState19 = (0, _react.useState)(""),
-      _useState20 = (0, _slicedToArray2.default)(_useState19, 2),
-      confirmationNo = _useState20[0],
-      setConfirmationNo = _useState20[1];
+    var _useState25 = (0, _react.useState)(""),
+      _useState26 = (0, _slicedToArray2.default)(_useState25, 2),
+      confirmationNo = _useState26[0],
+      setConfirmationNo = _useState26[1];
 
     // 🔟 Vendor
-    var _useState21 = (0, _react.useState)(""),
-      _useState22 = (0, _slicedToArray2.default)(_useState21, 2),
-      vendor = _useState22[0],
-      setVendor = _useState22[1];
-
-    // 11️⃣ Do you have proof
-    var _useState23 = (0, _react.useState)(false),
-      _useState24 = (0, _slicedToArray2.default)(_useState23, 2),
-      hasProof = _useState24[0],
-      setHasProof = _useState24[1];
-
-    // 12️⃣ Proof type
-    var _useState25 = (0, _react.useState)("other"),
-      _useState26 = (0, _slicedToArray2.default)(_useState25, 2),
-      proofType = _useState26[0],
-      setProofType = _useState26[1];
-
-    // 13️⃣ Notes
     var _useState27 = (0, _react.useState)(""),
       _useState28 = (0, _slicedToArray2.default)(_useState27, 2),
-      notes = _useState28[0],
-      setNotes = _useState28[1];
+      vendor = _useState28[0],
+      setVendor = _useState28[1];
 
-    // 14️⃣ Attachment
-    var _useState29 = (0, _react.useState)(null),
+    // 11️⃣ Do you have proof
+    var _useState29 = (0, _react.useState)(false),
       _useState30 = (0, _slicedToArray2.default)(_useState29, 2),
-      attachment = _useState30[0],
-      setAttachment = _useState30[1];
-    var _useState31 = (0, _react.useState)(false),
+      hasProof = _useState30[0],
+      setHasProof = _useState30[1];
+
+    // 12️⃣ Proof type
+    var _useState31 = (0, _react.useState)("other"),
       _useState32 = (0, _slicedToArray2.default)(_useState31, 2),
-      loading = _useState32[0],
-      setLoading = _useState32[1];
+      proofType = _useState32[0],
+      setProofType = _useState32[1];
+
+    // 13️⃣ Notes
     var _useState33 = (0, _react.useState)(""),
       _useState34 = (0, _slicedToArray2.default)(_useState33, 2),
-      startLocation = _useState34[0],
-      setStartLocation = _useState34[1];
-    var _useState35 = (0, _react.useState)(""),
+      notes = _useState34[0],
+      setNotes = _useState34[1];
+
+    // 14️⃣ Attachment
+    var _useState35 = (0, _react.useState)(null),
       _useState36 = (0, _slicedToArray2.default)(_useState35, 2),
-      endLocation = _useState36[0],
-      setEndLocation = _useState36[1];
-    var _useState37 = (0, _react.useState)([]),
+      attachment = _useState36[0],
+      setAttachment = _useState36[1];
+    var _useState37 = (0, _react.useState)(false),
       _useState38 = (0, _slicedToArray2.default)(_useState37, 2),
-      startSuggestions = _useState38[0],
-      setStartSuggestions = _useState38[1];
-    var _useState39 = (0, _react.useState)([]),
+      loading = _useState38[0],
+      setLoading = _useState38[1];
+    var _useState39 = (0, _react.useState)(""),
       _useState40 = (0, _slicedToArray2.default)(_useState39, 2),
-      endSuggestions = _useState40[0],
-      setEndSuggestions = _useState40[1];
-    var _useState41 = (0, _react.useState)(null),
+      startLocation = _useState40[0],
+      setStartLocation = _useState40[1];
+    var _useState41 = (0, _react.useState)(""),
       _useState42 = (0, _slicedToArray2.default)(_useState41, 2),
-      startData = _useState42[0],
-      setStartData = _useState42[1];
-    var _useState43 = (0, _react.useState)(null),
+      endLocation = _useState42[0],
+      setEndLocation = _useState42[1];
+    var _useState43 = (0, _react.useState)([]),
       _useState44 = (0, _slicedToArray2.default)(_useState43, 2),
-      endData = _useState44[0],
-      setEndData = _useState44[1];
-    var _useState45 = (0, _react.useState)(new Date()),
+      startSuggestions = _useState44[0],
+      setStartSuggestions = _useState44[1];
+    var _useState45 = (0, _react.useState)([]),
       _useState46 = (0, _slicedToArray2.default)(_useState45, 2),
-      startDate = _useState46[0],
-      setStartDate = _useState46[1];
-    var _useState47 = (0, _react.useState)(new Date()),
+      endSuggestions = _useState46[0],
+      setEndSuggestions = _useState46[1];
+    var _useState47 = (0, _react.useState)(null),
       _useState48 = (0, _slicedToArray2.default)(_useState47, 2),
-      endDate = _useState48[0],
-      setEndDate = _useState48[1];
-    var _useState49 = (0, _react.useState)(false),
+      startData = _useState48[0],
+      setStartData = _useState48[1];
+    var _useState49 = (0, _react.useState)(null),
       _useState50 = (0, _slicedToArray2.default)(_useState49, 2),
-      openStartPicker = _useState50[0],
-      setOpenStartPicker = _useState50[1];
-    var _useState51 = (0, _react.useState)(false),
+      endData = _useState50[0],
+      setEndData = _useState50[1];
+    var _useState51 = (0, _react.useState)(new Date()),
       _useState52 = (0, _slicedToArray2.default)(_useState51, 2),
-      openEndPicker = _useState52[0],
-      setOpenEndPicker = _useState52[1];
+      startDate = _useState52[0],
+      setStartDate = _useState52[1];
+    var _useState53 = (0, _react.useState)(new Date()),
+      _useState54 = (0, _slicedToArray2.default)(_useState53, 2),
+      endDate = _useState54[0],
+      setEndDate = _useState54[1];
+    var _useState55 = (0, _react.useState)(false),
+      _useState56 = (0, _slicedToArray2.default)(_useState55, 2),
+      openStartPicker = _useState56[0],
+      setOpenStartPicker = _useState56[1];
+    var _useState57 = (0, _react.useState)(false),
+      _useState58 = (0, _slicedToArray2.default)(_useState57, 2),
+      openEndPicker = _useState58[0],
+      setOpenEndPicker = _useState58[1];
+    var _useState59 = (0, _react.useState)(false),
+      _useState60 = (0, _slicedToArray2.default)(_useState59, 2),
+      isPicking = _useState60[0],
+      setIsPicking = _useState60[1];
+    var _useState61 = (0, _react.useState)(""),
+      _useState62 = (0, _slicedToArray2.default)(_useState61, 2),
+      city = _useState62[0],
+      setCity = _useState62[1];
+    var _useState63 = (0, _react.useState)(""),
+      _useState64 = (0, _slicedToArray2.default)(_useState63, 2),
+      county = _useState64[0],
+      setCounty = _useState64[1];
 
     /* ---------------- MASTER DATA ---------------- */
     var searchPlaces = /*#__PURE__*/function () {
@@ -290805,6 +291091,10 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     (0, _react.useEffect)(function () {
       dispatch((0, _$$_REQUIRE(_dependencyMap[15], "../redux/actions/action-creator").GET_TRIP_MODE_LIST)());
       dispatch((0, _$$_REQUIRE(_dependencyMap[15], "../redux/actions/action-creator").GET_TRIP_TYPE_LIST)());
+      dispatch((0, _$$_REQUIRE(_dependencyMap[15], "../redux/actions/action-creator").GET_TRIP_TYPE_LIST)());
+      dispatch((0, _$$_REQUIRE(_dependencyMap[15], "../redux/actions/action-creator").GET_WORK_LOCATION_TYPE_LIST)());
+      dispatch((0, _$$_REQUIRE(_dependencyMap[15], "../redux/actions/action-creator").GET_NATURE_OF_WORK_TYPE_LIST)());
+      dispatch((0, _$$_REQUIRE(_dependencyMap[15], "../redux/actions/action-creator").GET_WORK_ACTIVITY_TYPE_LIST)());
       dispatch((0, _$$_REQUIRE(_dependencyMap[15], "../redux/actions/action-creator").GET_TYPE_OF_DAY_LIST)());
       dispatch((0, _$$_REQUIRE(_dependencyMap[15], "../redux/actions/action-creator").GET_STATES_LIST)());
     }, []);
@@ -290925,6 +291215,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       // ✅ NON-TRIP (Missing day)
       if (!isTrip) {
         setStateId(editData.state || "");
+        setCity((editData == null ? void 0 : editData.originCity) || "");
+        setCounty((editData == null ? void 0 : editData.originCounty) || "");
       }
 
       // ✅ TRIP
@@ -290979,6 +291271,9 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       setHoursWorked(editData.remoteHours ? String(editData.remoteHours) : "");
       setTripType(editData.tripTypeId || 1);
       setTripMode(editData.tripModeId || 1);
+      setWorkLocationType(editData.typeOfWorkLocationId || 1);
+      setNatureOfWorkType(editData.natureOfWorkId || 1);
+      setWorkActivityType(editData.workActivityId || 1);
       setConfirmationNo(editData.confirmationNo || "");
       setVendor(editData.vendor || "");
       setHasProof(!!editData.hasProof);
@@ -291030,10 +291325,21 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
 
     var pickDocument = /*#__PURE__*/function () {
       var _ref6 = (0, _asyncToGenerator2.default)(function* () {
-        var res = yield (0, _$$_REQUIRE(_dependencyMap[16], "@react-native-documents/picker").pick)({
-          allowMultiSelection: false
-        });
-        setAttachment(res[0]);
+        console.log("pickDocument called");
+        if (isPicking) return;
+        try {
+          setIsPicking(true);
+          var res = yield (0, _$$_REQUIRE(_dependencyMap[16], "@react-native-documents/picker").pick)({
+            allowMultiSelection: false
+          });
+          if (res != null && res.length) {
+            setAttachment(res[0]);
+          }
+        } catch (e) {
+          console.log(e);
+        } finally {
+          setIsPicking(false);
+        }
       });
       return function pickDocument() {
         return _ref6.apply(this, arguments);
@@ -291043,6 +291349,11 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     /* ---------------- SAVE ---------------- */
 
     var handleSave = function handleSave() {
+      console.log({
+        workLocationType: workLocationType,
+        natureOfWorkType: natureOfWorkType,
+        workActivityType: workActivityType
+      });
       if (!typeOfDay) {
         _$$_REQUIRE(_dependencyMap[14], "../helpers/CommonHelpers").CustomToast.show("Please select Type of Day");
         return;
@@ -291063,7 +291374,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       }
       var payload = {
         // date: editData?.date || date || new Date().toLocaleDateString("en-CA"),
-        date: !editData && creationType === "manual" && isTrip ? startDate : (editData == null ? void 0 : editData.date) || date || new Date().toLocaleDateString("en-CA"),
+        date: !editData && creationType === "manual" && isTrip ? startDate.toLocaleDateString("en-CA") : (editData == null ? void 0 : editData.date) || date || new Date().toLocaleDateString("en-CA"),
         typeOfDayId: Number(typeOfDay),
         isCommissionDay: isCommissionDay,
         kind: isTrip ? "trip" : "missing",
@@ -291072,6 +291383,9 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         isTravelling: isTravelling,
         tripTypeId: tripType,
         tripModeId: tripMode,
+        typeOfWorkLocationId: workLocationType,
+        natureOfWorkId: natureOfWorkType,
+        workActivityId: workActivityType,
         confirmationNo: confirmationNo,
         vendor: vendor,
         hasProof: hasProof,
@@ -291084,6 +291398,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       };
       if (!isTrip) {
         payload.state = stateId;
+        payload.originCity = city;
+        payload.originCounty = county;
         // payload.date = new Date(date).toLocaleDateString("en-CA");
         // payload.date = new Date(date).toLocaleDateString("en-CA").split("T")[0];
       }
@@ -291236,6 +291552,30 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
               children: formatDate((editData == null ? void 0 : editData.date) || date || new Date().toLocaleDateString("en-CA"))
             }), !isTrip && /*#__PURE__*/(0, _jsxRuntime.jsxs)(_jsxRuntime.Fragment, {
               children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
+                title: "Location (City)"
+              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.TextInput, {
+                placeholder: "Enter City",
+                value: city,
+                onChangeText: function onChangeText(text) {
+                  setCity(text);
+                  searchPlaces(text, setEndSuggestions);
+                },
+                style: styles.input,
+                placeholderTextColor: "#777",
+                editable: (editData == null ? void 0 : editData.creationType) !== "automatic"
+              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
+                title: "Location (County)"
+              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.TextInput, {
+                placeholder: "Enter County",
+                value: county,
+                onChangeText: function onChangeText(text) {
+                  setCounty(text);
+                  searchPlaces(text, setEndSuggestions);
+                },
+                style: styles.input,
+                placeholderTextColor: "#777",
+                editable: (editData == null ? void 0 : editData.creationType) !== "automatic"
+              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
                 title: "Location (State)"
               }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.TextInput, {
                 placeholder: "Enter State",
@@ -291252,12 +291592,20 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 children: endSuggestions.map(function (item) {
                   return /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.TouchableOpacity, {
                     onPress: /*#__PURE__*/(0, _asyncToGenerator2.default)(function* () {
-                      var _details$address_comp;
+                      var _details$address_comp, _details$address_comp2, _details$address_comp3;
                       var details = yield getPlaceDetails(item.place_id);
-                      var state = ((_details$address_comp = details.address_components.find(function (c) {
+                      var city = ((_details$address_comp = details.address_components.find(function (c) {
+                        return c.types.includes("locality");
+                      })) == null ? void 0 : _details$address_comp.long_name) || "";
+                      var county = ((_details$address_comp2 = details.address_components.find(function (c) {
+                        return c.types.includes("administrative_area_level_2");
+                      })) == null ? void 0 : _details$address_comp2.long_name) || "";
+                      var state = ((_details$address_comp3 = details.address_components.find(function (c) {
                         return c.types.includes("administrative_area_level_1");
-                      })) == null ? void 0 : _details$address_comp.long_name) || item.description;
-                      setStateId(state); // ✅ MAIN FIX
+                      })) == null ? void 0 : _details$address_comp3.long_name) || "";
+                      setCity(city);
+                      setCounty(county);
+                      setStateId(state);
                       setEndSuggestions([]);
                     }),
                     style: styles.suggestionItem,
@@ -291290,24 +291638,24 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 children: startSuggestions.map(function (item) {
                   return /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.TouchableOpacity, {
                     onPress: /*#__PURE__*/(0, _asyncToGenerator2.default)(function* () {
-                      var _details$address_comp2, _details$address_comp3;
+                      var _details$address_comp4, _details$address_comp5;
                       setStartLocation(item.description);
                       setStartSuggestions([]);
                       console.log('item>>>>>>>>>>', item);
                       var details = yield getPlaceDetails(item.place_id);
                       var lat = details.geometry.location.lat;
                       var lng = details.geometry.location.lng;
-                      var city = ((_details$address_comp2 = details.address_components.find(function (c) {
+                      var city = ((_details$address_comp4 = details.address_components.find(function (c) {
                         return c.types.includes("locality");
-                      })) == null ? void 0 : _details$address_comp2.long_name) || "";
+                      })) == null ? void 0 : _details$address_comp4.long_name) || "";
 
                       // const state =
                       //     details.address_components.find((c) =>
                       //         c.types.includes("administrative_area_level_1")
                       //     )?.short_name || "";
-                      var state = ((_details$address_comp3 = details.address_components.find(function (c) {
+                      var state = ((_details$address_comp5 = details.address_components.find(function (c) {
                         return c.types.includes("administrative_area_level_1");
-                      })) == null ? void 0 : _details$address_comp3.long_name) || "";
+                      })) == null ? void 0 : _details$address_comp5.long_name) || "";
                       setStartData({
                         city: city,
                         state: state,
@@ -291343,23 +291691,23 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 children: endSuggestions.map(function (item) {
                   return /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.TouchableOpacity, {
                     onPress: /*#__PURE__*/(0, _asyncToGenerator2.default)(function* () {
-                      var _details$address_comp4, _details$address_comp5;
+                      var _details$address_comp6, _details$address_comp7;
                       setEndLocation(item.description);
                       setEndSuggestions([]);
                       var details = yield getPlaceDetails(item.place_id);
                       var lat = details.geometry.location.lat;
                       var lng = details.geometry.location.lng;
-                      var city = ((_details$address_comp4 = details.address_components.find(function (c) {
+                      var city = ((_details$address_comp6 = details.address_components.find(function (c) {
                         return c.types.includes("locality");
-                      })) == null ? void 0 : _details$address_comp4.long_name) || "";
+                      })) == null ? void 0 : _details$address_comp6.long_name) || "";
 
                       // const state =
                       //     details.address_components.find((c) =>
                       //         c.types.includes("administrative_area_level_1")
                       //     )?.short_name || "";
-                      var state = ((_details$address_comp5 = details.address_components.find(function (c) {
+                      var state = ((_details$address_comp7 = details.address_components.find(function (c) {
                         return c.types.includes("administrative_area_level_1");
-                      })) == null ? void 0 : _details$address_comp5.long_name) || "";
+                      })) == null ? void 0 : _details$address_comp7.long_name) || "";
                       setEndData({
                         city: city,
                         state: state,
@@ -291567,6 +291915,48 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 ,
                 boxStyles: styles.dropdownBox,
                 inputStyles: styles.dropdownInput
+              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
+                title: "Work Location Type"
+              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_$$_REQUIRE(_dependencyMap[18], "react-native-dropdown-select-list").SelectList, {
+                data: workLocationTypeList == null ? void 0 : workLocationTypeList.map(function (i) {
+                  return {
+                    key: i.id,
+                    value: i.name
+                  };
+                }),
+                setSelected: setWorkLocationType,
+                save: "key",
+                defaultOption: getDefaultOption(workLocationTypeList, workLocationType),
+                boxStyles: styles.dropdownBox,
+                inputStyles: styles.dropdownInput
+              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
+                title: "Nature of Work"
+              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_$$_REQUIRE(_dependencyMap[18], "react-native-dropdown-select-list").SelectList, {
+                data: natureOfWorkTypeList == null ? void 0 : natureOfWorkTypeList.map(function (i) {
+                  return {
+                    key: i.id,
+                    value: i.name
+                  };
+                }),
+                setSelected: setNatureOfWorkType,
+                save: "key",
+                defaultOption: getDefaultOption(natureOfWorkTypeList, natureOfWorkType),
+                boxStyles: styles.dropdownBox,
+                inputStyles: styles.dropdownInput
+              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
+                title: "Work Activity Type"
+              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_$$_REQUIRE(_dependencyMap[18], "react-native-dropdown-select-list").SelectList, {
+                data: workActivityTypeList == null ? void 0 : workActivityTypeList.map(function (i) {
+                  return {
+                    key: i.id,
+                    value: i.name
+                  };
+                }),
+                setSelected: setWorkActivityType,
+                save: "key",
+                defaultOption: getDefaultOption(workActivityTypeList, workActivityType),
+                boxStyles: styles.dropdownBox,
+                inputStyles: styles.dropdownInput
               })]
             }), /*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
               title: "Confirmation Number"
@@ -291624,6 +292014,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
             }), /*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
               title: "Attachment"
             }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.TouchableOpacity, {
+              disabled: isPicking,
               style: styles.attachBtn,
               onPress: pickDocument,
               children: /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
@@ -291632,9 +292023,21 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 },
                 children: "Add Attachment"
               })
-            }), attachment && /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
-              style: styles.fileName,
-              children: attachment.name
+            }), attachment && /*#__PURE__*/(0, _jsxRuntime.jsxs)(_jsxRuntime.Fragment, {
+              children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Image, {
+                source: {
+                  uri: attachment.uri || attachment.signedUrl
+                },
+                style: {
+                  width: 80,
+                  height: 80,
+                  borderRadius: 8,
+                  marginTop: 10
+                }
+              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
+                style: styles.fileName,
+                children: attachment.name || attachment.fileName
+              })]
             })]
           }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.TouchableOpacity, {
             disabled: loading,
@@ -291665,6 +292068,9 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     return {
       tripModeList: state.common.tripModeList,
       tripTypeList: state.common.tripTypeList,
+      workLocationTypeList: state.common.workLocationTypeList,
+      natureOfWorkTypeList: state.common.natureOfWorkTypeList,
+      workActivityTypeList: state.common.workActivityTypeList,
       typeOfDayList: state.common.typeOfDayList,
       statesList: state.common.statesList
     };

@@ -23,15 +23,15 @@ import { GET_PRIVACY_POLICY, } from '../redux/actions/action-creator';
 
 
 
-const PrivacyPolicyScreen = ({GET_PRIVACY_POLICY, privacyPolicy}) => {
+const PrivacyPolicyScreen = ({ GET_PRIVACY_POLICY, privacyPolicy }) => {
     const navigation = useNavigation();
 
     useEffect(() => {
         GET_PRIVACY_POLICY();
-      }, []);
+    }, []);
 
-      
-  console.log('privacypolicy', privacyPolicy);
+
+    console.log('privacypolicy', privacyPolicy);
 
 
     const { width } = Dimensions.get("window");
@@ -44,8 +44,26 @@ const PrivacyPolicyScreen = ({GET_PRIVACY_POLICY, privacyPolicy}) => {
         { id: "5", title: "Your Rights" },
         { id: "6", title: "Contact Us" },
     ];
+    // const renderItem = ({ item }) => (
+    //     <Pressable style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+    //         <Text style={styles.rowText}>{item.title}</Text>
+    //         <Text style={styles.chev}>{">"}</Text>
+    //     </Pressable>
+    // );
+
     const renderItem = ({ item }) => (
-        <Pressable style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+        <Pressable
+            style={({ pressed }) => [
+                styles.row,
+                pressed && styles.pressed,
+            ]}
+            onPress={() =>
+                navigation.navigate("PrivacyPolicyDetails", {
+                    title: item.title,
+                    content: item.content,
+                })
+            }
+        >
             <Text style={styles.rowText}>{item.title}</Text>
             <Text style={styles.chev}>{">"}</Text>
         </Pressable>
@@ -101,13 +119,13 @@ const PrivacyPolicyScreen = ({GET_PRIVACY_POLICY, privacyPolicy}) => {
                             </View>
                         </View> */}
                         <View style={styles.infoCard}>
-                        <FlatList
-                            data={SETTINGS}
-                            keyExtractor={(i) => i.id}
-                            renderItem={renderItem}
-                            contentContainerStyle={styles.listContainer}
-                            ItemSeparatorComponent={() => <View style={styles.separator} />}
-                        />
+                            <FlatList
+                                data={privacyPolicy || []}
+                                keyExtractor={(i) => i.id}
+                                renderItem={renderItem}
+                                contentContainerStyle={styles.listContainer}
+                                ItemSeparatorComponent={() => <View style={styles.separator} />}
+                            />
                         </View>
                     </View>
                 </ScrollView>
@@ -128,18 +146,18 @@ const InfoRow = ({ icon, value, isLast }) => (
 
 function mapStateToProps(state) {
     return {
-      userData: state.auth.userData,
-      loginToken: state.auth.loginToken,
-      privacyPolicy: state.common.privacyPolicy,
+        userData: state.auth.userData,
+        loginToken: state.auth.loginToken,
+        privacyPolicy: state.common.privacyPolicy,
     };
-  }
-  
-  
-  const mapDispatchToProps = {
+}
+
+
+const mapDispatchToProps = {
     GET_PRIVACY_POLICY,
-  };
-  
-  export default connect(mapStateToProps, mapDispatchToProps)(PrivacyPolicyScreen);
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(PrivacyPolicyScreen);
 
 const styles = StyleSheet.create({
     container: {
@@ -300,7 +318,7 @@ const styles = StyleSheet.create({
     },
     separator: {
         height: 1,
-        backgroundColor:'#bbb'
+        backgroundColor: '#bbb'
     },
 
 });

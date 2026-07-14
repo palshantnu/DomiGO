@@ -157,7 +157,7 @@ export const getPersonalProfileDataAction = () => (dispatch, getState) => new Pr
   const state = getState()
   const token = getAuthToken(state)
   getUserPersonalInfoService(token).then((res) => {
-    console.log('res====>', res);
+    console.log('res====>1111', res);
 
     sendDataToReducer(dispatch, UPDATE_PERSONAL_DATA, res?.data?.result);
     resolve(res?.data?.result)

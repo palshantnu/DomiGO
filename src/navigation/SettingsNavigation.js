@@ -14,6 +14,7 @@ import ResidencyRecordDetailsScreen from '../screens/ResidencyRecordDetailsScree
 import ResidencyDeclarationChecklistScreen from '../screens/ResidencyDeclarationChecklistScreen';
 import ResidencyHistoryScreen from '../screens/ResidencyRecords';
 import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
+import PrivacyPolicyDetails from '../screens/PrivacyPolicyDetails';
 import HelpSupportScreen from '../screens/HelpSupportScreen';
 import AboutUsScreen from '../screens/AboutUsScreen';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
@@ -22,90 +23,94 @@ import AddTertiaryLocationScreen from '../screens/AddTertiaryLocationScreen';
 
 
 export default function SettingsNavigation() {
-    const Stack = createStackNavigator();
-    return (
-      <Stack.Navigator>
-        <Stack.Screen
-          name="SettingsScreen"
-          component={SettingsScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="ReportsExport"
-          component={ReportsExportScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Menu"
-          component={MenuScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="ResidencyHistory"
-          component={ResidencyHistoryScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="CreateResidencyRecord"
-          component={CreateResidencyRecordScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="ResidencyRecordDetails"
-          component={ResidencyRecordDetailsScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="ResidencyDeclarationChecklistScreen"
-          component={ResidencyDeclarationChecklistScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Profile"
-          component={ProfileScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="ProfileManagement"
-          component={ProfileManagementScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="ChangePassword"
-          component={ChangePasswordScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="PrivacyPolicyScreen"
-          component={PrivacyPolicyScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="HelpSupportScreen"
-          component={HelpSupportScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="AboutUsScreen"
-          component={AboutUsScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="SubscriptionScreen"
-          component={SubscriptionScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="MyLocationsScreen"
-          component={MyLocationsScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="AddTertiaryLocation"
-          component={AddTertiaryLocationScreen}
-          options={{ headerShown: false }}
-        />
-      </Stack.Navigator>
-    );
-  }
-  
+  const Stack = createStackNavigator();
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="SettingsScreen"
+        component={SettingsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ReportsExport"
+        component={ReportsExportScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Menu"
+        component={MenuScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ResidencyHistory"
+        component={ResidencyHistoryScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="CreateResidencyRecord"
+        component={CreateResidencyRecordScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ResidencyRecordDetails"
+        component={ResidencyRecordDetailsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ResidencyDeclarationChecklistScreen"
+        component={ResidencyDeclarationChecklistScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ProfileManagement"
+        component={ProfileManagementScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ChangePassword"
+        component={ChangePasswordScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="PrivacyPolicyScreen"
+        component={PrivacyPolicyScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="PrivacyPolicyDetails"
+        component={PrivacyPolicyDetails}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="HelpSupportScreen"
+        component={HelpSupportScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="AboutUsScreen"
+        component={AboutUsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="SubscriptionScreen"
+        component={SubscriptionScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="MyLocationsScreen"
+        component={MyLocationsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="AddTertiaryLocation"
+        component={AddTertiaryLocationScreen}
+        options={{ headerShown: false }}
+      />
+    </Stack.Navigator>
+  );
+}

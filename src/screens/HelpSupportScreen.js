@@ -105,7 +105,7 @@ const HelpSupportScreen = ({ GET_FAQS, GET_SUPPORT_CONTACT, faqs, supportContact
                         <View style={styles.card}>
                             <Text style={styles.sectionTitle}>Frequently Asked Question?</Text>
 
-                            {FAQS.map((item, index) => (
+                            {faqs.map((item, index) => (
                                 <View
                                     key={item.id}
                                     style={index !== FAQS.length - 1 && styles.rowBorder}
@@ -132,7 +132,7 @@ const HelpSupportScreen = ({ GET_FAQS, GET_SUPPORT_CONTACT, faqs, supportContact
 
                             <View style={styles.contactRow}>
                                 <Ionicons name="call-outline" size={18} color="#22C55E" />
-                                <Text style={styles.contactText}>+1 {supportContact[0]?.phone}</Text>
+                                <Text style={styles.contactText}>{supportContact[0]?.phone}</Text>
                             </View>
 
                             <TouchableOpacity style={styles.primaryButton}>

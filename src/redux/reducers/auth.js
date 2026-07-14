@@ -33,18 +33,28 @@ export const authReducer = (state = initialState, { type, payload }) => {
       }
     case SIGN_UP_FAILURE:
       return { ...state, userData: [] }
-      case UPDATE_PERSONAL_DATA: {
-        return {
-            ...state,
-            userPersonalData: {
-                ...payload,
-            },
-            userData: {
-                ...state.userData,
-                email: payload?.email,
-            },
-        }
-    }
+    //   case UPDATE_PERSONAL_DATA: {
+    //     return {
+    //         ...state,
+    //         userPersonalData: {
+    //             ...payload,
+    //         },
+    //         userData: {
+    //             ...state.userData,
+    //             email: payload?.email,
+    //         },
+    //     }
+    // }
+    case UPDATE_PERSONAL_DATA: {
+  return {
+    ...state,
+    userPersonalData: payload,
+    userData: {
+      ...state.userData,
+      ...payload,
+    },
+  };
+}
    
     case LOGOUT_SUCCESS:
       return {
