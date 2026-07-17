@@ -1995,7 +1995,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                   <Text style={{ fontSize: 14, color: "#000" }}>
                     {
                       selectedFilter === "ALL"
-                        ? "All"
+                        ? "All Locations"
                         : selectedFilter === "TRIP"
                           ? "State / Region Trips"
                           : selectedFilter === "COUNTY_CHANGE"
@@ -2026,12 +2026,18 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                     }}
                   >
                     {[
-                      { label: "All", value: "ALL" },
+                      // { label: "All", value: "ALL" },
+                      // { label: "State / Region Trips", value: "TRIP" },
+                      // { label: "County Trips", value: "COUNTY_CHANGE" },
+                      // { label: "City / Municipality Trips", value: "CITY_CHANGE" },
+                      // { label: "Verified Locations", value: "LOCATIONS" },
+                      // { label: "Alert Locations", value: "ALERT_LOCATIONS" },
+                      { label: "Alert Locations", value: "ALERT_LOCATIONS" },
                       { label: "State / Region Trips", value: "TRIP" },
                       { label: "County Trips", value: "COUNTY_CHANGE" },
                       { label: "City / Municipality Trips", value: "CITY_CHANGE" },
                       { label: "Verified Locations", value: "LOCATIONS" },
-                      { label: "Alert Locations", value: "ALERT_LOCATIONS" },
+                      { label: "All Locations", value: "ALL" },
                     ].map(item => (
                       <TouchableOpacity
                         key={item.value}
@@ -2266,7 +2272,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                   <Text style={{ fontSize: 14, color: "#000" }}>
                     {
                       selectedFilter === "ALL"
-                        ? "All"
+                        ? "All Locations"
                         : selectedFilter === "TRIP"
                           ? "State / Region Trips"
                           : selectedFilter === "COUNTY_CHANGE"
@@ -2297,12 +2303,18 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                     }}
                   >
                     {[
-                      { label: "All", value: "ALL" },
+                      // { label: "All", value: "ALL" },
+                      // { label: "State / Region Trips", value: "TRIP" },
+                      // { label: "County Trips", value: "COUNTY_CHANGE" },
+                      // { label: "City / Municipality Trips", value: "CITY_CHANGE" },
+                      // { label: "Verified Locations", value: "LOCATIONS" },
+                      // { label: "Alert Locations", value: "ALERT_LOCATIONS" },
+                      { label: "Alert Locations", value: "ALERT_LOCATIONS" },
                       { label: "State / Region Trips", value: "TRIP" },
                       { label: "County Trips", value: "COUNTY_CHANGE" },
                       { label: "City / Municipality Trips", value: "CITY_CHANGE" },
                       { label: "Verified Locations", value: "LOCATIONS" },
-                      { label: "Alert Locations", value: "ALERT_LOCATIONS" },
+                      { label: "All Locations", value: "ALL" },
                     ].map(item => (
                       <TouchableOpacity
                         key={item.value}

@@ -12,9 +12,10 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import colors from "../theme/colors";
 import { connect, useDispatch } from "react-redux";
 import { GET_NOTIFICATION, } from '../redux/actions/action-creator';
+import { useFocusEffect } from "@react-navigation/native";
 
 
-const AlertsScreen = ({GET_NOTIFICATION,notifications}) => {
+const AlertsScreen = ({ GET_NOTIFICATION, notifications }) => {
   const dispatch = useDispatch();
 
   const alerts = [
@@ -74,9 +75,26 @@ const AlertsScreen = ({GET_NOTIFICATION,notifications}) => {
 
   useEffect(() => {
     dispatch(GET_NOTIFICATION)
-}, []);
+  }, []);
+  useEffect(() => {
+    GET_NOTIFICATION()
+  }, []);
 
-console.log('notifications',notifications);
+ useFocusEffect(
+    React.useCallback(() => {
+      GET_NOTIFICATION()
+    }, [])
+  );
+
+  const formatDate = (date) => {
+  return new Date(date).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+  console.log('notificationssss', notifications);
 
   return (
     <LinearGradient
@@ -129,12 +147,12 @@ console.log('notifications',notifications);
                   </View>
                 )}
               </View>
-              {/* {
-                item.id == '5'?
-              <Text style={styles.desc}>{notifications[0].description}</Text>
-                 :
-              <Text style={styles.desc}>{item.description}</Text>
-              } */}
+              {
+                item.id == '5' ?
+                  <Text style={styles.desc}>{notifications[0].description}</Text>
+                  :
+                  <Text style={styles.desc}>{item.description}</Text>
+              }
               <Text style={styles.desc}>{item.description}</Text>
               <View style={styles.footer}>
                 <Text style={styles.time}>{item.time}</Text>
@@ -143,6 +161,42 @@ console.log('notifications',notifications);
                     <Text style={styles.actionText}>{item.action}</Text>
                   </TouchableOpacity>
                 )}
+              </View>
+            </View>
+          ))}
+
+
+          {notifications?.map((item) => (
+            <View key={`api-${item.id}`} style={styles.card}>
+              <View style={styles.row}>
+                <View style={styles.rowLeft}>
+                  <Ionicons
+                    name="notifications-outline"
+                    size={20}
+                    color={colors.primary}
+                  />
+
+                  <Text style={styles.cardTitle}>
+                    {item.title}
+                  </Text>
+                </View>
+
+                <View style={[styles.badge, styles.badgeInfo]}>
+                  <Text style={[styles.badgeText, { color: "#007AFF" }]}>
+                    Info
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={styles.desc}>
+                {item.description}
+              </Text>
+
+              <View style={styles.footer}>
+                <Text style={styles.time}>
+                  {/* {/* {new Date(item.createdAt).toLocaleDateString()} */}
+                    {formatDate(item.createdAt)} 
+                </Text>
               </View>
             </View>
           ))}

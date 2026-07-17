@@ -549,7 +549,8 @@ const DayEntryScreen = ({
             // date: editData?.date || date || new Date().toLocaleDateString("en-CA"),
             date:
                 !editData && creationType === "manual" && isTrip
-                    ? startDate.toLocaleDateString("en-CA")
+                    // ? startDate.toLocaleDateString("en-CA")
+                    ? startDate.toISOString()
                     : editData?.date || date || new Date().toLocaleDateString("en-CA"),
             typeOfDayId: Number(typeOfDay),
             isCommissionDay,
@@ -591,8 +592,10 @@ const DayEntryScreen = ({
             payload.destinationLat = endData.lat;
             payload.destinationLng = endData.lng;
 
-            payload.startDate = startDate.toLocaleDateString("en-CA");
-            payload.endDate = endDate.toLocaleDateString("en-CA");
+            // payload.startDate = startDate.toLocaleDateString("en-CA");
+            // payload.endDate = endDate.toLocaleDateString("en-CA");
+            payload.startDate = startDate.toISOString();
+            payload.endDate = endDate.toISOString();
         }
 
         if (isEdit) payload.id = editData.id;
@@ -716,6 +719,14 @@ const DayEntryScreen = ({
             hour12: true,
         })
     );
+
+
+    const workingType = typeOfDayList?.find(
+        (item) => item.name === "Working"
+    );
+
+    const isWorkingDay =
+        Number(typeOfDay) === workingType?.id;
 
 
     return (
@@ -1054,9 +1065,9 @@ const DayEntryScreen = ({
                                     modal
                                     open={openStartPicker}
                                     date={startDate}
-                                    mode="date"
+                                    mode="datetime"
                                     onConfirm={(date) => {
-                                        date.setHours(9, 0, 0, 0);
+                                        // date.setHours(9, 0, 0, 0);
                                         setOpenStartPicker(false);
                                         setStartDate(date);
                                     }}
@@ -1067,9 +1078,9 @@ const DayEntryScreen = ({
                                     modal
                                     open={openEndPicker}
                                     date={endDate}
-                                    mode="date"
+                                    mode="datetime"
                                     onConfirm={(date) => {
-                                        date.setHours(18, 0, 0, 0);
+                                        // date.setHours(18, 0, 0, 0);
                                         setOpenEndPicker(false);
                                         setEndDate(date);
                                     }}
@@ -1087,7 +1098,8 @@ const DayEntryScreen = ({
                             boxStyles={styles.dropdownBox}
                         />
 
-                        {(editData?.typeOfDay?.name == "Working" || typeOfDay == 2) && (
+                        {/* {(editData?.typeOfDay?.name == "Working" || typeOfDay == 2) && ( */}
+                        {isWorkingDay && (
                             <>
                                 <FieldLabel title="Hours Worked" />
                                 <TextInput
@@ -1101,11 +1113,14 @@ const DayEntryScreen = ({
                             </>
                         )}
 
-                        <FieldLabel title="Commission Day" />
-                        <Toggle value={isCommissionDay} onChange={setIsCommissionDay} />
+                        {isWorkingDay && (
+                            <>
+                                <FieldLabel title="Commission Day" />
+                                <Toggle value={isCommissionDay} onChange={setIsCommissionDay} />
 
-                        <FieldLabel title="Remote Work" />
-                        <Toggle value={isRemoteWork} onChange={setIsRemoteWork} />
+                                <FieldLabel title="Remote Work" />
+                                <Toggle value={isRemoteWork} onChange={setIsRemoteWork} />
+                            </>)}
 
                         {isRemoteWork && !isEdit && (
                             <>
@@ -1181,6 +1196,9 @@ const DayEntryScreen = ({
                                     boxStyles={styles.dropdownBox}
                                     inputStyles={styles.dropdownInput}
                                 />
+
+                                 {isWorkingDay && (
+                            <>
                                 <FieldLabel title="Work Location Type" />
                                 <SelectList
                                     data={workLocationTypeList?.map(i => ({
@@ -1230,6 +1248,7 @@ const DayEntryScreen = ({
                                 />
                             </>
                         )}
+                        </>)}
 
                         <FieldLabel title="Confirmation Number" />
                         <TextInput
