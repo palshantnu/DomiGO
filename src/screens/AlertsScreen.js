@@ -111,23 +111,23 @@ const AlertsScreen = ({ GET_NOTIFICATION, notifications }) => {
         <ScrollView showsVerticalScrollIndicator={false}>
 
           {alerts.map((item) => (
-            <View key={item.id} style={styles.card}>
+            <View key={item?.id} style={styles.card}>
               <View style={styles.row}>
                 <View style={styles.rowLeft}>
                   <Ionicons
-                    name={item.icon}
+                    name={item?.icon}
                     size={20}
-                    color={item.color || "#333"}
+                    color={item?.color || "#333"}
                   />
-                  <Text style={styles.cardTitle}>{item.title}</Text>
+                  <Text style={styles.cardTitle}>{item?.title}</Text>
                 </View>
-                {item.type && (
+                {item?.type && (
                   <View
                     style={[
                       styles.badge,
-                      item.type === "Urgent"
+                      item?.type === "Urgent"
                         ? styles.badgeUrgent
-                        : item.type === "Success"
+                        : item?.type === "Success"
                           ? styles.badgeSuccess
                           : styles.badgeInfo,
                     ]}
@@ -135,30 +135,30 @@ const AlertsScreen = ({ GET_NOTIFICATION, notifications }) => {
                     <Text
                       style={[
                         styles.badgeText,
-                        item.type === "Urgent"
+                        item?.type === "Urgent"
                           ? { color: "#FF3B30" }
-                          : item.type === "Success"
+                          : item?.type === "Success"
                             ? { color: "#34C759" }
                             : { color: "#007AFF" },
                       ]}
                     >
-                      {item.type}
+                      {item?.type}
                     </Text>
                   </View>
                 )}
               </View>
               {
-                item.id == '5' ?
-                  <Text style={styles.desc}>{notifications[0].description}</Text>
+                item?.id == '5' ?
+                  <Text style={styles.desc}>{notifications[0]?.description}</Text>
                   :
-                  <Text style={styles.desc}>{item.description}</Text>
+                  <Text style={styles.desc}>{item?.description}</Text>
               }
-              <Text style={styles.desc}>{item.description}</Text>
+              <Text style={styles.desc}>{item?.description}</Text>
               <View style={styles.footer}>
-                <Text style={styles.time}>{item.time}</Text>
-                {item.action && (
+                <Text style={styles.time}>{item?.time}</Text>
+                {item?.action && (
                   <TouchableOpacity style={styles.actionButton}>
-                    <Text style={styles.actionText}>{item.action}</Text>
+                    <Text style={styles.actionText}>{item?.action}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -167,7 +167,7 @@ const AlertsScreen = ({ GET_NOTIFICATION, notifications }) => {
 
 
           {notifications?.map((item) => (
-            <View key={`api-${item.id}`} style={styles.card}>
+            <View key={`api-${item?.id}`} style={styles.card}>
               <View style={styles.row}>
                 <View style={styles.rowLeft}>
                   <Ionicons
@@ -177,7 +177,7 @@ const AlertsScreen = ({ GET_NOTIFICATION, notifications }) => {
                   />
 
                   <Text style={styles.cardTitle}>
-                    {item.title}
+                    {item?.title}
                   </Text>
                 </View>
 
@@ -189,13 +189,13 @@ const AlertsScreen = ({ GET_NOTIFICATION, notifications }) => {
               </View>
 
               <Text style={styles.desc}>
-                {item.description}
+                {item?.description}
               </Text>
 
               <View style={styles.footer}>
                 <Text style={styles.time}>
                   {/* {/* {new Date(item.createdAt).toLocaleDateString()} */}
-                    {formatDate(item.createdAt)} 
+                    {formatDate(item?.createdAt)} 
                 </Text>
               </View>
             </View>

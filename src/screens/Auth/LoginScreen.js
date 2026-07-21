@@ -270,21 +270,30 @@ const LoginScreen = ({ navigation, signIn }) => {
   };
 
 
-  React.useEffect(() => {
-    requestPermission()
-    getToken()
-  }, []);
+React.useEffect(() => {
+  initFCM();
+}, []);
 
-  async function requestPermission() {
+const initFCM = async () => {
+  try {
+    // Required on iOS
+    await messaging().registerDeviceForRemoteMessages();
+
     const authStatus = await messaging().requestPermission();
-    console.log('Permission status:', authStatus);
-  }
 
-  async function getToken() {
-    const token = await messaging().getToken();
-    console.log('FCM Token:', token);
-    setFcmtoken(token)
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+    if (enabled) {
+      const token = await messaging().getToken();
+      console.log("FCM Token:", token);
+      setFcmtoken(token);
+    }
+  } catch (e) {
+    console.log("FCM Error:", e);
   }
+};
 
   React.useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
