@@ -79,7 +79,7 @@
 //             </TouchableOpacity>
 
 //             <Text style={styles.disclaimer}>
-//                 * Save document at your own risk
+//                 * Please save this information at your own discretion
 //             </Text>
 
 //             <DatePicker
@@ -152,7 +152,7 @@ const DriversLicenseForm = ({ data = {}, onChange,userData }) => {
                     style={styles.input}
                     placeholder="Enter State"
                     placeholderTextColor="#A8A8A8"
-                    value={data.state || ''}
+                    value={!data?.state ? userData?.state : data?.state || ''}
                     onChangeText={(val) => updateField('state', val)}
                 />
             </View>
@@ -181,7 +181,7 @@ const DriversLicenseForm = ({ data = {}, onChange,userData }) => {
             </TouchableOpacity>
 
             <Text style={styles.disclaimer}>
-                * Save document at your own risk
+                * Please save this information at your own discretion
             </Text>
 
             <DatePicker

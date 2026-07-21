@@ -2555,8 +2555,8 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
               >
                 <Text style={[styles.actionText, { color: '#fff' }]}>
                   {/* {isMissingAlreadyAdded ? 'Fill Missing Day' : 'Add Missing Day'} */}
-                  {isMissingAlreadyAdded && selectedMissingDate.isUpdated ? 'Edit Missing Day Info' :
-                    isMissingAlreadyAdded && !selectedMissingDate.isUpdated ? 'Fix Missing Day Info' : 'Add Missing Day Info'}
+                  {isMissingAlreadyAdded && selectedMissingDate.isUpdated ? 'Update Missing Location Info' :
+                    isMissingAlreadyAdded && !selectedMissingDate.isUpdated ? 'Fix Missing Location Info' : 'Add Missing Location Info'}
                 </Text>
               </TouchableOpacity>
 

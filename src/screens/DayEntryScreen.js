@@ -205,6 +205,11 @@ const DayEntryScreen = ({
     const [isPicking, setIsPicking] = useState(false);
     const [city, setCity] = useState("");
     const [county, setCounty] = useState("");
+    const [openStartDate, setOpenStartDate] = useState(false);
+    const [openStartTime, setOpenStartTime] = useState(false);
+
+    const [openEndDate, setOpenEndDate] = useState(false);
+    const [openEndTime, setOpenEndTime] = useState(false);
 
     /* ---------------- MASTER DATA ---------------- */
     const searchPlaces = async (text, setter) => {
@@ -1039,7 +1044,8 @@ const DayEntryScreen = ({
                                         editData?.creationType === "automatic" && { opacity: 0.6 }
                                         ]}
                                         disabled={editData?.creationType === "automatic"}
-                                        onPress={() => setOpenStartPicker(true)}
+                                        // onPress={() => setOpenStartPicker(true)}
+                                        onPress={() => setOpenStartDate(true)}
                                     >
                                         <Ionicons name="calendar-outline" size={18} color="#777" />
                                         <Text style={styles.dateText}>
@@ -1053,7 +1059,8 @@ const DayEntryScreen = ({
                                         editData?.creationType === "automatic" && { opacity: 0.6 }
                                         ]}
                                         disabled={editData?.creationType === "automatic"}
-                                        onPress={() => setOpenEndPicker(true)}
+                                        // onPress={() => setOpenEndPicker(true)}
+                                        onPress={() => setOpenEndDate(true)}
                                     >
                                         <Ionicons name="calendar-outline" size={18} color="#777" />
                                         {/* <Text style={styles.dateText}>{endDate.toDateString()}</Text> */}
@@ -1061,7 +1068,7 @@ const DayEntryScreen = ({
                                     </TouchableOpacity>
                                 </View>
 
-                                <DatePicker
+                                {/* <DatePicker
                                     modal
                                     open={openStartPicker}
                                     date={startDate}
@@ -1072,9 +1079,53 @@ const DayEntryScreen = ({
                                         setStartDate(date);
                                     }}
                                     onCancel={() => setOpenStartPicker(false)}
+                                /> */}
+                                <DatePicker
+                                    modal
+                                    mode="date"
+                                    open={openStartDate}
+                                    date={startDate}
+                                    minimumDate={new Date(2020, 0, 1)}
+                                    maximumDate={new Date(2035, 11, 31)}
+                                    onConfirm={(selectedDate) => {
+                                        const newDate = new Date(startDate);
+
+                                        newDate.setFullYear(selectedDate.getFullYear());
+                                        newDate.setMonth(selectedDate.getMonth());
+                                        newDate.setDate(selectedDate.getDate());
+
+                                        setStartDate(newDate);
+
+                                        setOpenStartDate(false);
+
+                                        setTimeout(() => {
+                                            setOpenStartTime(true);
+                                        }, 250);
+                                    }}
+                                    onCancel={() => setOpenStartDate(false)}
                                 />
 
+                                {/* Start Time Picker */}
+
                                 <DatePicker
+                                    modal
+                                    mode="time"
+                                    open={openStartTime}
+                                    date={startDate}
+                                    onConfirm={(selectedTime) => {
+                                        const newDate = new Date(startDate);
+
+                                        newDate.setHours(selectedTime.getHours());
+                                        newDate.setMinutes(selectedTime.getMinutes());
+
+                                        setStartDate(newDate);
+
+                                        setOpenStartTime(false);
+                                    }}
+                                    onCancel={() => setOpenStartTime(false)}
+                                />
+
+                                {/* <DatePicker
                                     modal
                                     open={openEndPicker}
                                     date={endDate}
@@ -1085,6 +1136,53 @@ const DayEntryScreen = ({
                                         setEndDate(date);
                                     }}
                                     onCancel={() => setOpenEndPicker(false)}
+                                /> */}
+
+                                {/* End Date Picker */}
+
+                                <DatePicker
+                                    modal
+                                    mode="date"
+                                    open={openEndDate}
+                                    date={endDate}
+                                    minimumDate={new Date(2020, 0, 1)}
+                                    maximumDate={new Date(2035, 11, 31)}
+                                    onConfirm={(selectedDate) => {
+                                        const newDate = new Date(endDate);
+
+                                        newDate.setFullYear(selectedDate.getFullYear());
+                                        newDate.setMonth(selectedDate.getMonth());
+                                        newDate.setDate(selectedDate.getDate());
+
+                                        setEndDate(newDate);
+
+                                        setOpenEndDate(false);
+
+                                        setTimeout(() => {
+                                            setOpenEndTime(true);
+                                        }, 250);
+                                    }}
+                                    onCancel={() => setOpenEndDate(false)}
+                                />
+
+                                {/* End Time Picker */}
+
+                                <DatePicker
+                                    modal
+                                    mode="time"
+                                    open={openEndTime}
+                                    date={endDate}
+                                    onConfirm={(selectedTime) => {
+                                        const newDate = new Date(endDate);
+
+                                        newDate.setHours(selectedTime.getHours());
+                                        newDate.setMinutes(selectedTime.getMinutes());
+
+                                        setEndDate(newDate);
+
+                                        setOpenEndTime(false);
+                                    }}
+                                    onCancel={() => setOpenEndTime(false)}
                                 />
                             </>)}
 
@@ -1197,58 +1295,58 @@ const DayEntryScreen = ({
                                     inputStyles={styles.dropdownInput}
                                 />
 
-                                 {isWorkingDay && (
-                            <>
-                                <FieldLabel title="Work Location Type" />
-                                <SelectList
-                                    data={workLocationTypeList?.map(i => ({
-                                        key: i.id,
-                                        value: i.name,
-                                    }))}
-                                    setSelected={setWorkLocationType}
-                                    save="key"
-                                    defaultOption={getDefaultOption(
-                                        workLocationTypeList,
-                                        workLocationType
-                                    )}
-                                    boxStyles={styles.dropdownBox}
-                                    inputStyles={styles.dropdownInput}
-                                />
+                                {isWorkingDay && (
+                                    <>
+                                        <FieldLabel title="Work Location Type" />
+                                        <SelectList
+                                            data={workLocationTypeList?.map(i => ({
+                                                key: i.id,
+                                                value: i.name,
+                                            }))}
+                                            setSelected={setWorkLocationType}
+                                            save="key"
+                                            defaultOption={getDefaultOption(
+                                                workLocationTypeList,
+                                                workLocationType
+                                            )}
+                                            boxStyles={styles.dropdownBox}
+                                            inputStyles={styles.dropdownInput}
+                                        />
 
-                                <FieldLabel title="Nature of Work" />
-                                <SelectList
-                                    data={natureOfWorkTypeList?.map(i => ({
-                                        key: i.id,
-                                        value: i.name,
-                                    }))}
-                                    setSelected={setNatureOfWorkType}
-                                    save="key"
-                                    defaultOption={getDefaultOption(
-                                        natureOfWorkTypeList,
-                                        natureOfWorkType
-                                    )}
-                                    boxStyles={styles.dropdownBox}
-                                    inputStyles={styles.dropdownInput}
-                                />
+                                        <FieldLabel title="Nature of Work" />
+                                        <SelectList
+                                            data={natureOfWorkTypeList?.map(i => ({
+                                                key: i.id,
+                                                value: i.name,
+                                            }))}
+                                            setSelected={setNatureOfWorkType}
+                                            save="key"
+                                            defaultOption={getDefaultOption(
+                                                natureOfWorkTypeList,
+                                                natureOfWorkType
+                                            )}
+                                            boxStyles={styles.dropdownBox}
+                                            inputStyles={styles.dropdownInput}
+                                        />
 
-                                <FieldLabel title="Work Activity Type" />
-                                <SelectList
-                                    data={workActivityTypeList?.map(i => ({
-                                        key: i.id,
-                                        value: i.name,
-                                    }))}
-                                    setSelected={setWorkActivityType}
-                                    save="key"
-                                    defaultOption={getDefaultOption(
-                                        workActivityTypeList,
-                                        workActivityType
-                                    )}
-                                    boxStyles={styles.dropdownBox}
-                                    inputStyles={styles.dropdownInput}
-                                />
-                            </>
-                        )}
-                        </>)}
+                                        <FieldLabel title="Work Activity Type" />
+                                        <SelectList
+                                            data={workActivityTypeList?.map(i => ({
+                                                key: i.id,
+                                                value: i.name,
+                                            }))}
+                                            setSelected={setWorkActivityType}
+                                            save="key"
+                                            defaultOption={getDefaultOption(
+                                                workActivityTypeList,
+                                                workActivityType
+                                            )}
+                                            boxStyles={styles.dropdownBox}
+                                            inputStyles={styles.dropdownInput}
+                                        />
+                                    </>
+                                )}
+                            </>)}
 
                         <FieldLabel title="Confirmation Number" />
                         <TextInput

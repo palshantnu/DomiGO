@@ -15,14 +15,29 @@ const PermissionScreen = ({ route }) => {
   const { screenname } = route.params;
   const navigation = useNavigation();
 
-  const [locationEnabled, setLocationEnabled] = useState(false);
+  const [locationEnabled, setLocationEnabled] = useState(true);
   const [offlineSync, setOfflineSync] = useState(true);
-  useEffect(() => {
-    if (locationEnabled && offlineSync) {
-      navigation.navigate(screenname)
-    }
+  // useEffect(() => {
+  //   if (locationEnabled && offlineSync) {
+  //     navigation.navigate(screenname)
+  //   }
 
-  }, [locationEnabled, offlineSync])
+  // }, [locationEnabled, offlineSync])
+
+
+  useEffect(() => {
+  let timer;
+
+  if (locationEnabled && offlineSync) {
+    timer = setTimeout(() => {
+      navigation.navigate(screenname);
+    }, 2000); // 2 seconds delay
+  }
+
+  return () => {
+    if (timer) clearTimeout(timer);
+  };
+}, [locationEnabled, offlineSync]);
 
   return (
 

@@ -11,8 +11,12 @@ import DatePicker from 'react-native-date-picker';
 import GoogleAutoComplete from '../../components/GoogleAutoComplete';
 import { GOOGLE_KEY } from '../../helpers/CommonHelpers';
 
-const PropertyExemptionsForm = ({ data, onChange }) => {
+const PropertyExemptionsForm = ({ data, onChange, userData }) => {
     const [openDatePicker, setOpenDatePicker] = useState(false);
+
+
+    console.log('userData>>>>>>>', userData);
+
 
     const updateField = (field, value) => {
         onChange({ ...data, [field]: value, enabled: true });
@@ -21,7 +25,7 @@ const PropertyExemptionsForm = ({ data, onChange }) => {
     return (
         <View>
             <Text style={styles.label}>Start Date *</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
                 style={styles.inputContainer}
                 onPress={() => setOpenDatePicker(true)}
             >
@@ -36,7 +40,7 @@ const PropertyExemptionsForm = ({ data, onChange }) => {
                 placeholder="Search Address"
                 apiKey={GOOGLE_KEY}
                 isResidence={true}
-                value={data.address}
+                value={!data?.address ? userData?.address : data?.address || ''}
                 onSelect={(value) => updateField('address', value)}
             />
 

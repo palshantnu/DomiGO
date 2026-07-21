@@ -165814,7 +165814,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                     fontSize: 14,
                     color: "#000"
                   },
-                  children: selectedFilter === "ALL" ? "All" : selectedFilter === "TRIP" ? "State / Region Trips" : selectedFilter === "COUNTY_CHANGE" ? "County Trips" : selectedFilter === "CITY_CHANGE" ? "City / Municipality Trips" : selectedFilter === "LOCATIONS" ? "Verified Locations" : "Alert Locations"
+                  children: selectedFilter === "ALL" ? "All Locations" : selectedFilter === "TRIP" ? "State / Region Trips" : selectedFilter === "COUNTY_CHANGE" ? "County Trips" : selectedFilter === "CITY_CHANGE" ? "City / Municipality Trips" : selectedFilter === "LOCATIONS" ? "Verified Locations" : "Alert Locations"
                 }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_Ionicons.default, {
                   name: showFilterDropdown ? "chevron-up" : "chevron-down",
                   size: 18,
@@ -165828,9 +165828,16 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                   elevation: 3,
                   overflow: "hidden"
                 },
-                children: [{
-                  label: "All",
-                  value: "ALL"
+                children: [
+                // { label: "All", value: "ALL" },
+                // { label: "State / Region Trips", value: "TRIP" },
+                // { label: "County Trips", value: "COUNTY_CHANGE" },
+                // { label: "City / Municipality Trips", value: "CITY_CHANGE" },
+                // { label: "Verified Locations", value: "LOCATIONS" },
+                // { label: "Alert Locations", value: "ALERT_LOCATIONS" },
+                {
+                  label: "Alert Locations",
+                  value: "ALERT_LOCATIONS"
                 }, {
                   label: "State / Region Trips",
                   value: "TRIP"
@@ -165844,8 +165851,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                   label: "Verified Locations",
                   value: "LOCATIONS"
                 }, {
-                  label: "Alert Locations",
-                  value: "ALERT_LOCATIONS"
+                  label: "All Locations",
+                  value: "ALL"
                 }].map(function (item) {
                   return /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.TouchableOpacity, {
                     onPress: function onPress() {
@@ -166029,7 +166036,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                     fontSize: 14,
                     color: "#000"
                   },
-                  children: selectedFilter === "ALL" ? "All" : selectedFilter === "TRIP" ? "State / Region Trips" : selectedFilter === "COUNTY_CHANGE" ? "County Trips" : selectedFilter === "CITY_CHANGE" ? "City / Municipality Trips" : selectedFilter === "LOCATIONS" ? "Verified Locations" : "Alert Locations"
+                  children: selectedFilter === "ALL" ? "All Locations" : selectedFilter === "TRIP" ? "State / Region Trips" : selectedFilter === "COUNTY_CHANGE" ? "County Trips" : selectedFilter === "CITY_CHANGE" ? "City / Municipality Trips" : selectedFilter === "LOCATIONS" ? "Verified Locations" : "Alert Locations"
                 }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_Ionicons.default, {
                   name: showFilterDropdown ? "chevron-up" : "chevron-down",
                   size: 18,
@@ -166043,9 +166050,16 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                   elevation: 3,
                   overflow: "hidden"
                 },
-                children: [{
-                  label: "All",
-                  value: "ALL"
+                children: [
+                // { label: "All", value: "ALL" },
+                // { label: "State / Region Trips", value: "TRIP" },
+                // { label: "County Trips", value: "COUNTY_CHANGE" },
+                // { label: "City / Municipality Trips", value: "CITY_CHANGE" },
+                // { label: "Verified Locations", value: "LOCATIONS" },
+                // { label: "Alert Locations", value: "ALERT_LOCATIONS" },
+                {
+                  label: "Alert Locations",
+                  value: "ALERT_LOCATIONS"
                 }, {
                   label: "State / Region Trips",
                   value: "TRIP"
@@ -166059,8 +166073,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                   label: "Verified Locations",
                   value: "LOCATIONS"
                 }, {
-                  label: "Alert Locations",
-                  value: "ALERT_LOCATIONS"
+                  label: "All Locations",
+                  value: "ALL"
                 }].map(function (item) {
                   return /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.TouchableOpacity, {
                     onPress: function onPress() {
@@ -291323,7 +291337,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   /* ---------------- MAIN ---------------- */
 
   var DayEntryScreen = function DayEntryScreen(_ref3) {
-    var _route$params, _route$params$isEdit, _route$params2, _route$params$data, _route$params3, _route$params4, _editData$typeOfDay;
+    var _route$params, _route$params$isEdit, _route$params2, _route$params$data, _route$params3, _route$params4;
     var tripModeList = _ref3.tripModeList,
       tripTypeList = _ref3.tripTypeList,
       workLocationTypeList = _ref3.workLocationTypeList,
@@ -291817,7 +291831,9 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       }
       var payload = {
         // date: editData?.date || date || new Date().toLocaleDateString("en-CA"),
-        date: !editData && creationType === "manual" && isTrip ? startDate.toLocaleDateString("en-CA") : (editData == null ? void 0 : editData.date) || date || new Date().toLocaleDateString("en-CA"),
+        date: !editData && creationType === "manual" && isTrip
+        // ? startDate.toLocaleDateString("en-CA")
+        ? startDate.toISOString() : (editData == null ? void 0 : editData.date) || date || new Date().toLocaleDateString("en-CA"),
         typeOfDayId: Number(typeOfDay),
         isCommissionDay: isCommissionDay,
         kind: isTrip ? "trip" : "missing",
@@ -291855,8 +291871,11 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         payload.destinationState = endData.state;
         payload.destinationLat = endData.lat;
         payload.destinationLng = endData.lng;
-        payload.startDate = startDate.toLocaleDateString("en-CA");
-        payload.endDate = endDate.toLocaleDateString("en-CA");
+
+        // payload.startDate = startDate.toLocaleDateString("en-CA");
+        // payload.endDate = endDate.toLocaleDateString("en-CA");
+        payload.startDate = startDate.toISOString();
+        payload.endDate = endDate.toISOString();
       }
       if (isEdit) payload.id = editData.id;
       var action = isTrip ? isEdit ? (0, _$$_REQUIRE(_dependencyMap[15], "../redux/actions/action-creator").UPDATETRIP)(payload) : (0, _$$_REQUIRE(_dependencyMap[15], "../redux/actions/action-creator").ADDTRIP)(payload)
@@ -291959,6 +291978,10 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       minute: "2-digit",
       hour12: true
     }));
+    var workingType = typeOfDayList == null ? void 0 : typeOfDayList.find(function (item) {
+      return item.name === "Working";
+    });
+    var isWorkingDay = Number(typeOfDay) === (workingType == null ? void 0 : workingType.id);
     return /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNativeLinearGradient.default, {
       colors: ["#9ab1fa", "#ffffff"],
       start: {
@@ -292212,9 +292235,9 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 modal: true,
                 open: openStartPicker,
                 date: startDate,
-                mode: "date",
+                mode: "datetime",
                 onConfirm: function onConfirm(date) {
-                  date.setHours(9, 0, 0, 0);
+                  // date.setHours(9, 0, 0, 0);
                   setOpenStartPicker(false);
                   setStartDate(date);
                 },
@@ -292225,9 +292248,9 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 modal: true,
                 open: openEndPicker,
                 date: endDate,
-                mode: "date",
+                mode: "datetime",
                 onConfirm: function onConfirm(date) {
-                  date.setHours(18, 0, 0, 0);
+                  // date.setHours(18, 0, 0, 0);
                   setOpenEndPicker(false);
                   setEndDate(date);
                 },
@@ -292248,7 +292271,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
               save: "key",
               defaultOption: getDefaultOption(typeOfDayList, typeOfDay),
               boxStyles: styles.dropdownBox
-            }), ((editData == null || (_editData$typeOfDay = editData.typeOfDay) == null ? void 0 : _editData$typeOfDay.name) == "Working" || typeOfDay == 2) && /*#__PURE__*/(0, _jsxRuntime.jsxs)(_jsxRuntime.Fragment, {
+            }), isWorkingDay && /*#__PURE__*/(0, _jsxRuntime.jsxs)(_jsxRuntime.Fragment, {
               children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
                 title: "Hours Worked"
               }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.TextInput, {
@@ -292259,16 +292282,18 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 placeholder: "Enter hours",
                 placeholderTextColor: "#777"
               })]
-            }), /*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
-              title: "Commission Day"
-            }), /*#__PURE__*/(0, _jsxRuntime.jsx)(Toggle, {
-              value: isCommissionDay,
-              onChange: setIsCommissionDay
-            }), /*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
-              title: "Remote Work"
-            }), /*#__PURE__*/(0, _jsxRuntime.jsx)(Toggle, {
-              value: isRemoteWork,
-              onChange: setIsRemoteWork
+            }), isWorkingDay && /*#__PURE__*/(0, _jsxRuntime.jsxs)(_jsxRuntime.Fragment, {
+              children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
+                title: "Commission Day"
+              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(Toggle, {
+                value: isCommissionDay,
+                onChange: setIsCommissionDay
+              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
+                title: "Remote Work"
+              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(Toggle, {
+                value: isRemoteWork,
+                onChange: setIsRemoteWork
+              })]
             }), isRemoteWork && !isEdit && /*#__PURE__*/(0, _jsxRuntime.jsxs)(_jsxRuntime.Fragment, {
               children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
                 title: "Hours Worked"
@@ -292358,48 +292383,50 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 ,
                 boxStyles: styles.dropdownBox,
                 inputStyles: styles.dropdownInput
-              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
-                title: "Work Location Type"
-              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_$$_REQUIRE(_dependencyMap[18], "react-native-dropdown-select-list").SelectList, {
-                data: workLocationTypeList == null ? void 0 : workLocationTypeList.map(function (i) {
-                  return {
-                    key: i.id,
-                    value: i.name
-                  };
-                }),
-                setSelected: setWorkLocationType,
-                save: "key",
-                defaultOption: getDefaultOption(workLocationTypeList, workLocationType),
-                boxStyles: styles.dropdownBox,
-                inputStyles: styles.dropdownInput
-              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
-                title: "Nature of Work"
-              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_$$_REQUIRE(_dependencyMap[18], "react-native-dropdown-select-list").SelectList, {
-                data: natureOfWorkTypeList == null ? void 0 : natureOfWorkTypeList.map(function (i) {
-                  return {
-                    key: i.id,
-                    value: i.name
-                  };
-                }),
-                setSelected: setNatureOfWorkType,
-                save: "key",
-                defaultOption: getDefaultOption(natureOfWorkTypeList, natureOfWorkType),
-                boxStyles: styles.dropdownBox,
-                inputStyles: styles.dropdownInput
-              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
-                title: "Work Activity Type"
-              }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_$$_REQUIRE(_dependencyMap[18], "react-native-dropdown-select-list").SelectList, {
-                data: workActivityTypeList == null ? void 0 : workActivityTypeList.map(function (i) {
-                  return {
-                    key: i.id,
-                    value: i.name
-                  };
-                }),
-                setSelected: setWorkActivityType,
-                save: "key",
-                defaultOption: getDefaultOption(workActivityTypeList, workActivityType),
-                boxStyles: styles.dropdownBox,
-                inputStyles: styles.dropdownInput
+              }), isWorkingDay && /*#__PURE__*/(0, _jsxRuntime.jsxs)(_jsxRuntime.Fragment, {
+                children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
+                  title: "Work Location Type"
+                }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_$$_REQUIRE(_dependencyMap[18], "react-native-dropdown-select-list").SelectList, {
+                  data: workLocationTypeList == null ? void 0 : workLocationTypeList.map(function (i) {
+                    return {
+                      key: i.id,
+                      value: i.name
+                    };
+                  }),
+                  setSelected: setWorkLocationType,
+                  save: "key",
+                  defaultOption: getDefaultOption(workLocationTypeList, workLocationType),
+                  boxStyles: styles.dropdownBox,
+                  inputStyles: styles.dropdownInput
+                }), /*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
+                  title: "Nature of Work"
+                }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_$$_REQUIRE(_dependencyMap[18], "react-native-dropdown-select-list").SelectList, {
+                  data: natureOfWorkTypeList == null ? void 0 : natureOfWorkTypeList.map(function (i) {
+                    return {
+                      key: i.id,
+                      value: i.name
+                    };
+                  }),
+                  setSelected: setNatureOfWorkType,
+                  save: "key",
+                  defaultOption: getDefaultOption(natureOfWorkTypeList, natureOfWorkType),
+                  boxStyles: styles.dropdownBox,
+                  inputStyles: styles.dropdownInput
+                }), /*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
+                  title: "Work Activity Type"
+                }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_$$_REQUIRE(_dependencyMap[18], "react-native-dropdown-select-list").SelectList, {
+                  data: workActivityTypeList == null ? void 0 : workActivityTypeList.map(function (i) {
+                    return {
+                      key: i.id,
+                      value: i.name
+                    };
+                  }),
+                  setSelected: setWorkActivityType,
+                  save: "key",
+                  defaultOption: getDefaultOption(workActivityTypeList, workActivityType),
+                  boxStyles: styles.dropdownBox,
+                  inputStyles: styles.dropdownInput
+                })]
               })]
             }), /*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
               title: "Confirmation Number"

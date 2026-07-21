@@ -221,7 +221,7 @@ const DeclarationForm = ({ data, onChange,userData }) => {
             />
 
             {/* Date Established */}
-            {data.hasDeclaration === "yes" && (
+            {/* {data.hasDeclaration === "yes" && (
                 <>
                     <Text style={styles.label}>Date Established</Text>
 
@@ -254,14 +254,14 @@ const DeclarationForm = ({ data, onChange,userData }) => {
                         onCancel={() => setOpenEstablishedDate(false)}
                     />
                 </>
-            )}
+            )} */}
 
             {/* Signup Address */}
-            {data.hasDeclaration === "yes" && (
+            {/* {data.hasDeclaration === "yes" && (
                 <TouchableOpacity style={styles.linkBtn}>
                     <Text style={styles.linkText}>Link to Sign Up Address</Text>
                 </TouchableOpacity>
-            )}
+            )} */}
 
             {/* Own Property */}
             <Text style={styles.label}>Do you own this property?</Text>

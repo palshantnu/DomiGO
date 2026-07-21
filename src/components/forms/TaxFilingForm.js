@@ -10,7 +10,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import DatePicker from 'react-native-date-picker';
 import colors from '../../theme/colors';
 
-const TaxFilingForm = ({ data, onChange }) => {
+const TaxFilingForm = ({ data, onChange, userData }) => {
     const [openDatePicker, setOpenDatePicker] = useState(false);
 
     const updateField = (field, value) => {
@@ -22,7 +22,7 @@ const TaxFilingForm = ({ data, onChange }) => {
     return (
         <View>
             <Text style={styles.label}>Last File Date *</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
                 style={styles.inputContainer}
                 onPress={() => setOpenDatePicker(true)}
             >
@@ -32,19 +32,19 @@ const TaxFilingForm = ({ data, onChange }) => {
                 </Text>
             </TouchableOpacity>
 
-            <Text style={styles.label}>State (from signup) *</Text>
+            <Text style={styles.label}>Tax filling to state registered with IRS *</Text>
             <View style={styles.inputContainer}>
                 <Ionicons name="flag-outline" size={20} color="#9E9EA7" />
                 <TextInput
                     style={styles.input}
                     placeholder="Enter state"
                     placeholderTextColor="#A8A8A8"
-                    value={data.state}
+                    value={!data?.state ? userData?.state : data?.state || ''}
                     onChangeText={(val) => updateField('state', val)}
                 />
             </View>
 
-            <Text style={styles.label}>Years Filed *</Text>
+            <Text style={styles.label}>Years Filed Within the state *</Text>
             <View style={styles.yearsContainer}>
                 {years.map((year) => (
                     <TouchableOpacity

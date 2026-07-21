@@ -62,7 +62,7 @@ const WorkLocationForm = ({ data, onChange }) => {
                 </Text>
             </TouchableOpacity>
 
-            <Text style={styles.disclaimer}>* Save document at your own risk</Text>
+            <Text style={styles.disclaimer}>* Please save this information at your own discretion</Text>
 
             <DatePicker
                 modal

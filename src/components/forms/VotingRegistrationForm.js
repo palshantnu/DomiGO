@@ -10,7 +10,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import DatePicker from 'react-native-date-picker';
 import { pick } from '@react-native-documents/picker';
 
-const VotingRegistrationForm = ({ data, onChange }) => {
+const VotingRegistrationForm = ({ data, onChange, userData }) => {
     const [openDatePicker, setOpenDatePicker] = useState(false);
 
     const updateField = (field, value) => {
@@ -48,12 +48,13 @@ const VotingRegistrationForm = ({ data, onChange }) => {
                     style={styles.input}
                     placeholder="Enter state"
                     placeholderTextColor="#A8A8A8"
-                    value={data.state}
+                    // value={data.state}
+                    value={!data?.state ? userData?.state : data?.state || ''}
                     onChangeText={(val) => updateField('state', val)}
                 />
             </View>
 
-            <Text style={styles.label}>Registered County *</Text>
+            {/* <Text style={styles.label}>Registered County *</Text>
             <View style={styles.inputContainer}>
                 <Ionicons name="location-outline" size={20} color="#9E9EA7" />
                 <TextInput
@@ -63,7 +64,7 @@ const VotingRegistrationForm = ({ data, onChange }) => {
                     value={data.county}
                     onChangeText={(val) => updateField('county', val)}
                 />
-            </View>
+            </View> */}
 
             <Text style={styles.label}>Registered City *</Text>
             <View style={styles.inputContainer}>
@@ -72,7 +73,8 @@ const VotingRegistrationForm = ({ data, onChange }) => {
                     style={styles.input}
                     placeholder="Enter city"
                     placeholderTextColor="#A8A8A8"
-                    value={data.city}
+                    // value={data.city}
+                    value={!data?.city ? userData?.city : data?.city || ''}
                     onChangeText={(val) => updateField('city', val)}
                 />
             </View>
@@ -88,7 +90,7 @@ const VotingRegistrationForm = ({ data, onChange }) => {
                 </Text>
             </TouchableOpacity>
 
-            <Text style={styles.disclaimer}>* Save document at your own risk</Text>
+            <Text style={styles.disclaimer}>* Please save this information at your own discretion</Text>
 
             <DatePicker
                 modal

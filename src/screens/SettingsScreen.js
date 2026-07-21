@@ -193,7 +193,7 @@ export default function SettingsScreen() {
 
           <Text style={styles.sectionTitle}>Data & Privacy</Text>
           <View style={styles.card}>
-            <View style={styles.row}>
+            {/* <View style={styles.row}>
               <View style={styles.rowLeft}>
                 <ICON_syncdata height={24} width={24} />
                 <View>
@@ -209,7 +209,7 @@ export default function SettingsScreen() {
                 trackColor={{ false: "#ccc", true: '#65C466' }}
                 thumbColor={"#fff"}
               />
-            </View>
+            </View> */}
 
 
 

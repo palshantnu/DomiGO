@@ -777,7 +777,7 @@
 //                                     fileName={sections.driversLicense.document?.name}
 //                                     onPick={() => pickDocument('driversLicense')}
 //                                 />
-//                                 <Text style={styles.disclaimer}>* Save document at your own risk</Text>
+//                                 <Text style={styles.disclaimer}>* Please save this information at your own discretion</Text>
 //                             </ToggleSection>
 
 //                             {/* ========== VOTING REGISTRATION ========== */}
@@ -817,7 +817,7 @@
 //                                     fileName={sections.votingRegistration.document?.name}
 //                                     onPick={() => pickDocument('votingRegistration')}
 //                                 />
-//                                 <Text style={styles.disclaimer}>* Save document at your own risk</Text>
+//                                 <Text style={styles.disclaimer}>* Please save this information at your own discretion</Text>
 //                             </ToggleSection>
 
 //                             {/* ========== WORK LOCATION ========== */}
@@ -846,7 +846,7 @@
 //                                     fileName={sections.workLocation.document?.name}
 //                                     onPick={() => pickDocument('workLocation')}
 //                                 />
-//                                 <Text style={styles.disclaimer}>* Save document at your own risk</Text>
+//                                 <Text style={styles.disclaimer}>* Please save this information at your own discretion</Text>
 //                             </ToggleSection>
 
 //                             {/* ========== PRIMARY DOCTOR ========== */}
@@ -932,7 +932,7 @@
 //                                     fileName={sections.businessRecords.document?.name}
 //                                     onPick={() => pickDocument('businessRecords')}
 //                                 />
-//                                 <Text style={styles.disclaimer}>* Save document at your own risk</Text>
+//                                 <Text style={styles.disclaimer}>* Please save this information at your own discretion</Text>
 //                             </ToggleSection>
 
 //                             {/* ========== OTHERS (Multiple Entries) ========== */}
@@ -1874,9 +1874,9 @@ const ResidencyHistoryScreen = ({
             'Tax Filing': 'taxFiling',
             'Business Records': 'businessRecords',
             'Other - Property Lease': 'others_lease',
-            'Other - Vehicle Title': 'others_title',
-            'Other - Vehicle Insurance': 'others_insurance',
-            'Other - Second home': 'secondHome',
+            'Other - Vehicle Title': 'vehicle_title',
+            'Other - Vehicle Insurance': 'vehicle_insurance',
+            'Other - Second home': 'secondHome', 
             'Other - Business Records': 'businessRecordsMulti'
         };
         return mapping[categoryName] || categoryName.toLowerCase().replace(/\s+/g, '');
@@ -2066,11 +2066,11 @@ const ResidencyHistoryScreen = ({
 
 
     const handleSectionPress = (category, sectionInfo) => {
-        console.log('sectionInfo',sectionInfo);
+        console.log('sectionInfo', sectionInfo);
         const sectionKey = getSectionKeyFromCategory(category.name);
 
         // if (sectionInfo.data == null || (Array.isArray(sectionInfo.data) && sectionInfo.data.length > 0)) {
-        if (sectionInfo?.data != null ) {
+        if (sectionInfo?.data != null) {
             // If enabled/has data, navigate to details
             navigation.navigate("CreateResidencyRecord", {
                 category,
@@ -2102,11 +2102,19 @@ const ResidencyHistoryScreen = ({
 
     // ========== Categorize Sections ==========
     const mainSections = documentCategoryList?.filter(cat =>
-        !cat.name.startsWith('Other -') && cat.name !== 'Other - Business Records'
+        !(
+            cat.name.startsWith("Other -") &&
+            cat.name !== "Other - Vehicle Title" &&
+            cat.name !== "Other - Vehicle Insurance"
+        ) &&
+        cat.name !== "Other - Business Records"
     ) || [];
 
     const otherSections = documentCategoryList?.filter(cat =>
-        cat.name.startsWith('Other -') && cat.name !== 'Other - Business Records'
+        cat.name.startsWith("Other -") &&
+        cat.name !== "Other - Vehicle Title" &&
+        cat.name !== "Other - Vehicle Insurance" &&
+        cat.name !== "Other - Business Records"
     ) || [];
 
     const multiBusinessSection = documentCategoryList?.find(cat =>
