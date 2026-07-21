@@ -12,6 +12,7 @@ import DatePicker from 'react-native-date-picker';
 import { pick } from '@react-native-documents/picker';
 import { Dropdown } from 'react-native-element-dropdown';
 import colors from '../../theme/colors';
+import AttachmentPicker from '../common/AttachmentPicker';
 
 const OthersForm = ({ data, onChange, mode }) => {
     const [openDatePicker, setOpenDatePicker] = useState(false);
@@ -55,7 +56,7 @@ const OthersForm = ({ data, onChange, mode }) => {
             )}
 
             <Text style={styles.label}>Start Date *</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
                 style={styles.inputContainer}
                 onPress={() => setOpenDatePicker(true)}
             >
@@ -80,7 +81,7 @@ const OthersForm = ({ data, onChange, mode }) => {
             </View>
 
             <Text style={styles.label}>Document</Text>
-            <TouchableOpacity 
+            {/* <TouchableOpacity 
                 style={styles.inputContainer}
                 onPress={pickDocument}
             >
@@ -88,7 +89,26 @@ const OthersForm = ({ data, onChange, mode }) => {
                 <Text style={[styles.input, !data.document && styles.placeholder]}>
                     {data.document?.name || "Upload PDF / Image"}
                 </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
+            <AttachmentPicker
+                value={data.document}
+                onChange={(file) => updateField("document", file)}
+                style={styles.inputContainer}
+            />
+
+            {
+                data.document?.uri && (
+                    <Image
+                        source={{ uri: data.document.uri }}
+                        style={{
+                            width: 90,
+                            height: 90,
+                            borderRadius: 8,
+                            marginTop: 10,
+                        }}
+                    />
+                )
+            }
 
             <DatePicker
                 modal

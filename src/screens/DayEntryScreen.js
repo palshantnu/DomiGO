@@ -7,12 +7,17 @@ import {
     TouchableOpacity,
     ScrollView,
     Image,
+     ActionSheetIOS, Platform 
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LinearGradient from "react-native-linear-gradient";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { SelectList } from "react-native-dropdown-select-list";
+import {
+  launchCamera,
+  launchImageLibrary,
+} from "react-native-image-picker";
 import { pick } from "@react-native-documents/picker";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { connect, useDispatch } from "react-redux";
@@ -498,6 +503,66 @@ const DayEntryScreen = ({
 
 
     /* ---------------- ATTACHMENT ---------------- */
+
+    const openAttachment = () => {
+  if (Platform.OS === "ios") {
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options: ["Cancel", "Photos", "Files"],
+        cancelButtonIndex: 0,
+      },
+      async (buttonIndex) => {
+        switch (buttonIndex) {
+          case 1:
+            openPhotos();
+            break;
+          case 2:
+            openFiles();
+            break;
+          case 3:
+            openCamera();
+            break;
+        }
+      }
+    );
+  } else {
+    pickDocument();
+    // Android ke liye bhi ActionSheet ya BottomSheet dikha sakte ho
+  }
+};
+
+const openCamera = async () => {
+  const res = await launchCamera({
+    mediaType: "photo",
+  });
+
+  if (!res.didCancel && res.assets?.length) {
+    setAttachment(res.assets[0]);
+  }
+};
+
+const openPhotos = async () => {
+  const res = await launchImageLibrary({
+    mediaType: "photo",
+  });
+
+  if (!res.didCancel && res.assets?.length) {
+    setAttachment(res.assets[0]);
+  }
+};
+
+const openFiles = async () => {
+  try {
+    const res = await pick({
+      allowMultiSelection: false,
+    });
+
+    if (res?.length) {
+      setAttachment(res[0]);
+    }
+  } catch (e) {}
+};
+
 
     const pickDocument = async () => {
         console.log("pickDocument called");
@@ -1401,7 +1466,7 @@ const DayEntryScreen = ({
                         />
 
                         <FieldLabel title="Attachment" />
-                        <TouchableOpacity disabled={isPicking} style={styles.attachBtn} onPress={pickDocument}>
+                        <TouchableOpacity disabled={isPicking} style={styles.attachBtn} onPress={openAttachment}>
                             <Text style={{ color: colors.primary }}>Add Attachment</Text>
                         </TouchableOpacity>
 

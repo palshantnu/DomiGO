@@ -5,11 +5,13 @@ import {
     StyleSheet,
     TouchableOpacity,
     TextInput,
+    Image,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import DatePicker from 'react-native-date-picker';
 import { pick } from '@react-native-documents/picker';
 import colors from '../../theme/colors';
+import AttachmentPicker from '../common/AttachmentPicker';
 
 const BusinessRecordsForm = ({ data, onChange }) => {
     const [openDatePicker, setOpenDatePicker] = useState(false);
@@ -46,7 +48,7 @@ const BusinessRecordsForm = ({ data, onChange }) => {
                         data.isActive === true && styles.yesNoTextActive
                     ]}>Yes</Text>
                 </TouchableOpacity>
-                
+
                 <TouchableOpacity
                     style={[
                         styles.yesNoButton,
@@ -76,7 +78,7 @@ const BusinessRecordsForm = ({ data, onChange }) => {
                     </View>
 
                     <Text style={styles.label}>Start Date *</Text>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={styles.inputContainer}
                         onPress={() => setOpenDatePicker(true)}
                     >
@@ -99,7 +101,7 @@ const BusinessRecordsForm = ({ data, onChange }) => {
                     </View>
 
                     <Text style={styles.label}>Document</Text>
-                    <TouchableOpacity 
+                    {/* <TouchableOpacity 
                         style={styles.inputContainer}
                         onPress={pickDocument}
                     >
@@ -107,10 +109,31 @@ const BusinessRecordsForm = ({ data, onChange }) => {
                         <Text style={[styles.input, !data.document && styles.placeholder]}>
                             {data.document?.name || "Upload PDF / Image"}
                         </Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
+                    <AttachmentPicker
+                        value={data.document}
+                        onChange={(file) => updateField("document", file)}
+                        style={styles.inputContainer}
+                    />
+
+                    {
+                        data.document?.uri && (
+
+                            <Image
+                                source={{ uri: data.document.uri }}
+                                style={{
+                                    width: 90,
+                                    height: 90,
+                                    borderRadius: 10,
+                                    marginTop: 10,
+                                }}
+                            />
+
+                        )
+                    }
 
                     <Text style={styles.label}>Dissolution Date (Optional)</Text>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={styles.inputContainer}
                         onPress={() => setOpenDissolutionPicker(true)}
                     >

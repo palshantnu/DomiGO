@@ -4,12 +4,14 @@ import {
     Text,
     StyleSheet,
     TouchableOpacity,
+    Image,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import DatePicker from 'react-native-date-picker';
 import { pick } from '@react-native-documents/picker';
 import GoogleAutoComplete from '../../components/GoogleAutoComplete';
 import { GOOGLE_KEY } from '../../helpers/CommonHelpers';
+import AttachmentPicker from '../common/AttachmentPicker';
 
 const WorkLocationForm = ({ data, onChange }) => {
     const [openDatePicker, setOpenDatePicker] = useState(false);
@@ -32,7 +34,7 @@ const WorkLocationForm = ({ data, onChange }) => {
     return (
         <View>
             <Text style={styles.label}>Start Date *</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
                 style={styles.inputContainer}
                 onPress={() => setOpenDatePicker(true)}
             >
@@ -52,7 +54,7 @@ const WorkLocationForm = ({ data, onChange }) => {
             />
 
             <Text style={styles.label}>Document</Text>
-            <TouchableOpacity 
+            {/* <TouchableOpacity 
                 style={styles.inputContainer}
                 onPress={pickDocument}
             >
@@ -60,7 +62,27 @@ const WorkLocationForm = ({ data, onChange }) => {
                 <Text style={[styles.input, !data.document && styles.placeholder]}>
                     {data.document?.name || "Upload PDF / Image"}
                 </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
+
+            <AttachmentPicker
+                value={data.document}
+                onChange={(file) => updateField("document", file)}
+                style={styles.inputContainer}
+            />
+
+            {
+                data.document?.uri && (
+                    <Image
+                        source={{ uri: data.document.uri }}
+                        style={{
+                            width: 90,
+                            height: 90,
+                            borderRadius: 8,
+                            marginTop: 10,
+                        }}
+                    />
+                )
+            }
 
             <Text style={styles.disclaimer}>* Please save this information at your own discretion</Text>
 

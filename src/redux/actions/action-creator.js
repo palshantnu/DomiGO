@@ -217,7 +217,7 @@ export const ADDTRIP = (formData) => {
 
               form.append("attachments", {
                 uri: file.uri,
-                name: file.name,
+                name: file.fileName || file.name || "attachment",
                 type: file.type || "image/jpeg",
               });
 
@@ -311,7 +311,7 @@ export const UPDATETRIP = (formData) => {
 
                 form.append("attachments", {
                   uri: file.uri,
-                  name: file.name,
+                  name: file.fileName || file.name || "attachment",
                   type: file.type || "image/jpeg",
                 });
 
@@ -526,8 +526,13 @@ export const ADD_DOCUMENT_RECORD = (formData) => {
         if (key === "attachment" && formData.attachment?.uri) {
           form.append("attachment", {
             uri: formData.attachment.uri,
-            name: formData.attachment.name,
-            type: formData.attachment.type,
+            name:
+              formData.attachment.fileName ||
+              formData.attachment.name ||
+              "attachment",
+            type:
+              formData.attachment.type ||
+              "application/octet-stream",
           });
         } else {
           form.append(key, formData[key]);
@@ -789,13 +794,22 @@ export function UPDATE_RESIDENCY_RECORD(id, payload) {
       const formData = new FormData();
 
       Object.keys(payload).forEach(key => {
-        if (key === "attachment" && payload.attachment?.uri && !payload.attachment.uri.startsWith("http")) {
+        if (
+          key === "attachment" &&
+          payload.attachment?.uri &&
+          !payload.attachment.uri.startsWith("http")
+        ) {
           formData.append("attachment", {
             uri: payload.attachment.uri,
-            type: payload.attachment.type || "image/jpeg",
-            name: payload.attachment.name || "file.jpg"
+            name:
+              payload.attachment.fileName ||
+              payload.attachment.name ||
+              "attachment",
+            type:
+              payload.attachment.type ||
+              "application/octet-stream",
           });
-        } if (key !== "attachment") {
+        } else if (key !== "attachment") {
           formData.append(key, payload[key]);
         }
         // else {
