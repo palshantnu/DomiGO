@@ -331,7 +331,7 @@ const ProfileManagementScreen = ({
         style={styles.container}
       >
         <SafeAreaView edges={["top", "left", "right"]} style={styles.container}>
-          <Header title="Profile Management" />
+          <Header title="Profile Management" showBack/>
 
           <ScrollView
             contentContainerStyle={{ paddingBottom: 40 }}

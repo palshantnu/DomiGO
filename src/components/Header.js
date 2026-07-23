@@ -7,7 +7,7 @@ import { connect } from 'react-redux';
 import { getPersonalProfileDataAction } from "../redux/actions/action-creator";
 import { getUserPersonalDataSelelctor } from "../redux/selectors/common";
 
-const Header = ({ title, userPersonalData, getPersonalProfileDataAction }) => {
+const Header = ({ title, userPersonalData, getPersonalProfileDataAction, showBack = false, }) => {
 
     const navigation = useNavigation();
 
@@ -20,16 +20,16 @@ const Header = ({ title, userPersonalData, getPersonalProfileDataAction }) => {
     }, []);
     return (
         <View style={styles.header}>
-            <TouchableOpacity style={styles.headerLeft}
+            {/* <TouchableOpacity style={styles.headerLeft}
                 onPress={() => navigation.navigate('Settings', {
                     screen: 'Profile',
                 })
                 }>
-                {/* <Image
+                <Image
                     // source={{ uri: 'https://i.pravatar.cc/100' }}
                     source={{ uri: 'https://cdn-icons-png.flaticon.com/128/3135/3135715.png' }}
                     style={styles.avatar}
-                /> */}
+                />
                 <Image
                     source={{
                         uri: userPersonalData?.profileImageSignedUrl
@@ -39,7 +39,34 @@ const Header = ({ title, userPersonalData, getPersonalProfileDataAction }) => {
                     style={styles.avatar}
                 />
 
-            </TouchableOpacity>
+            </TouchableOpacity> */}
+            <View style={styles.leftContainer}>
+                {showBack ? (
+                    <TouchableOpacity
+                        onPress={() => navigation.goBack()}
+                        style={styles.backButton}
+                    >
+                        <Icon name="arrow-back" size={24} color="#000" />
+                    </TouchableOpacity>
+                ) : (
+                    <TouchableOpacity
+                        onPress={() =>
+                            navigation.navigate('Settings', {
+                                screen: 'Profile',
+                            })
+                        }
+                    >
+                        <Image
+                            source={{
+                                uri:
+                                    userPersonalData?.profileImageSignedUrl ||
+                                    'https://cdn-icons-png.flaticon.com/128/3135/3135715.png',
+                            }}
+                            style={styles.avatar}
+                        />
+                    </TouchableOpacity>
+                )}
+            </View>
             <Text style={styles.headerTitle}>{title}</Text>
             <Icon name="notifications-outline" style={{ backgroundColor: '#fff', padding: 10, borderRadius: 30 }} size={24} color="#000"
                 onPress={() => navigation.navigate('Alerts')} />
@@ -85,5 +112,16 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '600',
         color: '#000'
+    },
+    leftContainer: {
+        width: 40,
+        alignItems: 'flex-start',
+    },
+
+    backButton: {
+        backgroundColor: '#fff',
+        padding: 8,
+        borderRadius: 20,
+        elevation: 1,
     },
 })

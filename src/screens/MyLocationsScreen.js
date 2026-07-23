@@ -68,7 +68,7 @@ const MyLocationsScreen = ({ GET_USER_LOCATIONS, userLocations, }) => {
       <SafeAreaView style={styles.container}>
 
         {/* Header */}
-        <Header title="My Locations" />
+        <Header title="My Locations" showBack/>
 
         <ScrollView
           showsVerticalScrollIndicator={false}

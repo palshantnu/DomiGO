@@ -206,7 +206,7 @@ const StateTripsScreen = ({ route, GET_STATE_WISE_TRIPS, navigation, stateWiseTr
             style={styles.container}
         >
             <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1, backgroundColor: 'none' }}>
-                <Header title={'State Wise Trips'} />
+                <Header title={'State Wise Trips'} showBack/>
 
                 <View style={styles.container}>
                     <View style={styles.header}>

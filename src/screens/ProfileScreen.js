@@ -41,7 +41,7 @@ const ProfileScreen = ({
             style={styles.container}
         >
             <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
-                <Header title={'My Profile'} />
+                <Header title={'My Profile'} showBack/>
                 <ScrollView
                     contentContainerStyle={{ paddingBottom: 30 }}
                     showsVerticalScrollIndicator={false}

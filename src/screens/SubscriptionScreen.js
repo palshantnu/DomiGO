@@ -149,7 +149,7 @@ function SubscriptionScreen({
       style={styles.container}
     >
       <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
-        <Header title="Subscription" />
+        <Header title="Subscription" showBack/>
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 40 }}

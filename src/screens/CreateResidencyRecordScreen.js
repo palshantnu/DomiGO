@@ -81,23 +81,23 @@
 //             const { latitude, longitude } = position.coords;
 //             // const latitude = 26.21
 //             // const longitude = 78.18
-    
+
 //             // Reverse Geocoding API
 //             const response = await fetch(
 //               `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_KEY}`
 //             );
-    
+
 //             const json = await response.json();
-    
+
 //             console.log('json', json);
-    
-    
+
+
 //             if (json.results.length > 0) {
 //               const countryData = json.results[0].address_components.find(c =>
 //                 c.types.includes("country")
 //               );
 //               console.log('countryData?.long_name', countryData?.long_name);
-    
+
 //               setCountry(countryData?.long_name || "");
 //               setCountryCode(countryData?.short_name?.toLowerCase() || "");
 //             }
@@ -645,7 +645,7 @@
 
 //     const handleSave = async (data) => {
 //         setIsLoading(true);
-        
+
 //         try {
 //             if (mode === 'edit') {
 //                 await UPDATE_RESIDENCY_RECORD(data.id, {
@@ -660,7 +660,7 @@
 //                 });
 //                 CustomToast.show("Added successfully");
 //             }
-            
+
 //             // Navigate back to history screen
 //             navigation.goBack();
 //         } catch (error) {
@@ -681,7 +681,7 @@
 //         >
 //             <View style={{ flex: 1, paddingTop: 50 }}>
 //                 <Header title={getSectionTitle()} showBack={true} />
-                
+
 //                 <KeyboardAvoidingView
 //                     behavior={Platform.OS === "ios" ? "padding" : undefined}
 //                     style={{ flex: 1 }}
@@ -692,7 +692,7 @@
 //                     >
 //                         <View style={styles.formCard}>
 //                             {renderForm()}
-                            
+
 //                             <TouchableOpacity
 //                                 style={styles.saveButton}
 //                                 onPress={() => handleSave(formData)}
@@ -792,8 +792,9 @@ import OthersForm from '../components/forms/OthersForm';
 import SecondHomeForm from '../components/forms/SecondHomeForm';
 import AddressOfRecordForm from '../components/forms/AddressOfRecordForm';
 import PropertyOwnershipForm from '../components/forms/PropertyOwnershipForm';
+import BankingInformationForm from '../components/forms/BankingInformationForm';
 
-const CreateResidencyRecordScreen = ({ 
+const CreateResidencyRecordScreen = ({
     ADD_DOCUMENT_RECORD,
     UPDATE_RESIDENCY_RECORD,
     userData
@@ -828,7 +829,7 @@ const CreateResidencyRecordScreen = ({
     // Map API response to form structure
     const mapApiDataToForm = (apiData) => {
         console.log('Mapping API Data:', apiData);
-        
+
         const mappedData = {
             id: apiData.id,
             categoryId: apiData.categoryId,
@@ -853,14 +854,14 @@ const CreateResidencyRecordScreen = ({
     // Initialize empty form based on category
     const initializeEmptyForm = () => {
         console.log('Initializing empty form for category:', category?.name);
-        
+
         const emptyForm = {
             categoryId: category?.id,
             enabled: true,
         };
 
         // Add category-specific empty fields
-        switch(category?.name) {
+        switch (category?.name) {
             case 'Declaration of Residency':
                 emptyForm.date = null;
                 break;
@@ -903,6 +904,9 @@ const CreateResidencyRecordScreen = ({
                 emptyForm.regNumber = '';
                 emptyForm.dissolutionDate = null;
                 emptyForm.document = null;
+                break;
+            case 'Banking Information':
+                emptyForm.isAdded = '';
                 break;
             case 'Other - Property Lease':
                 emptyForm.type = 'lease';
@@ -953,12 +957,12 @@ const CreateResidencyRecordScreen = ({
     // Render appropriate form based on category
     const renderForm = () => {
         console.log('Rendering form for category:', category?.name);
-        
+
         const formProps = {
             data: formData,
             onChange: setFormData,
             mode: mode,
-            userData:userData
+            userData: userData
         };
 
         // Log available form components
@@ -979,7 +983,7 @@ const CreateResidencyRecordScreen = ({
             'Property Ownership': !!PropertyOwnershipForm,
         });
 
-        switch(category?.name) {
+        switch (category?.name) {
             case 'Declaration of Residency':
                 return <DeclarationForm {...formProps} />;
             case 'Address of Record':
@@ -1000,6 +1004,8 @@ const CreateResidencyRecordScreen = ({
                 return <TaxFilingForm {...formProps} />;
             case 'Business Records':
                 return <BusinessRecordsForm {...formProps} />;
+            case 'Banking Information':
+                return <BankingInformationForm {...formProps} />;
             case 'Other - Property Lease':
             case 'Other - Vehicle Title':
             case 'Other - Vehicle Insurance':
@@ -1013,102 +1019,102 @@ const CreateResidencyRecordScreen = ({
                         <Text style={styles.errorText}>Form not found for "{category?.name}"</Text>
                         <Text style={styles.debugText}>Category ID: {category?.id}</Text>
                         <Text style={styles.debugText}>Available Categories: </Text>
-                        {['Declaration of Residency', 'Property Exemptions', 'Drivers License', 
-                          'Voting Registration', 'Work location', 'Primary Doctor', 'Tax Filing', 
-                          'Business Records', 'Other - Property Lease', 'Other - Vehicle Title', 
-                          'Other - Vehicle Insurance', 'Other - Second home', 'Address of Record', 
-                          'Property Ownership'].map(cat => (
-                            <Text key={cat} style={styles.debugItem}>• {cat}</Text>
-                        ))}
+                        {['Declaration of Residency', 'Property Exemptions', 'Drivers License',
+                            'Voting Registration', 'Work location', 'Primary Doctor', 'Tax Filing',
+                            'Business Records', 'Other - Property Lease', 'Other - Vehicle Title',
+                            'Other - Vehicle Insurance', 'Other - Second home', 'Address of Record',
+                            'Property Ownership'].map(cat => (
+                                <Text key={cat} style={styles.debugItem}>• {cat}</Text>
+                            ))}
                     </View>
                 );
         }
     };
 
     // Prepare data for API
-// screens/CreateResidencyRecordScreen.js - Updated prepareApiData function
+    // screens/CreateResidencyRecordScreen.js - Updated prepareApiData function
 
-// Prepare data for API
-const prepareApiData = () => {
-    const { document, ...rest } = formData;
-    
-    // Required fields check
-    if (!category?.id) {
-        CustomToast.show("Category ID is missing");
-        return null;
-    }
+    // Prepare data for API
+    const prepareApiData = () => {
+        const { document, ...rest } = formData;
 
-    // Prepare metadata as JSON string
-    const metadataObj = {};
-    
-    // Collect all relevant fields into metadata object
-    Object.keys(rest).forEach(key => {
-        if (['issueDate', 'issuingState', 'licenseNumber', 'date', 'startDate', 
-             'registrationDate', 'lastFileDate', 'dateEstablished', 'yearsFiled',
-             'isActive', 'dissolutionDate', 'type', 'details', 'owns', 'exemptions',
-             'state', 'county', 'city', 'address', 'name', 'regNumber', 
-             'issuingState', 'licenseNumber', 'number', 'type'].includes(key)) {
-            
-            // Only add if value exists
-            if (rest[key] !== null && rest[key] !== undefined && rest[key] !== '') {
-                metadataObj[key] = rest[key];
-            }
+        // Required fields check
+        if (!category?.id) {
+            CustomToast.show("Category ID is missing");
+            return null;
         }
-    });
 
-    // Convert metadata to JSON string (as API expects)
-    const metadataString = JSON.stringify(metadataObj);
-    
-    console.log('Metadata Object:', metadataObj);
-    console.log('Metadata String:', metadataString);
+        // Prepare metadata as JSON string
+        const metadataObj = {};
 
-    // Prepare dates
-    const today = new Date().toLocaleDateString("en-CA");
-    const nextYear = new Date(Date.now() + 365*24*60*60*1000).toLocaleDateString("en-CA");
+        // Collect all relevant fields into metadata object
+        Object.keys(rest).forEach(key => {
+            if (['issueDate', 'issuingState', 'licenseNumber', 'date', 'startDate',
+                'registrationDate', 'lastFileDate', 'dateEstablished', 'yearsFiled',
+                'isActive', 'dissolutionDate', 'type', 'details', 'owns', 'exemptions',
+                'state', 'county', 'city', 'address', 'name', 'regNumber',
+                'issuingState', 'licenseNumber', 'number', 'type', 'isAdded'].includes(key)) {
 
-    // Get issue date from metadata
-    let issueDate = metadataObj.issueDate || metadataObj.startDate || metadataObj.date || 
-                    metadataObj.registrationDate || metadataObj.lastFileDate || today;
-    
-    // Get renew date (if dissolution date exists, use it, otherwise use next year)
-    let renewDate = metadataObj.dissolutionDate || nextYear;
+                // Only add if value exists
+                if (rest[key] !== null && rest[key] !== undefined && rest[key] !== '') {
+                    metadataObj[key] = rest[key];
+                }
+            }
+        });
 
-    // Ensure dates are in correct format
-    if (issueDate && !issueDate.includes('T')) {
-        issueDate = new Date(issueDate).toLocaleDateString("en-CA");
-    }
-    if (renewDate && !renewDate.includes('T')) {
-        renewDate = new Date(renewDate).toLocaleDateString("en-CA");
-    }
+        // Convert metadata to JSON string (as API expects)
+        const metadataString = JSON.stringify(metadataObj);
 
-    // Get state and city from appropriate fields
-    const state = metadataObj.state || metadataObj.issuingState || '';
-    const city = metadataObj.city || '';
+        console.log('Metadata Object:', metadataObj);
+        console.log('Metadata String:', metadataString);
 
-    // Prepare final API data
-    const apiData = {
-        categoryId: category.id,
-        title: `${category.name} - Record`,
-        state: state,
-        city: city,
-        issueDate: issueDate,
-        renewDate: renewDate,
-        notes: metadataObj.details || metadataObj.notes || '',
-        metadata: metadataString,  // ✅ Send as string, not object
+        // Prepare dates
+        const today = new Date().toLocaleDateString("en-CA");
+        const nextYear = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString("en-CA");
+
+        // Get issue date from metadata
+        let issueDate = metadataObj.issueDate || metadataObj.startDate || metadataObj.date ||
+            metadataObj.registrationDate || metadataObj.lastFileDate || today;
+
+        // Get renew date (if dissolution date exists, use it, otherwise use next year)
+        let renewDate = metadataObj.dissolutionDate || nextYear;
+
+        // Ensure dates are in correct format
+        if (issueDate && !issueDate.includes('T')) {
+            issueDate = new Date(issueDate).toLocaleDateString("en-CA");
+        }
+        if (renewDate && !renewDate.includes('T')) {
+            renewDate = new Date(renewDate).toLocaleDateString("en-CA");
+        }
+
+        // Get state and city from appropriate fields
+        const state = metadataObj.state || metadataObj.issuingState || '';
+        const city = metadataObj.city || '';
+
+        // Prepare final API data
+        const apiData = {
+            categoryId: category.id,
+            title: `${category.name} - Record`,
+            state: state,
+            city: city,
+            issueDate: issueDate,
+            renewDate: renewDate,
+            notes: metadataObj.details || metadataObj.notes || '',
+            metadata: metadataString,  // ✅ Send as string, not object
+        };
+
+        // Add document if exists (as FormData for file upload)
+        if (document) {
+            // If you need to handle file upload, you might need FormData
+            // For now, we'll just log it
+            console.log('Document to upload:', document);
+            apiData.attachment = document;
+        }
+
+        console.log('Final API Data:', apiData);
+
+        return apiData;
     };
-
-    // Add document if exists (as FormData for file upload)
-    if (document) {
-        // If you need to handle file upload, you might need FormData
-        // For now, we'll just log it
-        console.log('Document to upload:', document);
-        apiData.attachment = document;
-    }
-
-    console.log('Final API Data:', apiData);
-    
-    return apiData;
-};
 
     // Handle form submission
     // const handleSubmit = async () => {
@@ -1117,7 +1123,7 @@ const prepareApiData = () => {
     //     try {
     //         const apiData = prepareApiData();
     //         console.log('Submitting API Data:', apiData);
-            
+
     //         if (mode === 'edit' && editData?.id) {
     //             await dispatch(UPDATE_RESIDENCY_RECORD(editData.id, apiData));
     //             CustomToast.show("Updated successfully");
@@ -1125,7 +1131,7 @@ const prepareApiData = () => {
     //             await ADD_DOCUMENT_RECORD(apiData);
     //             CustomToast.show("Added successfully");
     //         }
-            
+
     //         navigation.goBack();
     //     } catch (error) {
     //         console.log("Save error:", error);
@@ -1135,56 +1141,56 @@ const prepareApiData = () => {
     //     }
     // };
     // Handle form submission
-        const handleSubmit = async () => {
-            // Basic validation
-            if (!category?.id) {
-                CustomToast.show("Category is required");
+    const handleSubmit = async () => {
+        // Basic validation
+        if (!category?.id) {
+            CustomToast.show("Category is required");
+            return;
+        }
+
+        setIsLoading(true);
+
+        try {
+            const apiData = prepareApiData();
+
+            if (!apiData) {
+                setIsLoading(false);
                 return;
             }
+            console.log('modeeeeee', mode, editData);
 
-            setIsLoading(true);
+            console.log('Submitting API Data:', JSON.stringify(apiData, null, 2));
 
-            try {
-                const apiData = prepareApiData();
-                
-                if (!apiData) {
-                    setIsLoading(false);
-                    return;
-                }
-                console.log('modeeeeee',mode,editData);
 
-                console.log('Submitting API Data:', JSON.stringify(apiData, null, 2));
+            let response;
 
-                
-                let response;
-                
-                if (mode === 'edit' && editData?.id) {
-                    console.log("STEP 1");
-                    response = await (UPDATE_RESIDENCY_RECORD(editData.id, apiData));
-                    console.log("STEP 2"); 
-                    console.log("API Response11111:", response);
-                } else {
-                    response = await ADD_DOCUMENT_RECORD(apiData);
-                }
-                
-                console.log('API Response:', response);
-                
-                if (response?.success || response?.message === "Success") {
-                    CustomToast.show(mode === 'edit' ? "Updated successfully" : "Added successfully");
-                    navigation.goBack();
-                } else {
-                  CustomToast.show(mode === 'edit' ? "Updated successfully" : "Added successfully");
-                    navigation.goBack();
-                }
-            } catch (error) {
-                console.log("CATCH BLOCK HIT ✅");
-                console.log("Save error:", error);
-                console.log("Error response:", error?.response?.data);
-                CustomToast.show(mode === 'edit' ? "Updated successfully" : "Added successfully");
-            } finally {
-                setIsLoading(false);
+            if (mode === 'edit' && editData?.id) {
+                console.log("STEP 1");
+                response = await (UPDATE_RESIDENCY_RECORD(editData.id, apiData));
+                console.log("STEP 2");
+                console.log("API Response11111:", response);
+            } else {
+                response = await ADD_DOCUMENT_RECORD(apiData);
             }
-        };
+
+            console.log('API Response:', response);
+
+            if (response?.success || response?.message === "Success") {
+                CustomToast.show(mode === 'edit' ? "Updated successfully" : "Added successfully");
+                navigation.goBack();
+            } else {
+                CustomToast.show(mode === 'edit' ? "Updated successfully" : "Added successfully");
+                navigation.goBack();
+            }
+        } catch (error) {
+            console.log("CATCH BLOCK HIT ✅");
+            console.log("Save error:", error);
+            console.log("Error response:", error?.response?.data);
+            CustomToast.show(mode === 'edit' ? "Updated successfully" : "Added successfully");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <LinearGradient
@@ -1196,12 +1202,12 @@ const prepareApiData = () => {
         >
             <View style={{ flex: 1, paddingTop: 50 }}>
                 <Header title={getFormTitle()} showBack={true} />
-                
+
                 <KeyboardAvoidingView
                     behavior={Platform.OS === "ios" ? "padding" : undefined}
                     style={{ flex: 1 }}
                 >
-                    <ScrollView 
+                    <ScrollView
                         contentContainerStyle={styles.container}
                         keyboardShouldPersistTaps="handled"
                     >
@@ -1210,9 +1216,9 @@ const prepareApiData = () => {
                             <Text style={styles.debugCategory}>
                                 Category: {category?.name || 'Unknown'}
                             </Text> */}
-                            
+
                             {renderForm()}
-                            
+
                             <TouchableOpacity
                                 style={styles.saveButton}
                                 onPress={handleSubmit}
@@ -1293,7 +1299,7 @@ const styles = StyleSheet.create({
 
 function mapStateToProps(state) {
     return {
-      userData: state.auth.userData,
+        userData: state.auth.userData,
     };
 }
 

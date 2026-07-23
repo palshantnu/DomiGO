@@ -1804,13 +1804,15 @@ fun createMissingDay() {
         state = currentStateName,
 
         // trip fields empty
-        originCity = previousCity,
+        // originCity = previousCity,
+        originCity = previousCityName.ifBlank { previousCity },
         originState = null,
         originLat = null,
         originLng = null,
         originCounty = previousCountyName,
         destinationCounty = previousCountyName,
-        destinationCity = previousCity,
+        // destinationCity = previousCity,
+        destinationCity = previousCityName.ifBlank { previousCity },
         destinationState = null,
         destinationLat = null,
         destinationLng = null
@@ -2037,8 +2039,10 @@ private fun backfillMissingDays() {
                 notes = "", creationType = "automatic", remoteLocation = "",
                 isUpdated = false,
                 state = stateForBackfill,
-                originCity = previousCity, originState = null, originLat = null, originLng = null,
-                destinationCity = previousCity, destinationState = null, destinationLat = null, destinationLng = null,
+                originCity = previousCityName.ifBlank { previousCity },
+                originState = null, originLat = null, originLng = null,
+                destinationCity = previousCityName.ifBlank { previousCity },
+                destinationState = null, destinationLat = null, destinationLng = null,
                 originCounty = previousCountyName,
                 destinationCounty = previousCountyName,
             )
@@ -2899,6 +2903,8 @@ private fun sendCityChangeByName(
     previousCityFips = destinationCityKey
     previousCityName = destinationCityName
     previousCityEnterTime = now
+    previousCity = destinationCityName
+    saveStateToPrefs()
 }
 
 
@@ -3035,6 +3041,8 @@ private fun handleCityTransition(
     previousCityFips = newCity.fips
     previousCityName = newCity.name
     previousCityEnterTime = newEnterTime
+    previousCity = newCity.name
+    saveStateToPrefs()
 
     sendEntryFormData(
         kind = "city_change",

@@ -75,7 +75,7 @@ const AddTertiaryLocationScreen = ({ route, navigation }) => {
       end={{ x: 0.8, y: 0.4 }}
       locations={[0.05, 0.55]}>
       <SafeAreaView style={{ flex: 1 }}>
-        <Header title={isEdit ? "Edit Location" : "Add Location"} />
+        <Header title={isEdit ? "Edit Location" : "Add Location"} showBack/>
 
         <View style={{ padding: 16 }}>
 

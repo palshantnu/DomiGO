@@ -808,7 +808,7 @@ const openFiles = async () => {
             style={{ flex: 1, backgroundColor: '#fff' }}
         >
             <SafeAreaView style={{ flex: 1 }}>
-                <Header title={isEdit ? "Update Entry" : "Add Entry"} />
+                <Header title={isEdit ? "Update Entry" : "Add Entry"} showBack/>
 
                 <ScrollView showsVerticalScrollIndicator={false}>
                     <View style={styles.card}>

@@ -1602,12 +1602,14 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         remoteLocation: "",
         stateId: state,
         isUpdated:false,
-        originCity: previousCity,
+        // originCity: previousCity,
+        originCity: previousDetectedCity.isEmpty ? previousCity : previousDetectedCity,
         originCounty: previousCountyName,
         originState: nil,
         originLat: nil,
         originLng: nil,
-        destinationCity: previousCity,
+        // destinationCity: previousCity,
+        destinationCity: previousDetectedCity.isEmpty ? previousCity : previousDetectedCity,
         destinationCounty: previousCountyName,
         destinationState: nil,
         destinationLat: nil,
@@ -1620,10 +1622,11 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
         "kind": "missing",
         "date": today,
         "state": state,
-        "originCity": previousCity,
+        "originCity": previousDetectedCity.isEmpty ? previousCity : previousDetectedCity,
         "originCounty": previousCountyName,
 
-        "destinationCity": previousCity,
+        // "destinationCity": previousCity,
+        "destinationCity": previousDetectedCity.isEmpty ? previousCity : previousDetectedCity,
         "destinationCounty": previousCountyName,
 
         "creationType": "automatic",
@@ -2917,6 +2920,7 @@ print("📍 county: \(county)")
     )
 
     previousDetectedCity = destinationCity
+    previousCity = destinationCity
     previousCityEnterTime = now
     saveState()
   }
@@ -3033,6 +3037,7 @@ private func handleCityTransition(
             print("⚠️ Ignoring fake city transition from state name")
 
             previousDetectedCity = newCity
+            previousCity = newCity
             previousCityEnterTime = now
             saveState()
             return

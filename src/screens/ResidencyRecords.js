@@ -1873,6 +1873,7 @@ const ResidencyHistoryScreen = ({
             'Primary Doctor': 'primaryDoctor',
             'Tax Filing': 'taxFiling',
             'Business Records': 'businessRecords',
+            'Banking Information': 'bankingInformation',
             'Other - Property Lease': 'others_lease',
             'Other - Vehicle Title': 'vehicle_title',
             'Other - Vehicle Insurance': 'vehicle_insurance',
@@ -1970,6 +1971,7 @@ const ResidencyHistoryScreen = ({
             'Primary Doctor': 'Primary Doctor',
             'Tax Filing': 'Tax Filing',
             'Business Records': 'Business Records',
+            'Banking Information': 'Banking Information',
             'Other - Property Lease': 'Property Lease',
             'Other - Vehicle Title': 'Vehicle Title',
             'Other - Vehicle Insurance': 'Vehicle Insurance',
@@ -2130,7 +2132,7 @@ const ResidencyHistoryScreen = ({
             style={styles.container}
         >
             <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
-                <Header title={'Residency Records'} />
+                <Header title={'Residency Records'} showBack/>
 
                 <ScrollView showsVerticalScrollIndicator={false}>
 

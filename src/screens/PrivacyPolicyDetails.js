@@ -22,7 +22,7 @@ const PrivacyPolicyDetails = ({ route }) => {
             style={styles.container}
         >
             <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
-                <Header title="Privacy Policy Details" />
+                <Header title="Privacy Policy Details" showBack/>
 
                 <ScrollView
                     contentContainerStyle={styles.container1}

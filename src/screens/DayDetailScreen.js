@@ -112,7 +112,7 @@ console.log("NOW", new Date().toString());
       style={styles.container}
     >
       <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
-        <Header title="Day Detail" />
+        <Header title="Day Detail" showBack/>
 
 
         <ScrollView showsVerticalScrollIndicator={false}>

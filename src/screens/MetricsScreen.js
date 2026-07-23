@@ -175,7 +175,7 @@ const MetricsScreen = ({ GET_STATE_WISE_METRICS, loginToken, stateWiseMetrics })
             style={styles.container}
         >
             <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
-                <Header title="Metrics" />
+                <Header title="Metrics" showBack/>
 
                 {/* <View style={styles.tabsContainer}>
                     <TouchableOpacity style={[styles.tabButton, styles.activeTab]}>

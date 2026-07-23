@@ -94,7 +94,7 @@ const HelpSupportScreen = ({ GET_FAQS, GET_SUPPORT_CONTACT, faqs, supportContact
             style={{ flex: 1 }}
         >
             <SafeAreaView style={{ flex: 1 }}>
-                <Header title="Help & Support" />
+                <Header title="Help & Support" showBack/>
 
                 {supportContact?.length > 0 &&
                     faqs?.length > 0 && <ScrollView

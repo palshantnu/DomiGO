@@ -78,7 +78,7 @@ const PrivacyPolicyScreen = ({ GET_PRIVACY_POLICY, privacyPolicy }) => {
             style={styles.container}
         >
             <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
-                <Header title={'Privacy Policy'} />
+                <Header title={'Privacy Policy'} showBack/>
                 <ScrollView
                     // contentContainerStyle={{ paddingBottom: 30 }}
                     showsVerticalScrollIndicator={false}

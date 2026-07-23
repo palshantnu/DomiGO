@@ -37,7 +37,7 @@ const AboutUsScreen = ({ GET_ABOUT_APP, aboutApp }) => {
       style={{ flex: 1 }}
     >
       <SafeAreaView style={{ flex: 1 }}>
-        <Header title="About Us" navigation={navigation} />
+        <Header title="About Us" navigation={navigation} showBack/>
 
         {aboutApp?.length > 0 && < ScrollView
           contentContainerStyle={styles.container}

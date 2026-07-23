@@ -152,7 +152,7 @@ function ReportsExportScreen({ GET_WEEK_WISE_TIMELINE, weekWiseTimeline, GET_REP
             style={styles.container}
         >
             <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
-                <Header title="Reports and Exports" />
+                <Header title="Reports and Exports" showBack/>
 
                 <ScrollView
                     showsVerticalScrollIndicator={false}

@@ -86,7 +86,7 @@ const ChangePasswordScreen = () => {
       style={styles.container}
     >
       <SafeAreaView edges={["top", "left", "right"]} style={styles.container}>
-        <Header title="Change Password" />
+        <Header title="Change Password" showBack/>
 
         <ScrollView
           contentContainerStyle={{ paddingBottom: 40 }}
