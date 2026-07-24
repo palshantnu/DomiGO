@@ -266,6 +266,7 @@ const YearWeekCard = React.memo(
           <View style={styles.expandedContainer}>
 
             {item.days.map((day, idx) => {
+              const alertTrips = day?.trips?.filter(trip => trip.isTaxable);
               // console.log('dayyyyy', day)
               return (
                 <View key={idx} style={{ marginBottom: 12 }}>
@@ -283,6 +284,9 @@ const YearWeekCard = React.memo(
                       if (selectedFilter === "CITY_CHANGE") return trip.kind === "city_change";
                       if (selectedFilter === "COUNTY_CHANGE") return trip.kind === "county_change";
                       if (selectedFilter === "LOCATIONS") return false;
+                      // 👇 Alert Locations
+                      if (selectedFilter === "ALERT_LOCATIONS")
+                        return trip.isTaxable === true;
                       return true; // ALL
                     })
                     .map(trip => (
@@ -310,6 +314,35 @@ const YearWeekCard = React.memo(
                               ? trip.destinationCounty
                               : trip.destinationCity
                             }, {trip.destinationState}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+
+                  {selectedFilter === "ALERT_LOCATIONS" &&
+                    alertTrips?.map(trip => (
+                      <TouchableOpacity
+                        key={trip.id}
+                        style={styles.tripRow}
+                        onPress={() => navigation.navigate("DayDetail", trip)}
+                      >
+                        <View style={styles.tripLine}>
+                          <View style={styles.blueDot} />
+                          <Text style={styles.tripText}>
+                            {trip.kind === "county_change"
+                              ? trip.originCounty
+                              : trip.originCity}
+                            , {trip.originState}
+                          </Text>
+                        </View>
+
+                        <View style={styles.tripLine}>
+                          <View style={styles.greenDot} />
+                          <Text style={styles.tripText}>
+                            {trip.kind === "county_change"
+                              ? trip.destinationCounty
+                              : trip.destinationCity}
+                            , {trip.destinationState}
                           </Text>
                         </View>
                       </TouchableOpacity>
@@ -1172,6 +1205,10 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
         }
         else if (selectedFilter === "COUNTY_CHANGE") {
           filteredTrips = countyChanges;
+        }
+        else if (selectedFilter === "ALERT_LOCATIONS") {
+          filteredTrips = [...trips, ...cityChanges, ...countyChanges]
+            .filter(item => item.isTaxable === true);
         }
         else {
           filteredTrips = [...trips, ...cityChanges, ...countyChanges,];
