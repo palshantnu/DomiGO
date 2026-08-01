@@ -880,7 +880,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
       const missing = dayData
         .filter(d => d.kind === "missing")
         // .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
-        .sort((a, b) => parseLocalDate(b.createdAt) - parseLocalDate(a.createdAt))[0];
+        .sort((a, b) => parseLocalDate(a.createdAt) - parseLocalDate(b.createdAt))[0];
 
 
       // ===============================
@@ -1044,7 +1044,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
     const missingEntry = [...dayData]
       .filter(d => d.kind === "missing")
       // .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
-      .sort((a, b) => parseLocalDate(b.createdAt) - parseLocalDate(a.createdAt))[0];
+      .sort((a, b) => parseLocalDate(a.createdAt) - parseLocalDate(b.createdAt))[0];
 
     // 🔥 STORE STATE
     setSelectedDate(dateKey);
@@ -1154,7 +1154,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
         if (
           !latestMissing ||
           // new Date(item.createdAt) > new Date(latestMissing.createdAt)
-          parseLocalDate(item.createdAt) > new Date(latestMissing.createdAt)
+          parseLocalDate(item.createdAt) < parseLocalDate(latestMissing.createdAt)
         ) {
           latestMissing = item;
         }
@@ -1404,8 +1404,17 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
         ) {
           normalized[date].trips.push(item);
         }
+        // if (item.kind === "missing") {
+        //   normalized[date].activity = item;
+        // }
         if (item.kind === "missing") {
-          normalized[date].activity = item;
+          if (
+            !normalized[date].activity ||
+            parseLocalDate(item.createdAt) <
+            parseLocalDate(normalized[date].activity.createdAt)
+          ) {
+            normalized[date].activity = item;
+          }
         }
       });
     });
