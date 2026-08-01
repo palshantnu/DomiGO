@@ -71,13 +71,13 @@ const getBusinessDateKey = (item) => {
     item?.kind === "county_change"
   ) {
 
-    if (!item?.startDate) return "";
+    if (!item?.endDate) return "";
 
     return new Intl.DateTimeFormat("en-CA", {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
-    }).format(new Date(item.startDate));
+    }).format(new Date(item.endDate));
   }
 
   // LOCATIONS
