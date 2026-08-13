@@ -165618,7 +165618,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                   fontWeight: "600",
                   color: "#FF9500"
                 },
-                children: ["Missing Day: ", getAutoTypeOfDayName(section.missing, section.date)]
+                children: ["Starting Day: ", getAutoTypeOfDayName(section.missing, section.date)]
               }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
                 style: {
                   color: "#666"
@@ -289135,7 +289135,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
               label: 'Days in',
               value: item.daysIn
             }, {
-              label: 'Travel Days',
+              label: 'Travel Through Days',
               value: item.travelDays
             },
             // { label: 'Days Worked', value: item.daysWorked },

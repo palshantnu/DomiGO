@@ -1194,6 +1194,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
   const getWeekCalendarData = (weekResult = {}) => {
     return Object.keys(weekResult)
+     .sort((a, b) => parseLocalDate(a) - parseLocalDate(b))
       .map(date => {
         const { trips, cityChanges, countyChanges, latestMissing } = normalizeDayData(weekResult[date]);
 
