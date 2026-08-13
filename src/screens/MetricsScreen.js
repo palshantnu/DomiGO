@@ -202,7 +202,7 @@ const MetricsScreen = ({ GET_STATE_WISE_METRICS, loginToken, stateWiseMetrics })
                         // ];
                         const stats = [
                             { label: 'Days in', value: item.daysIn },
-                            { label: 'Travel Days', value: item.travelDays },
+                            { label: 'Travel Through Days', value: item.travelDays },
                             // { label: 'Days Worked', value: item.daysWorked },
                             { label: 'Residency Days', value: item.daysWorked },
                             { label: 'Hours Worked', value: item.hoursWorked },

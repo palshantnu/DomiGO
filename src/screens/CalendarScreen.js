@@ -1806,7 +1806,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                 >
                   <Text style={{ fontWeight: "600", color: "#FF9500" }}>
                     {/* Missing Day: {section.missing.typeOfDay?.name} */}
-                    Missing Day: {getAutoTypeOfDayName(section.missing, section.date)}
+                    Starting Day: {getAutoTypeOfDayName(section.missing, section.date)}
                   </Text>
                   <Text style={{ color: "#666" }}>
                     State: {section.missing.state}

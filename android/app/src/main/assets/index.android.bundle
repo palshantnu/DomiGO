@@ -164003,12 +164003,12 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   var getBusinessDateKey = function getBusinessDateKey(item) {
     // TRIPS ONLY
     if ((item == null ? void 0 : item.kind) === "trip" || (item == null ? void 0 : item.kind) === "city_change" || (item == null ? void 0 : item.kind) === "county_change") {
-      if (!(item != null && item.startDate)) return "";
+      if (!(item != null && item.endDate)) return "";
       return new Intl.DateTimeFormat("en-CA", {
         year: "numeric",
         month: "2-digit",
         day: "2-digit"
-      }).format(new Date(item.startDate));
+      }).format(new Date(item.endDate));
     }
 
     // LOCATIONS
@@ -164765,7 +164765,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         })
         // .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
         .sort(function (a, b) {
-          return parseLocalDate(b.createdAt) - parseLocalDate(a.createdAt);
+          return parseLocalDate(a.createdAt) - parseLocalDate(b.createdAt);
         })[0];
 
         // ===============================
@@ -164917,7 +164917,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       })
       // .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
       .sort(function (a, b) {
-        return parseLocalDate(b.createdAt) - parseLocalDate(a.createdAt);
+        return parseLocalDate(a.createdAt) - parseLocalDate(b.createdAt);
       })[0];
 
       // 🔥 STORE STATE
@@ -165015,7 +165015,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         if (item.kind === "missing") {
           if (!latestMissing ||
           // new Date(item.createdAt) > new Date(latestMissing.createdAt)
-          parseLocalDate(item.createdAt) > new Date(latestMissing.createdAt)) {
+          parseLocalDate(item.createdAt) < parseLocalDate(latestMissing.createdAt)) {
             latestMissing = item;
           }
         }
@@ -165239,8 +165239,13 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           if (item.kind === "trip" || item.kind === "city_change" || item.kind === "county_change") {
             normalized[date].trips.push(item);
           }
+          // if (item.kind === "missing") {
+          //   normalized[date].activity = item;
+          // }
           if (item.kind === "missing") {
-            normalized[date].activity = item;
+            if (!normalized[date].activity || parseLocalDate(item.createdAt) < parseLocalDate(normalized[date].activity.createdAt)) {
+              normalized[date].activity = item;
+            }
           }
         });
       });

@@ -121,7 +121,7 @@ android {
     applicationVariants.all { variant ->
         variant.outputs.all {
             // outputFileName = "Domigo-v${variant.versionName}-${variant.buildType.name}.apk"
-            outputFileName = "Domigo-24-07-26-${variant.buildType.name}.apk"
+            outputFileName = "Domigo-01-08-26-${variant.buildType.name}.apk"
         }
     }
 }
