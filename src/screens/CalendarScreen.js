@@ -11,6 +11,7 @@ import {
   Dimensions,
   PanResponder,
   InteractionManager,
+  RefreshControl,
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -461,6 +462,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   const [selectedFilter, setSelectedFilter] = useState("ALL")
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const yearOptions = useMemo(() => {
     return [
       currentYear - 2,
@@ -671,6 +673,56 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
   console.log("Device timezone",
     Intl.DateTimeFormat().resolvedOptions().timeZone
   );
+
+  const onRefresh = async () => {
+    try {
+      setRefreshing(true);
+
+      // Missing activity list har tab ke liye refresh hogi
+      GET_MISSING_ACTIVITY_LIST();
+
+      if (selectedTab === 'Month') {
+        await GET_MONTH_WISE_TIMELINE({
+          month: visibleMonth.month,
+          year: visibleMonth.year,
+        });
+        // console.log('hucdnd',monthWiseTimeline);
+      }
+
+      if (selectedTab === 'Week') {
+        const { start, end } = getCurrentWeekDates();
+
+        await GET_WEEK_WISE_TIMELINE({
+          start,
+          end,
+        });
+
+        await GET_WEEK_WISE_LOCATION({
+          start,
+          end,
+        });
+        // console.log('hucdnd',weekWiseTimeline);
+
+      }
+
+      if (selectedTab === 'Year') {
+        await GET_YEAR_WISE_TIMELINE({
+          year: selectedYear,
+        });
+
+        await GET_YEAR_WISE_LOCATION({
+          year: selectedYear,
+        });
+        // console.log('hucdnd',yearWiseTimeline);
+
+      }
+    } catch (error) {
+      console.log('Pull to refresh error:', error);
+    } finally {
+      setRefreshing(false);
+    }
+    
+  };
 
 
 
@@ -1194,7 +1246,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
   const getWeekCalendarData = (weekResult = {}) => {
     return Object.keys(weekResult)
-     .sort((a, b) => parseLocalDate(a) - parseLocalDate(b))
+      .sort((a, b) => parseLocalDate(a) - parseLocalDate(b))
       .map(date => {
         const { trips, cityChanges, countyChanges, latestMissing } = normalizeDayData(weekResult[date]);
 
@@ -1874,12 +1926,30 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
           </View>
 
           {selectedTab === 'Month' && (
-            <View style={{
-              flex: 1,
-              backgroundColor: '#fff',
-              padding: 16,
-              elevation: 1
-            }}>
+            // <View style={{
+            //   flex: 1,
+            //   backgroundColor: '#fff',
+            //   padding: 16,
+            //   elevation: 1
+            // }}>
+            <ScrollView
+              style={{
+                flex: 1,
+                backgroundColor: '#fff',
+              }}
+              contentContainerStyle={{
+                padding: 16,
+              }}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  tintColor={colors.primary}      // iOS
+                  colors={[colors.primary]}
+                />
+              }
+            >
               <View style={styles.calendarWrapper} pointerEvents="auto">
                 <Calendar
                   markingType={'multi-dot'}
@@ -2012,7 +2082,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                   </View>
                 ))}
               </View>
-            </View>
+            </ScrollView>
           )}
           {selectedTab === 'Week' && (
             <View
@@ -2131,7 +2201,15 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
               ) : (
 
-                <CustomScroll>
+                <CustomScroll
+                  refreshControl={
+                    <RefreshControl
+                      refreshing={refreshing}
+                      onRefresh={onRefresh}
+                      tintColor={colors.primary}      // iOS
+                      colors={[colors.primary]}
+                    />
+                  }>
                   {regulatoryCalendar.map(renderRegulatorySection)}
                 </CustomScroll>
 
@@ -2422,6 +2500,14 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
                     navigation={navigation}
                   />
                 )}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                    tintColor={colors.primary}      // iOS
+                    colors={[colors.primary]}
+                  />
+                }
                 removeClippedSubviews
                 initialNumToRender={10}
                 maxToRenderPerBatch={10}
@@ -2621,7 +2707,7 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
 
 
       </SafeAreaView>
-    </LinearGradient>
+    </LinearGradient >
   );
 }
 

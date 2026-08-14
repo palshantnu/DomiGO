@@ -165051,7 +165051,9 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     };
     var getWeekCalendarData = function getWeekCalendarData() {
       var weekResult = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      return Object.keys(weekResult).map(function (date) {
+      return Object.keys(weekResult).sort(function (a, b) {
+        return parseLocalDate(a) - parseLocalDate(b);
+      }).map(function (date) {
         var _normalizeDayData = normalizeDayData(weekResult[date]),
           trips = _normalizeDayData.trips,
           cityChanges = _normalizeDayData.cityChanges,

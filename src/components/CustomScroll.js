@@ -3,7 +3,7 @@ import { Animated, View, StyleSheet, Dimensions } from "react-native";
 
 const { height: windowHeight } = Dimensions.get("window");
 
-const CustomScroll = ({ children }) => {
+const CustomScroll = ({ children,refreshControl }) => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const [contentHeight, setContentHeight] = useState(1);
   const [scrollViewHeight, setScrollViewHeight] = useState(0);
@@ -42,6 +42,7 @@ const CustomScroll = ({ children }) => {
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: false }
         )}
+        refreshControl={refreshControl}
       >
         {children}
       </Animated.ScrollView>
