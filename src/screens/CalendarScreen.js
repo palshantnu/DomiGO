@@ -1500,6 +1500,41 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
       });
     });
 
+    // Backend only returns dates that have at least one record (trip/missing/
+    // location). Days with zero records were simply absent, so weeks rendered
+    // with fewer than 7 rows. Fill the gaps with blank placeholder days so every
+    // week always shows Sunday through Saturday.
+    Object.keys(weekMap).forEach(weekKey => {
+      const days = weekMap[weekKey];
+      const existingDates = new Set(days.map(d => d.date));
+      const sample = parseLocalDate(days[0].date);
+      const weekStart = new Date(
+        sample.getFullYear(),
+        sample.getMonth(),
+        sample.getDate() - sample.getDay()
+      );
+
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(
+          weekStart.getFullYear(),
+          weekStart.getMonth(),
+          weekStart.getDate() + i
+        );
+        const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+        if (!existingDates.has(dateKey)) {
+          days.push({
+            date: dateKey,
+            trips: [],
+            activity: null,
+            locations: [],
+          });
+        }
+      }
+
+      days.sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
+    });
+
     return Object.keys(weekMap).map((week, index) => ({
       id: index + 1,
       week,
@@ -2688,8 +2723,8 @@ function CalendarScreen({ navigation, GET_MONTH_WISE_TIMELINE, GET_WEEK_WISE_TIM
               >
                 <Text style={[styles.actionText, { color: '#fff' }]}>
                   {/* {isMissingAlreadyAdded ? 'Fill Missing Day' : 'Add Missing Day'} */}
-                  {isMissingAlreadyAdded && selectedMissingDate.isUpdated ? 'Update Missing Location Info' :
-                    isMissingAlreadyAdded && !selectedMissingDate.isUpdated ? 'Fix Missing Location Info' : 'Add Missing Location Info'}
+                  {isMissingAlreadyAdded && selectedMissingDate.isUpdated ? 'Update Starting Location Info' :
+                    isMissingAlreadyAdded && !selectedMissingDate.isUpdated ? 'Fix Starting Location Info' : 'Add Starting Location Info'}
                 </Text>
               </TouchableOpacity>
 

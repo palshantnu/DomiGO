@@ -542,15 +542,29 @@ private fun scheduleMidnightMissingDay() {
     private fun reverseGeocodeInBackground(
         lat: Double,
         lng: Double,
+        match: StateMatch? = null,
+        newState: String? = null,
         stateTripOriginCity: String? = null,
         stateTripStartTime: Long? = null,
         stateTripEndTime: Long? = null
     ) {
         val url = "$GOOGLE_GEOCODING_URL?latlng=$lat,$lng&language=en&key=$googleApiKey"
-        
+
         val request = Request.Builder()
             .url(url)
             .build()
+
+        // Any failure below (timeout, bad response, empty/blank result, parse error)
+        // used to silently drop the trip — a flaky connection while "online" would
+        // lose the transition entirely with no retry. Fall back to the same local
+        // GeoJSON detection the offline path uses. (match/newState are only supplied
+        // by the local_native state-change path; the legacy periodic 'google' mode
+        // call below has neither, so it just skips the fallback like before.)
+        val fallbackToLocalTrip = {
+            if (match != null && newState != null) {
+                createLocalFallbackTrip(match, newState, lat, lng, stateTripOriginCity, stateTripStartTime, stateTripEndTime)
+            }
+        }
 
         httpClient.newCall(request).enqueue(object : okhttp3.Callback {
             override fun onFailure(call: okhttp3.Call, e: IOException) {
@@ -558,6 +572,7 @@ private fun scheduleMidnightMissingDay() {
                 sendEvent("onLocationError", Arguments.createMap().apply {
                     putString("error", "Reverse geocoding failed: ${e.message}")
                 })
+                fallbackToLocalTrip()
             }
 
             override fun onResponse(call: okhttp3.Call, response: Response) {
@@ -637,7 +652,8 @@ private fun scheduleMidnightMissingDay() {
                                 
                                 sendEvent("onAddressResolved", addressData)
                                 if (state.isBlank() || city.isBlank()) {
-                                    Log.d(TAG, "🚫 Invalid geocode data — skipped")
+                                    Log.d(TAG, "🚫 Invalid geocode data — falling back to local detection")
+                                    fallbackToLocalTrip()
                                     return
                                 }
                                 
@@ -714,22 +730,133 @@ private fun scheduleMidnightMissingDay() {
                                 //     isTransitionInProgress = false
                                 //     return
                                 // }
+                            } else {
+                                Log.d(TAG, "🚫 Geocoding returned no results — falling back to local detection")
+                                fallbackToLocalTrip()
                             }
                         } else {
                             Log.e(TAG, "Google Geocoding API error: $status")
                             sendEvent("onLocationError", Arguments.createMap().apply {
                                 putString("error", "Geocoding API error: $status")
                             })
+                            fallbackToLocalTrip()
                         }
+                    } else {
+                        Log.e(TAG, "Reverse geocode response unsuccessful or empty body")
+                        fallbackToLocalTrip()
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "Error parsing reverse geocode response: ${e.message}")
                     sendEvent("onLocationError", Arguments.createMap().apply {
                         putString("error", "Geocoding parse error: ${e.message}")
                     })
+                    fallbackToLocalTrip()
                 }
             }
         })
+    }
+
+    // Builds and commits a "trip" locally via GeoJSON when the online reverse-geocode
+    // path couldn't complete (timeout, error, empty/blank result). Mirrors the offline
+    // branch of processWithLocalGeoJSON so a flaky connection never silently drops a trip.
+    private fun createLocalFallbackTrip(
+        match: StateMatch,
+        newState: String,
+        lat: Double,
+        lng: Double,
+        stateTripOriginCity: String?,
+        stateTripStartTime: Long?,
+        stateTripEndTime: Long?
+    ) {
+        if (newState.equals(previousStateName, ignoreCase = true)) {
+            Log.d(TAG, "🚫 Fallback trip skipped — state already committed")
+            return
+        }
+
+        val now = stateTripEndTime ?: System.currentTimeMillis()
+        val tripKey = "${previousStateName}_${newState}_${previousEnterTime}"
+        if (tripKey == lastTripKey) {
+            Log.d(TAG, "🚫 Duplicate fallback trip blocked")
+            return
+        }
+
+        val originStateSafe = previousStateName
+        val originLatSafe = previousLat
+        val originLngSafe = previousLng
+        val originCitySafe = stateTripOriginCity?.takeIf { it.isNotBlank() }
+            ?: previousCityName.ifBlank { previousCity }
+        val tripStartTime = stateTripStartTime?.takeIf { it > 0L }
+            ?: if (previousCityEnterTime > 0L) previousCityEnterTime else previousEnterTime
+
+        val destinationCityFallback = detectCityFromGeoJSON(newState, lat, lng)
+
+        previousStateName = newState
+        previousStateCode = match.fips ?: newState
+        previousCountryCode = match.countryCode
+        previousLat = lat
+        previousLng = lng
+        previousEnterTime = now
+        saveStateToPrefs()
+        if (match.countryCode == "US") {
+            match.fips?.let { fips ->
+                val county = detectCountyFromGeoJSON(fips, lat, lng)
+                if (county != null) {
+                    previousCountyFips = county.fips
+                    previousCountyName = county.name
+                    previousCountyEnterTime = now
+                }
+            }
+            if (destinationCityFallback != null) {
+                previousCityFips = destinationCityFallback.fips
+                previousCityName = destinationCityFallback.name
+                previousCityEnterTime = now
+            } else {
+                previousCityFips = ""
+                previousCityName = ""
+                previousCityEnterTime = 0L
+            }
+        } else {
+            previousCountyFips = ""
+            previousCountyName = ""
+            previousCountyEnterTime = 0L
+            previousCityFips = ""
+            previousCityName = ""
+            previousCityEnterTime = 0L
+        }
+        lastTripKey = tripKey
+
+        Log.d(TAG, "🌐➡️📴 Online geocode unavailable — created trip via local fallback: $originStateSafe -> $newState")
+
+        sendEntryFormData(
+            kind = "trip",
+            date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
+            typeOfDayId = null,
+            isCommissionDay = false,
+            isRemoteWork = false,
+            remoteHours = 0,
+            isTravelling = true,
+            tripTypeId = 1,
+            tripModeId = 1,
+            confirmationNo = "",
+            vendor = "",
+            hasProof = false,
+            proofType = "other",
+            notes = "",
+            creationType = "automatic",
+            remoteLocation = "",
+            state = null,
+            isUpdated = false,
+            originCity = originCitySafe,
+            originState = originStateSafe,
+            originLat = originLatSafe,
+            originLng = originLngSafe,
+            destinationCity = destinationCityFallback?.name ?: newState,
+            destinationState = newState,
+            destinationLat = lat,
+            destinationLng = lng,
+            startDate = tripStartTime,
+            endDate = now
+        )
     }
 
 
@@ -2510,20 +2637,12 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
             previousCityName = ""
             previousCityEnterTime = 0L
         }
-        reverseGeocodeInBackground(lat, lng, stateTripOriginCity, stateTripStartTime, stateTripEndTime)
+        reverseGeocodeInBackground(lat, lng, match, newState, stateTripOriginCity, stateTripStartTime, stateTripEndTime)
         return
     }
 
     // State changed → offline: guard, then create trip locally.
     Log.d(TAG, "Offline — creating trip with basic state only")
-
-    // Debounce rapid border flaps.
-    if (stateChangeDetectedTime == 0L) {
-        stateChangeDetectedTime = System.currentTimeMillis()
-        return
-    }
-    val diff = System.currentTimeMillis() - stateChangeDetectedTime
-    if (diff < 10000) return
     stateChangeDetectedTime = 0L
 
     // Minimum stay in the previous state (avoids spurious trips during transit noise).
@@ -2565,6 +2684,9 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
         sendUsBoundaryTripsForStateChange(match, lat, lng, stateTripEndTime)
     }
 
+    // Resolve destination city from bundled GeoJSON — works fully offline, no Google call needed.
+    val destinationCityOffline = detectCityFromGeoJSON(newState, lat, lng)
+
     // Commit new state before firing the trip API.
     previousStateName = newState
     previousStateCode = match.fips ?: newState
@@ -2583,6 +2705,16 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
 
                 Log.d(TAG, "County seeded after state change: ${county.name}")
             }
+        }
+        if (destinationCityOffline != null) {
+            previousCityFips = destinationCityOffline.fips
+            previousCityName = destinationCityOffline.name
+            previousCityEnterTime = stateTripEndTime
+            Log.d(TAG, "City seeded after state change: ${destinationCityOffline.name}")
+        } else {
+            previousCityFips = ""
+            previousCityName = ""
+            previousCityEnterTime = 0L
         }
     } else {
         previousCountyFips = ""
@@ -2617,7 +2749,7 @@ private fun processWithLocalGeoJSON(lat: Double, lng: Double) {
         originState = originStateSafe,
         originLat = originLatSafe,
         originLng = originLngSafe,
-        destinationCity = "",
+        destinationCity = destinationCityOffline?.name ?: newState,
         destinationState = newState,
         destinationLat = lat,
         destinationLng = lng,
