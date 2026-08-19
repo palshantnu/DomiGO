@@ -641,7 +641,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                                 <Text style={styles.metricLabel}>Readiness</Text>
                                 <Text style={[styles.metricLabel, { marginTop: 0 }]}> Score</Text>
                                 <Text style={styles.metricSub}>
-                                    {finalYearProgress?.missingDays ?? 0} missing days
+                                    {finalYearProgress?.missingDays ?? 0} starting days
                                 </Text>
                             </FeatureGateWrapper>
 

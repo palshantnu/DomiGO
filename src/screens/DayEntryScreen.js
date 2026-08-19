@@ -7,7 +7,7 @@ import {
     TouchableOpacity,
     ScrollView,
     Image,
-     ActionSheetIOS, Platform 
+    ActionSheetIOS, Platform
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LinearGradient from "react-native-linear-gradient";
@@ -15,8 +15,8 @@ import FontAwesome from "react-native-vector-icons/FontAwesome";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { SelectList } from "react-native-dropdown-select-list";
 import {
-  launchCamera,
-  launchImageLibrary,
+    launchCamera,
+    launchImageLibrary,
 } from "react-native-image-picker";
 import { pick } from "@react-native-documents/picker";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -505,63 +505,63 @@ const DayEntryScreen = ({
     /* ---------------- ATTACHMENT ---------------- */
 
     const openAttachment = () => {
-  if (Platform.OS === "ios") {
-    ActionSheetIOS.showActionSheetWithOptions(
-      {
-        options: ["Cancel", "Photos", "Files"],
-        cancelButtonIndex: 0,
-      },
-      async (buttonIndex) => {
-        switch (buttonIndex) {
-          case 1:
-            openPhotos();
-            break;
-          case 2:
-            openFiles();
-            break;
-          case 3:
-            openCamera();
-            break;
+        if (Platform.OS === "ios") {
+            ActionSheetIOS.showActionSheetWithOptions(
+                {
+                    options: ["Cancel", "Photos", "Files"],
+                    cancelButtonIndex: 0,
+                },
+                async (buttonIndex) => {
+                    switch (buttonIndex) {
+                        case 1:
+                            openPhotos();
+                            break;
+                        case 2:
+                            openFiles();
+                            break;
+                        case 3:
+                            openCamera();
+                            break;
+                    }
+                }
+            );
+        } else {
+            pickDocument();
+            // Android ke liye bhi ActionSheet ya BottomSheet dikha sakte ho
         }
-      }
-    );
-  } else {
-    pickDocument();
-    // Android ke liye bhi ActionSheet ya BottomSheet dikha sakte ho
-  }
-};
+    };
 
-const openCamera = async () => {
-  const res = await launchCamera({
-    mediaType: "photo",
-  });
+    const openCamera = async () => {
+        const res = await launchCamera({
+            mediaType: "photo",
+        });
 
-  if (!res.didCancel && res.assets?.length) {
-    setAttachment(res.assets[0]);
-  }
-};
+        if (!res.didCancel && res.assets?.length) {
+            setAttachment(res.assets[0]);
+        }
+    };
 
-const openPhotos = async () => {
-  const res = await launchImageLibrary({
-    mediaType: "photo",
-  });
+    const openPhotos = async () => {
+        const res = await launchImageLibrary({
+            mediaType: "photo",
+        });
 
-  if (!res.didCancel && res.assets?.length) {
-    setAttachment(res.assets[0]);
-  }
-};
+        if (!res.didCancel && res.assets?.length) {
+            setAttachment(res.assets[0]);
+        }
+    };
 
-const openFiles = async () => {
-  try {
-    const res = await pick({
-      allowMultiSelection: false,
-    });
+    const openFiles = async () => {
+        try {
+            const res = await pick({
+                allowMultiSelection: false,
+            });
 
-    if (res?.length) {
-      setAttachment(res[0]);
-    }
-  } catch (e) {}
-};
+            if (res?.length) {
+                setAttachment(res[0]);
+            }
+        } catch (e) { }
+    };
 
 
     const pickDocument = async () => {
@@ -794,9 +794,29 @@ const openFiles = async () => {
     const workingType = typeOfDayList?.find(
         (item) => item.name === "Working"
     );
+    const defaultType = typeOfDayList?.find(
+        (item) => item.name === "Default"
+    );
 
     const isWorkingDay =
         Number(typeOfDay) === workingType?.id;
+
+    const isDefaultDay =
+        Number(typeOfDay) === Number(defaultType?.id);
+
+    const filteredTripTypeList = tripTypeList?.filter((item) => {
+        // Default => saare options
+        if (isDefaultDay) {
+            return true;
+        }
+        if (isWorkingDay) {
+            // Working par Personal hide, Work show
+            return item.name !== "Personal";
+        }
+
+        // Working ke alawa Work hide, Personal show
+        return item.name !== "Work";
+    });
 
 
     return (
@@ -808,7 +828,7 @@ const openFiles = async () => {
             style={{ flex: 1, backgroundColor: '#fff' }}
         >
             <SafeAreaView style={{ flex: 1 }}>
-                <Header title={isEdit ? "Update Entry" : "Add Entry"} showBack/>
+                <Header title={isEdit ? "Update Entry" : "Add Entry"} showBack />
 
                 <ScrollView showsVerticalScrollIndicator={false}>
                     <View style={styles.card}>
@@ -913,7 +933,7 @@ const openFiles = async () => {
                                 {/* <TextInput
                                     value={startLocation}
                                     onChangeText={(text) => {
-                                        setStartLocation(text);
+                                    setStartLocation(text);
                                         searchPlaces(text, setStartSuggestions);
                                     }}
                                     placeholder="Enter start location"
@@ -1330,7 +1350,7 @@ const openFiles = async () => {
                         {isTravelling && (
                             <>
                                 <FieldLabel title="Trip Type" />
-                                <SelectList
+                                {/* <SelectList
                                     data={tripTypeList?.map(i => ({
                                         key: i.id,
                                         value: i.name,
@@ -1338,6 +1358,21 @@ const openFiles = async () => {
                                     setSelected={setTripType}
                                     save="key"
                                     defaultOption={getDefaultOption(tripTypeList, tripType)}
+                                    boxStyles={styles.dropdownBox}
+                                    inputStyles={styles.dropdownInput}
+                                /> */}
+
+                                <SelectList
+                                    data={filteredTripTypeList?.map(i => ({
+                                        key: i.id,
+                                        value: i.name,
+                                    }))}
+                                    setSelected={setTripType}
+                                    save="key"
+                                    defaultOption={getDefaultOption(
+                                        filteredTripTypeList,
+                                        tripType
+                                    )}
                                     boxStyles={styles.dropdownBox}
                                     inputStyles={styles.dropdownInput}
                                 />

@@ -244,7 +244,7 @@ const AddMissingDayScreen = ({
       style={{ flex: 1 }}
     >
       <SafeAreaView style={{ flex: 1 }}>
-        <Header title= {isEdit ? "Update Missing Day" : "Add Missing Day"} />
+        <Header title= {isEdit ? "Update Starting Day" : "Add Starting Day"} />
 
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.card}>
@@ -387,7 +387,7 @@ const AddMissingDayScreen = ({
           </View>
 
           <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-            <Text style={styles.saveText}> {isEdit ? "Update Missing Day" : "Save Missing Day"}</Text>
+            <Text style={styles.saveText}> {isEdit ? "Update Starting Day" : "Save Starting Day"}</Text>
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>

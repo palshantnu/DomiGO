@@ -2582,13 +2582,24 @@ print("📍 county: \(county)")
     if isOnline {
       let location = CLLocation(latitude: lat, longitude: lng)
 
-      geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
-        guard let self = self else { return }
-        let geocodedCity = placemarks?.first?.locality ?? ""
+      // Guards against both the timeout and the geocode callback firing (only the
+      // first one should act). Local `var` captured by reference in both closures.
+      var transitionResolved = false
+      let geocodeTimeoutSeconds = 15.0
+
+      // Safety net: isInternetAvailable() only checks the network interface, not
+      // whether requests actually complete. On a weak/dropped signal (e.g. driving
+      // through low-coverage area) reverseGeocodeLocation's callback may never fire,
+      // which used to leave isTransitionInProgress stuck true forever — silently
+      // dropping this trip AND blocking every future state change until app restart.
+      DispatchQueue.main.asyncAfter(deadline: .now() + geocodeTimeoutSeconds) { [weak self] in
+        guard let self = self, !transitionResolved else { return }
+        transitionResolved = true
+        print("⏱️ Reverse geocode timed out after \(geocodeTimeoutSeconds)s — using local city detection")
+
         let destinationCity =
-          geocodedCity.isEmpty
-          ? (self.previousDetectedCity.isEmpty ? detectedState : self.previousDetectedCity)
-          : geocodedCity
+          self.detectCityFromGeoJSON(stateName: detectedState, lat: lat, lng: lng)
+          ?? (self.previousDetectedCity.isEmpty ? detectedState : self.previousDetectedCity)
 
         self.createTrip(
           originCity: originCity,
@@ -2608,7 +2619,6 @@ print("📍 county: \(county)")
         self.previousCity = destinationCity
         self.previousStateName = detectedState
         self.currentStateName = detectedState
-        // RESET CITY TRACKING
         if detectedCountry == "US" {
           self.seedUsBoundaryState(state: match, lat: lat, lng: lng, now: stateTripEndTime)
         } else {
@@ -2623,13 +2633,69 @@ print("📍 county: \(county)")
         self.isTransitionInProgress = false
         self.saveState()
       }
+
+      geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
+        guard let self = self else { return }
+        // Normalize onto main queue so the transitionResolved check-and-set below
+        // can't race with the timeout block above.
+        DispatchQueue.main.async {
+          guard !transitionResolved else { return }
+          transitionResolved = true
+
+          let geocodedCity = placemarks?.first?.locality ?? ""
+          let destinationCity =
+            geocodedCity.isEmpty
+            ? (self.detectCityFromGeoJSON(stateName: detectedState, lat: lat, lng: lng)
+                ?? (self.previousDetectedCity.isEmpty ? detectedState : self.previousDetectedCity))
+            : geocodedCity
+
+          self.createTrip(
+            originCity: originCity,
+            originState: originState,
+            originLat: originLat,
+            originLng: originLng,
+            destinationCity: destinationCity,
+            destinationState: detectedState,
+            destinationLat: lat,
+            destinationLng: lng,
+            startDate: startTime,
+            endDate: stateTripEndTime
+          )
+
+          self.previousLat = lat
+          self.previousLng = lng
+          self.previousCity = destinationCity
+          self.previousStateName = detectedState
+          self.currentStateName = detectedState
+          // RESET CITY TRACKING
+          if detectedCountry == "US" {
+            self.seedUsBoundaryState(state: match, lat: lat, lng: lng, now: stateTripEndTime)
+          } else {
+            self.previousDetectedCity = ""
+            self.previousCityEnterTime = 0
+            self.previousCountyFips = ""
+            self.previousCountyName = ""
+            self.previousCountyEnterTime = 0
+          }
+          self.previousEnterTime = stateTripEndTime
+          self.lastTripProcessedTime = stateTripEndTime
+          self.isTransitionInProgress = false
+          self.saveState()
+        }
+      }
     } else {
+      // Resolve destination city from bundled GeoJSON at the NEW location — works fully
+      // offline. Previously this reused previousDetectedCity (the ORIGIN's city, seeded
+      // only after createTrip ran), so offline trips always showed the old city.
+      let offlineDestinationCity =
+        detectCityFromGeoJSON(stateName: detectedState, lat: lat, lng: lng) ?? ""
+
       createTrip(
         originCity: originCity.isEmpty ? originState : originCity,
         originState: originState,
         originLat: originLat,
         originLng: originLng,
-        destinationCity: previousDetectedCity.isEmpty ? detectedState : previousDetectedCity,
+        destinationCity: offlineDestinationCity.isEmpty ? detectedState : offlineDestinationCity,
         destinationState: detectedState,
         destinationLat: lat,
         destinationLng: lng,
@@ -2642,7 +2708,7 @@ print("📍 county: \(county)")
       // RESET CITY TRACKING
       if detectedCountry == "US" {
         seedUsBoundaryState(state: match, lat: lat, lng: lng, now: stateTripEndTime)
-        previousCity = previousDetectedCity.isEmpty ? detectedState : previousDetectedCity
+        previousCity = offlineDestinationCity.isEmpty ? detectedState : offlineDestinationCity
       } else {
         previousCity = ""
         previousDetectedCity = ""

@@ -163952,15 +163952,16 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   });
   exports.default = void 0;
   var _toConsumableArray2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[1], "@babel/runtime/helpers/toConsumableArray"));
-  var _slicedToArray2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[2], "@babel/runtime/helpers/slicedToArray"));
-  var _react = _interopRequireWildcard(_$$_REQUIRE(_dependencyMap[3], "react"));
-  var _reactNative = _$$_REQUIRE(_dependencyMap[4], "react-native");
-  var _Ionicons = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[5], "react-native-vector-icons/Ionicons"));
-  var _colors = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[6], "../theme/colors"));
-  var _Header = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[7], "../components/Header"));
-  var _reactNativeLinearGradient = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[8], "react-native-linear-gradient"));
-  var _CustomScroll = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[9], "../components/CustomScroll"));
-  var _jsxRuntime = _$$_REQUIRE(_dependencyMap[10], "react/jsx-runtime");
+  var _asyncToGenerator2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[2], "@babel/runtime/helpers/asyncToGenerator"));
+  var _slicedToArray2 = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[3], "@babel/runtime/helpers/slicedToArray"));
+  var _react = _interopRequireWildcard(_$$_REQUIRE(_dependencyMap[4], "react"));
+  var _reactNative = _$$_REQUIRE(_dependencyMap[5], "react-native");
+  var _Ionicons = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[6], "react-native-vector-icons/Ionicons"));
+  var _colors = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[7], "../theme/colors"));
+  var _Header = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[8], "../components/Header"));
+  var _reactNativeLinearGradient = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[9], "react-native-linear-gradient"));
+  var _CustomScroll = _interopRequireDefault(_$$_REQUIRE(_dependencyMap[10], "../components/CustomScroll"));
+  var _jsxRuntime = _$$_REQUIRE(_dependencyMap[11], "react/jsx-runtime");
   var _this = this,
     _jsxFileName = "D:\\Reactnativeprojects\\DomiGO\\src\\screens\\CalendarScreen.js";
   function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function _interopRequireWildcard(e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (var _t in e) "default" !== _t && {}.hasOwnProperty.call(e, _t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, _t)) && (i.get || i.set) ? o(f, _t, i) : f[_t] = e[_t]); return f; })(e, t); }
@@ -164369,6 +164370,10 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       _useState28 = (0, _slicedToArray2.default)(_useState27, 2),
       loading = _useState28[0],
       setLoading = _useState28[1];
+    var _useState29 = (0, _react.useState)(false),
+      _useState30 = (0, _slicedToArray2.default)(_useState29, 2),
+      refreshing = _useState30[0],
+      setRefreshing = _useState30[1];
     var yearOptions = (0, _react.useMemo)(function () {
       return [currentYear - 2, currentYear - 1, currentYear];
     }, []);
@@ -164426,13 +164431,13 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       }
       return new Date(input);
     };
-    var _useState29 = (0, _react.useState)({
+    var _useState31 = (0, _react.useState)({
         month: today.getMonth() + 1,
         year: today.getFullYear()
       }),
-      _useState30 = (0, _slicedToArray2.default)(_useState29, 2),
-      visibleMonth = _useState30[0],
-      setVisibleMonth = _useState30[1];
+      _useState32 = (0, _slicedToArray2.default)(_useState31, 2),
+      visibleMonth = _useState32[0],
+      setVisibleMonth = _useState32[1];
 
     // console.log('yearWiseTimeline', yearWiseTimeline);
     // console.log('weekWiseTimeline', weekWiseTimeline);
@@ -164546,6 +164551,53 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
 
     // console.log("API week range", getCurrentWeekDates());
     console.log("Device timezone", Intl.DateTimeFormat().resolvedOptions().timeZone);
+    var onRefresh = /*#__PURE__*/function () {
+      var _ref3 = (0, _asyncToGenerator2.default)(function* () {
+        try {
+          setRefreshing(true);
+
+          // Missing activity list har tab ke liye refresh hogi
+          GET_MISSING_ACTIVITY_LIST();
+          if (selectedTab === 'Month') {
+            yield GET_MONTH_WISE_TIMELINE({
+              month: visibleMonth.month,
+              year: visibleMonth.year
+            });
+            // console.log('hucdnd',monthWiseTimeline);
+          }
+          if (selectedTab === 'Week') {
+            var _getCurrentWeekDates = getCurrentWeekDates(),
+              start = _getCurrentWeekDates.start,
+              end = _getCurrentWeekDates.end;
+            yield GET_WEEK_WISE_TIMELINE({
+              start: start,
+              end: end
+            });
+            yield GET_WEEK_WISE_LOCATION({
+              start: start,
+              end: end
+            });
+            // console.log('hucdnd',weekWiseTimeline);
+          }
+          if (selectedTab === 'Year') {
+            yield GET_YEAR_WISE_TIMELINE({
+              year: selectedYear
+            });
+            yield GET_YEAR_WISE_LOCATION({
+              year: selectedYear
+            });
+            // console.log('hucdnd',yearWiseTimeline);
+          }
+        } catch (error) {
+          console.log('Pull to refresh error:', error);
+        } finally {
+          setRefreshing(false);
+        }
+      });
+      return function onRefresh() {
+        return _ref3.apply(this, arguments);
+      };
+    }();
 
     // useEffect(() => {
     //   const today = new Date();
@@ -164576,9 +164628,9 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
 
     (0, _react.useEffect)(function () {
       var today = new Date();
-      var _getCurrentWeekDates = getCurrentWeekDates(),
-        start = _getCurrentWeekDates.start,
-        end = _getCurrentWeekDates.end;
+      var _getCurrentWeekDates2 = getCurrentWeekDates(),
+        start = _getCurrentWeekDates2.start,
+        end = _getCurrentWeekDates2.end;
       GET_MISSING_ACTIVITY_LIST();
       if (selectedTab === 'Month') {
         GET_MONTH_WISE_TIMELINE({
@@ -164606,7 +164658,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         });
       }
     }, [selectedTab, selectedYear]);
-    (0, _$$_REQUIRE(_dependencyMap[11], "@react-navigation/native").useFocusEffect)(_react.default.useCallback(function () {
+    (0, _$$_REQUIRE(_dependencyMap[12], "@react-navigation/native").useFocusEffect)(_react.default.useCallback(function () {
       // const today = new Date();
       // const { start, end } = getCurrentWeekDates();
 
@@ -165225,10 +165277,10 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       var fixedYearWiseTimeline = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var normalizedYearLocation = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var normalized = {};
-      Object.entries(fixedYearWiseTimeline).forEach(function (_ref3) {
-        var _ref4 = (0, _slicedToArray2.default)(_ref3, 2),
-          date = _ref4[0],
-          items = _ref4[1];
+      Object.entries(fixedYearWiseTimeline).forEach(function (_ref4) {
+        var _ref5 = (0, _slicedToArray2.default)(_ref4, 2),
+          date = _ref5[0],
+          items = _ref5[1];
         normalized[date] = {
           trips: [],
           activity: null,
@@ -165256,16 +165308,16 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     var getYearWeeklyData = function getYearWeeklyData() {
       var normalizedData = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var weekMap = {};
-      Object.entries(normalizedData).sort(function (_ref5, _ref6) {
-        var _ref7 = (0, _slicedToArray2.default)(_ref5, 1),
-          a = _ref7[0];
+      Object.entries(normalizedData).sort(function (_ref6, _ref7) {
         var _ref8 = (0, _slicedToArray2.default)(_ref6, 1),
-          b = _ref8[0];
+          a = _ref8[0];
+        var _ref9 = (0, _slicedToArray2.default)(_ref7, 1),
+          b = _ref9[0];
         return parseLocalDate(a) - parseLocalDate(b);
-      }).forEach(function (_ref9) {
-        var _ref0 = (0, _slicedToArray2.default)(_ref9, 2),
-          date = _ref0[0],
-          dayData = _ref0[1];
+      }).forEach(function (_ref0) {
+        var _ref1 = (0, _slicedToArray2.default)(_ref0, 2),
+          date = _ref1[0],
+          dayData = _ref1[1];
         var weekKey = getWeekKey(date);
         if (!weekMap[weekKey]) {
           weekMap[weekKey] = [];
@@ -165664,7 +165716,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       },
       locations: [0.05, 0.55],
       style: styles.container,
-      children: /*#__PURE__*/(0, _jsxRuntime.jsxs)(_$$_REQUIRE(_dependencyMap[12], "react-native-safe-area-context").SafeAreaView, {
+      children: /*#__PURE__*/(0, _jsxRuntime.jsxs)(_$$_REQUIRE(_dependencyMap[13], "react-native-safe-area-context").SafeAreaView, {
         edges: ['top', 'left', 'right'],
         style: styles.container,
         children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_Header.default, {
@@ -165685,17 +165737,34 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 })
               }, tab);
             })
-          }), selectedTab === 'Month' && /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
+          }), selectedTab === 'Month' &&
+          /*#__PURE__*/
+          // <View style={{
+          //   flex: 1,
+          //   backgroundColor: '#fff',
+          //   padding: 16,
+          //   elevation: 1
+          // }}>
+          (0, _jsxRuntime.jsxs)(_reactNative.ScrollView, {
             style: {
               flex: 1,
-              backgroundColor: '#fff',
-              padding: 16,
-              elevation: 1
+              backgroundColor: '#fff'
             },
+            contentContainerStyle: {
+              padding: 16
+            },
+            showsVerticalScrollIndicator: false,
+            refreshControl: /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.RefreshControl, {
+              refreshing: refreshing,
+              onRefresh: onRefresh,
+              tintColor: _colors.default.primary // iOS
+              ,
+              colors: [_colors.default.primary]
+            }),
             children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
               style: styles.calendarWrapper,
               pointerEvents: "auto",
-              children: /*#__PURE__*/(0, _jsxRuntime.jsx)(_$$_REQUIRE(_dependencyMap[13], "react-native-calendars").Calendar, {
+              children: /*#__PURE__*/(0, _jsxRuntime.jsx)(_$$_REQUIRE(_dependencyMap[14], "react-native-calendars").Calendar, {
                 markingType: 'multi-dot'
                 // onMonthChange={(monthData) => {
                 //   console.log('Month Changed =>', monthData);
@@ -165721,10 +165790,10 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 ,
                 markedDates: markedDates,
                 onDayPress: handleDayPress,
-                dayComponent: function dayComponent(_ref1) {
-                  var date = _ref1.date,
-                    state = _ref1.state,
-                    marking = _ref1.marking;
+                dayComponent: function dayComponent(_ref10) {
+                  var date = _ref10.date,
+                    state = _ref10.state,
+                    marking = _ref10.marking;
                   var weekend = isWeekend(date.dateString);
                   return /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
                     onPress: function onPress() {
@@ -165947,6 +166016,13 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 children: "No trip found in this week"
               })]
             }) : /*#__PURE__*/(0, _jsxRuntime.jsx)(_CustomScroll.default, {
+              refreshControl: /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.RefreshControl, {
+                refreshing: refreshing,
+                onRefresh: onRefresh,
+                tintColor: _colors.default.primary // iOS
+                ,
+                colors: [_colors.default.primary]
+              }),
               children: regulatoryCalendar.map(renderRegulatorySection)
             })]
           }), selectedTab === 'Year' &&
@@ -166163,9 +166239,9 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
               keyExtractor: function keyExtractor(item, index) {
                 return index.toString();
               },
-              renderItem: function renderItem(_ref10) {
-                var item = _ref10.item,
-                  index = _ref10.index;
+              renderItem: function renderItem(_ref11) {
+                var item = _ref11.item,
+                  index = _ref11.index;
                 return /*#__PURE__*/(0, _jsxRuntime.jsx)(YearWeekCard, {
                   item: item,
                   index: index,
@@ -166175,6 +166251,13 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                   navigation: navigation
                 });
               },
+              refreshControl: /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.RefreshControl, {
+                refreshing: refreshing,
+                onRefresh: onRefresh,
+                tintColor: _colors.default.primary // iOS
+                ,
+                colors: [_colors.default.primary]
+              }),
               removeClippedSubviews: true,
               initialNumToRender: 10,
               maxToRenderPerBatch: 10,
@@ -166227,8 +166310,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                     style: styles.tripDivider
                   });
                 },
-                renderItem: function renderItem(_ref11) {
-                  var item = _ref11.item;
+                renderItem: function renderItem(_ref12) {
+                  var item = _ref12.item;
                   return /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.TouchableOpacity, {
                     style: styles.tripRow,
                     onPress: function onPress() {
@@ -166387,16 +166470,16 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     };
   }
   var mapDispatchToProps = {
-    GET_WEEK_WISE_TIMELINE: _$$_REQUIRE(_dependencyMap[14], "../redux/actions/action-creator").GET_WEEK_WISE_TIMELINE,
-    GET_MONTH_WISE_TIMELINE: _$$_REQUIRE(_dependencyMap[14], "../redux/actions/action-creator").GET_MONTH_WISE_TIMELINE,
-    GET_YEAR_WISE_TIMELINE: _$$_REQUIRE(_dependencyMap[14], "../redux/actions/action-creator").GET_YEAR_WISE_TIMELINE,
-    GET_WEEK_WISE_LOCATION: _$$_REQUIRE(_dependencyMap[14], "../redux/actions/action-creator").GET_WEEK_WISE_LOCATION,
-    GET_YEAR_WISE_LOCATION: _$$_REQUIRE(_dependencyMap[14], "../redux/actions/action-creator").GET_YEAR_WISE_LOCATION,
-    GET_MISSING_ACTIVITY_LIST: _$$_REQUIRE(_dependencyMap[14], "../redux/actions/action-creator").GET_MISSING_ACTIVITY_LIST
+    GET_WEEK_WISE_TIMELINE: _$$_REQUIRE(_dependencyMap[15], "../redux/actions/action-creator").GET_WEEK_WISE_TIMELINE,
+    GET_MONTH_WISE_TIMELINE: _$$_REQUIRE(_dependencyMap[15], "../redux/actions/action-creator").GET_MONTH_WISE_TIMELINE,
+    GET_YEAR_WISE_TIMELINE: _$$_REQUIRE(_dependencyMap[15], "../redux/actions/action-creator").GET_YEAR_WISE_TIMELINE,
+    GET_WEEK_WISE_LOCATION: _$$_REQUIRE(_dependencyMap[15], "../redux/actions/action-creator").GET_WEEK_WISE_LOCATION,
+    GET_YEAR_WISE_LOCATION: _$$_REQUIRE(_dependencyMap[15], "../redux/actions/action-creator").GET_YEAR_WISE_LOCATION,
+    GET_MISSING_ACTIVITY_LIST: _$$_REQUIRE(_dependencyMap[15], "../redux/actions/action-creator").GET_MISSING_ACTIVITY_LIST
   };
 
   // export default React.memo(connect(mapStateToProps, mapDispatchToProps)(CalendarScreen));
-  var _default = exports.default = (0, _$$_REQUIRE(_dependencyMap[15], "react-redux").connect)(mapStateToProps, mapDispatchToProps)(CalendarScreen);
+  var _default = exports.default = (0, _$$_REQUIRE(_dependencyMap[16], "react-redux").connect)(mapStateToProps, mapDispatchToProps)(CalendarScreen);
   var styles = _reactNative.StyleSheet.create({
     container: {
       flex: 1
@@ -167089,7 +167172,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       fontWeight: "500"
     }
   });
-},1155,[1,47,39,79,17,615,1013,1014,634,1156,182,1015,836,1157,855,847],"src/screens/CalendarScreen.js");
+},1155,[1,47,178,39,79,17,615,1013,1014,634,1156,182,1015,836,1157,855,847],"src/screens/CalendarScreen.js");
 __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, exports, _dependencyMap) {
   var _interopRequireDefault = _$$_REQUIRE(_dependencyMap[0], "@babel/runtime/helpers/interopRequireDefault");
   Object.defineProperty(exports, "__esModule", {
@@ -167106,7 +167189,8 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
   var _Dimensions$get = _reactNative.Dimensions.get("window"),
     windowHeight = _Dimensions$get.height;
   var CustomScroll = function CustomScroll(_ref) {
-    var children = _ref.children;
+    var children = _ref.children,
+      refreshControl = _ref.refreshControl;
     var scrollY = (0, _react.useRef)(new _reactNative.Animated.Value(0)).current;
     var _useState = (0, _react.useState)(1),
       _useState2 = (0, _slicedToArray2.default)(_useState, 2),
@@ -167154,6 +167238,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
         }], {
           useNativeDriver: false
         }),
+        refreshControl: refreshControl,
         children: children
       }), scrollViewHeight > 0 && /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.View, {
         style: styles.indicatorTrack,

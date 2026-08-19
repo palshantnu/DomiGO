@@ -150,7 +150,7 @@ console.log("NOW", new Date().toString());
                   TripSummaryDetails?.tripDay?.kind == 'county_change' ?
                   <Text style={styles.creationTypeText}>County Change Type: {TripSummaryDetails?.tripDay?.creationType.toUpperCase()}</Text>
                   :
-                  <Text style={styles.creationTypeText}>Missing Day Type: {TripSummaryDetails?.tripDay?.creationType.toUpperCase()}</Text>
+                  <Text style={styles.creationTypeText}>Starting Day Type: {TripSummaryDetails?.tripDay?.creationType.toUpperCase()}</Text>
                 }
               </View>
             )}
@@ -211,7 +211,7 @@ console.log("NOW", new Date().toString());
             </View>
             :
             <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Missing Day Summary</Text>
+              <Text style={styles.sectionTitle}>Starting Day Summary</Text>
               <View style={styles.summaryRow}>
                 <View style={styles.summaryBox}>
                   <Ionicons name="calendar-outline" size={22} color={colors.primary} />
