@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   ScrollView,
   Switch,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
@@ -18,7 +20,7 @@ import LinearGradient from "react-native-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ICON_AppTheme, ICON_bell, ICON_bell_off, ICON_File_dock, ICON_Language, ICON_Lock, ICON_Menu, ICON_syncdata } from "../assets/svgicon";
 import { useDispatch } from "react-redux";
-import { LOGOUT, CLEAR_USER_SUBSCRIPTION } from "../redux/actions/action-creator";
+import { LOGOUT, CLEAR_USER_SUBSCRIPTION, DELETE_ACCOUNT } from "../redux/actions/action-creator";
 import { CustomToast } from "../helpers/CommonHelpers";
 import { stopDomigoTracking } from "../helpers/MainTracker";
 import DomigoTracker from "../helpers/MainTracker";
@@ -30,6 +32,7 @@ export default function SettingsScreen() {
   const [deadlineReminders, setDeadlineReminders] = useState(true);
   const [stateAlerts, setStateAlerts] = useState(true);
   const [syncData, setSyncData] = useState(true);
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const navigation = useNavigation();
   const { plan, isTrial, trialDaysLeft } = useFeatureAccess();
 
@@ -38,6 +41,36 @@ export default function SettingsScreen() {
     if (plan === 'lite') return 'Lite Plan (Active)';
     if (plan === 'full') return 'Full Plan (Active)';
     return 'Choose a plan';
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deletingAccount) return;
+    setDeletingAccount(true);
+    try {
+      await dispatch(DELETE_ACCOUNT());
+      await AsyncStorage.removeItem('DOMIGO_TRACKING_ENABLED');
+      DomigoTracker.stopDomigoTracking();
+      CustomToast.show('Account deleted successfully');
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Login" }],
+      });
+    } catch (e) {
+      setDeletingAccount(false);
+      CustomToast.show(e?.message || 'Unable to delete your account right now. Please try again.');
+    }
+  };
+
+  const confirmDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account?',
+      'Deleting your account will permanently remove your account and associated data. This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete Account', style: 'destructive', onPress: handleDeleteAccount },
+      ],
+      { cancelable: true }
+    );
   };
   return (
     <LinearGradient
@@ -280,6 +313,26 @@ export default function SettingsScreen() {
               </View>
               <Ionicons name="chevron-forward" size={18} color="#999" />
             </TouchableOpacity> */}
+            <TouchableOpacity
+              style={[styles.row, { borderBottomWidth: 0 }]}
+              disabled={deletingAccount}
+              onPress={confirmDeleteAccount}
+            >
+              <View style={styles.rowLeft}>
+                <Ionicons name="trash-outline" size={24} color="#d9534f" />
+                <View style={{ width: '100%' }}>
+                  <Text style={[styles.title, { color: "#d9534f" }]}>Delete Account</Text>
+                  <Text style={styles.subtitle}>
+                    Permanently delete your account and all associated data
+                  </Text>
+                </View>
+              </View>
+              {deletingAccount ? (
+                <ActivityIndicator size="small" color="#d9534f" />
+              ) : (
+                <Ionicons name="chevron-forward" size={18} color="#999" />
+              )}
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </SafeAreaView>

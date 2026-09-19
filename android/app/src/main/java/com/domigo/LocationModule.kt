@@ -147,10 +147,14 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         private const val PREF_PREV_ENTER_TIME = "domigo_prev_enter_time"
         private const val PREF_LAST_TRACKED_DATE = "domigo_last_tracked_date"
         private const val PREF_CURRENT_STATE = "domigo_current_state"
+        // Periodic heartbeat to /api/locations. Matches the 4h hours-API cadence so a
+        // stationary user produces at most ~6 location rows/day (plus any genuine
+        // state-change pings and manual dashboard refreshes).
         private const val LOCATION_PING_INTERVAL = 15 * 60 * 1000 // 15 min
         private const val HOURS_API_INTERVAL = 4 * 60 * 60 * 1000L
         // private const val HOURS_API_INTERVAL = 30 * 60 * 1000L
         private const val PREF_LAST_HOURS_API_TIME = "pref_last_hours_api_time"
+        private const val PREF_LAST_LOCATION_PING_TIME = "pref_last_location_ping_time"
         private const val PREF_PREV_COUNTY_NAME = "pref_prev_county_name"
         private const val PREF_PREV_COUNTY_FIPS = "pref_prev_county_fips"
         private const val PREF_PREV_COUNTY_ENTER = "pref_prev_county_enter"
@@ -1207,6 +1211,16 @@ if (!stateChanged && !timePassed) {
 
         Log.d(TAG, "📡 Sending LOCATION PING → $state ($lat,$lng)")
 
+        // Advance the throttle NOW (and persist it) — before the network call, not in
+        // the success callback. The old code only advanced lastLocationPingTime on a
+        // 2xx response, so while /api/locations was erroring every 20s tick queued
+        // another POST and the backlog later drained to the server as a burst of
+        // near-duplicate rows. A time-based ping that fails is simply retried in the
+        // next 4h window; a genuine state-change ping still retries on the next tick
+        // because lastSentState is only advanced on success.
+        lastLocationPingTime = currentTime
+        prefs.edit().putLong(PREF_LAST_LOCATION_PING_TIME, currentTime).apply()
+
         val mediaType = "application/json; charset=utf-8".toMediaType()
         val requestBody = jsonBody.toString().toRequestBody(mediaType)
 
@@ -1226,7 +1240,7 @@ if (!stateChanged && !timePassed) {
             if (response.isSuccessful) {
                 Log.d(TAG, "✅ Location ping success")
 
-                lastLocationPingTime = currentTime
+                // lastLocationPingTime already advanced + persisted before enqueue.
                 lastSentState = stateCode
                 sendEvent("onApiSuccess", Arguments.createMap().apply {
                     putString("message", "Location sent to API successfully")
@@ -1261,12 +1275,16 @@ if (!stateChanged && !timePassed) {
             return
         }
 
-        // 🔥 interval complete
-        // lastHoursApiTime = now
-
-        // prefs.edit()
-        //     .putLong(PREF_LAST_HOURS_API_TIME, now)
-        //     .apply()
+        // Advance + persist the 4h throttle NOW — before the geocode + POST, not only
+        // in sendHoursLocationAPI's success callback. These lines were commented out,
+        // so while /api/locations/hours was erroring `lastHoursApiTime` never moved and
+        // every ~20s tick queued another geocode + POST; the backlog then drained to
+        // the server as a burst of near-duplicate rows. A hours-ping that fails is
+        // simply retried in the next 4h window.
+        lastHoursApiTime = now
+        prefs.edit()
+            .putLong(PREF_LAST_HOURS_API_TIME, now)
+            .apply()
 
         reverseGeocodeForHoursAPI(lat, lng)
     }
@@ -1425,14 +1443,8 @@ if (!stateChanged && !timePassed) {
                     if (response.isSuccessful) {
 
                         Log.d(TAG, "✅ Hours API success")
-                        lastHoursApiTime = System.currentTimeMillis()
-
-                            prefs.edit()
-                                .putLong(
-                                    PREF_LAST_HOURS_API_TIME,
-                                    lastHoursApiTime
-                                )
-                                .apply()
+                        // lastHoursApiTime already advanced + persisted in checkAndSendHoursAPI
+                        // before this request was enqueued.
 
                         val eventData = Arguments.createMap().apply {
 
@@ -1986,6 +1998,7 @@ private fun loadStateFromPrefs() {
     previousEnterTime = prefs.getLong(PREF_PREV_ENTER_TIME, 0L)
     currentStateName = prefs.getString(PREF_CURRENT_STATE, "") ?: ""
     lastHoursApiTime = prefs.getLong(PREF_LAST_HOURS_API_TIME, 0L)
+    lastLocationPingTime = prefs.getLong(PREF_LAST_LOCATION_PING_TIME, 0L)
     previousCountyName = prefs.getString(PREF_PREV_COUNTY_NAME, "") ?: ""
     previousCountyFips = prefs.getString(PREF_PREV_COUNTY_FIPS, "") ?: ""
     previousCountyEnterTime = prefs.getLong(PREF_PREV_COUNTY_ENTER, 0L)

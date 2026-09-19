@@ -4,8 +4,11 @@ import EndPoints from './EndPoints'
 export const checkEmailOrMobileIsExistOrNotService = (data) => 
   axiosinstance.post(EndPoints.checkEmailOrMobileIsExistOrNot, data)
 
-export const logoutService = () => 
+export const logoutService = () =>
   axiosinstance.post(EndPoints.logout)
+
+export const deleteAccountService = () =>
+  axiosinstance.delete(EndPoints.deleteAccount)
 
 export const getUserPersonalInfoService = (token) => 
   axiosinstance.get(`${EndPoints.getUserPersonalInfo}`)

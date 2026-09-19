@@ -54,6 +54,11 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
     const [locationModal, setLocationModal] = React.useState(false);
     const [currentLocation, setCurrentLocation] = React.useState(null);
     const MAX_DAILY_REFRESH = 10;
+    // Guards against RefreshControl firing onRefresh twice for a single
+    // pull gesture (a known Android quirk) — without this, each duplicate
+    // call sends its own /locations/hours entry, creating multiple
+    // "4-hour" location rows from one manual refresh.
+    const isRefreshingRef = React.useRef(false);
 
     const REFRESH_COUNT_KEY =
         "daily_location_refresh_count";
@@ -89,76 +94,85 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
     });
 
     const onRefresh = async () => {
+        // Ignore a second onRefresh call while one is already in flight
+        // (RefreshControl on Android can fire onRefresh twice for one pull).
+        if (isRefreshingRef.current) {
+            console.log("⚠️ Refresh already in progress, ignoring duplicate call");
+            return;
+        }
+        isRefreshingRef.current = true;
         setRefreshing(true);
-        const allowed =
-            await canRefreshLocation();
-
-        if (!allowed) {
-            CustomToast.show(
-                "You have already completed your attempts for today"
-            );
-
-            setRefreshing(false);
-            return;
-        }
-        if (!isGPSOn) {
-            CustomToast.show("Please enable GPS");
-            setRefreshing(false);
-            return;
-        }
 
         try {
-            const coords = await getCurrentLocation();
+            const allowed =
+                await canRefreshLocation();
 
-            const locationDetails = await getAddressFromLatLong(
-                coords.latitude,
-                coords.longitude
-            );
+            if (!allowed) {
+                CustomToast.show(
+                    "You have already completed your attempts for today"
+                );
 
-            const finalLocation = {
-                latitude: coords.latitude,
-                longitude: coords.longitude,
-                state: locationDetails.state,
-                city: locationDetails.city,
-                county: locationDetails.county,
-                address: locationDetails.address,
-            };
-
-            console.log("FINAL LOCATION 👉", finalLocation);
-
-            // 🔥 API me sab separate jaayega
-            // await sendLocationAPI(finalLocation);
-            const locationResponse =
-                await sendLocationAPI(finalLocation);
-
-            const hoursResponse =
-                await sendHoursLocationAPI(finalLocation);
-
-            if (hoursResponse) {
-                await increaseRefreshCount();
+                return;
             }
-
-            if (!locationResponse && !hoursResponse) {
-                CustomToast.show("Location not saved");
-
-                setRefreshing(false);
+            if (!isGPSOn) {
+                CustomToast.show("Please enable GPS");
                 return;
             }
 
-            setCurrentLocation(finalLocation);
-            setLocationModal(true);
+            try {
+                const coords = await getCurrentLocation();
+
+                const locationDetails = await getAddressFromLatLong(
+                    coords.latitude,
+                    coords.longitude
+                );
+
+                const finalLocation = {
+                    latitude: coords.latitude,
+                    longitude: coords.longitude,
+                    state: locationDetails.state,
+                    city: locationDetails.city,
+                    county: locationDetails.county,
+                    address: locationDetails.address,
+                };
+
+                console.log("FINAL LOCATION 👉", finalLocation);
+
+                // 🔥 API me sab separate jaayega
+                // await sendLocationAPI(finalLocation);
+                const locationResponse =
+                    await sendLocationAPI(finalLocation);
+
+                const hoursResponse =
+                    await sendHoursLocationAPI(finalLocation);
+
+                if (hoursResponse) {
+                    await increaseRefreshCount();
+                }
+
+                if (!locationResponse && !hoursResponse) {
+                    CustomToast.show("Location not saved");
+
+                    return;
+                }
+
+                setCurrentLocation(finalLocation);
+                setLocationModal(true);
 
 
-            await dispatch(GET_FINAL_YEAR_PROGRESS);
-            await dispatch(GET_STATE_WISE_RESIDENCY);
-            await dispatch(GET_COMPLIANCE_SCORE);
-            await dispatch(GET_USER_LOCATIONS);
-        } catch (e) {
-            console.log('Refresh error', e);
+                await dispatch(GET_FINAL_YEAR_PROGRESS);
+                await dispatch(GET_STATE_WISE_RESIDENCY);
+                await dispatch(GET_COMPLIANCE_SCORE);
+                await dispatch(GET_USER_LOCATIONS);
+
+                CustomToast.show("Dashboard refreshed");
+            } catch (e) {
+                console.log('Refresh error', e);
+            }
+        } finally {
+            setRefreshing(false);
+            isRefreshingRef.current = false;
         }
-
-        setRefreshing(false);
-        CustomToast.show("Dashboard refreshed");
     };
 
 

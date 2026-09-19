@@ -18,6 +18,7 @@ import { Provider } from 'react-redux';
 import RootNavigator from './src/navigation';
 import colors from './src/theme/colors';
 import { store, persistor } from './src/redux/store';
+import { INIT_IAP } from './src/redux/actions/action-creator';
 import { PersistGate } from 'redux-persist/integration/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DomigoTracker from './src/helpers/MainTracker';
@@ -102,6 +103,15 @@ function App() {
 
     useEffect(() => {
     requestNotificationPermission();
+  }, []);
+
+  useEffect(() => {
+    // Establish the Google Play / App Store billing connection and wire
+    // purchase listeners once for the whole app.
+    const unsubscribe = store.dispatch(INIT_IAP() as any);
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
   }, []);
 
   useEffect(() => {

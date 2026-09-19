@@ -1,13 +1,12 @@
 import {
   initConnection,
   endConnection,
-  getSubscriptions,
-  requestSubscription,
+  fetchProducts as fetchIapProducts,
+  requestPurchase,
   getAvailablePurchases,
   purchaseUpdatedListener,
   purchaseErrorListener,
   finishTransaction,
-  flushFailedPurchasesCachedAsPendingAndroid,
 } from 'react-native-iap';
 import { Platform } from 'react-native';
 
@@ -17,6 +16,13 @@ export const PRODUCT_IDS = {
 };
 
 const SKU_LIST = [PRODUCT_IDS.LITE, PRODUCT_IDS.FULL];
+
+// react-native-iap 15+ needs the Android offerToken to start a subscription
+// purchase, so we keep the last fetched subscription products around.
+let subscriptionCache = [];
+
+// Ensure the billing connection is established exactly once before any call.
+let connectionPromise = null;
 
 export const productIdToPlan = (productId) => {
   switch (productId) {
@@ -36,29 +42,96 @@ export const calculateExpiry = (purchaseDateMs) => {
 };
 
 export const initIAP = async () => {
-  const result = await initConnection();
-  if (Platform.OS === 'android') {
-    await flushFailedPurchasesCachedAsPendingAndroid();
+  if (!connectionPromise) {
+    connectionPromise = initConnection().catch((err) => {
+      // reset so a later call can retry
+      connectionPromise = null;
+      throw err;
+    });
   }
-  return result;
+  return connectionPromise;
 };
 
 export const fetchProducts = async () => {
-  const subscriptions = await getSubscriptions({ skus: SKU_LIST });
-  return subscriptions;
+  await initIAP();
+  const subscriptions = await fetchIapProducts({ skus: SKU_LIST, type: 'subs' });
+  subscriptionCache = subscriptions || [];
+  return subscriptionCache;
+};
+
+const getAndroidOfferToken = (sku) => {
+  const product = subscriptionCache.find(
+    (p) => p.id === sku || p.productId === sku
+  );
+  const offers = product?.subscriptionOfferDetailsAndroid;
+  return offers && offers.length > 0 ? offers[0].offerToken : undefined;
 };
 
 export const buySubscription = async (sku) => {
-  await requestSubscription({ sku });
+  await initIAP();
+
+  if (Platform.OS === 'android') {
+    let offerToken = getAndroidOfferToken(sku);
+    if (!offerToken) {
+      await fetchProducts();
+      offerToken = getAndroidOfferToken(sku);
+    }
+    await requestPurchase({
+      type: 'subs',
+      request: {
+        google: {
+          skus: [sku],
+          subscriptionOffers: offerToken ? [{ sku, offerToken }] : [],
+        },
+      },
+    });
+    return;
+  }
+
+  await requestPurchase({
+    type: 'subs',
+    request: {
+      apple: { sku },
+    },
+  });
 };
 
 export const restorePurchases = async () => {
+  await initIAP();
   const purchases = await getAvailablePurchases();
-  return purchases;
+  return purchases || [];
 };
 
 export const endIAP = () => {
+  connectionPromise = null;
   endConnection();
+};
+
+/**
+ * Register global purchase listeners. Call once at app startup.
+ * `onSuccess(purchase)` fires after the purchase is acknowledged/finished;
+ * `onError(error)` fires on a failed or cancelled purchase.
+ * Returns an unsubscribe function.
+ */
+export const subscribeToPurchaseUpdates = ({ onSuccess, onError } = {}) => {
+  const updateSub = purchaseUpdatedListener(async (purchase) => {
+    try {
+      // Subscriptions / non-consumables must not be consumed.
+      await finishTransaction({ purchase, isConsumable: false });
+    } catch (e) {
+      // already finished / not fatal for entitlement
+    }
+    onSuccess?.(purchase);
+  });
+
+  const errorSub = purchaseErrorListener((error) => {
+    onError?.(error);
+  });
+
+  return () => {
+    updateSub?.remove?.();
+    errorSub?.remove?.();
+  };
 };
 
 export { purchaseUpdatedListener, purchaseErrorListener, finishTransaction };

@@ -9,6 +9,7 @@ const EndPoints = {
     tripList:"trips",
     addDocumentRecords:"residency-doc",
     DocumentRecordsList:"residency-doc",
+    deleteAccount:"users/me",
 }
 
 export default EndPoints;

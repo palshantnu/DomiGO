@@ -137750,6 +137750,11 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
       currentLocation = _React$useState14[0],
       setCurrentLocation = _React$useState14[1];
     var MAX_DAILY_REFRESH = 10;
+    // Guards against RefreshControl firing onRefresh twice for a single
+    // pull gesture (a known Android quirk) — without this, each duplicate
+    // call sends its own /locations/hours entry, creating multiple
+    // "4-hour" location rows from one manual refresh.
+    var isRefreshingRef = _react.default.useRef(false);
     var REFRESH_COUNT_KEY = "daily_location_refresh_count";
     var REFRESH_DATE_KEY = "daily_location_refresh_date";
     // console.log('stateWiseResidency>>>>', stateWiseResidency);
@@ -137779,54 +137784,62 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     });
     var onRefresh = /*#__PURE__*/function () {
       var _ref2 = (0, _asyncToGenerator2.default)(function* () {
+        // Ignore a second onRefresh call while one is already in flight
+        // (RefreshControl on Android can fire onRefresh twice for one pull).
+        if (isRefreshingRef.current) {
+          console.log("⚠️ Refresh already in progress, ignoring duplicate call");
+          return;
+        }
+        isRefreshingRef.current = true;
         setRefreshing(true);
-        var allowed = yield canRefreshLocation();
-        if (!allowed) {
-          _$$_REQUIRE(_dependencyMap[20], "../helpers/CommonHelpers").CustomToast.show("You have already completed your attempts for today");
-          setRefreshing(false);
-          return;
-        }
-        if (!isGPSOn) {
-          _$$_REQUIRE(_dependencyMap[20], "../helpers/CommonHelpers").CustomToast.show("Please enable GPS");
-          setRefreshing(false);
-          return;
-        }
         try {
-          var coords = yield getCurrentLocation();
-          var locationDetails = yield getAddressFromLatLong(coords.latitude, coords.longitude);
-          var finalLocation = {
-            latitude: coords.latitude,
-            longitude: coords.longitude,
-            state: locationDetails.state,
-            city: locationDetails.city,
-            county: locationDetails.county,
-            address: locationDetails.address
-          };
-          console.log("FINAL LOCATION 👉", finalLocation);
-
-          // 🔥 API me sab separate jaayega
-          // await sendLocationAPI(finalLocation);
-          var locationResponse = yield sendLocationAPI(finalLocation);
-          var hoursResponse = yield sendHoursLocationAPI(finalLocation);
-          if (hoursResponse) {
-            yield increaseRefreshCount();
-          }
-          if (!locationResponse && !hoursResponse) {
-            _$$_REQUIRE(_dependencyMap[20], "../helpers/CommonHelpers").CustomToast.show("Location not saved");
-            setRefreshing(false);
+          var allowed = yield canRefreshLocation();
+          if (!allowed) {
+            _$$_REQUIRE(_dependencyMap[20], "../helpers/CommonHelpers").CustomToast.show("You have already completed your attempts for today");
             return;
           }
-          setCurrentLocation(finalLocation);
-          setLocationModal(true);
-          yield dispatch(GET_FINAL_YEAR_PROGRESS);
-          yield dispatch(GET_STATE_WISE_RESIDENCY);
-          yield dispatch(GET_COMPLIANCE_SCORE);
-          yield dispatch(GET_USER_LOCATIONS);
-        } catch (e) {
-          console.log('Refresh error', e);
+          if (!isGPSOn) {
+            _$$_REQUIRE(_dependencyMap[20], "../helpers/CommonHelpers").CustomToast.show("Please enable GPS");
+            return;
+          }
+          try {
+            var coords = yield getCurrentLocation();
+            var locationDetails = yield getAddressFromLatLong(coords.latitude, coords.longitude);
+            var finalLocation = {
+              latitude: coords.latitude,
+              longitude: coords.longitude,
+              state: locationDetails.state,
+              city: locationDetails.city,
+              county: locationDetails.county,
+              address: locationDetails.address
+            };
+            console.log("FINAL LOCATION 👉", finalLocation);
+
+            // 🔥 API me sab separate jaayega
+            // await sendLocationAPI(finalLocation);
+            var locationResponse = yield sendLocationAPI(finalLocation);
+            var hoursResponse = yield sendHoursLocationAPI(finalLocation);
+            if (hoursResponse) {
+              yield increaseRefreshCount();
+            }
+            if (!locationResponse && !hoursResponse) {
+              _$$_REQUIRE(_dependencyMap[20], "../helpers/CommonHelpers").CustomToast.show("Location not saved");
+              return;
+            }
+            setCurrentLocation(finalLocation);
+            setLocationModal(true);
+            yield dispatch(GET_FINAL_YEAR_PROGRESS);
+            yield dispatch(GET_STATE_WISE_RESIDENCY);
+            yield dispatch(GET_COMPLIANCE_SCORE);
+            yield dispatch(GET_USER_LOCATIONS);
+            _$$_REQUIRE(_dependencyMap[20], "../helpers/CommonHelpers").CustomToast.show("Dashboard refreshed");
+          } catch (e) {
+            console.log('Refresh error', e);
+          }
+        } finally {
+          setRefreshing(false);
+          isRefreshingRef.current = false;
         }
-        setRefreshing(false);
-        _$$_REQUIRE(_dependencyMap[20], "../helpers/CommonHelpers").CustomToast.show("Dashboard refreshed");
       });
       return function onRefresh() {
         return _ref2.apply(this, arguments);
@@ -138235,7 +138248,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                   children: " Score"
                 }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
                   style: styles.metricSub,
-                  children: [(_finalYearProgress$mi = finalYearProgress == null ? void 0 : finalYearProgress.missingDays) != null ? _finalYearProgress$mi : 0, " missing days"]
+                  children: [(_finalYearProgress$mi = finalYearProgress == null ? void 0 : finalYearProgress.missingDays) != null ? _finalYearProgress$mi : 0, " starting days"]
                 })]
               })
             })]
@@ -165326,6 +165339,34 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           date: date
         }, dayData));
       });
+
+      // Backend only returns dates that have at least one record (trip/missing/
+      // location). Days with zero records were simply absent, so weeks rendered
+      // with fewer than 7 rows. Fill the gaps with blank placeholder days so every
+      // week always shows Sunday through Saturday.
+      Object.keys(weekMap).forEach(function (weekKey) {
+        var days = weekMap[weekKey];
+        var existingDates = new Set(days.map(function (d) {
+          return d.date;
+        }));
+        var sample = parseLocalDate(days[0].date);
+        var weekStart = new Date(sample.getFullYear(), sample.getMonth(), sample.getDate() - sample.getDay());
+        for (var i = 0; i < 7; i++) {
+          var d = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + i);
+          var dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+          if (!existingDates.has(dateKey)) {
+            days.push({
+              date: dateKey,
+              trips: [],
+              activity: null,
+              locations: []
+            });
+          }
+        }
+        days.sort(function (a, b) {
+          return parseLocalDate(a.date) - parseLocalDate(b.date);
+        });
+      });
       return Object.keys(weekMap).map(function (week, index) {
         return {
           id: index + 1,
@@ -166435,7 +166476,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                   style: [styles.actionText, {
                     color: '#fff'
                   }],
-                  children: isMissingAlreadyAdded && selectedMissingDate.isUpdated ? 'Update Missing Location Info' : isMissingAlreadyAdded && !selectedMissingDate.isUpdated ? 'Fix Missing Location Info' : 'Add Missing Location Info'
+                  children: isMissingAlreadyAdded && selectedMissingDate.isUpdated ? 'Update Starting Location Info' : isMissingAlreadyAdded && !selectedMissingDate.isUpdated ? 'Fix Starting Location Info' : 'Add Starting Location Info'
                 })
               }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.TouchableOpacity, {
                 onPress: function onPress() {
@@ -214638,7 +214679,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
           flex: 1
         },
         children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_Header.default, {
-          title: isEdit ? "Update Missing Day" : "Add Missing Day"
+          title: isEdit ? "Update Starting Day" : "Add Starting Day"
         }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.ScrollView, {
           showsVerticalScrollIndicator: false,
           children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
@@ -214763,7 +214804,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
             onPress: handleSave,
             children: /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
               style: styles.saveText,
-              children: [" ", isEdit ? "Update Missing Day" : "Save Missing Day"]
+              children: [" ", isEdit ? "Update Starting Day" : "Save Starting Day"]
             })
           })]
         })]
@@ -291163,7 +291204,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 children: ["County Change Type: ", TripSummaryDetails == null || (_TripSummaryDetails$t17 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t17.creationType.toUpperCase()]
               }) : /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.Text, {
                 style: styles.creationTypeText,
-                children: ["Missing Day Type: ", TripSummaryDetails == null || (_TripSummaryDetails$t18 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t18.creationType.toUpperCase()]
+                children: ["Starting Day Type: ", TripSummaryDetails == null || (_TripSummaryDetails$t18 = TripSummaryDetails.tripDay) == null ? void 0 : _TripSummaryDetails$t18.creationType.toUpperCase()]
               })
             }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Image, {
               source: {
@@ -291262,7 +291303,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
             style: styles.card,
             children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNative.Text, {
               style: styles.sectionTitle,
-              children: "Missing Day Summary"
+              children: "Starting Day Summary"
             }), /*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
               style: styles.summaryRow,
               children: [/*#__PURE__*/(0, _jsxRuntime.jsxs)(_reactNative.View, {
@@ -292489,7 +292530,24 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
     var workingType = typeOfDayList == null ? void 0 : typeOfDayList.find(function (item) {
       return item.name === "Working";
     });
+    var defaultType = typeOfDayList == null ? void 0 : typeOfDayList.find(function (item) {
+      return item.name === "Default";
+    });
     var isWorkingDay = Number(typeOfDay) === (workingType == null ? void 0 : workingType.id);
+    var isDefaultDay = Number(typeOfDay) === Number(defaultType == null ? void 0 : defaultType.id);
+    var filteredTripTypeList = tripTypeList == null ? void 0 : tripTypeList.filter(function (item) {
+      // Default => saare options
+      if (isDefaultDay) {
+        return true;
+      }
+      if (isWorkingDay) {
+        // Working par Personal hide, Work show
+        return item.name !== "Personal";
+      }
+
+      // Working ke alawa Work hide, Personal show
+      return item.name !== "Work";
+    });
     return /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactNativeLinearGradient.default, {
       colors: ["#9ab1fa", "#ffffff"],
       start: {
@@ -292911,7 +292969,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
               children: [/*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {
                 title: "Trip Type"
               }), /*#__PURE__*/(0, _jsxRuntime.jsx)(_$$_REQUIRE(_dependencyMap[19], "react-native-dropdown-select-list").SelectList, {
-                data: tripTypeList == null ? void 0 : tripTypeList.map(function (i) {
+                data: filteredTripTypeList == null ? void 0 : filteredTripTypeList.map(function (i) {
                   return {
                     key: i.id,
                     value: i.name
@@ -292919,7 +292977,7 @@ __d(function (global, _$$_REQUIRE, _$$_IMPORT_DEFAULT, _$$_IMPORT_ALL, module, e
                 }),
                 setSelected: setTripType,
                 save: "key",
-                defaultOption: getDefaultOption(tripTypeList, tripType),
+                defaultOption: getDefaultOption(filteredTripTypeList, tripType),
                 boxStyles: styles.dropdownBox,
                 inputStyles: styles.dropdownInput
               }), /*#__PURE__*/(0, _jsxRuntime.jsx)(FieldLabel, {

@@ -96,7 +96,7 @@ import {
 } from './action-types';
 import axiosinstance from '../../axios/axiosinstance';
 import EndPoints from '../../services/EndPoints';
-import { getTripService, getUserPersonalInfoService, updateUserPersonalInfoService } from '../../services/Services';
+import { getTripService, getUserPersonalInfoService, updateUserPersonalInfoService, deleteAccountService } from '../../services/Services';
 import { CustomToast, jsonToFormData, sendDataToReducer } from '../../helpers/CommonHelpers';
 import { getAuthToken } from '../selectors/common';
 
@@ -1785,6 +1785,23 @@ export const LOGOUT = () => (dispatch) => {
   dispatch({ type: LOGOUT_SUCCESS })
 }
 
+// Permanently deletes the signed-in user's account (DELETE /api/users/me),
+// then clears local auth/subscription state the same way LOGOUT does.
+export const DELETE_ACCOUNT = () => async (dispatch) => {
+  try {
+    await deleteAccountService();
+    dispatch(LOGOUT());
+    dispatch(CLEAR_USER_SUBSCRIPTION());
+    return { status: true };
+  } catch (e) {
+    console.log('DELETE_ACCOUNT error', e);
+    return Promise.reject({
+      message: 'Unable to delete your account right now. Please try again.',
+      status: false,
+    });
+  }
+}
+
 export const changeAppLanguageAction = (language) => (dispatch) => {
   dispatch({
     type: SET_APP_LANGUAGE,
@@ -1804,6 +1821,23 @@ import {
 } from './action-types';
 import * as SubscriptionService from '../../services/subscriptionService';
 
+// Wire the global purchase listeners to redux. Call once at app startup.
+// Returns an unsubscribe function.
+export const INIT_IAP = () => (dispatch) => {
+  SubscriptionService.initIAP().catch((error) => {
+    dispatch({ type: SET_SUBSCRIPTION_ERROR, payload: error.message });
+  });
+
+  return SubscriptionService.subscribeToPurchaseUpdates({
+    onSuccess: (purchase) => {
+      dispatch(SET_PLAN_FROM_PURCHASE(purchase));
+    },
+    onError: (error) => {
+      dispatch({ type: SET_SUBSCRIPTION_ERROR, payload: error?.message || 'Purchase failed' });
+    },
+  });
+};
+
 export const FETCH_SUBSCRIPTION_PRODUCTS = () => async (dispatch) => {
   dispatch({ type: SET_SUBSCRIPTION_LOADING, payload: true });
   try {
@@ -1819,7 +1853,8 @@ export const PURCHASE_SUBSCRIPTION = (sku) => async (dispatch) => {
   dispatch({ type: SET_SUBSCRIPTION_LOADING, payload: true });
   try {
     await SubscriptionService.buySubscription(sku);
-    // Actual completion handled by purchaseUpdatedListener in App.tsx
+    // Completion is handled by the purchase listener wired in INIT_IAP
+    // (dispatches SET_PLAN_FROM_PURCHASE on success).
   } catch (error) {
     dispatch({ type: SET_SUBSCRIPTION_ERROR, payload: error.message });
   }
@@ -1845,7 +1880,7 @@ export const RESTORE_SUBSCRIPTION = () => async (dispatch) => {
             productId: latest.productId,
             purchaseDate: new Date(latest.transactionDate).toLocaleDateString("en-CA"),
             expiryDate,
-            receipt: latest.transactionReceipt,
+            receipt: latest.purchaseToken,
           },
         });
         return { restored: true, plan };
@@ -1870,7 +1905,7 @@ export const SET_PLAN_FROM_PURCHASE = (purchase) => (dispatch) => {
       productId: purchase.productId,
       purchaseDate: new Date(purchase.transactionDate).toLocaleDateString("en-CA"),
       expiryDate,
-      receipt: purchase.transactionReceipt,
+      receipt: purchase.purchaseToken,
     },
   });
 };
