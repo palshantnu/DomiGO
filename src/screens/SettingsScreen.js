@@ -260,6 +260,19 @@ export default function SettingsScreen() {
               <Ionicons name="chevron-forward" size={18} color="#999" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.row}
+              onPress={() => navigation.navigate("TermsOfUseScreen")}>
+              <View style={styles.rowLeft}>
+                <Ionicons name="document-text-outline" size={24} color={colors.primary} />
+                <View>
+                  <Text style={styles.title}>Terms of Use</Text>
+                  <Text style={styles.subtitle}>
+                    Review the terms and subscription agreement (EULA)
+                  </Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#999" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.row}
               onPress={() => navigation.navigate("HelpSupportScreen")}>
               <View style={styles.rowLeft}>
                 {/* <ICON_Lock height={24} width={24} /> */}

@@ -15,6 +15,7 @@ import ResidencyDeclarationChecklistScreen from '../screens/ResidencyDeclaration
 import ResidencyHistoryScreen from '../screens/ResidencyRecords';
 import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 import PrivacyPolicyDetails from '../screens/PrivacyPolicyDetails';
+import TermsOfUseScreen from '../screens/TermsOfUseScreen';
 import HelpSupportScreen from '../screens/HelpSupportScreen';
 import AboutUsScreen from '../screens/AboutUsScreen';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
@@ -84,6 +85,11 @@ export default function SettingsNavigation() {
       <Stack.Screen
         name="PrivacyPolicyDetails"
         component={PrivacyPolicyDetails}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="TermsOfUseScreen"
+        component={TermsOfUseScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
