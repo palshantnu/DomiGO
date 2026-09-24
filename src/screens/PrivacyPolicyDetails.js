@@ -11,7 +11,7 @@ import Header from "../components/Header";
 import colors from "../theme/colors";
 
 const PrivacyPolicyDetails = ({ route }) => {
-    const { title, content } = route.params;
+    const { title, content, headerTitle } = route.params;
 
     return (
         <LinearGradient
@@ -22,7 +22,7 @@ const PrivacyPolicyDetails = ({ route }) => {
             style={styles.container}
         >
             <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
-                <Header title="Privacy Policy Details" showBack/>
+                <Header title={headerTitle || "Privacy Policy Details"} showBack/>
 
                 <ScrollView
                     contentContainerStyle={styles.container1}

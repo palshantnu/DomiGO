@@ -24,7 +24,7 @@ import DomigoTracker from "../../helpers/MainTracker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
-import appleAuth from '@invertase/react-native-apple-authentication';
+import appleAuth, { AppleButton } from '@invertase/react-native-apple-authentication';
 import messaging from '@react-native-firebase/messaging';
 
 GoogleSignin.configure({
@@ -185,6 +185,8 @@ const LoginScreen = ({ navigation, signIn }) => {
   };
 
   const signInWithApple = async () => {
+    // Ignore repeat taps while a sign-in request is already in flight.
+    if (buttonLoader) return;
     try {
 
       if (!netInfo) {
@@ -552,19 +554,33 @@ const initFCM = async () => {
               style={styles.socialIcon}
             />
           </TouchableOpacity>
-          <TouchableOpacity>
+         {/* <TouchableOpacity>
             <Image
               source={require("../../assets/image/facebook.png")}
               style={styles.socialIcon}
             />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={signInWithApple}>
-            <Image
-              source={require("../../assets/image/apple.png")}
-              style={styles.socialIcon}
-            />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
+          {Platform.OS !== 'ios' && (
+            <TouchableOpacity onPress={signInWithApple}>
+              <Image
+                source={require("../../assets/image/apple.png")}
+                style={styles.socialIcon}
+              />
+            </TouchableOpacity>
+          )}
         </View>
+
+        {/* Apple-provided "Sign in with Apple" button (HIG compliant) */}
+        {Platform.OS === 'ios' && appleAuth.isSupported && (
+          <AppleButton
+            buttonStyle={AppleButton.Style.BLACK}
+            buttonType={AppleButton.Type.SIGN_IN}
+            cornerRadius={25}
+            style={styles.appleButton}
+            onPress={signInWithApple}
+            testID="sign-in-with-apple-button"
+          />
+        )}
       </SafeAreaView>
     </LinearGradient>
   );
@@ -662,6 +678,15 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     resizeMode: "contain",
+  },
+  // Native ASAuthorizationAppleIDButton needs an explicit size; cap the
+  // width so it keeps Apple's proportions on iPad.
+  appleButton: {
+    width: "100%",
+    maxWidth: 375,
+    height: 48,
+    alignSelf: "center",
+    marginTop: 16,
   },
 });
 function mapStateToProps(state) {

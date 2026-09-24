@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -6,8 +6,11 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  Alert,
+  Platform,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native';
 import Header from '../components/Header';
 import colors from '../theme/colors';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -43,29 +46,101 @@ const PLAN_FEATURES = {
   ],
 };
 
+const STORE_NAME = Platform.OS === 'ios' ? 'App Store' : 'Google Play';
+
 function SubscriptionScreen({
   FETCH_SUBSCRIPTION_PRODUCTS,
   PURCHASE_SUBSCRIPTION,
   RESTORE_SUBSCRIPTION,
-  loading,
+  products,
 }) {
+  const navigation = useNavigation();
   const { plan, isTrial, trialDaysLeft, isExpired } = useFeatureAccess();
 
+  // Local UI state so the buttons never depend on the persisted redux
+  // `loading` flag (which could be left `true` from a previous session).
+  const [purchasingSku, setPurchasingSku] = useState(null);
+  const [restoring, setRestoring] = useState(false);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [productsError, setProductsError] = useState(false);
+  const isMounted = useRef(true);
+
+  const loadProducts = useCallback(async () => {
+    setProductsLoading(true);
+    setProductsError(false);
+    const result = await FETCH_SUBSCRIPTION_PRODUCTS();
+    if (!isMounted.current) return;
+    setProductsLoading(false);
+    setProductsError(!result?.success);
+  }, [FETCH_SUBSCRIPTION_PRODUCTS]);
+
   useEffect(() => {
-    FETCH_SUBSCRIPTION_PRODUCTS();
-  }, []);
+    isMounted.current = true;
+    loadProducts();
+    return () => {
+      isMounted.current = false;
+    };
+  }, [loadProducts]);
+
+  const getStoreProduct = (sku) =>
+    (products || []).find((p) => p?.id === sku || p?.productId === sku);
+
+  // Prefer the localized price returned by StoreKit / Play Billing.
+  const getDisplayPrice = (sku, fallbackPrice) => {
+    const product = getStoreProduct(sku);
+    return product?.displayPrice || product?.localizedPrice || fallbackPrice;
+  };
+
+  const showProductsNotice =
+    !productsLoading && (productsError || (products || []).length === 0);
 
   const handlePurchase = async (sku) => {
+    if (purchasingSku || restoring) return;
     console.log('subscriptionplan',sku);
-    await PURCHASE_SUBSCRIPTION(sku);
+    setPurchasingSku(sku);
+    try {
+      const result = await PURCHASE_SUBSCRIPTION(sku);
+      switch (result?.status) {
+        case 'purchased':
+          CustomToast.show('Subscription activated successfully!');
+          break;
+        case 'cancelled':
+          break;
+        case 'pending':
+          Alert.alert(
+            'Purchase Processing',
+            `Your purchase is being processed by the ${STORE_NAME}. Your plan will update automatically once it is confirmed. You can also tap "Restore Purchases" later.`
+          );
+          break;
+        default:
+          Alert.alert(
+            'Purchase Failed',
+            result?.error ||
+              'We could not complete your purchase. Please try again.'
+          );
+      }
+    } catch (e) {
+      Alert.alert(
+        'Purchase Failed',
+        e?.message || 'We could not complete your purchase. Please try again.'
+      );
+    } finally {
+      if (isMounted.current) setPurchasingSku(null);
+    }
   };
 
   const handleRestore = async () => {
-    const result = await RESTORE_SUBSCRIPTION();
-    if (result?.restored) {
-      CustomToast.show('Subscription restored successfully!');
-    } else {
-      CustomToast.show('No active subscription found.');
+    if (purchasingSku || restoring) return;
+    setRestoring(true);
+    try {
+      const result = await RESTORE_SUBSCRIPTION();
+      if (result?.restored) {
+        CustomToast.show('Subscription restored successfully!');
+      } else {
+        CustomToast.show('No active subscription found.');
+      }
+    } finally {
+      if (isMounted.current) setRestoring(false);
     }
   };
 
@@ -83,9 +158,12 @@ function SubscriptionScreen({
     return colors.success;
   };
 
-  const renderPlanCard = (planType, title, price, sku) => {
+  const renderPlanCard = (planType, title, fallbackPrice, sku) => {
     const isCurrentPlan = plan === planType;
     const features = PLAN_FEATURES[planType];
+    const price = getDisplayPrice(sku, fallbackPrice);
+    const isPurchasing = purchasingSku === sku;
+    const isBusy = !!purchasingSku || restoring;
 
     return (
       <View style={[styles.planCard, isCurrentPlan && styles.planCardActive]}>
@@ -124,11 +202,17 @@ function SubscriptionScreen({
           style={[
             styles.subscribeBtn,
             isCurrentPlan && styles.subscribeBtnDisabled,
+            !isCurrentPlan && isBusy && !isPurchasing && styles.subscribeBtnBusy,
           ]}
           onPress={() => !isCurrentPlan && handlePurchase(sku)}
-          disabled={isCurrentPlan || loading}
+          disabled={isCurrentPlan || isBusy}
+          accessibilityRole="button"
+          accessibilityLabel={
+            isCurrentPlan ? `${title} is your current plan` : `Subscribe to ${title} for ${price} per year`
+          }
+          accessibilityState={{ disabled: isCurrentPlan || isBusy, busy: isPurchasing }}
         >
-          {loading ? (
+          {isPurchasing ? (
             <ActivityIndicator color="#fff" />
           ) : (
             <Text style={styles.subscribeBtnText}>
@@ -136,6 +220,25 @@ function SubscriptionScreen({
             </Text>
           )}
         </TouchableOpacity>
+
+        {/* Legal links required for auto-renewable subscriptions */}
+        <View style={styles.legalRow}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('TermsOfUseScreen')}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityRole="link"
+          >
+            <Text style={styles.legalLink}>Terms of Use</Text>
+          </TouchableOpacity>
+          <Text style={styles.legalSeparator}>|</Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('PrivacyPolicyScreen')}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityRole="link"
+          >
+            <Text style={styles.legalLink}>Privacy Policy</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   };
@@ -152,7 +255,7 @@ function SubscriptionScreen({
         <Header title="Subscription" showBack/>
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 40 }}
+          contentContainerStyle={styles.scrollContent}
         >
           {/* Status Banner */}
           <View style={[styles.statusBanner, { backgroundColor: getStatusColor() }]}>
@@ -166,6 +269,30 @@ function SubscriptionScreen({
 
           <Text style={styles.sectionTitle}>Choose Your Plan</Text>
 
+          {productsLoading && (products || []).length === 0 && (
+            <View style={styles.productsNotice}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={styles.productsNoticeText}>
+                Loading subscription details...
+              </Text>
+            </View>
+          )}
+
+          {showProductsNotice && (
+            <View style={styles.productsNotice}>
+              <Text style={styles.productsNoticeText}>
+                Unable to load subscription details from the {STORE_NAME}.
+              </Text>
+              <TouchableOpacity
+                onPress={loadProducts}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                accessibilityRole="button"
+              >
+                <Text style={styles.retryText}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           {renderPlanCard('lite', 'Lite', '$49.99', PRODUCT_IDS.LITE)}
           {renderPlanCard('full', 'Full', '$99.99', PRODUCT_IDS.FULL)}
 
@@ -173,13 +300,20 @@ function SubscriptionScreen({
           <TouchableOpacity
             style={styles.restoreBtn}
             onPress={handleRestore}
-            disabled={loading}
+            disabled={restoring || !!purchasingSku}
+            accessibilityRole="button"
           >
-            <Text style={styles.restoreBtnText}>Restore Purchases</Text>
+            {restoring ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <Text style={styles.restoreBtnText}>Restore Purchases</Text>
+            )}
           </TouchableOpacity>
 
           <Text style={styles.disclaimer}>
-            Subscriptions are billed annually and auto-renew unless cancelled at least 24 hours before the end of the current period.
+            {Platform.OS === 'ios'
+              ? 'Payment will be charged to your Apple ID account at confirmation of purchase. Subscriptions are billed annually and auto-renew unless cancelled at least 24 hours before the end of the current period. You can manage or cancel your subscription in your App Store account settings.'
+              : 'Subscriptions are billed annually and auto-renew unless cancelled at least 24 hours before the end of the current period.'}
           </Text>
         </ScrollView>
       </SafeAreaView>
@@ -205,6 +339,52 @@ export default connect(mapStateToProps, mapDispatchToProps)(SubscriptionScreen);
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  // Keep cards at a readable width on iPad; no effect on phones.
+  scrollContent: {
+    paddingBottom: 40,
+    width: '100%',
+    maxWidth: 700,
+    alignSelf: 'center',
+  },
+  productsNotice: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginHorizontal: 16,
+    marginBottom: 12,
+  },
+  productsNoticeText: {
+    fontSize: 13,
+    color: '#666',
+    textAlign: 'center',
+  },
+  retryText: {
+    fontSize: 13,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  subscribeBtnBusy: {
+    opacity: 0.6,
+  },
+  legalRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 14,
+  },
+  legalLink: {
+    fontSize: 13,
+    color: colors.primary,
+    fontWeight: '500',
+    textDecorationLine: 'underline',
+  },
+  legalSeparator: {
+    fontSize: 13,
+    color: '#999',
+    marginHorizontal: 10,
+  },
   statusBanner: {
     flexDirection: 'row',
     alignItems: 'center',

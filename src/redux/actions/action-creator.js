@@ -75,6 +75,8 @@ import {
   ABOUT_APP_FAILURE,
   GET_PRIVACY_POLICY_SUCCESS,
   PRIVACY_POLICY_FAILURE,
+  GET_TERMS_OF_SERVICE_SUCCESS,
+  TERMS_OF_SERVICE_FAILURE,
   GET_USER_LOCATIONS_SUCCESS,
   USER_LOCATIONS_FAILURE,
   ADD_USER_LOCATIONS_REQUEST,
@@ -1665,6 +1667,34 @@ export function GET_PRIVACY_POLICY() {
   }
 }
 
+export function GET_TERMS_OF_SERVICE() {
+  return async (dispatch) => {
+    try {
+      const response = await axiosinstance.get(`terms-of-service`)
+      const responseJson = response.data;
+      if (responseJson.message == 'Success') {
+        dispatch({
+          type: GET_TERMS_OF_SERVICE_SUCCESS,
+          payload: responseJson.result,
+        })
+        return Promise.resolve(responseJson)
+      }
+      dispatch({
+        type: TERMS_OF_SERVICE_FAILURE,
+        payload: 'TERMS_OF_SERVICE_FAILURE',
+      })
+      return Promise.reject(responseJson)
+    } catch (e) {
+      dispatch({
+        type: TERMS_OF_SERVICE_FAILURE,
+        payload: 'TERMS_OF_SERVICE_FAILURE',
+      })
+      console.log('catch error API TERMS_OF_SERVICE_FAILURE', e)
+      return Promise.reject(CommonError)
+    }
+  }
+}
+
 export function GET_USER_LOCATIONS() {
   return async (dispatch) => {
     try {
@@ -1843,20 +1873,35 @@ export const FETCH_SUBSCRIPTION_PRODUCTS = () => async (dispatch) => {
   try {
     const products = await SubscriptionService.fetchProducts();
     dispatch({ type: SET_SUBSCRIPTION_PRODUCTS, payload: products });
+    return { success: true, products };
   } catch (error) {
-    dispatch({ type: SET_SUBSCRIPTION_ERROR, payload: error.message });
+    dispatch({ type: SET_SUBSCRIPTION_ERROR, payload: error?.message });
+    return { success: false, error: error?.message };
   }
 };
 
+// Resolves with the store outcome ({ status: 'purchased' | 'cancelled' |
+// 'error' | 'pending', error? }) so the UI can always give feedback.
+// Entitlement is still applied by the purchase listener wired in INIT_IAP
+// (dispatches SET_PLAN_FROM_PURCHASE on success).
 export const PURCHASE_SUBSCRIPTION = (sku) => async (dispatch) => {
   console.log('internal', sku);
   dispatch({ type: SET_SUBSCRIPTION_LOADING, payload: true });
   try {
-    await SubscriptionService.buySubscription(sku);
-    // Completion is handled by the purchase listener wired in INIT_IAP
-    // (dispatches SET_PLAN_FROM_PURCHASE on success).
+    const outcome = await SubscriptionService.buySubscription(sku);
+    if (outcome?.status !== 'purchased') {
+      dispatch({ type: SET_SUBSCRIPTION_LOADING, payload: false });
+    }
+    return {
+      status: outcome?.status || 'pending',
+      error: outcome?.error?.message,
+    };
   } catch (error) {
-    dispatch({ type: SET_SUBSCRIPTION_ERROR, payload: error.message });
+    dispatch({ type: SET_SUBSCRIPTION_ERROR, payload: error?.message });
+    return {
+      status: SubscriptionService.isPurchaseCancelled(error) ? 'cancelled' : 'error',
+      error: error?.message,
+    };
   }
 };
 
