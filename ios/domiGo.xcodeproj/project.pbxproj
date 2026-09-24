@@ -349,7 +349,7 @@
 				CODE_SIGN_ENTITLEMENTS = domiGo/domiGo.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 46;
+				CURRENT_PROJECT_VERSION = 47;
 				DEVELOPMENT_TEAM = NZK3F2XNQQ;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = domiGo/Info.plist;
@@ -359,7 +359,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.46;
+				MARKETING_VERSION = 1.0.47;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -384,7 +384,7 @@
 				CODE_SIGN_ENTITLEMENTS = domiGo/domiGo.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 46;
+				CURRENT_PROJECT_VERSION = 47;
 				DEVELOPMENT_TEAM = NZK3F2XNQQ;
 				INFOPLIST_FILE = domiGo/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DomiGo;
@@ -393,7 +393,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.46;
+				MARKETING_VERSION = 1.0.47;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
