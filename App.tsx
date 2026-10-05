@@ -115,13 +115,18 @@ function App() {
   }, []);
 
   useEffect(() => {
-    setTimeout(() => {
+    // On Android, logged-out users get the location disclosure on
+    // PermissionScreen, so don't pop the system prompt over the splash/intro.
+    const autoRequestLocation = () => {
+      if (Platform.OS === 'android' && !store.getState().auth?.loginToken) return;
       checkAndRequestLocation();
-    }, 1200);
+    };
+
+    setTimeout(autoRequestLocation, 1200);
 
     const subscription = AppState.addEventListener('change', state => {
       if (state === 'active') {
-        checkAndRequestLocation();
+        autoRequestLocation();
       }
     });
 

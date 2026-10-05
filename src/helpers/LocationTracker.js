@@ -1,4 +1,5 @@
 import { NativeModules, NativeEventEmitter, PermissionsAndroid, Platform } from 'react-native';
+import { requestLocationPermission } from './locationPermission2';
 
 const { LocationTracker } = NativeModules;
 const locationEventEmitter = new NativeEventEmitter(LocationTracker);
@@ -21,16 +22,9 @@ class BackgroundLocationTracker {
 
       // Request permissions for Android
       if (Platform.OS === 'android') {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          {
-            title: 'Location Permission for Domigo',
-            message: 'Domigo needs access to your location to track your rides.',
-            buttonPositive: 'Allow',
-          }
-        );
-        
-        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+        const granted = await requestLocationPermission();
+
+        if (!granted) {
           throw new Error('Location permission denied');
         }
       }

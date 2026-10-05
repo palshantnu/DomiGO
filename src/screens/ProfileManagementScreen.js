@@ -16,6 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import LinearGradient from "react-native-linear-gradient";
 import Header from "../components/Header";
+import { requestLocationPermission as requestLocationWithDisclosure } from "../helpers/locationPermission2";
 import {
   getPersonalProfileDataAction,
   updatePersonalInfoAction
@@ -94,16 +95,9 @@ const ProfileManagementScreen = ({
   useEffect(() => {
     const requestLocationPermission = async () => {
       if (Platform.OS === 'android') {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          {
-            title: 'Location Permission',
-            message: 'App needs access to your location',
-            buttonPositive: 'OK',
-          }
-        );
-        getLocation()
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
+        const granted = await requestLocationWithDisclosure();
+        if (granted) getLocation()
+        return granted;
       }
       return true;
     };
@@ -189,9 +183,7 @@ const ProfileManagementScreen = ({
 
   const requestLocationPermission = async () => {
     if (Platform.OS === "android") {
-      await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-      );
+      await requestLocationWithDisclosure();
     }
   };
 

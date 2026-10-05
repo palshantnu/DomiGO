@@ -33,6 +33,7 @@ import { useGPSListener } from '../hooks/useGPSListener';
 import { openLocationSettings } from '../helpers/locationRedirect';
 import { getStateShortCode } from '../utils/getStateShortCode';
 import { CustomToast } from '../helpers/CommonHelpers';
+import { requestLocationPermission } from '../helpers/locationPermission2';
 import FeatureGateWrapper from '../components/FeatureGateWrapper';
 import TrialBanner from '../components/TrialBanner';
 import { FEATURES } from '../config/featureAccess';
@@ -59,6 +60,58 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
     // call sends its own /locations/hours entry, creating multiple
     // "4-hour" location rows from one manual refresh.
     const isRefreshingRef = React.useRef(false);
+    const currentYear = new Date().getFullYear();
+
+    const [selectedYear, setSelectedYear] = React.useState(currentYear);
+    const [showYearDropdown, setShowYearDropdown] = React.useState(false);
+
+    const yearOptions = React.useMemo(() => {
+        return [
+            currentYear - 2,
+            currentYear - 1,
+            currentYear,
+        ];
+    }, [currentYear]);
+
+
+
+    // Jis year ka data abhi grid me dikh raha hai. Jab tak ye selectedYear
+    // se match nahi karta, purane year ke cards nahi dikhate.
+    const [loadedYear, setLoadedYear] = React.useState(null);
+    const [residencyLoading, setResidencyLoading] = React.useState(false);
+    const [residencyError, setResidencyError] = React.useState(false);
+    const latestYearRef = React.useRef(selectedYear);
+
+    // GET_STATE_WISE_RESIDENCY connect() se already bound hai, isliye ise
+    // dispatch() me wrap nahi karna — seedha call karna hai.
+    const loadStateResidency = async (year) => {
+        latestYearRef.current = year;
+        setResidencyLoading(true);
+        setResidencyError(false);
+
+        try {
+            const res = await GET_STATE_WISE_RESIDENCY({ year });
+            if (res?.stale || latestYearRef.current !== year) return;
+            setLoadedYear(year);
+        } catch (error) {
+            console.log("Home state residency error:", error);
+            if (latestYearRef.current === year) {
+                setResidencyError(true);
+            }
+        } finally {
+            if (latestYearRef.current === year) {
+                setResidencyLoading(false);
+            }
+        }
+    };
+
+    // API call selectedYear wale useEffect se hoti hai
+    const onYearSelect = (year) => {
+        setShowYearDropdown(false);
+        if (year !== selectedYear) {
+            setSelectedYear(year);
+        }
+    };
 
     const REFRESH_COUNT_KEY =
         "daily_location_refresh_count";
@@ -161,7 +214,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
 
 
                 await dispatch(GET_FINAL_YEAR_PROGRESS);
-                await dispatch(GET_STATE_WISE_RESIDENCY);
+                await loadStateResidency(selectedYear);
                 await dispatch(GET_COMPLIANCE_SCORE);
                 await dispatch(GET_USER_LOCATIONS);
 
@@ -187,8 +240,15 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
     // },[])
 
     useEffect(() => {
+        // dispatch(GET_FINAL_YEAR_PROGRESS({ year: selectedYear }));
+        loadStateResidency(selectedYear);
+        // dispatch(GET_COMPLIANCE_SCORE({ year: selectedYear }));
+        // dispatch(GET_USER_LOCATIONS({ year: selectedYear }));
+    }, [selectedYear]);
+
+    useEffect(() => {
         dispatch(GET_FINAL_YEAR_PROGRESS)
-        dispatch(GET_STATE_WISE_RESIDENCY)
+        // dispatch(GET_STATE_WISE_RESIDENCY)
         dispatch(GET_COMPLIANCE_SCORE)
         dispatch(GET_USER_LOCATIONS)
         // return () => {
@@ -200,11 +260,9 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
 
     const getCurrentLocation = async () => {
         if (Platform.OS === 'android') {
-            const granted = await PermissionsAndroid.request(
-                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-            );
+            const granted = await requestLocationPermission();
 
-            if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+            if (!granted) {
                 throw new Error("Location permission denied");
             }
         }
@@ -446,7 +504,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
             CustomToast.show("Threshold Updated Successfully!");
         }
         setThresholdModalVisible(false);
-        dispatch(GET_STATE_WISE_RESIDENCY)
+        loadStateResidency(selectedYear);
     };
 
     // const sortedStateResidency = React.useMemo(() => {
@@ -776,11 +834,90 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                                 <Text style={styles.inactiveText}>Calendar</Text>
                             </TouchableOpacity>
                         </View>
+                        {/* YEAR SELECTOR */}
+                        <View style={styles.homeYearContainer}>
+
+                            <TouchableOpacity
+                                activeOpacity={0.8}
+                                style={styles.homeYearButton}
+                                onPress={() => setShowYearDropdown(prev => !prev)}
+                            >
+                                <Text style={styles.homeYearText}>
+                                    {selectedYear}
+                                </Text>
+
+                                {residencyLoading ? (
+                                    <ActivityIndicator size="small" color={colors.primary} />
+                                ) : (
+                                    <Icon
+                                        name={
+                                            showYearDropdown
+                                                ? "chevron-up-outline"
+                                                : "chevron-down-outline"
+                                        }
+                                        size={18}
+                                        color="#333"
+                                    />
+                                )}
+                            </TouchableOpacity>
+
+                            {showYearDropdown && (
+                                <View style={styles.homeYearDropdown}>
+                                    {yearOptions.map(year => (
+                                        <TouchableOpacity
+                                            key={year}
+                                            style={[
+                                                styles.homeYearOption,
+                                                selectedYear === year &&
+                                                styles.homeYearOptionSelected,
+                                            ]}
+                                            onPress={() => onYearSelect(year)}
+                                        >
+                                            <Text
+                                                style={[
+                                                    styles.homeYearOptionText,
+                                                    selectedYear === year &&
+                                                    styles.homeYearOptionTextSelected,
+                                                ]}
+                                            >
+                                                {year}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            )}
+
+                        </View>
                     </View>
 
 
                     <View style={styles.section}>
                         {/* <Text style={styles.sectionTitle}>State-wise Residency Overview</Text> */}
+                        {loadedYear !== selectedYear ? (
+                            <View style={styles.residencyStatus}>
+                                {residencyError ? (
+                                    <>
+                                        <Text style={styles.residencyStatusText}>
+                                            Couldn't load data for {selectedYear}
+                                        </Text>
+                                        <TouchableOpacity
+                                            style={styles.residencyRetryBtn}
+                                            onPress={() => loadStateResidency(selectedYear)}
+                                        >
+                                            <Text style={styles.residencyRetryText}>Retry</Text>
+                                        </TouchableOpacity>
+                                    </>
+                                ) : (
+                                    <ActivityIndicator size="large" color={colors.primary} />
+                                )}
+                            </View>
+                        ) : sortedStateResidency.length === 0 ? (
+                            <View style={styles.residencyStatus}>
+                                <Text style={styles.residencyStatusText}>
+                                    No data for {selectedYear}
+                                </Text>
+                            </View>
+                        ) : (
                         <View style={styles.stateGrid}>
                             {
                                 // [
@@ -909,6 +1046,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                                     })
                             }
                         </View>
+                        )}
                     </View>
                     <Modal
                         transparent={true}
@@ -933,15 +1071,15 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                                             screen: 'ProfileManagement',
                                         });
                                     }}
-                                    // onPress={() => {
-                                    //     navigation.navigate("Settings", {
-                                    //         screen: "AddTertiaryLocation",
-                                    //         params: {
-                                    //             mode: "add",
-                                    //             type: "primary",
-                                    //         },
-                                    //     });
-                                    // }}
+                                // onPress={() => {
+                                //     navigation.navigate("Settings", {
+                                //         screen: "AddTertiaryLocation",
+                                //         params: {
+                                //             mode: "add",
+                                //             type: "primary",
+                                //         },
+                                //     });
+                                // }}
                                 >
                                     <Text style={styles.modalButtonText}>
                                         Add Now
@@ -1649,6 +1787,95 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 10,
         left: 10,
+    },
+    homeYearContainer: {
+        alignItems: 'center',
+        marginTop: 12,
+        marginBottom: 0,
+        position: 'relative',
+        zIndex: 100,
+    },
+
+    homeYearButton: {
+        minWidth: 120,
+        height: 42,
+        paddingHorizontal: 16,
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#DADADA',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+
+    homeYearText: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#222',
+    },
+
+    // Inline rakha hai (absolute nahi): Android par parent ke bounds se
+    // bahar nikle absolute children touch receive nahi karte.
+    homeYearDropdown: {
+        marginTop: 4,
+        width: 120,
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.15,
+        shadowRadius: 5,
+        zIndex: 999,
+    },
+
+    homeYearOption: {
+        paddingVertical: 11,
+        paddingHorizontal: 16,
+    },
+
+    homeYearOptionSelected: {
+        backgroundColor: '#F1F5FF',
+    },
+
+    homeYearOptionText: {
+        fontSize: 14,
+        color: '#333',
+    },
+
+    homeYearOptionTextSelected: {
+        color: colors.primary,
+        fontWeight: '700',
+    },
+
+    residencyStatus: {
+        minHeight: 160,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    residencyStatusText: {
+        fontSize: 14,
+        color: '#666',
+    },
+
+    residencyRetryBtn: {
+        marginTop: 12,
+        paddingVertical: 8,
+        paddingHorizontal: 24,
+        borderRadius: 20,
+        backgroundColor: colors.primary,
+    },
+
+    residencyRetryText: {
+        color: '#fff',
+        fontWeight: '600',
     },
 
 

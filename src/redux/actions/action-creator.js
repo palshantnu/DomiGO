@@ -910,13 +910,23 @@ export function GET_FINAL_YEAR_PROGRESS() {
   }
 }
 
-export function GET_STATE_WISE_RESIDENCY() {
+// Year jaldi-jaldi switch karne par purani request ka late response
+// naye year ke data ko overwrite na kare, isliye latest request track hoti hai.
+let stateWiseResidencyRequestId = 0;
+
+export function GET_STATE_WISE_RESIDENCY({ year = new Date().getFullYear() } = {}) {
   return async (dispatch) => {
+    const requestId = ++stateWiseResidencyRequestId;
     try {
       // const response = await axiosinstance.get('dashboard/state-days')
-      const response = await axiosinstance.get('dashboard/v2/state-days')
+      // const response = await axiosinstance.get('dashboard/v2/state-days')
+      const response = await axiosinstance.get(`dashboard/v3/state-days?year=${year}`)
       const responseJson = response.data;
       // console.log('responseSTATEJson-=>', responseJson);
+
+      if (requestId !== stateWiseResidencyRequestId) {
+        return Promise.resolve({ ...responseJson, stale: true })
+      }
 
       if (responseJson.message == 'Success') {
         dispatch({
@@ -931,6 +941,9 @@ export function GET_STATE_WISE_RESIDENCY() {
       })
       return Promise.reject(responseJson)
     } catch (e) {
+      if (requestId !== stateWiseResidencyRequestId) {
+        return Promise.resolve({ stale: true })
+      }
       dispatch({
         type: STATE_WISE_RESIDENCY_FAILURE,
         payload: 'STATE_WISE_RESIDENCY_FAILURE',

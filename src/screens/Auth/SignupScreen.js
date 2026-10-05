@@ -22,6 +22,7 @@ import { GOOGLE_KEY } from "../../helpers/CommonHelpers";
 import AddressAutoComplete from "../../components/AddressAutoComplete";
 import Geolocation from "@react-native-community/geolocation";
 import messaging from '@react-native-firebase/messaging';
+import { requestLocationPermission as requestLocationWithDisclosure } from '../../helpers/locationPermission2';
 
 
 const SignupScreen = ({ navigation, signUp }) => {
@@ -151,21 +152,16 @@ const SignupScreen = ({ navigation, signUp }) => {
   useEffect(() => {
     const requestLocationPermission = async () => {
       if (Platform.OS === 'android') {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          {
-            title: 'Location Permission',
-            message: 'App needs access to your location',
-            buttonPositive: 'OK',
-          }
-        );
-        getLocation()
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
+        const granted = await requestLocationWithDisclosure();
+        if (granted) getLocation()
+        return granted;
       }
       return true;
     };
     requestLocationPermission();
-    getLocation()
+    // Android only reads the location once permission is granted (above);
+    // calling it here would raise the system prompt without the disclosure.
+    if (Platform.OS !== 'android') getLocation()
   }, [])
 
 
