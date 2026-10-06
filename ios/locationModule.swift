@@ -137,6 +137,8 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   private let OFFLINE_QUEUE_KEY = "LocationTracker_offlineTripQueue"
   private let MAX_OFFLINE_RETRIES = 5
   private let LAST_TRACKED_DATE_KEY = "LocationTracker_lastTrackedDate"
+  // Account that owns the offline queue + persisted tracking state on this device.
+  private let ACTIVE_USER_ID_KEY = "LocationTracker_activeUserId"
 
   // MARK: - Real-time Check Properties
   private var lastRealTimeCheck: TimeInterval = 0
@@ -429,6 +431,19 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
     print("📍 setConfig called with: \(config)")
     self.config = config
 
+    // The offline queue and persisted state are device-wide. If a different account
+    // (or an unknown owner) logs in, drop them so old events are never posted with
+    // the new user's token.
+    if let userId = config["userId"] as? String, !userId.isEmpty {
+      let storedUserId = defaults.string(forKey: ACTIVE_USER_ID_KEY) ?? ""
+      if storedUserId != userId {
+        print("📍 Active user changed (\(storedUserId) → \(userId)) — resetting tracking data")
+        resetUserTrackingData()
+        defaults.set(userId, forKey: ACTIVE_USER_ID_KEY)
+        defaults.synchronize()
+      }
+    }
+
     if let mode = config["geofencingMode"] as? String {
       self.geofencingMode = mode
     }
@@ -467,6 +482,58 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
       self.isTracking = false
       self.safeSendEvent(withName: "onLocationStatus", body: ["status": "stopped"])
     }
+  }
+
+  // Called from JS on logout / account deletion.
+  @objc
+  func clearUserData() {
+    print("🧹 clearUserData called")
+    resetUserTrackingData()
+    config.removeValue(forKey: "domigoToken")
+    defaults.removeObject(forKey: ACTIVE_USER_ID_KEY)
+    defaults.synchronize()
+  }
+
+  private func resetUserTrackingData() {
+    let keys = [
+      OFFLINE_QUEUE_KEY, LAST_STATE_KEY, LAST_API_TIME_KEY, PREVIOUS_LAT_KEY, PREVIOUS_LNG_KEY,
+      PREVIOUS_CITY_KEY, PREVIOUS_STATE_KEY, PREVIOUS_ENTER_TIME_KEY, LAST_TRIP_TIME_KEY,
+      INITIAL_STATE_LOADED_KEY, CURRENT_STATE_NAME_KEY, PREVIOUS_COUNTY_FIPS_KEY,
+      PREVIOUS_COUNTY_NAME_KEY, PREVIOUS_COUNTY_ENTER_TIME_KEY, PREVIOUS_DETECTED_CITY_KEY,
+      PREVIOUS_CITY_ENTER_TIME_KEY, LAST_LOCATION_PING_TIME_KEY, LAST_SENT_STATE_KEY,
+      LAST_TRACKED_DATE_KEY, LAST_TRIP_KEY, "lastHoursApiTime",
+    ]
+    for key in keys {
+      defaults.removeObject(forKey: key)
+      sharedDefaults?.removeObject(forKey: key)
+    }
+    defaults.synchronize()
+    sharedDefaults?.synchronize()
+
+    lastState = ""
+    lastApiTime = 0
+    lastHoursApiTime = 0
+    previousLat = nil
+    previousLng = nil
+    previousCity = ""
+    previousStateName = ""
+    previousEnterTime = 0
+    lastTripKey = ""
+    previousCountyFips = ""
+    previousCountyName = ""
+    previousCountyEnterTime = 0
+    previousDetectedCity = ""
+    previousCityEnterTime = 0
+    currentStateName = ""
+    lastLocationPingTime = 0
+    lastSentState = ""
+    lastCityChangeKey = ""
+    countyChangeDetectedTime = 0
+    isTransitionInProgress = false
+    stateChangeDetectedTime = 0
+    lastTripProcessedTime = 0
+    isInitialStateLoaded = false
+    isProcessingTrip = false
   }
 
   @objc
@@ -1913,6 +1980,14 @@ class LocationTracker: RCTEventEmitter, CLLocationManagerDelegate {
   // MARK: - Offline Queue
 
   private func enqueueToOfflineQueue(_ payload: [String: Any]) {
+    // No logged-in user → nobody owns this event; don't keep it for the next account.
+    // The persisted owner id survives app relaunch (config is only set once JS starts tracking).
+    let hasOwner = !(defaults.string(forKey: ACTIVE_USER_ID_KEY) ?? "").isEmpty
+    let hasToken = !((config["domigoToken"] as? String) ?? "").isEmpty
+    guard hasOwner || hasToken else {
+      print("📦 Offline queue: no active user, event not queued")
+      return
+    }
     var queue = defaults.array(forKey: OFFLINE_QUEUE_KEY) as? [[String: Any]] ?? []
     let entry: [String: Any] = [
       "payload": payload,

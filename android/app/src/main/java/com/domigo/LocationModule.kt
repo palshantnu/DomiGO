@@ -162,6 +162,8 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         private const val PREF_PREV_CITY_NAME = "pref_prev_city_name"
         private const val PREF_PREV_CITY_FIPS = "pref_prev_city_fips"
         private const val PREF_PREV_CITY_ENTER = "pref_prev_city_enter"
+        // Account that owns the offline queue + persisted tracking state on this device.
+        private const val PREF_ACTIVE_USER_ID = "domigo_active_user_id"
         
     }
 
@@ -180,6 +182,18 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
             }
             if (config.hasKey("domigoToken")) {
                 domigoToken = config.getString("domigoToken") ?: ""
+            }
+            // The offline queue and persisted state are device-wide. If a different account
+            // (or an unknown owner) logs in, drop them so old events are never posted with
+            // the new user's token. Must run before backfillMissingDays().
+            if (config.hasKey("userId")) {
+                val userId = config.getString("userId") ?: ""
+                val storedUserId = prefs.getString(PREF_ACTIVE_USER_ID, "") ?: ""
+                if (userId.isNotEmpty() && userId != storedUserId) {
+                    Log.d(TAG, "Active user changed ($storedUserId -> $userId) - resetting tracking data")
+                    resetUserTrackingData()
+                    prefs.edit().putString(PREF_ACTIVE_USER_ID, userId).apply()
+                }
             }
             if (config.hasKey("apiUrl")) {
                 apiUrl = config.getString("apiUrl") ?: ""
@@ -277,6 +291,55 @@ class LocationModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         } catch (e: Exception) {
             Log.e(TAG, "Error stopping location tracking: ${e.message}")
         }
+    }
+
+    // Called from JS on logout / account deletion.
+    @ReactMethod
+    fun clearUserData() {
+        Log.d(TAG, "clearUserData called")
+        resetUserTrackingData()
+        domigoToken = ""
+        prefs.edit().remove(PREF_ACTIVE_USER_ID).apply()
+    }
+
+    private fun resetUserTrackingData() {
+        prefs.edit().apply {
+            listOf(
+                OFFLINE_QUEUE_KEY, PREF_PREV_STATE_CODE, PREF_PREV_STATE_NAME, PREF_PREV_CITY,
+                PREF_PREV_LAT, PREF_PREV_LNG, PREF_PREV_COUNTRY, PREF_PREV_ENTER_TIME,
+                PREF_LAST_TRACKED_DATE, PREF_CURRENT_STATE, PREF_LAST_HOURS_API_TIME,
+                PREF_LAST_LOCATION_PING_TIME, PREF_PREV_COUNTY_NAME, PREF_PREV_COUNTY_FIPS,
+                PREF_PREV_COUNTY_ENTER, PREF_PREV_CITY_NAME, PREF_PREV_CITY_FIPS,
+                PREF_PREV_CITY_ENTER,
+            ).forEach { remove(it) }
+            apply()
+        }
+
+        lastState = ""
+        lastApiTime = 0
+        previousLat = null
+        previousLng = null
+        previousCity = ""
+        previousStateName = ""
+        previousStateCode = ""
+        previousCountryCode = ""
+        previousEnterTime = 0L
+        currentStateName = ""
+        isTransitionInProgress = false
+        stateChangeDetectedTime = 0L
+        previousCountyFips = ""
+        previousCountyName = ""
+        previousCountyEnterTime = 0L
+        previousCityFips = ""
+        previousCityName = ""
+        previousCityEnterTime = 0L
+        lastCityChangeKey = ""
+        countyChangeDetectedTime = 0L
+        lastBoundaryStartTime = 0L
+        lastTripKey = ""
+        lastLocationPingTime = 0
+        lastHoursApiTime = 0
+        lastSentState = ""
     }
 
     @ReactMethod
@@ -2012,6 +2075,13 @@ private fun loadStateFromPrefs() {
 // ==================== Native Offline Queue (Gap 2) ====================
 
 private fun enqueueToOfflineQueue(payload: JSONObject) {
+    // No logged-in user → nobody owns this event; don't keep it for the next account.
+    // The persisted owner id survives app relaunch (token is only set once JS starts tracking).
+    val hasOwner = !prefs.getString(PREF_ACTIVE_USER_ID, "").isNullOrEmpty()
+    if (!hasOwner && domigoToken.isEmpty()) {
+        Log.d(TAG, "Offline queue: no active user, event not queued")
+        return
+    }
     try {
         val raw = prefs.getString(OFFLINE_QUEUE_KEY, "[]") ?: "[]"
         val queue = JSONArray(raw)

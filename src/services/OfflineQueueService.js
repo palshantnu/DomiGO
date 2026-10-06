@@ -87,6 +87,15 @@ async function flush(sendFn) {
   await saveQueue(remaining);
 }
 
+// Drop every queued event — called on logout so they are never sent as another user.
+async function clear() {
+  try {
+    await AsyncStorage.removeItem(STORAGE_KEY);
+  } catch (e) {
+    console.warn('OfflineQueueService: failed to clear queue', e);
+  }
+}
+
 function startListening(sendFn) {
   stopListening();
   netInfoUnsubscribe = NetInfo.addEventListener(state => {
@@ -103,4 +112,4 @@ function stopListening() {
   }
 }
 
-export default { enqueue, flush, startListening, stopListening };
+export default { enqueue, flush, clear, startListening, stopListening };

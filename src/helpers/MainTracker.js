@@ -16,6 +16,18 @@ const isNativeModuleAvailable = () => {
 
 // console.log(userData,'loginToken>>>>>>>>>>>>>>>>>>>>>>>>>>>', loginToken,userData);
 
+// User id from the JWT `sub` claim. Native uses it to make sure the offline queue and
+// persisted tracking state are never carried over from one account to another.
+const getUserIdFromToken = (token) => {
+  try {
+    const part = String(token).split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const sub = JSON.parse(global.atob(part)).sub;
+    return sub != null ? String(sub) : '';
+  } catch {
+    return '';
+  }
+};
+
 // Create event emitter only if native module exists
 const locationEventEmitter = isNativeModuleAvailable()
   ? new NativeEventEmitter(NativeModules.LocationTracker)
@@ -114,6 +126,7 @@ class DomigoTracker {
         // 60s matches the native default; state-level detection doesn't need faster sampling.
         interval: 60000,
         domigoToken: token || loginToken,
+        userId: getUserIdFromToken(token || loginToken) || String(userData?.id ?? ''),
         apiUrl: API_URL,
         geofencingMode: GEOFENCING_MODE,
         geofencingCountry: GEOFENCING_COUNTRY,
@@ -233,6 +246,22 @@ class DomigoTracker {
     } catch (e) {
       console.log('Reverse geocode failed', e);
       return '';
+    }
+  }
+
+  // Call on logout / account deletion: wipes queued events and tracking state (native + JS)
+  // so nothing recorded for this account can be uploaded under the next one.
+  async clearUserData() {
+    this.previousCity = null;
+    this.previousState = null;
+    this.lastTripTime = 0;
+    await OfflineQueueService.clear();
+
+    try {
+      // Optional call: older native binaries don't have this method.
+      await NativeModules.LocationTracker?.clearUserData?.();
+    } catch (error) {
+      console.error(`❌ Domigo ${Platform.OS} - Failed to clear user data:`, error);
     }
   }
 

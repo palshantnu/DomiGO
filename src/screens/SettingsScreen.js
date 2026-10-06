@@ -50,6 +50,7 @@ export default function SettingsScreen() {
       await dispatch(DELETE_ACCOUNT());
       await AsyncStorage.removeItem('DOMIGO_TRACKING_ENABLED');
       DomigoTracker.stopDomigoTracking();
+      DomigoTracker.clearUserData();
       CustomToast.show('Account deleted successfully');
       navigation.reset({
         index: 0,
@@ -144,6 +145,7 @@ export default function SettingsScreen() {
                 await AsyncStorage.removeItem('DOMIGO_TRACKING_ENABLED');
                 CustomToast.show('LogOut User Successfully');
                 DomigoTracker.stopDomigoTracking();
+                DomigoTracker.clearUserData();
                 navigation.reset({
                   index: 0,
                   routes: [{ name: "Login" }],
