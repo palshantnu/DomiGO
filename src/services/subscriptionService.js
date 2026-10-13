@@ -11,9 +11,12 @@ import {
 } from 'react-native-iap';
 import { Platform } from 'react-native';
 
+// Product IDs are case-sensitive and must match the stores exactly.
+// App Store Connect has the Full plan as `domigo_full_Yearly` (capital Y);
+// Google Play IDs are always lowercase.
 export const PRODUCT_IDS = {
   LITE: 'domigo_lite_yearly',
-  FULL: 'domigo_full_yearly',
+  FULL: Platform.OS === 'ios' ? 'domigo_full_Yearly' : 'domigo_full_yearly',
 };
 
 const SKU_LIST = [PRODUCT_IDS.LITE, PRODUCT_IDS.FULL];

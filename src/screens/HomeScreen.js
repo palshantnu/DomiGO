@@ -229,11 +229,35 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
     };
 
 
+    const isFocused = useIsFocused();
+
+    // Only show the home-state prompt while this tab is focused. Tabs are
+    // frozen on blur (freezeOnBlur), so a native Modal left open here would
+    // float over other tabs and stop responding to taps.
     useEffect(() => {
-        if (userData && userData.state === null) {
+        if (isFocused && userData && userData.state === null) {
             setShowStateModal(true);
         }
-    }, [userData]);
+    }, [userData, isFocused]);
+
+    // "Add Now" first dismisses the modal and navigates only once it is gone;
+    // hiding the modal and switching tabs in the same tick can leave the modal
+    // stuck on screen (the hide never commits once the tab freezes).
+    const pendingStateNavRef = React.useRef(false);
+    const navigateToAddState = () => {
+        if (!pendingStateNavRef.current) return;
+        pendingStateNavRef.current = false;
+        navigation.navigate('Settings', {
+            screen: 'ProfileManagement',
+        });
+    };
+
+    useEffect(() => {
+        if (showStateModal || !pendingStateNavRef.current) return;
+        // Fallback for Android (no onDismiss) or if onDismiss never fires.
+        const timer = setTimeout(navigateToAddState, 400);
+        return () => clearTimeout(timer);
+    }, [showStateModal]);
 
     // useEffect(()=>{
     useGPSListener(setIsGPSOn);
@@ -255,8 +279,6 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
         //   stopDomigoTracking();
         // };
     }, []);
-
-    const isFocused = useIsFocused();
 
     const getCurrentLocation = async () => {
         if (Platform.OS === 'android') {
@@ -1051,7 +1073,10 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                     <Modal
                         transparent={true}
                         animationType="fade"
-                        visible={showStateModal}
+                        visible={showStateModal && isFocused}
+                        supportedOrientations={['portrait', 'landscape']}
+                        onDismiss={navigateToAddState}
+                        onRequestClose={() => {}}
                     >
                         <View style={styles.modalOverlay}>
                             <View style={styles.modalContainer}>
@@ -1066,10 +1091,8 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                                 <TouchableOpacity
                                     style={styles.modalButton}
                                     onPress={() => {
+                                        pendingStateNavRef.current = true;
                                         setShowStateModal(false);
-                                        navigation.navigate('Settings', {
-                                            screen: 'ProfileManagement',
-                                        });
                                     }}
                                 // onPress={() => {
                                 //     navigation.navigate("Settings", {
