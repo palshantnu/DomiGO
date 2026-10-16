@@ -36,10 +36,12 @@ import { CustomToast } from '../helpers/CommonHelpers';
 import { requestLocationPermission } from '../helpers/locationPermission2';
 import FeatureGateWrapper from '../components/FeatureGateWrapper';
 import TrialBanner from '../components/TrialBanner';
+import ServiceDisclaimer from '../components/ServiceDisclaimer';
 import { FEATURES } from '../config/featureAccess';
 import Geolocation from '@react-native-community/geolocation';
 import { GOOGLE_KEY } from "../helpers/CommonHelpers"
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { checkRestoredFromBackup } from '../helpers/deviceIdentity';
 
 
 
@@ -269,6 +271,11 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
         // dispatch(GET_COMPLIANCE_SCORE({ year: selectedYear }));
         // dispatch(GET_USER_LOCATIONS({ year: selectedYear }));
     }, [selectedYear]);
+
+    // Backup se restore hue phone par "Restored from Backup" popup
+    useEffect(() => {
+        if (loginToken) checkRestoredFromBackup();
+    }, [loginToken]);
 
     useEffect(() => {
         dispatch(GET_FINAL_YEAR_PROGRESS)
@@ -850,7 +857,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                                 </View>
                             </TouchableOpacity> */}
 
-                            <TouchableOpacity
+                              <TouchableOpacity
                                 onPress={() => navigation.navigate('Calendar')}
                                 style={styles.rightTab}>
                                 <Text style={styles.inactiveText}>Calendar</Text>
@@ -859,6 +866,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                         {/* YEAR SELECTOR */}
                         <View style={styles.homeYearContainer}>
 
+                            {/* YEAR SELECTOR */}
                             <TouchableOpacity
                                 activeOpacity={0.8}
                                 style={styles.homeYearButton}
@@ -883,6 +891,14 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                                 )}
                             </TouchableOpacity>
 
+                            {/* <TouchableOpacity
+                                onPress={() => navigation.navigate('Calendar')}
+                                style={styles.rightTab}>
+                                <Text style={styles.inactiveText}>Calendar</Text>
+                            </TouchableOpacity> */}
+                        </View>
+
+                        <View style={styles.homeYearContainer}>
                             {showYearDropdown && (
                                 <View style={styles.homeYearDropdown}>
                                     {yearOptions.map(year => (
@@ -1204,6 +1220,7 @@ const HomeScreen = ({ GET_FINAL_YEAR_PROGRESS, GET_STATE_WISE_RESIDENCY, GET_COM
                         </View>
                     </Modal>
 
+                    <ServiceDisclaimer style={{ marginTop: 10, marginBottom: 24, paddingHorizontal: 20 }} />
 
                 </ScrollView>
             </SafeAreaView>
@@ -1243,7 +1260,8 @@ const styles = StyleSheet.create({
 
     section: {
         // marginBottom: 24,
-        padding: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 5,
         // margin: 10
     },
     sectionTitle: {
@@ -1813,20 +1831,26 @@ const styles = StyleSheet.create({
     },
     homeYearContainer: {
         alignItems: 'center',
-        marginTop: 12,
-        marginBottom: 0,
         position: 'relative',
+        marginTop: 8,
+        marginBottom: 0,
         zIndex: 100,
     },
 
+    // Metrics aur Calendar tab ke beech wala segment
     homeYearButton: {
-        minWidth: 120,
-        height: 42,
+        minWidth: 80,
+        height: 36,
         paddingHorizontal: 16,
+        // alignSelf: 'stretch',
+        // minWidth: 92,
+        // paddingHorizontal: 12,
         backgroundColor: '#fff',
-        borderRadius: 10,
+        borderRadius: 50,
         borderWidth: 1,
         borderColor: '#DADADA',
+        // borderRightWidth: 1,
+        // borderColor: '#D7D7D7',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',

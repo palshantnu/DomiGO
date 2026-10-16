@@ -7,6 +7,7 @@ import {
   TextInput,
   Image,
   StatusBar,
+  ScrollView,
   PermissionsAndroid,
   Platform,
 } from "react-native";
@@ -18,10 +19,13 @@ import { SIGNUP } from '../../redux/actions/action-creator';
 import { CustomToast } from '../../helpers/CommonHelpers';
 import NetInfo from '@react-native-community/netinfo';
 import { SliderButton } from '../../components/SliderButton';
+import ServiceDisclaimer from '../../components/ServiceDisclaimer';
+import LegalConsent,{ LEGAL_CONSENT_INITIAL, getLegalConsentError } from '../../components/LegalConsent';
 import { GOOGLE_KEY } from "../../helpers/CommonHelpers";
 import AddressAutoComplete from "../../components/AddressAutoComplete";
 import Geolocation from "@react-native-community/geolocation";
 import messaging from '@react-native-firebase/messaging';
+import { getDeviceIdForAuth, saveCurrentDeviceId } from '../../helpers/deviceIdentity';
 import { requestLocationPermission as requestLocationWithDisclosure } from '../../helpers/locationPermission2';
 
 
@@ -41,6 +45,7 @@ const SignupScreen = ({ navigation, signUp }) => {
   const [secondaryCity, setSecondaryCity] = useState("");
   const [secondaryState, setSecondaryState] = useState("");
   const [secondaryCountry, setSecondaryCountry] = useState("");
+  const [consent, setConsent] = useState(LEGAL_CONSENT_INITIAL);
 
 
 
@@ -235,6 +240,10 @@ const SignupScreen = ({ navigation, signUp }) => {
     if (!city || !stateName) {
       return CustomToast.show("Please select valid address");
     }
+    const consentError = getLegalConsentError(consent);
+    if (consentError) {
+      return CustomToast.show(consentError);
+    }
 
     const data = {
       email,
@@ -245,6 +254,7 @@ const SignupScreen = ({ navigation, signUp }) => {
       country,
       deviceType: Platform.OS === "ios" ? "ios" : "android", // 👈 add
       deviceToken: fcmtoken || "123456", // 👈 redux se aa raha hai
+      deviceId: await getDeviceIdForAuth(),
       // 👇 optional fields
       ...(secondaryAddress && {
         secondaryAddress,
@@ -259,6 +269,7 @@ const SignupScreen = ({ navigation, signUp }) => {
       console.log('response==>', response);
       try {
         if (response.success) {
+          saveCurrentDeviceId();
           setTimeout(() => setButtonLoader(false), 2000)
           CustomToast.show('Sucessfully Register');
           navigation.reset({
@@ -317,7 +328,13 @@ const SignupScreen = ({ navigation, signUp }) => {
       style={styles.container}
     >
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
-      <SafeAreaView style={{ paddingHorizontal: 20, }}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          automaticallyAdjustKeyboardInsets
+        >
         <Text style={styles.title}>Create Your{"\n"}Account</Text>
         <View style={styles.inputWrapper}>
           <Ionicons name="mail-outline" size={20} color="#666" style={styles.icon} />
@@ -378,6 +395,12 @@ const SignupScreen = ({ navigation, signUp }) => {
           />
         </View>
 
+        <LegalConsent
+          value={consent}
+          onChange={setConsent}
+          style={{ marginTop: -10, marginBottom: 20 }}
+        />
+
         <SliderButton
           isClickButton={true}
           onSubmit={() => {
@@ -432,6 +455,9 @@ const SignupScreen = ({ navigation, signUp }) => {
             Log in
           </Text>
         </Text>
+
+        <ServiceDisclaimer />
+        </ScrollView>
       </SafeAreaView>
     </LinearGradient>
   );
@@ -441,13 +467,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 0,
+  },
+  // Content chhota ho to center me, lamba ho to scroll
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 24,
   },
   title: {
     fontSize: 28,
     fontWeight: "700",
     color: "#000",
-    marginBottom: 40,
+    marginBottom: 30,
   },
   inputWrapper: {
     flexDirection: "row",

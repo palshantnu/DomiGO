@@ -255,31 +255,84 @@ const DayEntryScreen = ({
 
 
 
+    // useEffect(() => {
+    //     if (isTrip) return; // ❌ only missing day
+
+    //     // ✅ ONLY automatic entries pe apply hoga
+    //     const isAuto = editData?.creationType === "automatic" || creationType === "automatic";
+    //     if (!isAuto) return;
+
+    //     // check only when typeOfDay = 1 (default)
+    //     if (Number(typeOfDay) !== 1) return;
+
+    //     const currentDate = editData?.date || date;
+    //     if (!currentDate) return;
+
+    //     const d = new Date(currentDate);
+    //     const day = d.getDay(); // 0 = Sunday, 6 = Saturday
+
+    //     if (day === 0 || day === 6) {
+    //         // Weekend
+    //         setTypeOfDay(3);
+    //     } else {
+    //         // Weekday
+    //         setTypeOfDay(2);
+    //     }
+
+    // }, [typeOfDay, date, editData, isTrip]);
+
+
     useEffect(() => {
-        if (isTrip) return; // ❌ only missing day
+    if (isTrip) return;
 
-        // ✅ ONLY automatic entries pe apply hoga
-        const isAuto = editData?.creationType === "automatic" || creationType === "automatic";
-        if (!isAuto) return;
+    const isAuto =
+        editData?.creationType === "automatic" ||
+        creationType === "automatic";
 
-        // check only when typeOfDay = 1 (default)
-        if (Number(typeOfDay) !== 1) return;
+    if (!isAuto) return;
 
-        const currentDate = editData?.date || date;
-        if (!currentDate) return;
+    if (Number(typeOfDay) !== 1) return;
 
-        const d = new Date(currentDate);
-        const day = d.getDay(); // 0 = Sunday, 6 = Saturday
+    const currentDate = editData?.date || date;
+    if (!currentDate) return;
 
-        if (day === 0 || day === 6) {
-            // Weekend
-            setTypeOfDay(3);
-        } else {
-            // Weekday
-            setTypeOfDay(2);
-        }
+    let d;
+    const dateString = String(currentDate);
+    const datePart = dateString.split("T")[0];
 
-    }, [typeOfDay, date, editData, isTrip]);
+    // Date-only format: YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+        const [year, month, dayOfMonth] =
+            datePart.split("-").map(Number);
+
+        // Local calendar date; no UTC date shift
+        d = new Date(year, month - 1, dayOfMonth);
+    } else {
+        // Timestamp: interpret using device's local timezone
+        d = new Date(dateString);
+    }
+
+    if (Number.isNaN(d.getTime())) {
+        console.log("Invalid date:", currentDate);
+        return;
+    }
+
+    const day = d.getDay();
+
+    console.log("Current date:", currentDate);
+    console.log(
+        "Mobile timezone:",
+        Intl.DateTimeFormat().resolvedOptions().timeZone
+    );
+    console.log("Local date:", d.toString());
+    console.log("Weekday number:", day);
+
+    if (day === 0 || day === 6) {
+        setTypeOfDay(3); // Weekend
+    } else {
+        setTypeOfDay(2); // Weekday
+    }
+}, [typeOfDay, date, editData, isTrip, creationType]);
 
     /* ---------------- EDIT PREFILL ---------------- */
 
@@ -626,7 +679,8 @@ const DayEntryScreen = ({
             isCommissionDay,
             kind: isTrip ? "trip" : "missing",
             isRemoteWork,
-            remoteHours: isRemoteWork ? Number(hoursWorked) : 0,
+            // remoteHours: isRemoteWork ? Number(hoursWorked) : 0,
+            remoteHours: isWorkingDay ? Number(hoursWorked || 8) : 0,
             isTravelling,
             tripTypeId: tripType,
             tripModeId: tripMode,

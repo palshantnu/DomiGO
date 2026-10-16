@@ -7,6 +7,7 @@ import {
   TextInput,
   Image,
   StatusBar,
+  ScrollView,
   Platform,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
@@ -16,6 +17,8 @@ import { connect } from "react-redux";
 import { SIGNIN } from "../../redux/actions/action-creator";
 import { CustomToast } from "../../helpers/CommonHelpers";
 import { SliderButton } from "../../components/SliderButton";
+import ServiceDisclaimer from "../../components/ServiceDisclaimer";
+import LegalConsent,{ LEGAL_CONSENT_INITIAL, getLegalConsentError } from "../../components/LegalConsent";
 import NetInfo from '@react-native-community/netinfo';
 import useAPI from '../../helpers/useAPI';
 import { startBackgroundLocation } from "../../helpers/LocationTracker";
@@ -26,6 +29,7 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
 import appleAuth, { AppleButton } from '@invertase/react-native-apple-authentication';
 import messaging from '@react-native-firebase/messaging';
+import { getDeviceIdForAuth, saveCurrentDeviceId } from "../../helpers/deviceIdentity";
 
 GoogleSignin.configure({
   webClientId: '354808270826-gns6qrt56geta1g46vv26j9l3n3jk415.apps.googleusercontent.com', // Firebase se
@@ -39,8 +43,17 @@ const LoginScreen = ({ navigation, signIn }) => {
   const [netInfo, setNetInfo] = useState(true);
   const [buttonLoader, setButtonLoader] = useState(false);
   const [fcmtoken, setFcmtoken] = useState("");
+  const [consent, setConsent] = useState(LEGAL_CONSENT_INITIAL);
 
-
+  // Email, Google aur Apple teeno sign-in ke liye acceptance zaroori hai
+  const hasLegalConsent = () => {
+    const consentError = getLegalConsentError(consent);
+    if (consentError) {
+      CustomToast.show(consentError);
+      return false;
+    }
+    return true;
+  };
 
   const validateForm = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -61,7 +74,8 @@ const LoginScreen = ({ navigation, signIn }) => {
       CustomToast.show("Please enter password");
       return false;
     }
-    return true;
+      return true;
+    // return hasLegalConsent();
   };
 
   const SignInUser = async () => {
@@ -73,6 +87,7 @@ const LoginScreen = ({ navigation, signIn }) => {
       password: password.trim(),
       deviceType: Platform.OS === "ios" ? "ios" : "android", // 👈 add
       deviceToken: fcmtoken || "123456", // 👈 redux se aa raha hai
+      deviceId: await getDeviceIdForAuth(),
     };
     callLoginApi(signIn(data))
       .then(async (response) => {
@@ -83,6 +98,7 @@ const LoginScreen = ({ navigation, signIn }) => {
           CustomToast.show(response?.message ?? response?.error);
         } else {
           console.log('response', response.token);
+          await saveCurrentDeviceId();
           await AsyncStorage.setItem('DOMIGO_TRACKING_ENABLED', '1');
           DomigoTracker.startDomigoTracking(response.token);
           // const { started } = await DomigoTracker.startDomigoTracking();
@@ -106,6 +122,7 @@ const LoginScreen = ({ navigation, signIn }) => {
         CustomToast.show("No internet connection");
         return;
       }
+      // if (!hasLegalConsent()) return;
 
       setButtonLoader(true);
 
@@ -145,6 +162,7 @@ const LoginScreen = ({ navigation, signIn }) => {
         name: user.displayName || "",
         deviceType: Platform.OS,
         deviceToken: fcmtoken || "123456",
+        deviceId: await getDeviceIdForAuth(),
       };
 
       console.log("Social Login Payload => ", payload);
@@ -158,6 +176,8 @@ const LoginScreen = ({ navigation, signIn }) => {
         CustomToast.show(response?.message || "Login Failed");
         return;
       }
+
+      await saveCurrentDeviceId();
 
       await AsyncStorage.setItem(
         "DOMIGO_TRACKING_ENABLED",
@@ -193,6 +213,7 @@ const LoginScreen = ({ navigation, signIn }) => {
         CustomToast.show("No internet connection");
         return;
       }
+      // if (!hasLegalConsent()) return;
 
       setButtonLoader(true);
 
@@ -233,6 +254,7 @@ const LoginScreen = ({ navigation, signIn }) => {
         name: user.displayName || "",
         deviceType: Platform.OS,
         deviceToken: fcmtoken || "123456",
+        deviceId: await getDeviceIdForAuth(),
       };
 
       const response = await callLoginApi(signIn(payload));
@@ -241,6 +263,8 @@ const LoginScreen = ({ navigation, signIn }) => {
         CustomToast.show(response.message);
         return;
       }
+
+      await saveCurrentDeviceId();
 
       await AsyncStorage.setItem(
         "DOMIGO_TRACKING_ENABLED",
@@ -473,7 +497,13 @@ const initFCM = async () => {
     >
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-      <SafeAreaView style={styles.innerContainer}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView
+          contentContainerStyle={styles.innerContainer}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          automaticallyAdjustKeyboardInsets
+        >
         <Text style={styles.welcomeTitle}>Welcome to{"\n"}DomiGo</Text>
         <Text style={styles.subtitle}>
           Modern residency tracking for a multi-location lifestyle.
@@ -503,6 +533,7 @@ const initFCM = async () => {
             onChangeText={setPassword}
           />
         </View>
+        {/* <LegalConsent value={consent} onChange={setConsent} style={{ marginTop: 10 }} /> */}
         <View style={{ marginTop: 25, }} />
         <SliderButton
           isClickButton={true}
@@ -521,9 +552,9 @@ const initFCM = async () => {
         {/* <TouchableOpacity onPress={() => navigation.navigate('Main')} style={styles.loginBtn}>
           <Text style={styles.loginText}>Log in</Text>
         </TouchableOpacity> */}
-        <TouchableOpacity>
+        {/* <TouchableOpacity>
           <Text style={styles.forgotText}>Forgot Password?</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <View style={styles.divider} />
 
         <Text style={styles.footerText}>
@@ -581,6 +612,9 @@ const initFCM = async () => {
             testID="sign-in-with-apple-button"
           />
         )}
+
+        <ServiceDisclaimer />
+        </ScrollView>
       </SafeAreaView>
     </LinearGradient>
   );
@@ -589,10 +623,13 @@ const initFCM = async () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
   },
+  // Content chhota ho to center me, lamba ho to scroll
   innerContainer: {
+    flexGrow: 1,
+    justifyContent: "center",
     paddingHorizontal: 20,
+    paddingVertical: 24,
   },
   welcomeTitle: {
     fontSize: 28,

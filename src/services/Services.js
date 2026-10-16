@@ -7,6 +7,9 @@ export const checkEmailOrMobileIsExistOrNotService = (data) =>
 export const logoutService = () =>
   axiosinstance.post(EndPoints.logout)
 
+export const setActiveDeviceService = (deviceId) =>
+  axiosinstance.patch(EndPoints.activeDevice, { deviceId })
+
 export const deleteAccountService = () =>
   axiosinstance.delete(EndPoints.deleteAccount)
 

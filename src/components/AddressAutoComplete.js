@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
   View,
   TextInput,
-  FlatList,
   TouchableOpacity,
   Text,
   StyleSheet,
@@ -73,20 +72,19 @@ console.log('json',json);
       </View>
 
       {results.length > 0 && (
-        <FlatList
-          data={results}
-          keyExtractor={(item) => item.place_id}
-          keyboardShouldPersistTaps="handled"
-          style={styles.dropdown}
-          renderItem={({ item }) => (
+        // Plain View (FlatList nahi): ye ScrollView ke andar render hota hai
+        // aur Google max 5 predictions hi deta hai.
+        <View style={styles.dropdown}>
+          {results.map((item) => (
             <TouchableOpacity
+              key={item.place_id}
               style={styles.item}
               onPress={() => handleSelect(item)}
             >
               <Text style={styles.itemText}>{item.description}</Text>
             </TouchableOpacity>
-          )}
-        />
+          ))}
+        </View>
       )}
     </View>
   );
@@ -115,7 +113,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     marginTop: 4,
     borderRadius: 10,
-    maxHeight: 220,
     elevation: 5,
   },
   item: {

@@ -20,6 +20,7 @@
 		18819CA42F31DDA1003E204A /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 18819CA32F31DDA1003E204A /* GoogleService-Info.plist */; };
 		18CD2AD82ED5B36B00A6C3BC /* locationModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18CD2AD72ED5B36700A6C3BC /* locationModule.swift */; };
 		18CD2ADA2ED5B52D00A6C3BC /* LocationTrackerBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 18CD2AD92ED5B52400A6C3BC /* LocationTrackerBridge.m */; };
+		D0F1A2B3C4D5E6F708192A3C /* DeviceVendorId.m in Sources */ = {isa = PBXBuildFile; fileRef = D0F1A2B3C4D5E6F708192A3B /* DeviceVendorId.m */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		87639A4F2148B3E8E3CD8D71 /* Pods_domiGo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25DC2D3480731E8787F285E4 /* Pods_domiGo.framework */; };
@@ -45,6 +46,7 @@
 		18819CA32F31DDA1003E204A /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		18CD2AD72ED5B36700A6C3BC /* locationModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = locationModule.swift; sourceTree = "<group>"; };
 		18CD2AD92ED5B52400A6C3BC /* LocationTrackerBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LocationTrackerBridge.m; sourceTree = "<group>"; };
+		D0F1A2B3C4D5E6F708192A3B /* DeviceVendorId.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeviceVendorId.m; sourceTree = "<group>"; };
 		25DC2D3480731E8787F285E4 /* Pods_domiGo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_domiGo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		4929A01D06700E2A750575FD /* Pods-domiGo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-domiGo.debug.xcconfig"; path = "Target Support Files/Pods-domiGo/Pods-domiGo.debug.xcconfig"; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = domiGo/AppDelegate.swift; sourceTree = "<group>"; };
@@ -83,6 +85,7 @@
 				18819CA32F31DDA1003E204A /* GoogleService-Info.plist */,
 				186B82672EF51DFE00A62AFF /* domiGo.entitlements */,
 				18CD2AD92ED5B52400A6C3BC /* LocationTrackerBridge.m */,
+				D0F1A2B3C4D5E6F708192A3B /* DeviceVendorId.m */,
 				18CD2AD72ED5B36700A6C3BC /* locationModule.swift */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				1811AC972ED0375D00585ACD /* SLCEventEmitter.swift */,
@@ -334,6 +337,7 @@
 				18CD2AD82ED5B36B00A6C3BC /* locationModule.swift in Sources */,
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
 				18CD2ADA2ED5B52D00A6C3BC /* LocationTrackerBridge.m in Sources */,
+				D0F1A2B3C4D5E6F708192A3C /* DeviceVendorId.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

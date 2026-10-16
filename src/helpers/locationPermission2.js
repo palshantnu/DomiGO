@@ -1,5 +1,6 @@
 import { Platform, PermissionsAndroid, Alert, Linking } from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Google Play "Prominent Disclosure" requirement: before the system location
 // prompt, the app must explain in-app what location data is collected, that it
@@ -76,6 +77,71 @@ const requestAndroidLocation = (disclosureAccepted = false) => {
   return pendingRequest;
 };
 
+// Background ("Allow all the time") access. Android only grants it in a second
+// step after foreground access, and on Android 11+ the user has to pick it on
+// the system settings page, so it gets its own disclosure right before it.
+const BACKGROUND_DISCLOSURE_TITLE = 'Allow Location All The Time';
+const BACKGROUND_DISCLOSURE_MESSAGE =
+  'domiGo collects location data to detect your trips and count your days of ' +
+  'residency even when the app is closed or not in use.\n\n' +
+  'To enable this, choose "Allow all the time" on the next screen.';
+const BACKGROUND_DECLINED_KEY = 'DOMIGO_BG_LOCATION_DECLINED';
+
+let backgroundDeclinedThisSession = false;
+let pendingBackgroundRequest = null;
+
+const showBackgroundDisclosure = () =>
+  new Promise(resolve => {
+    Alert.alert(
+      BACKGROUND_DISCLOSURE_TITLE,
+      BACKGROUND_DISCLOSURE_MESSAGE,
+      [
+        { text: 'No Thanks', style: 'cancel', onPress: () => resolve(false) },
+        { text: 'Continue', onPress: () => resolve(true) },
+      ],
+      { cancelable: false },
+    );
+  });
+
+const runAndroidBackgroundRequest = async () => {
+  try {
+    if (Platform.Version < 29) return true;
+
+    const permission = PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION;
+    if (await PermissionsAndroid.check(permission)) return true;
+    if (backgroundDeclinedThisSession) return false;
+    if ((await AsyncStorage.getItem(BACKGROUND_DECLINED_KEY)) === '1') return false;
+
+    if (!(await showBackgroundDisclosure())) {
+      backgroundDeclinedThisSession = true;
+      await AsyncStorage.setItem(BACKGROUND_DECLINED_KEY, '1');
+      return false;
+    }
+
+    const result = await PermissionsAndroid.request(permission);
+    if (result === PermissionsAndroid.RESULTS.GRANTED) return true;
+
+    backgroundDeclinedThisSession = true;
+    if (result === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+      await AsyncStorage.setItem(BACKGROUND_DECLINED_KEY, '1');
+    }
+    return false;
+  } catch (error) {
+    console.log('Background location permission error:', error);
+    return false;
+  }
+};
+
+// Only call once foreground location is granted.
+const requestAndroidBackgroundLocation = () => {
+  if (!pendingBackgroundRequest) {
+    pendingBackgroundRequest = runAndroidBackgroundRequest().finally(() => {
+      pendingBackgroundRequest = null;
+    });
+  }
+  return pendingBackgroundRequest;
+};
+
 const requestIosLocation = async () => {
   try {
     const status = await Geolocation.requestAuthorization('whenInUse');
@@ -96,7 +162,9 @@ export const requestLocationPermission = async () => {
 // tapped "Agree & Continue" there, so go straight to the system prompt.
 export const requestLocationAfterDisclosure = async () => {
   if (Platform.OS === 'android') {
-    return (await requestAndroidLocation(true)) === 'granted';
+    const granted = (await requestAndroidLocation(true)) === 'granted';
+    if (granted) await requestAndroidBackgroundLocation();
+    return granted;
   }
   return requestIosLocation();
 };
@@ -132,6 +200,8 @@ export const checkAndRequestLocation = async () => {
       settingsAlertShown = true;
       showSettingsAlert();
     }
+
+    if (status === 'granted') await requestAndroidBackgroundLocation();
 
     return status === 'granted';
   }

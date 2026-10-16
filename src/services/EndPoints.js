@@ -10,6 +10,7 @@ const EndPoints = {
     addDocumentRecords:"residency-doc",
     DocumentRecordsList:"residency-doc",
     deleteAccount:"users/me",
+    activeDevice:"users/active-device",
 }
 
 export default EndPoints;

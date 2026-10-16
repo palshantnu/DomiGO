@@ -101,8 +101,16 @@ function App() {
   //   testNativeModule()
   // },[])
 
-    useEffect(() => {
-    requestNotificationPermission();
+  useEffect(() => {
+    // On Android, logged-out users are asked on the Login/Signup screens, after
+    // the location disclosure on PermissionScreen, so that no system permission
+    // prompt appears before that disclosure.
+    const timer = setTimeout(() => {
+      if (Platform.OS === 'android' && !store.getState().auth?.loginToken) return;
+      requestNotificationPermission();
+      requestPermission();
+    }, 1200);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -135,7 +143,6 @@ function App() {
 
 
   useEffect(() => {
-    requestPermission();
     getToken();
   }, []);
 

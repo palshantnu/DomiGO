@@ -1,43 +1,44 @@
 import { useNavigation } from "@react-navigation/native";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  Switch,
   ScrollView,
+  TouchableOpacity,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  DISCLOSURE_TITLE,
+  DISCLOSURE_PARAGRAPHS,
+  requestLocationAfterDisclosure,
+  declineLocationDisclosure,
+} from "../helpers/locationPermission2";
 
 
+// Prominent disclosure for location data (Google Play User Data policy). The
+// system permission prompt is only shown after the user taps "Agree & Continue";
+// this screen must never advance or request the permission on its own.
 const PermissionScreen = ({ route }) => {
-  const { screenname } = route.params;
+  const screenname = route.params?.screenname || 'Login';
   const navigation = useNavigation();
 
-  const [locationEnabled, setLocationEnabled] = useState(true);
-  const [offlineSync, setOfflineSync] = useState(true);
-  // useEffect(() => {
-  //   if (locationEnabled && offlineSync) {
-  //     navigation.navigate(screenname)
-  //   }
+  const [requesting, setRequesting] = useState(false);
 
-  // }, [locationEnabled, offlineSync])
-
-
-  useEffect(() => {
-  let timer;
-
-  if (locationEnabled && offlineSync) {
-    timer = setTimeout(() => {
-      navigation.navigate(screenname);
-    }, 2000); // 2 seconds delay
-  }
-
-  return () => {
-    if (timer) clearTimeout(timer);
+  const onAgree = async () => {
+    if (requesting) return;
+    setRequesting(true);
+    await requestLocationAfterDisclosure();
+    setRequesting(false);
+    navigation.navigate(screenname);
   };
-}, [locationEnabled, offlineSync]);
+
+  const onDecline = () => {
+    if (requesting) return;
+    declineLocationDisclosure();
+    navigation.navigate(screenname);
+  };
 
   return (
 
@@ -52,55 +53,42 @@ const PermissionScreen = ({ route }) => {
         <ScrollView showsVerticalScrollIndicator={false}>
 
           <View style={styles.header}>
-            <Text style={styles.title}>Grant Essential Permissions</Text>
+            <Text style={styles.title}>{DISCLOSURE_TITLE}</Text>
 
             <Text style={styles.subtitle}>
-              ResiTrack Tax requires Location and Motion & Fitness data to
-              accurately track your residency days across states. Please grant
-              these permissions to get started.
+              Please read how DomiGO collects and uses your location before
+              you decide whether to allow location access.
             </Text>
           </View>
 
 
           <View style={styles.card}>
 
+            <Text style={styles.sectionTitle}>Location Access</Text>
+
+            {DISCLOSURE_PARAGRAPHS.map((paragraph) => (
+              <Text key={paragraph} style={styles.sectionDesc}>
+                {paragraph}
+              </Text>
+            ))}
 
             <View style={styles.line} />
 
+            <TouchableOpacity
+              style={[styles.agreeButton, requesting && styles.buttonDisabled]}
+              onPress={onAgree}
+              disabled={requesting}
+            >
+              <Text style={styles.agreeText}>Agree & Continue</Text>
+            </TouchableOpacity>
 
-            <View style={styles.row}>
-              <Text style={styles.sectionTitle}>Location Access</Text>
-              <Switch
-                value={locationEnabled}
-                onValueChange={(val) => setLocationEnabled(val)}
-                trackColor={{ false: "#D1D5DB", true: "#7ED957" }}
-                thumbColor="#fff"
-              />
-            </View>
-
-            <Text style={styles.sectionDesc}>
-              Allow ResiTrack to access your location in the background to
-              automatically track your residency days across states. This data
-              is essential for accurate tax calculations.
-            </Text>
-
-            <View style={styles.line} />
-
-
-            <View style={styles.row}>
-              <Text style={styles.sectionTitle}>Offline Sync</Text>
-              <Switch
-                value={offlineSync}
-                onValueChange={(val) => setOfflineSync(val)}
-                trackColor={{ false: "#D1D5DB", true: "#7ED957" }}
-                thumbColor="#fff"
-              />
-            </View>
-
-            <Text style={styles.sectionDesc}>
-              Enable offline sync and calendar sync to manage data in the local
-              database until it is synced to the cloud.
-            </Text>
+            <TouchableOpacity
+              style={styles.declineButton}
+              onPress={onDecline}
+              disabled={requesting}
+            >
+              <Text style={styles.declineText}>No Thanks</Text>
+            </TouchableOpacity>
 
           </View>
         </ScrollView>
@@ -151,12 +139,6 @@ const styles = StyleSheet.create({
     marginVertical: 18,
   },
 
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-
   sectionTitle: {
     fontSize: 16,
     fontWeight: "600",
@@ -164,9 +146,38 @@ const styles = StyleSheet.create({
   },
 
   sectionDesc: {
-    fontSize: 13,
-    color: "#4B5563",
+    fontSize: 14,
+    color: "#374151",
+    marginTop: 12,
+    lineHeight: 20,
+  },
+
+  agreeButton: {
+    backgroundColor: "#69BE7E",
+    paddingVertical: 14,
+    borderRadius: 28,
+    alignItems: "center",
+  },
+
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+
+  agreeText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+
+  declineButton: {
+    paddingVertical: 14,
     marginTop: 8,
-    lineHeight: 18,
+    alignItems: "center",
+  },
+
+  declineText: {
+    color: "#4B5563",
+    fontSize: 15,
+    fontWeight: "600",
   },
 });
